@@ -1,0 +1,74 @@
+[ ca ]
+# X509 extensions for a ca
+keyUsage                = critical, cRLSign, keyCertSign
+basicConstraints        = CA:TRUE, pathlen:0
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid:always,issuer:always
+
+[ db2 ]
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid,issuer:always
+
+[ sqlserver ]
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid,issuer:always
+
+[ zk ]
+# X509 extensions for a server
+keyUsage                = critical,digitalSignature,keyEncipherment
+extendedKeyUsage        = serverAuth,clientAuth
+basicConstraints        = critical,CA:FALSE
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid,issuer:always
+
+[ solr ]
+# X509 extensions for a server
+keyUsage                = critical,digitalSignature,keyEncipherment
+extendedKeyUsage        = serverAuth,clientAuth
+basicConstraints        = critical,CA:FALSE
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid,issuer:always
+subjectAltName          = @subject_alt_names
+
+[ daod ]
+# X509 extensions for a server
+keyUsage                = critical,digitalSignature,keyEncipherment
+extendedKeyUsage        = serverAuth,clientAuth
+basicConstraints        = critical,CA:FALSE
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid,issuer:always
+
+[ connector ]
+# X509 extensions for a server
+keyUsage                = critical,digitalSignature,keyEncipherment
+extendedKeyUsage        = serverAuth, clientAuth
+basicConstraints        = critical,CA:FALSE
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid,issuer:always
+subjectAltName          = @subject_alt_names
+
+[ liberty ]
+# X509 extensions for a server
+keyUsage                = critical,digitalSignature,keyEncipherment
+extendedKeyUsage        = serverAuth, clientAuth
+basicConstraints        = critical,CA:FALSE
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid,issuer:always
+subjectAltName          = @subject_alt_names
+
+[ user ]
+# X509 extensions for a user
+keyUsage                = critical,digitalSignature,keyEncipherment
+extendedKeyUsage        = serverAuth,clientAuth
+basicConstraints        = critical,CA:FALSE
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid,issuer:always
+subjectAltName          = @subject_alt_names
+
+[ subject_alt_names ]
+DNS.1 = HOST_NAME
+
+
+[ sqlserver ]
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid,issuer:always

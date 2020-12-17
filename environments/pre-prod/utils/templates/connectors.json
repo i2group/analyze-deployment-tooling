@@ -1,0 +1,10 @@
+{
+  "connectors": [
+      {
+          "id": "example-connector",
+          "name": "Example Connector",
+          "description": "",
+          "baseUrl": "https://exampleconnector1.eia:3700/"
+      }
+  ]
+}
