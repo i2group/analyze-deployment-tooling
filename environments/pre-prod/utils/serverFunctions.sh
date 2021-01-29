@@ -11,14 +11,25 @@
 # Start of function definitions                                               #
 ###############################################################################
 
+#######################################
+# Run a Zookeeper server conatiner.
+# Arguments:
+#   1. ZK container name
+#   2. ZK cotnaienr FQDN
+#   3  ZK data volume name
+#   4. ZK datalog volume name
+#   5. ZK log volume name
+#   6. ZK port (on the host machine)
+#   7. Zoo ID (an identifier for the ZooKeeper server)
+#######################################
 function runZK() {
-  local CONTAINER=${1}
-  local FQDN=${2}
-  local DATA_VOLUME=${3}
-  local DATALOG_VOLUME=${4}
-  local LOG_VOLUME=${5}
-  local HOST_PORT=${6}
-  local ZOO_ID=${7}
+  local CONTAINER="$1"
+  local FQDN="$2"
+  local DATA_VOLUME="$3"
+  local DATALOG_VOLUME="$4"
+  local LOG_VOLUME="$5"
+  local HOST_PORT="$6"
+  local ZOO_ID="$7"
   print "ZooKeeper container ${CONTAINER} is starting"
   docker run --restart always -d \
     --name "${CONTAINER}" \
@@ -41,11 +52,19 @@ function runZK() {
     "${ZOOKEEPER_IMAGE_NAME}"
 }
 
+#######################################
+# Run a Solr server conatiner.
+# Arguments:
+#   1. Solr container name
+#   2. Solr container FQDN
+#   3. Solr volume name
+#   4. Solr port (on the host machine)
+#######################################
 function runSolr() {
-  local CONTAINER=${1}
-  local FQDN=${2}
-  local VOLUME=${3}
-  local HOST_PORT=${4}
+  local CONTAINER="$1"
+  local FQDN="$2"
+  local VOLUME="$3"
+  local HOST_PORT="$4"
   print "Solr container ${CONTAINER} is starting"
   docker run -d \
     --name "${CONTAINER}" \
@@ -69,6 +88,11 @@ function runSolr() {
     "${SOLR_IMAGE_NAME}"
 }
 
+#######################################
+# Run a SQL Server conatiner.
+# Arguments:
+#   None
+#######################################
 function runSQLServer() {
   print "SQL Server container ${SQL_SERVER_CONTAINER_NAME} is starting"
   docker run -d \
@@ -89,12 +113,21 @@ function runSQLServer() {
     "${SQL_SERVER_IMAGE_NAME}"
 }
 
+#######################################
+# Run a Liberty Server conatiner.
+# Arguments:
+#   1. Liberty container name
+#   2. Liberty container FQDN
+#   3. Liberty volume name
+#   4. Liberty port (on the host machine)
+#   5. Liberty key folder
+#######################################
 function runLiberty() {
-  local CONTAINER=${1}
-  local FQDN=${2}
-  local VOLUME=${3}
-  local HOST_PORT=${4}
-  local KEY_FOLDER=${5}
+  local CONTAINER="$1"
+  local FQDN="$2"
+  local VOLUME="$3"
+  local HOST_PORT="$4"
+  local KEY_FOLDER="$5"
   print "Liberty container ${CONTAINER} is starting"
   docker run -m 1g -d \
     --name "${CONTAINER}" \
@@ -129,6 +162,11 @@ function runLiberty() {
     "${LIBERTY_CONFIGURED_IMAGE_NAME}"
 }
 
+#######################################
+# Build a configured Liberty image.
+# Arguments:
+#   None
+#######################################
 function buildLibertyConfiguredImage() {
   print "Building Liberty image"
   rm -rf "${IMAGES_DIR}/liberty_ubi_combined/classes"
@@ -144,6 +182,11 @@ function buildLibertyConfiguredImage() {
     --build-arg "BASE_IMAGE=${LIBERTY_BASE_IMAGE_NAME}"
 }
 
+#######################################
+# Run a Load Balancer container.
+# Arguments:
+#   None
+#######################################
 function runLoadBalancer() {
   print "Load balancer container ${LOAD_BALANCER_CONTAINER_NAME} is starting"
   docker run -d \
@@ -163,17 +206,17 @@ function runLoadBalancer() {
     "${LOAD_BALANCER_IMAGE_NAME}"
 }
 
+
 function runExampleConnector() {
   local CONTAINER=${1}
   local FQDN=${2}
-  local HOST_PORT=${3}
+  local KEY_FOLDER=${3}
   print "Connector container ${CONTAINER} is starting"
   docker run -m 128m -d \
     --name "${CONTAINER}" \
     --network "${DOMAIN_NAME}" \
     --net-alias "${FQDN}" \
-    -p "${HOST_PORT}":3700 \
-    -v "${LOCAL_KEYS_DIR}/${CONTAINER}:${CONTAINER_SECRETS_DIR}" \
+    -v "${LOCAL_KEYS_DIR}/${KEY_FOLDER}:${CONTAINER_SECRETS_DIR}" \
     -e "SERVER_SSL=${GATEWAY_SSL_CONNECTION}" \
     -e "SSL_CA_CERTIFICATE_FILE=${CONTAINER_SECRETS_DIR}/CA.cer" \
     -e "SSL_CERTIFICATE_FILE=${CONTAINER_SECRETS_DIR}/server.cer" \

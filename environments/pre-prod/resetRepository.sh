@@ -11,7 +11,7 @@ set -e
 
 # This is to ensure the script can be run from any directory
 SCRIPT_DIR="$(dirname "$0")"
-cd "${SCRIPT_DIR}"
+cd "$SCRIPT_DIR"
 
 # Load common variables and functions
 source ./utils/commonVariables.sh
@@ -57,20 +57,13 @@ removeAllImages
 cleanDockerImagesDirectories
 
 ###############################################################################
-# Remove i2 Analyze configuration                                             #
+# Removing Simulated Secret Store                                                     #
 ###############################################################################
-print "Removing i2Analyze configuration"
-deleteFolderIfExists "${LOCAL_GENERATED_DIR}"
-deleteFolderIfExists "${LOCAL_I2ANALYZE_DIR}"
-
-###############################################################################
-# Removing old ssh keys                                                       #
-###############################################################################
-print "Removing ssh keys"
+print "Removing simulated-secret-store directory"
 deleteFolderIfExists "${LOCAL_KEYS_DIR}"
 
 ###############################################################################
-# Remove generatedSecrets                                                     #
+# Remove generated-secrets                                                     #
 ###############################################################################
 print "Remove Generated secrets"
 deleteFolderIfExists "${GENERATED_SECRETS_DIR}"
@@ -90,12 +83,6 @@ deleteFolderIfExists "${LOCAL_ETL_TOOLKIT_DIR}"
 print "Removing old database scripts"
 deleteFolderIfExists "${LOCAL_GENERATED_DIR}"
 deleteFolderIfExists "${LOCAL_DATABASE_SCRIPTS_DIR}"
-
-###############################################################################
-# Remove saved cookies                                                        #
-###############################################################################
-print "Removing saved cookies"
-deleteFolderIfExists "${COOKIE_PATH}"
 
 ###############################################################################
 # Remove ETL toolkit                                                          #

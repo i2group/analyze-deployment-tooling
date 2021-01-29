@@ -1,17 +1,17 @@
 # Getting started with the Analyze-Containers repository
 
-## Prerequisites
+## <a name="prerequisites"></a> Prerequisites
 
-### Code
+### <a name="code"></a> Code
 Clone or download the Analyze-Containers repository from https://github.com/IBM-i2/Analyze-Containers/releases.
 
-### Windows Subsystem for Linux (WSL)
+### <a name="windowssubsystemforlinux"></a> Windows Subsystem for Linux (WSL)
 
 If you are on Windows, you must use WSL 2 to run the shell scripts in this repository.
 
 For information about installing WSL, see [Windows Subsystem for Linux Installation Guide](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
 
-### Docker
+### <a name="docker"></a> Docker
 
 You must install Docker CE for your operating system. For more information about installing Docker CE, see https://docs.docker.com/engine/installation/.
 
@@ -29,7 +29,7 @@ For more information about modifying the resources allocated to Docker, see:
 - [Docker Desktop for Mac](https://docs.docker.com/docker-for-mac/#resources)
 
 
-### Command Line Tools
+### <a name="commandlinetools"></a> Command Line Tools
 
 You must install `jq` command line tools into your shell. For more information, see [Download jq](https://stedolan.github.io/jq/download/).
 
@@ -39,7 +39,7 @@ sudo apt-get update
 sudo apt-get install jq
 ```
 
-### Visual Studio Code
+### <a name="visualstudiocode"></a> Visual Studio Code
 
 The repository is designed to be used with VS Code to create the development environment.
 
@@ -53,26 +53,26 @@ To make the environment easier to use, install the following extensions in VS Co
 - [Red Hat XML](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-xml)
 - [Red Hat YAML](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml)
 
-### i2 Analyze minimal toolkit
+### <a name="i2analyzeminimaltoolkit"></a> i2 Analyze minimal toolkit
 
 1. Download the i2 Analyze V4.3.3 Minimal for Linux package using the following part number: *CC96NML*.
-1. Rename the `IBM_I2A_V4.3.3_MIN_LIN.tar.gz` file to `i2AnalyzeMinimal.tar.gz`, then copy it to the `pre-reqs` directory.
+1. Rename the `IBM_I2A_V4.3.3_MIN_LIN.tar.gz` file to `i2analyzeMinimal.tar.gz`, then copy it to the `Analyze-Containers/pre-reqs` directory.
 
-### JDBC drivers
+### <a name="jdbcdrivers"></a> JDBC drivers
 
 You must provide the JDBC driver to enable the application to communicate with the database.
 
-For SQL Server, copy the `mssql-jdbc-7.4.1.jre8.jar` file to the `pre-reqs/jdbc-drivers` directory.
+For SQL Server, copy the `mssql-jdbc-7.4.1.jre8.jar` file to the `Analyze-Containers/pre-reqs/jdbc-drivers` directory.
 
 You can download the Microsoft JDBC Driver 7.4 for SQL Server archive from https://www.microsoft.com/en-us/download/details.aspx?id=58505. Extract the contents of the download, and locate the `sqljdbc_7.4\enu\mssql-jdbc-7.4.1.jre8.jar` file.
 
 ---
 
-## Creating a containerised deployment
+## <a name="creatingacontaineriseddeployment"></a> Creating a containerised deployment
 
 After you have all of the prerequisites in place, use the example scripts and artifacts in the `environments/pre-prod` directory to create the reference pre-production containerised deployment.
 
-### Creating the environment and configuration
+### <a name="creatingtheenvironmentandconfiguration"></a> Creating the environment and configuration
 
 The `createEnvironment.sh` script performs a number of actions that ensure all of the artifacts for a deployment are created and in the correct locations. These actions include:
 - Extracting the i2 Analyze minimal toolkit to the `pre-reqs/i2analyze` directory.
@@ -93,7 +93,7 @@ The `configuration` directory is created in the `environments/pre-prod` director
 
 By default, the environment is created for an Information Store and i2 Connect gateway deployment.
 
-### Accepting the licences
+### <a name="acceptingthelicences"></a> Accepting the licences
 
 - Before you can use i2 Analyze and the tools, you must read and accept the licence agreement and copyright notices in the `pre-reqs/i2analyze/license` directory.  
     To accept the licence agreement, change the value of the `LIC_AGREEMENT` environment variable to `ACCEPT`. The environment variable is in the `utils/commonVariables.sh` script.
@@ -101,23 +101,23 @@ By default, the environment is created for an Information Store and i2 Connect g
 - Before you can use Microsoft SQL Server, you must accept the licence agreement and the EULA. For more information about using the `MSSQL_PID` and `ACCEPT_EULA` environment variables, see [Configure SQL Server settings with environment variables on Linux](https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-configure-environment-variables?view=sql-server-ver15#environment-variables)  
     To accept the licence in this environment, change the value of the `MSSQL_PID` and `ACCEPT_EULA` environment variables. The environment variable is in the `utils/commonVariables.sh` script.
 
-### Building the Docker images
+### <a name="buildingthedockerimages"></a> Building the Docker images
 
 To build the Docker images, run the following command:
 ```
 ./buildImages.sh 
 ```
 
-### Generating the secrets
+### <a name="generatingthesecrets"></a> Generating the secrets
 
 To generate the secrets used in the environment, run the following command:
 ```
 ./generateSecrets.sh
 ```
 
-For more information about the secrets that are generated and how they are used, see [Managing secrets](./security%20and%20users/secrets.md).
+For more information about the secrets that are generated and how they are used, see [Managing secrets](./security%20and%20users/security.md).
 
-### Running the containers and start i2 Analyze
+### <a name="runningthecontainersandstarti2analyze"></a> Running the containers and start i2 Analyze
 
 To deploy and start i2 Analyze, run the following command:
 ```
@@ -126,7 +126,7 @@ To deploy and start i2 Analyze, run the following command:
 
 For more information about the actions that are completed, see [Deploying i2 Analyze](./tools%20and%20functions/deploy.md).
 
-### Modifying the hosts file
+### <a name="modifyingthehostsfile"></a> Modifying the hosts file
 
 To enable you to connect to the deployment and the Solr Web UI, update your hosts file to include the following lines:
 ```
@@ -137,7 +137,7 @@ To enable you to connect to the deployment and the Solr Web UI, update your host
 
 ---
 
-## Installing Certificate
+## <a name="installingcertificate"></a> Installing Certificate
 
 To access the system, the server that you are connecting from must trust the certificate that it receives from the deployment. To enable trust, install the `environments/pre-prod/generated-secrets/certificates/externalCA/CA.cer` certificate as a trusted root certificate authority in your browser and operating system's certificate store.
 
@@ -146,11 +146,11 @@ For information about installing the certificate, see:
 - [Setting up certificate authorities in Firefox](https://support.mozilla.org/en-US/kb/setting-certificate-authorities-firefox)
 - [Set up an HTTPS certificate authority in Chrome](https://support.google.com/chrome/a/answer/6342302?hl=en)
 
-## Accessing the system
+## <a name="accessingthesystem"></a> Accessing the system
 
 To connect to the deployment, the URL to use is: `https://i2analyze.eia:9046/opal/`
 
-## What to do next
+## <a name="whattodonext"></a> What to do next
 
 To understand how the environment is created, you can review the documentation that explains the images, containers, tools, and functions:
 - [Images and containers](./images%20and%20containers/)

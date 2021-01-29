@@ -1,8 +1,9 @@
-environments/pre-prod/loadBalancer/haproxy.cfg
+environments/pre-prod/load-balancer/haproxy.cfg
 environments/pre-prod/simulated-secret-store
 environments/pre-prod/generated-secrets
 environments/pre-prod/configuration
 environments/pre-prod/database-scripts
+environments/pre-prod/deploy-test.sh
 
 images/liberty_ubi_base/application/**
 images/liberty_ubi_combined/classes/**
@@ -15,6 +16,7 @@ images/i2a_tools/tools
 images/sql_client/tools
 images/**/environment.sh
 
+pre-reqs/i2analyze
 pre-reqs/**/*.jar
 pre-reqs/**/*.tar.gz
 
@@ -30,3 +32,5 @@ pre-reqs/**/*.tar.gz
 .idea
 
 bld/**
+
+

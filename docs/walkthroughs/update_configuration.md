@@ -10,9 +10,9 @@ Updating the configuration includes the following high-level steps:
 * Running the Liberty containers
     * When you start Liberty, the schema that it caches from the database is updated
 
-> Note: Before you complete this walkthrough, reset your environment to the base configuration. For more information, see [Resetting your environment](../reset_walkthroughs.md).
+> Note: Before you complete this walkthrough, reset your environment to the base configuration. For more information, see [Resetting your environment](./reset_walkthroughs.md).
 
-## Removing the Liberty containers
+## <a name="removingthelibertycontainers"></a> Removing the Liberty containers
 
 Before you update the application configuration, you remove the Liberty containers. To do remove the containers, run the following docker commands:
 
@@ -23,19 +23,19 @@ docker rm liberty1 liberty2
 
 See the `Removing the Liberty containers` section of the walkthrough script.
 
-## Updating your configuration
+## <a name="updatingyourconfiguration"></a> Updating your configuration
 
 In the `updateConfigurationWalkthrough.sh` script, a modified `geospatial-configuration.xml` is being copied from the `/walkthrouhgs/configuration-changes` directory to the `configuration/fragments/common/WEB-INF/classes/` directory.
 
-For information about modifying the configuration, see [Configuring the i2 Analyze application](https://www.ibm.com/support/knowledgecenter/SSXVTH_4.3.2/com.ibm.i2.eia.go.live.doc/eia_going_live.html).
+For information about modifying the configuration, see [Configuring the i2 Analyze application](https://www.ibm.com/support/knowledgecenter/SSXVTH_latest/com.ibm.i2.eia.go.live.doc/eia_going_live.html).
 
 See the `Updating the configuration` section of the walkthrough script.
 
 After you modify the configuration, build a new configured liberty image with the updated configuration.
 
-The `buildLibertyConfiguredImage` server function builds the configured Liberty image.  For more information, see [Building a configured Liberty image](../images%20and%20containers/liberty.md#building-a-configured-liberty-image).
+The `buildLibertyConfiguredImage` server function builds the configured Liberty image.  For more information, see [Building a configured Liberty image](../images%20and%20containers/liberty.md#buildingaconfiguredlibertyimage).
 
-### Running the Liberty containers
+### <a name="runningthelibertycontainers"></a> Running the Liberty containers
 
 The `runLiberty` server function runs a Liberty container. For more information about running a Liberty container, see [Liberty](../images%20and%20containers/liberty.md).  
 See the `Running the Liberty containers` section of the walkthrough script.

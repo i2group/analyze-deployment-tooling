@@ -81,6 +81,7 @@ if [[ ! -f "$ZOO_CONF_DIR/zoo.cfg" ]]; then
       echo "ssl.quorum.trustStore.location=${TRUSTSTORE}"
       echo "ssl.quorum.keyStore.location=${KEYSTORE}"
       echo "secureClientPort=$ZOO_SECURE_CLIENT_PORT"
+      echo "admin.portUnification=true"
     } >>"$CONFIG"
   else
     echo "clientPort=$ZOO_CLIENT_PORT" >>"$CONFIG"

@@ -1,6 +1,6 @@
 # Managing container security
 
-## SSL certificates in the deployment
+## <a name="sslcertificatesinthedeployment"></a> SSL certificates in the deployment
 
 The example deployment is configured to use SSL connections for communication between clients and i2 Analyze, and between the components of i2 Analyze.
 
@@ -8,7 +8,7 @@ To achieve this, the appropriate certificate authorities and certificates are us
 
 > Note: The keys and certificates used are set to expire after 90 days. To use the certificates for longer than this, you must run the `generateSecrets.sh` script again.
 
-## Certificate Authorities (CA)
+## <a name="certificateauthorities"></a> Certificate Authorities (CA)
 
 In the example, two CAs are used to provide trust:
 
@@ -17,7 +17,7 @@ In the example, two CAs are used to provide trust:
 - **External CA**
    The external CA is to provide trust for external requests to the i2 Analyze service via the load balancer. In our example, the external certificate authority is generated for you. However, in production a real certificate should be used.
 
-## Container certificates
+## <a name="containercertificates"></a> Container certificates
 
 To communicate securely using SSL each container requires the following certificates:
 
@@ -25,9 +25,9 @@ To communicate securely using SSL each container requires the following certific
 - certificate key
 - internal certificate authority
 
-The containers will generate truststores and keystores based on the keys provided to the container. For more information about how the keys are passed to the containers securely please see [Secure Environment variables](#secure-environment-variables).
+The containers will generate truststores and keystores based on the keys provided to the container. For more information about how the keys are passed to the containers securely please see [Secure Environment variables](#secureenvironmentvariables).
 
-## Secure communication between containers
+## <a name="securecommunicationbetweencontainers"></a> Secure communication between containers
 
 When the components communicate, the `CA certificate` is used to establish trust of the `container certificate` that is received.  
 
@@ -35,7 +35,7 @@ When the components communicate, the `CA certificate` is used to establish trust
 
 - ZooKeeper requires client authentication to initiate communication. The i2 Analyze, i2 Analyze Tool, and Solr client containers require container certificates to authenticate with ZooKeeper.
 
-## Creating keys and certificates
+## <a name="creatingkeysandcertificates"></a> Creating keys and certificates
 The following diagram shows a simplified sequence of creating a container certificate from the certificate authority and using it to establish trust:
 
 
@@ -63,19 +63,19 @@ The following diagram shows a simplified sequence of creating a container certif
 
 1. When communication is established, the `container certificate` is sent to the client. The client uses it's copy of the `CA certificate` to verify that the `container certificate` was signed by the same CA. 
 
-## Password generation
+## <a name="passwordgeneration"></a> Password generation
 
 The example simulates secrets management performed by various secrets managers provided by cloud vendors. The `generateSecrets.sh` generates these secrets and populates the `environments/pre-prod/simulated-secret-store` with secrets required for each container. The docker desktop does not support secrets, but the example environment example simulates this by mounting the secrets folder. For more information see [Manage sensitive data with Docker secrets](https://docs.docker.com/engine/swarm/secrets/).
 
 After these passwords have been generated, they can be uploaded to a secrets manager. Alternatively you can use a secrets manager to generate your passwords.
 
-## Solr Basic Authentication
+## <a name="solrbasicauthentication"></a> Solr Basic Authentication
 
 Solr authorisation can be enabled using the BasicAuthPlugin. The basic auth plugin defines users, user roles and passwords for users. For the BasicAuthPlugin to be enabled, solr requires a security.json file to be uploaded. In our example the security.json file is created by the `generateSecrets.sh` and located in `environments/pre-prod/generatedSecrets/secrets/solr/security.json`.
 
 For more information about solr authentication see [Basic Authentication Plugin](https://lucene.apache.org/solr/guide/8_3/basic-authentication-plugin.html)
 
-## Secure Environment variables
+## <a name="secureenvironmentvariables"></a> Secure Environment variables
 
 In general secrets used by a particular container can be supplied via an environment variable containing the path to a file containing the secret, or an environment variable specifying the literal secret value, for example:
 Note: Secrets can be passwords, keys or certificates.

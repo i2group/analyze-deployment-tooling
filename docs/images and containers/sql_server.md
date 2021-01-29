@@ -2,13 +2,13 @@
 
 In a containerized deployment, the database is located on a SQL Server container.
 
-## Building a SQL Server image
+## <a name="buildingasqlserverimage"></a> Building a SQL Server image
 
 SQL Server is built from a Dockerfile that is based on the Dockerfile from [Microsoft SQL Server](https://hub.docker.com/_/microsoft-mssql-server).
 
 The SQL Server image is built from the Dockerfile in `images/sql_server`.
 
-### Docker build command
+### <a name="dockerbuildcommand"></a> Docker build command
 
 The following `docker build` command builds the SQL Server image:
 
@@ -17,13 +17,13 @@ docker build -t sqlserver_redhat images/sqlserver
 ```
 For examples of the build commands, see `buildImages.sh` script. 
 
-## Running a SQL Server container
+## <a name="runningasqlservercontainer"></a> Running a SQL Server container
 
-A SQL Server container uses the SQL Server image. In the `docker run` command, you can use `-e` to pass environment variables to the container. The environment variables are described in [environment variables](#environment-variables).
+A SQL Server container uses the SQL Server image. In the `docker run` command, you can use `-e` to pass environment variables to the container. The environment variables are described in [environment variables](#environmentvariables).
 
 For more information about the command, see [docker run reference](https://docs.docker.com/engine/reference/run/).
 
-### Docker run command
+### <a name="dockerruncommand"></a> Docker run command
 
 The following `docker run` command runs a SQL Server container:
 
@@ -48,7 +48,7 @@ docker run -d \
 
 For an example of the `docker run` command, see [serverFunctions.sh](../../environments/pre-prod/utils/serverFunctions.sh). The `runSQLServer` does not take any arguments.
 
-### Volumes
+### <a name="volumes"></a> Volumes
 
 A named volume is used to persist data and logs that are generated and used in the SQL Server container, outside of the container. 
 
@@ -60,7 +60,7 @@ For example:
 
 For more information, see [Use Data Volume Containers](https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-docker-container-configure?view=sql-server-ver15&pivots=cs1-bash#use-data-volume-containers).
 
-### Bind mounts
+### <a name="bindmounts"></a> Bind mounts
 
 - **Secrets**:  
 A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access zookeeper and certificates used in SSL.  
@@ -70,7 +70,7 @@ In a production environment, the orchestration environment can provide the secre
 - **Example Data**:  
 To demonstrate ingesting data into the Information Store, the i2 Analyze toolkit is mounted to `/tmp/examples/data` in the container.
 
-### Environment variables
+### <a name="environmentvariables"></a> Environment variables
 
 |Environment Variable           | Description  |
 | ----------------------------- | ------------ |
@@ -83,8 +83,8 @@ The following environment variables enable you to use SSL:
 
 | Environment variable   | Description   |
 | ---------------------- | ------------- |
-| `SERVER_SSL`           | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables).|
-| `SSL_PRIVATE_KEY_FILE` | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables).| 
-| `SSL_CERTIFICATE_FILE` | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables).|
+| `SERVER_SSL`           | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables).|
+| `SSL_PRIVATE_KEY_FILE` | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables).| 
+| `SSL_CERTIFICATE_FILE` | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables).|
 
 For more information about the SSL in SQLServer, see [Specify TLS settings](https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-configure-mssql-conf?view=sql-server-ver15#tls).

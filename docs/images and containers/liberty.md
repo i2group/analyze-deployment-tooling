@@ -2,25 +2,25 @@
 
 In a containerized deployment, you configure the i2 Analyze application and Liberty in an image that is layered on top of the *liberty_ubi_base* image. The *liberty_ubi_base* contains static configuration and application jars that are required by i2 Analyze and should not be changed. 
 
-## Configuring the Liberty server
+## <a name="configuringthelibertyserver"></a> Configuring the Liberty server
 
 Liberty is configured by exception. The runtime environment operates from a set of built-in configuration default settings, and you only need to specify configuration that overrides those default settings. You do this by editing either the `server.xml` file or another XML file that is included in `server.xml` at run time.
 
-In a containerized deployment of i2 Analyze, a `server.xml` file is provided for you. To provide or modify any values, you specify a number of [environment variables](#environment-variables) when you run a Liberty container.
+In a containerized deployment of i2 Analyze, a `server.xml` file is provided for you. To provide or modify any values, you specify a number of [environment variables](#environmentvariables) when you run a Liberty container.
 
 Additionally, you can extend the `server.xml` by using the provided `server.extensions.xml` in the i2 Analyze configuration. Any elements that you add to the extensions file are included in the `server.xml` when you run a Liberty container.
 
-## Configuring the i2 Analyze application
+## <a name="configuringthei2analyzeapplication"></a> Configuring the i2 Analyze application
 
 The contents of the `configuration` directory must be copied into the `images/liberty_ubi_combined/classes` directory. The contents of the `classes` directory is added to the configured Liberty image when the image is built. If you make changes to the configuration, you must copy the changes to the `classes` directory and rebuild the configured image.
 
 >Note: The system match rules are configured differently. The application is updated to use the `system-match-rules.xml` from the Solr client command line. For more information about updating the system match rules, see ... .
 
-## Building a configured Liberty image
+## <a name="buildingaconfiguredlibertyimage"></a> Building a configured Liberty image
 
 The *configured image* is built from the base image. The configured image contains the i2 Analyze application and Liberty configuration that is required to start the i2 Analyze application. When you change the configuration, the configured image must be rebuilt to reflect the changes.
 
-### Docker build command
+### <a name="dockerbuildcommand"></a> Docker build command
 
 The configured image is built from the Dockerfile in `images/liberty_ubi_combined`. The following `docker build` command builds the configured image:
 
@@ -30,13 +30,13 @@ docker build -t liberty_configured_redhat images/liberty_ubi_combined
 
 An example of providing the configuration to the classes directory and building the image is included in the `buildLibertyConfiguredImage` function in the `serverFunctions.sh` script.
 
-## Running a Liberty container
+## <a name="runningalibertycontainer"></a> Running a Liberty container
 
-A Liberty container uses the configured image. In the `docker run` command, you can use `-e` to pass environment variables to Liberty on the container. The environment variables are described in [environment variables](#environment-variables)
+A Liberty container uses the configured image. In the `docker run` command, you can use `-e` to pass environment variables to Liberty on the container. The environment variables are described in [environment variables](#environmentvariables)
 
 For more information about the command, see [docker run reference](https://docs.docker.com/engine/reference/run/).
 
-### Docker run command
+### <a name="dockerruncommand"></a> Docker run command
 
 The following `docker run` command runs a Liberty container:
 
@@ -85,7 +85,7 @@ An example of running Liberty container by using `runLiberty` function:
 ```bash
 runLiberty liberty1 liberty1.eia liberty1_data 9045 liberty1
 ```
-### Volumes
+### <a name="volumes"></a> Volumes
 A named volume is used to persist data, which is generated and used in the Liberty container, outside of the container. 
 
 To configure the Liberty container to use the volume, specify the `-v` option with the name of the volume and the path where the directory is mounted in the container. By setting `-v` option in the docker run command, a named volume is created. For Liberty, the directory that is mounted must be `/data`, this directory folder stores: jobs, record groups and charts.
@@ -95,14 +95,14 @@ For example:
 -v liberty_data:/data
 ```
 
-### Bind mounts
+### <a name="bindmounts"></a> Bind mounts
 
 **Secrets**:  
 A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access ZooKeeper, the database, and the certificates used in SSL.  
 The directory is mounted to a location in the container defined by the `CONTAINER_SECRETS_DIR` environment variable. This can then be used by other environment variables such as `ZOO_DIGEST_USERNAME_FILE` to locate the secrets.  
 In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files. This is achieved by using a bind mount. In production this would not be required.
 
-### Environment variables
+### <a name="environmentvariables"></a> Environment variables
 
 To configure the Liberty server, you provide environment variables to the Docker container in the `docker run` command.
 
@@ -126,17 +126,17 @@ The following environment variables enable you to use SSL:
 
 | Environment variable              | Description |
 | --------------------------------- | ----------- |
-| `DB_SSL_CONNECTION`               | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables). |
-| `SOLR_ZOO_SSL_CONNECTION`         | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables). |
-| `SERVER_SSL`                      | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables). |
-| `SSL_PRIVATE_KEY_FILE`            | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables). | 
-| `SSL_CERTIFICATE_FILE`            | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables). |
-| `SSL_CA_CERTIFICATE_FILE`         | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables). | 
-| `GATEWAY_SSL_CONNECTION`          | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables). |
-| `SSL_OUTBOUND_PRIVATE_KEY_FILE`   | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables). |
-| `SSL_OUTBOUND_CERTIFICATE_FILE`   | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables). |
+| `DB_SSL_CONNECTION`               | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables). |
+| `SOLR_ZOO_SSL_CONNECTION`         | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables). |
+| `SERVER_SSL`                      | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables). |
+| `SSL_PRIVATE_KEY_FILE`            | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables). | 
+| `SSL_CERTIFICATE_FILE`            | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables). |
+| `SSL_CA_CERTIFICATE_FILE`         | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables). | 
+| `GATEWAY_SSL_CONNECTION`          | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables). |
+| `SSL_OUTBOUND_PRIVATE_KEY_FILE`   | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables). |
+| `SSL_OUTBOUND_CERTIFICATE_FILE`   | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables). |
 
-### Liberty HADR
+### <a name="libertyhadr"></a> Liberty HADR
 You can run Liberty in an active/active configuration with multiple Liberty containers. In an active/active configuration, multiple instance of the i2 Analyze application run concurrently on multiple Liberty containers. One instance of the i2 Analyze application is determined to be the leader at any given time.
 
 The following tables describes the environment variables that you can use to configure HADR:

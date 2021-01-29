@@ -2,13 +2,13 @@
 
 An SQL Server Client container is an ephemeral container that is used to run the `sqlcmd` commands to create and configure the database.
 
-## Building an SQL Server Client image
+## <a name="buildingansqlserverclientimage"></a> Building an SQL Server Client image
 
 The SQL Server Client is built from a Dockerfile that is based on [Microsoft SQL Server](https://hub.docker.com/_/microsoft-mssql-server).
 
 The SQL Server Client image is built from the Dockerfile in `images/sql_client`.
 
-### Docker build command
+### <a name="dockerbuildcommand"></a> Docker build command
 
 The following `docker build` command builds the SQL Server Client image:
 
@@ -16,13 +16,13 @@ The following `docker build` command builds the SQL Server Client image:
 docker build -t sqlserver_client_redhat images/sql_client
 ```
 
-## Running a SQL Server Client container
+## <a name="runningasqlserverclientcontainer"></a> Running a SQL Server Client container
 
-An SQL Server Client container uses the SQL Server Client image. In the `docker run` command, you can use `-e` to pass environment variables to the container. The environment variables are described in [environment variables](#environment-variables).
+An SQL Server Client container uses the SQL Server Client image. In the `docker run` command, you can use `-e` to pass environment variables to the container. The environment variables are described in [environment variables](#environmentvariables).
 
 For more information about the command, see [docker run reference](https://docs.docker.com/engine/reference/run/).
 
-### Docker run command
+### <a name="dockerruncommand"></a> Docker run command
 
 The following `docker run` command runs a SQL Server Client container:
 
@@ -48,7 +48,7 @@ For an example of the `docker run` command, see `runSQLServerCommandAsETL` funct
 For an example of how to use `runSQLServerCommandAsETL` function, see [runSQLServerCommandAsETL](../tools%20and%20functions/client_functions.md#runsqlservercommandasetl).
 > Note: you can run SQL Server Client container as different users, see [`runSQLServerCommandAsDBA`](../tools%20and%20functions/client_functions.md#runsqlservercommandasdba), [`runSQLServerCommandAsSA`](../tools%20and%20functions/client_functions.md#runsqlservercommandassa)
 
-## Bind mounts
+## <a name="bindmounts"></a> Bind mounts
 
 - **Secrets**:  
 A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access zookeeper and certificates used in SSL.  
@@ -64,7 +64,7 @@ In the example scripts, this is defaulted to `/opt/toolkit`.
 Some of the i2 Analyze tools generate scripts to be run against the Information Store database. For the SQL Server Client to run these scripts, the directory where they are generated must be mounted into the container.  
 In the example scripts, this is defaulted to `/database-scripts/generated`. The `GENERATED_DIR` environment variable must specify the location where the generated scripts are mounted.
 
-## Environment variables
+## <a name="environmentvariables"></a> Environment variables
 
 |Environment Variable | Description                                                    |
 | ------------------- | -------------------------------------------------------------- |
@@ -79,10 +79,10 @@ The following environment variables enable you use SSL
 
 | Environment variable | Description                                                   |
 | -------------------- | ------------------------------------------------------------- |
-| `DB_SSL_CONNECTION`  | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables).        |
-| `SSL_CA_CERTIFICATE` | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables).        |
+| `DB_SSL_CONNECTION`  | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables).        |
+| `SSL_CA_CERTIFICATE` | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables).        |
 
-## Command parsing
+## <a name="commandparsing"></a> Command parsing
 
 When commands are passed to the Solr client by using the `"$@"` notation, the command that is passed to the container must be escaped correctly. On the container, the command is run using `docker exec "$@"`. Because the command is passed to the `docker run` command using `bash -c`, the command must be maintained as a double quoted string.
 

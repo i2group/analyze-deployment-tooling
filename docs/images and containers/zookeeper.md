@@ -2,11 +2,11 @@
 
 The ZooKeeper image for i2 Analyze is built from a Dockerfile that is based on the Dockerfile from Apache ZooKeeper. The Dockerfile is modified to configure ZooKeeper for use with i2 Analyze.
 
-## Building a ZooKeeper image
+## <a name="buildingazookeeperimage"></a> Building a ZooKeeper image
 
 The ZooKeeper image is built from the Dockerfile located in `images/zookeeper_redhat`.
 
-### Docker build command
+### <a name="dockerbuildcommand"></a> Docker build command
 
 The The following `docker build` command builds the ZooKeeper image:
 
@@ -14,13 +14,13 @@ The The following `docker build` command builds the ZooKeeper image:
 docker build -t zookeeper_redhat images/zookeeper_redhat
 ```
 
-## Running a ZooKeeper container
+## <a name="runningazookeepercontainer"></a> Running a ZooKeeper container
 
-A ZooKeeper container uses the ZooKeeper image. In the `docker run` command, you can use `-e` to pass environment variables to ZooKeeper on the container. The environment variables are described in [environment variables](#environment-variables).
+A ZooKeeper container uses the ZooKeeper image. In the `docker run` command, you can use `-e` to pass environment variables to ZooKeeper on the container. The environment variables are described in [environment variables](#environmentvariables).
 
 For more information about the command, see [docker run reference](https://docs.docker.com/engine/reference/run/).
 
-### Docker run command
+### <a name="dockerruncommand"></a> Docker run command
 
 The following `docker run` command starts a ZooKeeper container:
 
@@ -54,14 +54,14 @@ For an example of the `docker run` command, see [serverFunctions.sh](../../envir
 1. `DATALOG_VOLUME` - The name for the `datalog` named volume. For more information, see [Volumes](#volumes).
 1. `LOG_VOLUME` - The name for the `log` named volume. For more information, see [Volumes](#volumes).
 1. `HOST_PORT` - The port number on the host machine that is mapped to the port on the container.
-1. `ZOO_ID` - An identifier for the ZooKeeper server. For more information, see [Environment variables](#environment-variables).
+1. `ZOO_ID` - An identifier for the ZooKeeper server. For more information, see [Environment variables](#environmentvariables).
 
 An example of running Zookeeper container using `runZK` function:
 ```bash
 runZK zk1 zk1.eia zk1_data zk1_datalog zk1_logs 8080 1
 ```
 
-### Volumes
+### <a name="volumes"></a> Volumes
 
 A named volume is used to persist data and logs that are generated and used in the ZooKeeper container, outside of the container. 
 
@@ -78,14 +78,14 @@ A unique volume name must be used for each ZooKeeper container.
 
 For more information, see [Where to store data](https://hub.docker.com/_/zookeeper).
 
-### Bind mounts
+### <a name="bindmounts"></a> Bind mounts
 
 **Secrets**:  
 A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access zookeeper and certificates used in SSL.  
 The directory is mounted to a location in the container defined by the `CONTAINER_SECRETS_DIR` environment variable. This can then be used by other environment variables such as `SSL_PRIVATE_KEY_FILE` to locate the secrets. 
 In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files. This is achieved by using a bind mount. In production this would not be required.
 
-### Environment variables
+### <a name="environmentvariables"></a> Environment variables
 
 To configure ZooKeeper, you can provide environment variables to the Docker container in the `docker run` command. The `zoo.cfg` configuration file for ZooKeeper is generated from the environment variables passed to the container.
 
@@ -104,11 +104,11 @@ The following table described the security environment variables:
 | Environment variable      | Description |
 |-------------------------- |-------------|
 | `ZOO_SECURE_CLIENT_PORT`  | Specifies the port number for client connections that use SSL. Maps to the `secureClientPort` configuration parameter. |
-| `SOLR_ZOO_SSL_CONNECTION` | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables).|
-| `SERVER_SSL`              | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables).| 
-| `SSL_PRIVATE_KEY_FILE`    | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables).| 
-| `SSL_CERTIFICATE_FILE`    | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables).|
-| `SSL_CA_CERTIFICATE_FILE` | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables).|
+| `SOLR_ZOO_SSL_CONNECTION` | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables).|
+| `SERVER_SSL`              | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables).| 
+| `SSL_PRIVATE_KEY_FILE`    | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables).| 
+| `SSL_CERTIFICATE_FILE`    | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables).|
+| `SSL_CA_CERTIFICATE_FILE` | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables).|
 
 For more information about securing ZooKeeper, see [Encryption, Authentication, Authorization Options](https://zookeeper.apache.org/doc/r3.6.2/zookeeperAdmin.html#sc_authOptions).
 

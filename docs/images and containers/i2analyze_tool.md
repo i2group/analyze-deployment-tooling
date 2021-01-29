@@ -113,10 +113,18 @@ The following table describes the supported environment variables that you can u
 
 The following environment variables enable you to use SSL:
 
-| Environment variable      | Description |
-| ------------------------- | ----------- |
-| `DB_SSL_CONNECTION`       | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables). |
-| `SOLR_ZOO_SSL_CONNECTION` | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables). |
-| `SSL_PRIVATE_KEY_FILE`    | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables). | 
-| `SSL_CERTIFICATE_FILE`    | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables). |
-| `SSL_CA_CERTIFICATE_FILE` | See [Secure Environment variables](../security%20and%20users/security.md#secure-environment-variables). | 
+| Environment variable         | Description |
+| ---------------------------- | ----------- |
+| `SERVER_SSL`                 | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables). |
+| `DB_SSL_CONNECTION`          | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables). |
+| `SOLR_ZOO_SSL_CONNECTION`    | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables). |
+| `SSL_PRIVATE_KEY`            | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables). | 
+| `SSL_CERTIFICATE`            | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables). |
+| `SSL_CA_CERTIFICATE`         | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables). | 
+| `GATEWAY_SSL_CONNECTION`     | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables). |
+| `SSL_OUTBOUND_PRIVATE_KEY`   | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables). |
+| `SSL_OUTBOUND_CERTIFICATE`   | See [Secure Environment variables](../security%20and%20users/security.md#secureenvironmentvariables). |
+
+*NOTE:* 
+- when you set `SERVER_SSL` and `SSL_CA_CERTIFICATE` environment variables, the `CA.cer` certificate will be located at `/tmp/i2acerts/CA.cer`.
+- when you set `GATEWAY_SSL_CONNECTION`, `SSL_OUTBOUND_PRIVATE_KEY` and `SSL_OUTBOUND_CERTIFICATE` environment variables, the certificated will be located at `/tmp/i2acerts/i2Analyze.pem`.

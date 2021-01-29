@@ -11,7 +11,7 @@ set -e
 
 # This is to ensure the script can be run from any directory
 SCRIPT_DIR="$(dirname "$0")"
-cd "${SCRIPT_DIR}"
+cd "$SCRIPT_DIR"
 
 # Set the root directory
 ROOT_DIR=$(pwd)/../../../..
@@ -26,8 +26,8 @@ source ../../utils/clientFunctions.sh
 # Running a new Solr container                                                #
 ###############################################################################
 print "Running a new Solr container"
-runSolr "${SOLR3_CONTAINER_NAME}" "${SOLR3_FQDN}" "${SOLR3_VOLUME_NAME}" "8985"
-waitForSolrToBeLive "${SOLR3_FQDN}"
+runSolr "$SOLR3_CONTAINER_NAME" "$SOLR3_FQDN" "$SOLR3_VOLUME_NAME" "8985"
+waitForSolrToBeLive "$SOLR3_FQDN"
 
 ###############################################################################
 # Adding a Solr replica                                                       #

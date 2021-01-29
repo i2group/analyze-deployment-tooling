@@ -9,9 +9,9 @@ The process includes the following high-level steps:
 
 The `mergedPropertyValuesWalkthrough.sh` script is a worked example that demonstrates how to enables and modify the views in a containerized environment.
 
-> Note: Before you complete this walkthrough, reset your environment to the base configuration. For more information, see [Resetting your environment](../reset_walkthroughs.md).
+> Note: Before you complete this walkthrough, reset your environment to the base configuration. For more information, see [Resetting your environment](./reset_walkthroughs.md).
 
-## Default merge property behavior
+## <a name="defaultmergepropertybehavior"></a> Default merge property behavior
 
 * To demonstrate the default behavior, use the `ingestDataWalkthrough.sh` script to ingest some data the correlates. For more information about ingesting the data, see [Ingesting data into the Information Store](./ingestion.md).
 
@@ -21,7 +21,7 @@ For more information about the how the property values for merged records are ca
 
 After you ingest the data, in Analyst's Notebook Premium search for `Julia Yochum` and add the returned entity to the chart. Keep the chart open for the remainder of the walkthrough script.
 
-## Enabling merged property values
+## <a name="enablingmergedpropertyvalues"></a> Enabling merged property values
 
 To inform i2 Analyze that you intend to define the property values of merged records, run the `enableMergedPropertyValues.sh` tool. You can take control of the property values for records of specific item types, or all item types in the i2 Analyze schema.
 Note that this operation must be performed by the database administrator.
@@ -30,12 +30,12 @@ See the `Enabling merged property values` section of the walkthrough script.
 
 The `runEtlToolkitToolAsDBA` client function is used to run the `enableMergedPropertyValues.sh` tool.
 * [runEtlToolkitToolAsDBA](../tools%20and%20functions/client_functions.md#runetltoolkittoolasdba)
-* [enableMergedPropertyValues](../tools%20and%20functions/etl_tools.md#enable-merge-property-values)
+* [enableMergedPropertyValues](../tools%20and%20functions/etl_tools.md#enablemergepropertyvalues)
 * [Defining the property values of merged i2 Analyze records](https://www.ibm.com/support/knowledgecenter/SSXVTH_latest/com.ibm.i2.iap.admin.correlation.doc/t_define_properties.html)
 
 In the `mergedPropertyValuesWalkthrough.sh`, the views are created for the Person item type. The `enableMergedPropertyValues.sh` tool is used in the `Create the merged property views for the CORRELATED_SCHEMA_TYPE_IDS` section.
 
-## Updating property value definitions
+## <a name="updatingpropertyvaluedefinitions"></a> Updating property value definitions
 
 The walkthrough provides an example `.sql` script that drops the existing `IS_Public.E_Person_MPVDV` view and replaces it with another. The new view prioritizes property values from merge contributors that come from the ingestion source names `EXAMPLE_1` over values from `EXAMPLE_2` and any other sources.  
 The `createAlternativeMergedPropertyValuesView.sql` script is in `environments/pre-prod/walkthroughs/configurationChanges`.
@@ -49,7 +49,7 @@ The `runSQLServerCommandAsDBA` client functions in used to run the `createAltern
 * [runSQLServerCommandAsDBA](../tools%20and%20functions/client_functions.md#runsqlservercommandasdba)
 * [The merged property values definition view](https://www.ibm.com/support/knowledgecenter/SSXVTH_latest/com.ibm.i2.iap.admin.correlation.doc/c_view_definition.html)
 
-## Reingesting the data
+## <a name="reingestingthedata"></a> Reingesting the data
 
 The property values of merged records do not update when the MPVDV views are modified. To update the values of existing records, you must reingest at least one of the merge contributors to the record.
 

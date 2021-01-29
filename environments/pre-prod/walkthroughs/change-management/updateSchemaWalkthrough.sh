@@ -11,7 +11,7 @@ set -e
 
 # This is to ensure the script can be run from any directory
 SCRIPT_DIR="$(dirname "$0")"
-cd "${SCRIPT_DIR}"
+cd "$SCRIPT_DIR"
 
 # Set the root directory
 ROOT_DIR=$(pwd)/../../../..

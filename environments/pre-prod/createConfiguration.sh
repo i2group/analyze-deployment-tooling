@@ -11,7 +11,7 @@ set -e
 
 # This is to ensure the script can be run from any directory
 SCRIPT_DIR="$(dirname "$0")"
-cd "${SCRIPT_DIR}"
+cd "$SCRIPT_DIR"
 
 # Loading common variables and functions
 source ./utils/commonVariables.sh
@@ -36,6 +36,8 @@ function createCleanBaseConfiguration() {
   print "Copying all-patterns Configuration to ${LOCAL_CONFIG_DIR}"
   mkdir -p "${LOCAL_CONFIG_DIR}"
   cp -pr "${ALL_PATTERNS_CONFIG_DIR}/"* "${LOCAL_CONFIG_DIR}"
+  cp ./utils/templates/connectors.json "${LOCAL_CONFIG_OPAL_SERVICES_DIR}"
+  cp ./utils/templates/log4j2.xml "${LOCAL_CONFIG_COMMON_DIR}"
 }
 
 function setProperties() {
@@ -75,7 +77,6 @@ function createSolrConfiguration() {
 }
 
 function copyJdbcDriversToConfiguration() {
-  cp ./utils/templates/connectors.json "${LOCAL_CONFIG_OPAL_SERVICES_DIR}/connectors.json"
   cp -pr "${PRE_REQS_DIR}/jdbc-drivers" "${LOCAL_CONFIG_DIR}/environment/common"
 }
 

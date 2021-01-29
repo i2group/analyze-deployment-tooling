@@ -21,7 +21,15 @@ COPY docker-entrypoint.sh /opt/docker-entrypoint.sh
 COPY environment.sh /opt/environment.sh
 COPY tools/ /opt/
 
-RUN chown -R $USER_UID:$USER_GID /opt/environment.sh /opt/docker-entrypoint.sh /opt/i2-tools/* /opt/scripts/*
+RUN mkdir -p /opt/configuration
+RUN mkdir -p /opt/databaseScripts/generated
+
+RUN chown -R $USER_UID:$USER_GID /opt/environment.sh \
+    /opt/docker-entrypoint.sh \
+    /opt/i2-tools/* \
+    /opt/scripts/* \
+    /opt/configuration \
+    /opt/databaseScripts/generated
 ENV TOOLKIT_DIR=/opt
 
 USER $USERNAME

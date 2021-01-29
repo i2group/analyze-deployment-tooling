@@ -2,17 +2,17 @@
 
 A Solr Client container is an ephemeral container that is used to run Solr commands.
 
-## Building a Solr Client container
+## <a name="buildingasolrclientcontainer"></a> Building a Solr Client container
 
 The Solr Client uses the same image as the Solr Server container. For more information about building the Solr image, see [Solr](./solr.md).
 
-## Running a Solr Client container
+## <a name="runningasolrclientcontainer"></a> Running a Solr Client container
 
-A Solr Client container uses the Solr image. In the `docker run` command, you can use `-e` to pass environment variables to Solr on the container. The environment variables are described in [environment variables](#environment-variables)
+A Solr Client container uses the Solr image. In the `docker run` command, you can use `-e` to pass environment variables to Solr on the container. The environment variables are described in [environment variables](#environmentvariables)
 
 For more information about the command, see [docker run reference](https://docs.docker.com/engine/reference/run/).
 
-### Docker run command
+### <a name="dockerruncommand"></a> Docker run command
 
 The following `docker run` command runs a Solr Client container:
 
@@ -37,7 +37,7 @@ docker run --rm \
 For an example of the `docker run` command, see `runSolrClientCommand` function in `clientFunctions.sh` script.
 For an example of how to use `runSolrClientCommand` function, see [runSolrClientCommand](../tools%20and%20functions/client_functions.md#runsolrclientcommand).
 
-## Bind mounts
+## <a name="bindmounts"></a> Bind mounts
 
 **Secrets**:  
 A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access zookeeper and certificates used in SSL.  
@@ -47,26 +47,26 @@ In a production environment, the orchestration environment can provide the secre
 **Configuration**:  
 The Solr client requires the i2 Analyze configuration to perform some Solr operations. To access the configuration, the `configuration` directory must be mounted into the container. 
 
-## Environment variables
+## <a name="environmentvariables"></a> Environment variables
 
 To configure the Solr client, you can provide environment variables to the Docker container in the `docker run` command.
 
 | Environment variable           | Description |
 | ------------------------------ |------------ |
-| `SOLR_ADMIN_DIGEST_USERNAME`   | For usage see [Command Parsing](#command-parsing)|
-| `SOLR_ADMIN_DIGEST_PASSWORD`   | For usage see [Command Parsing](#command-parsing)|
+| `SOLR_ADMIN_DIGEST_USERNAME`   | For usage see [Command Parsing](#commandparsing)|
+| `SOLR_ADMIN_DIGEST_PASSWORD`   | For usage see [Command Parsing](#commandparsing)|
 | `ZOO_DIGEST_USERNAME`          | The ZooKeeper administrator user name. This environment variable maps to the `zkDigestUsername` system property. |
 | `ZOO_DIGEST_PASSWORD`          | The ZooKeeper administrator password. This environment variable maps to the `zkDigestPassword` system property. |
 | `ZOO_DIGEST_READONLY_USERNAME` | The ZooKeeper read-only user name. This environment variable maps to the `zkDigestReadonlyUsername` system property. |
 | `ZOO_DIGEST_READONLY_PASSWORD` | The ZooKeeper read-only password. This environment variable maps to the `zkDigestReadonlyPassword` system property. |
-| `SECURITY_JSON`                | The Solr security.json. [Solr Basic Authentication](../security%20and%20users/security.md#solr-basic-authentication) |
-| `SOLR_ZOO_SSL_CONNECTION`      | See [Secure Environment Variables](../security%20and%20users/security.md#secure-environment-variables).|
-| `SERVER_SSL`                   | See [Secure Environment Variables](../security%20and%20users/security.md#secure-environment-variables).|
-| `SSL_PRIVATE_KEY`              | See [Secure Environment Variables](../security%20and%20users/security.md#secure-environment-variables).| 
-| `SSL_CERTIFICATE`              | See [Secure Environment Variables](../security%20and%20users/security.md#secure-environment-variables).|
-| `SSL_CA_CERTIFICATE`           | See [Secure Environment Variables](../security%20and%20users/security.md#secure-environment-variables).| 
+| `SECURITY_JSON`                | The Solr security.json. [Solr Basic Authentication](../security%20and%20users/security.md#solrbasicauthentication) |
+| `SOLR_ZOO_SSL_CONNECTION`      | See [Secure Environment Variables](../security%20and%20users/security.md#secureenvironmentvariables).|
+| `SERVER_SSL`                   | See [Secure Environment Variables](../security%20and%20users/security.md#secureenvironmentvariables).|
+| `SSL_PRIVATE_KEY`              | See [Secure Environment Variables](../security%20and%20users/security.md#secureenvironmentvariables).| 
+| `SSL_CERTIFICATE`              | See [Secure Environment Variables](../security%20and%20users/security.md#secureenvironmentvariables).|
+| `SSL_CA_CERTIFICATE`           | See [Secure Environment Variables](../security%20and%20users/security.md#secureenvironmentvariables).| 
 
-## Command parsing
+## <a name="commandparsing"></a> Command parsing
 
 When commands are passed to the Solr client by using the `"$@"` notation, the command that is passed to the container must be escaped correctly. On the container, the command is run using `docker exec "$@"`. Because the command is passed to the `docker run` command using `bash -c`, the command must be maintained as a double quoted string.
 

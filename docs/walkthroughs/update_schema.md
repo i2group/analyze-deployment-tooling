@@ -14,11 +14,11 @@ Updating the schema includes the following high-level steps:
 
 The `updateSchemaWalkthrough.sh` script is a worked example that demonstrates how to update the schema in a containerized environment.
 
-> Note: Before you complete this walkthrough, reset your environment to the base configuration. For more information, see [Resetting your environment](../reset_walkthroughs.md).
+> Note: Before you complete this walkthrough, reset your environment to the base configuration. For more information, see [Resetting your environment](./reset_walkthroughs.md).
 
-## Removing the Liberty containers
+## <a name="removingthelibertycontainers"></a> Removing the Liberty containers
 
-Before you update the schema in the Information Store, you remove the Liberty containers. To do remove the containers, run the following docker commands:
+Before you update the schema in the Information Store, you remove the Liberty containers. To remove the containers, run the following docker commands:
 
 ```bash
 docker stop liberty1 liberty2
@@ -27,45 +27,45 @@ docker rm liberty1 liberty2
 
 See the `Removing the Liberty containers` section of the walkthrough script.
 
-## Modifying your schema
+## <a name="modifyingyourschema"></a> Modifying your schema
 
 In the `updateSchemaWalkthrough.sh` script, a modified `schema.xml` from the `walkthrouhgs/configuration-changes` directory is copied to the `configuration/fragments/common/WEB-INF/classes/` directory.
 After you modify the configuration, build a new configured liberty image with the updated configuration.
-The `buildLibertyConfiguredImage` server function builds the configured Liberty image.  For more information, see [Building a configured Liberty image](../images%20and%20containers/liberty.md#building-a-configured-liberty-image).
+The `buildLibertyConfiguredImage` server function builds the configured Liberty image.  For more information, see [Building a configured Liberty image](../images%20and%20containers/liberty.md#buildingaconfiguredlibertyimage).
 See the `Modifying the schema` section of the walkthrough script.
 
 To modify your schema, use IBM i2 Analyze Schema Designer. For more information on installing Schema Designer please see: [IBM i2 Analyze Schema Designer](https://www.ibm.com/support/knowledgecenter/SSXVTH_latest/com.ibm.i2.iap.schemadesigner.doc/ar_tools_welcome.html).
 
-## Validating your schema
+## <a name="validatingyourschema"></a> Validating your schema
 
 After you modify the schema, you can use the `validateSchemaAndSecuritySchema.sh` tool to validate it. If the schema is invalid, errors are reported.
 See the `Validating the schema` section of the walkthrough script.
 
 The `runi2AnalyzeTool` client function is used to run the `validateSchemaAndSecuritySchema.sh` tool.  
   * [runi2AnalyzeTool](../tools%20and%20functions/client_functions.md#runi2analyzetool)
-  * [validateSchemaAndSecuritySchema](../tools%20and%20functions/i2analyze_tools.md#schema-validation-tool)
+  * [validateSchemaAndSecuritySchema](../tools%20and%20functions/i2analyze_tools.md#schemavalidationtool)
 
-## Generating the database scripts
+## <a name="generatingthedatabasescripts"></a> Generating the database scripts
 
 After you modify and validate the schema, generate the database scripts that are used to update the Information Store database to reflect the change.
 See the `Generating update schema scripts` section of the walkthrough script.
 
 The `runi2AnalyzeTool` client function is used to run the `generateUpdateSchemaScripts.sh` tool.  
   * [runi2AnalyzeTool](../tools%20and%20functions/client_functions.md#runi2analyzetool)
-  * [generateUpdateSchemaScripts](../tools%20and%20functions/i2analyze_tools.md#schema-update-tool)
+  * [generateUpdateSchemaScripts](../tools%20and%20functions/i2analyze_tools.md#schemaupdatetool)
 
-## Running the generated scripts
+## <a name="runningthegeneratedscripts"></a> Running the generated scripts
 
 After you generate the scripts, run them against the Information Store database to update the database objects to represent the changes to the schema.
 See the `Running the generated scripts` section of the walkthrough script.
 
 The `runSQLServerCommandAsDBA` client function is used to run the `runDatabaseScripts.sh` tool.  
-  * [runSQLServerCommandAsDBA](./client_functions.md#runSQLServerCommandAsDBA)
-  * [runDatabaseScripts](./i2analyze_tools.md#run-database-scripts-tool)
+  * [runSQLServerCommandAsDBA](../tools%20and%20functions/client_functions.md#runSQLServerCommandAsDBA)
+  * [runDatabaseScripts](../tools%20and%20functions/i2analyze_tools.md#rundatabasescriptstool)
 
 After the database scripts are run, the Information Store database is updated with any changes to the schema.
 
-## Running the Liberty containers
+## <a name="runningthelibertycontainers"></a> Running the Liberty containers
 
 The `runLiberty` server function runs a Liberty container. For more information about running a Liberty container, see [Liberty](../images%20and%20containers/liberty.md).  
 See the `Running the Liberty containers` section of the walkthrough script.
@@ -74,11 +74,11 @@ See the `Running the Liberty containers` section of the walkthrough script.
 
 The `waitFori2AnalyzeServiceToBeLive` client function ensures that Liberty is running. For more information, see [Status utilities](../tools%20and%20functions/client_functions.md#status-utilities#waitFori2AnalyzeServiceToBeLive).
 
-## Validating database consistency
+## <a name="validatingdatabaseconsistency"></a> Validating database consistency
 
 After the system has started, the `dbConsistencyCheckScript.sh` tool is used to check the state of the database after the Information Store tables are modified.
 See the `Validating database consistency` section of the walkthrough script.
 
 The `runi2AnalyzeTool` client function is used to run the `dbConsistencyCheckScript.sh` tool.  
   * [runi2AnalyzeTool](../tools%20and%20functions/client_functions.md#runi2analyzetool)
-  * [dbConsistencyCheckScript](../tools%20and%20functions/i2analyze_tools.md#information-store-database-consistency-tool)
+  * [dbConsistencyCheckScript](../tools%20and%20functions/i2analyze_tools.md#informationstoredatabaseconsistencytool)

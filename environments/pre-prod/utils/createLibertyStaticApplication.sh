@@ -9,7 +9,7 @@
 set -e
 
 SCRIPT_DIR="$(dirname "$0")"
-cd "${SCRIPT_DIR}"
+cd "$SCRIPT_DIR"
 
 ROOT_DIR=$(pwd)/../../..
 
@@ -19,21 +19,21 @@ source ./serverFunctions.sh
 source ./clientFunctions.sh
 source ./commonVariables.sh
 
-TARGET_DIR="${1}"
-DEPLOYMENT="${2}"
-TOOLKIT_APPLICATION_DIR="${LOCAL_TOOLKIT_DIR}/application"
-THIRD_PARTY_DIR="${TARGET_DIR}/third-party-dependencies"
+TARGET_DIR="$1"
+DEPLOYMENT="$2"
+TOOLKIT_APPLICATION_DIR="$LOCAL_TOOLKIT_DIR/application"
+THIRD_PARTY_DIR="$TARGET_DIR/third-party-dependencies"
 
 ###############################################################################
 # Function definitions                                                        #
 ###############################################################################
 function populateLibertyApplication() {
   print "Populating static liberty application folder"
-  cp -pr "${TOOLKIT_APPLICATION_DIR}/targets/opal-services" "${TARGET_DIR}"
-  cp -pr "${TOOLKIT_APPLICATION_DIR}/dependencies/icons" "${TARGET_DIR}/opal-services"
-  cp -pr "${TOOLKIT_APPLICATION_DIR}/shared/lib" "${THIRD_PARTY_DIR}/resources/i2-common"
-  cp -pr "${TOOLKIT_APPLICATION_DIR}/dependencies/tai" "${THIRD_PARTY_DIR}/resources/security"
-  cp -pr "${TOOLKIT_APPLICATION_DIR}/server/." "${TARGET_DIR}/"
+  cp -pr "$TOOLKIT_APPLICATION_DIR/targets/opal-services" "$TARGET_DIR"
+  cp -pr "$TOOLKIT_APPLICATION_DIR/dependencies/icons" "$TARGET_DIR/opal-services"
+  cp -pr "$TOOLKIT_APPLICATION_DIR/shared/lib" "$THIRD_PARTY_DIR/resources/i2-common"
+  cp -pr "$TOOLKIT_APPLICATION_DIR/dependencies/tai" "$THIRD_PARTY_DIR/resources/security"
+  cp -pr "$TOOLKIT_APPLICATION_DIR/server/." "$TARGET_DIR/"
 }
 
 function createDataSourceProperties() {
@@ -44,16 +44,16 @@ function createDataSourceProperties() {
     echo "TopologyId=infostore"
     echo "AppName=opal-services"
     echo "IsMonitored=true"
-  } >>"${TARGET_DIR}/opal-services/WEB-INF/classes/DataSource.properties"
+  } >>"$TARGET_DIR/opal-services/WEB-INF/classes/DataSource.properties"
 }
 
 function createDeploymentSpecificFiles() {
   print "Creating deployment specific files"
-  cp -pr "${TOOLKIT_APPLICATION_DIR}/target-mods/${CATALOGUE_TYPE}/catalog.json" "${TARGET_DIR}/opal-services/WEB-INF/classes/"
-  cp -pr "${TOOLKIT_APPLICATION_DIR}/fragment-mods/${APPLICATION_BASE_TYPE}/WEB-INF/web.xml" "${TARGET_DIR}/web-app-files/web.xml"
-  sed -i.bak -e '1s/^/<?xml version="1.0" encoding="UTF-8"?><web-app xmlns="http:\/\/java.sun.com\/xml\/ns\/javaee" xmlns:xsi="http:\/\/www.w3.org\/2001\/XMLSchema-instance" xsi:schemaLocation="http:\/\/java.sun.com\/xml\/ns\/javaee http:\/\/java.sun.com\/xml\/ns\/javaee\/web-app_3_0.xsd" id="WebApp_ID" version="3.0"> \
-    <display-name>opal<\/display-name>/' "${TARGET_DIR}/web-app-files/web.xml"
-  echo '</web-app>' >>"${TARGET_DIR}/web-app-files/web.xml"
+  cp -pr "$TOOLKIT_APPLICATION_DIR/target-mods/$CATALOGUE_TYPE/catalog.json" "$TARGET_DIR/opal-services/WEB-INF/classes/"
+  cp -pr "$TOOLKIT_APPLICATION_DIR/fragment-mods/$APPLICATION_BASE_TYPE/WEB-INF/web.xml" "$TARGET_DIR/web-app-files/web.xml"
+  sed -i.bak -e '1s/^/<?xml version="1.0" encoding="UTF-8"?><web-app xmlns="http:\/\/java.sun.com\/xml\/ns\/javaee" xmlns:xsi="http:\/\/www.w3.org\/2001\/XMLSchema-instance" xsi:schemaLocation="http:\/\/java.sun.com\/xml\/ns\/javaee http:\/\/java.sun.com\/xml\/ns\/javaee\/web-app_3_0.xsd" id="WebApp_ID" version="3.0"> <display-name>opal<\/display-name>/' \
+    "${TARGET_DIR}/web-app-files/web.xml"
+  echo '</web-app>' >>"$TARGET_DIR/web-app-files/web.xml"
 }
 
 ###############################################################################
@@ -89,11 +89,11 @@ esac
 ###############################################################################
 # Create required directories                                                 #
 ###############################################################################
-mkdir -p "${TARGET_DIR}"
-mkdir -p "${THIRD_PARTY_DIR}/resources"
-mkdir -p "${THIRD_PARTY_DIR}/resources/i2-common"
-mkdir -p "${THIRD_PARTY_DIR}/resources/security"
-mkdir -p "${THIRD_PARTY_DIR}/resources/jdbc"
+mkdir -p "$TARGET_DIR"
+mkdir -p "$THIRD_PARTY_DIR/resources"
+mkdir -p "$THIRD_PARTY_DIR/resources/i2-common"
+mkdir -p "$THIRD_PARTY_DIR/resources/security"
+mkdir -p "$THIRD_PARTY_DIR/resources/jdbc"
 
 ###############################################################################
 # Populate liberty application                                                #

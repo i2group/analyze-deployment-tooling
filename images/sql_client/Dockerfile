@@ -19,4 +19,7 @@ ENV TOOLKIT_DIR=/opt
 RUN yum install -y ca-certificates
 RUN ACCEPT_EULA=Y yum update -y mssql-tools
 
+RUN mkdir -p /opt/databaseScripts/generated
+RUN mkdir -p /opt/toolkit
+
 ENTRYPOINT ["/opt/docker-entrypoint.sh"]

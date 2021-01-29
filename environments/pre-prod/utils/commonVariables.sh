@@ -88,18 +88,25 @@ I2_ANALYZE_PORT=9046
 LIBERTY1_PORT=9045
 LIBERTY2_PORT=9044
 SOLR_PORT=8983
-CONNECTOR1_PORT=3700
-CONNECTOR2_PORT=3701
+CONNECTOR1_APP_PORT=3700
+CONNECTOR2_APP_PORT=3700
 
 ###############################################################################
 # Connection Information                                                      #
 ###############################################################################
+
 if [[ "$SOLR_ZOO_SSL_CONNECTION" == true ]]; then
   ZK_ACTIVE_PORT="${ZK_SECURE_CLIENT_PORT}"
   SOLR1_BASE_URL="https://${SOLR1_FQDN}:${SOLR_PORT}"
+  ZK1_ADMIN_URL="https://${ZK1_FQDN}:8080/commands"
+  ZK2_ADMIN_URL="https://${ZK2_FQDN}:8080/commands"
+  ZK3_ADMIN_URL="https://${ZK3_FQDN}:8080/commands"
 else
   ZK_ACTIVE_PORT="${ZK_CLIENT_PORT}"
   SOLR1_BASE_URL="http://${SOLR1_FQDN}:${SOLR_PORT}"
+  ZK1_ADMIN_URL="http://${ZK1_FQDN}:8080/commands"
+  ZK2_ADMIN_URL="http://${ZK2_FQDN}:8080/commands"
+  ZK3_ADMIN_URL="http://${ZK3_FQDN}:8080/commands"
 fi
 
 if [[ "$AWS_DEPLOY" == true ]]; then
@@ -276,6 +283,8 @@ LOCAL_KEYS_DIR="${PRE_PROD_DIR}/simulated-secret-store"
 LOCAL_CONFIG_CHANGES_DIR="${PRE_PROD_DIR}/walkthroughs/change-management/configuration-changes"
 
 ###############################################################################
-# Front end URI                                                               #
+# URIs                                                                        #
 ###############################################################################
-FRONT_END_URI="https://${I2_ANALYZE_FQDN}:${I2_ANALYZE_PORT}/opal"
+BASE_URI="https://${I2_ANALYZE_FQDN}:${I2_ANALYZE_PORT}"
+LOAD_BALANCER_STATS_URI="${BASE_URI}/haproxy_stats;csv"
+FRONT_END_URI="${BASE_URI}/opal"

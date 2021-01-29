@@ -5,7 +5,7 @@ All of the tools described here are located in the `images/etl_client` directory
 
 The `runEtlToolkitToolAsi2ETL` client function is used to run the ETL tools described in this topic as the i2ETL user. For more information about this client function, see [runEtlToolkitToolAsi2ETL](../tools%20and%20functions/client_functions.md#runetltoolkittoolasi2etl)
 
-## Building an ETL Client image
+## <a name="buildinganetlclientimage"></a> Building an ETL Client image
 
 The ETL client image is built from the Dockerfile in `images/etl_client`. 
 
@@ -15,7 +15,7 @@ The following `docker run` command builds the configured image:
 docker build -t "etl_client" "images/etl_client"
 ```
 
-## Add Information Store ingestion source
+## <a name="addinformationstoreingestionsource"></a> Add Information Store ingestion source
 
 The `addInformationStoreIngestionSource` tool defines an ingestion source in the Information Store. For more information about ingestion sources in the Information Store, see [Defining an ingestion source](https://www.ibm.com/support/knowledgecenter/SSXVTH_latest/com.ibm.i2.iap.admin.ingestion.doc/define_ingestion_source.html).
 
@@ -35,7 +35,7 @@ runEtlToolkitToolAsi2ETL
         -d <> "
 ```
 
-## Create Information Store staging table
+## <a name="createinformationstorestagingtable"></a> Create Information Store staging table
 
 The `createInformationStoreStagingTable` tool creates the staging tables that you can use to ingest data into the Information Store. For more information about creating the tables, see [Creating the staging tables](https://www.ibm.com/support/knowledgecenter/SSXVTH_latest/com.ibm.i2.iap.admin.ingestion.doc/create_staging_stables.html).
 
@@ -57,7 +57,7 @@ runEtlToolkitToolAsi2ETL
         -tn <> "
 ```
 
-## Ingest Information Store records
+## <a name="ingestinformationstorerecords"></a> Ingest Information Store records
 The `ingestInformationStoreRecords` is used to ingest data into the Information Store. For more information about ingesting data into the Information Store, see [The ingestInformationStoreRecords toolkit task](https://www.ibm.com/support/knowledgecenter/SSXVTH_latest/com.ibm.i2.iap.admin.ingestion.doc/ingestion_command.html)
 
 You can use the following arguments with the tool:
@@ -81,7 +81,7 @@ runEtlToolkitToolAsi2ETL
     -im <>"
 ```
 
-## Sync Information Store records
+## <a name="syncinformationstorerecords"></a> Sync Information Store records
 
 The `syncInformationStoreCorrelation` tool is used after an error during correlation, to synchronize the data in the Information Store with the data in the Solr index so that the data returns to a usable state
 
@@ -92,7 +92,7 @@ runEtlToolkitToolAsi2ETL
     bash -c "/opt/ibm/etltoolkit/syncInformationStoreCorrelation"
 ```
 
-## Duplicate provenance check
+## <a name="duplicateprovenancecheck"></a> Duplicate provenance check
 
 The `duplicateProvenanceCheck` tool can be used to for identifying records in the Information Store with duplicate origin identifiers. Any provenance that has a duplicated origin identifier is added to a staging table in the Information Store.
 
@@ -103,7 +103,7 @@ runEtlToolkitTool
     bash -c "/opt/ibm/etltoolkit/syncInformationStoreCorrelation"
 ```
 
-## Duplicate provenance delete
+## <a name="duplicateprovenancedelete"></a> Duplicate provenance delete
 
 The `duplicateProvenanceDelete` tool deletes (entity/link) provenance from the Information Store that has duplicated origin identifiers. The provenance to delete is identified in the staging tables created by the `duplicateProvenanceCheck` tool.
 
@@ -122,7 +122,7 @@ runEtlToolkitToolAsi2ETL
     bash -c "/opt/ibm/etltoolkit/syncInformationStoreCorrelation"
 ```
 
-## Generate Information Store index creation scripts
+## <a name="generateinformationstoreindexcreationscripts"></a> Generate Information Store index creation scripts
 
 The `generateInformationStoreIndexCreationScript` tool generates the scripts that create the indexes for each item type in the Information Store. For more information about Database index management, see [Database index management](https://www.ibm.com/support/knowledgecenter/SSXVTH_latest/com.ibm.i2.iap.admin.ingestion.doc/bulk_index_management.html)
 
@@ -145,7 +145,7 @@ runEtlToolkitTask
 
 For more information about Database index management, see [Database index management](https://www.ibm.com/support/knowledgecenter/SSXVTH_4.3.2/com.ibm.i2.iap.admin.ingestion.doc/bulk_index_management.html?cp=SSXVXZ_2.3.2)
 
-## Generate Information Store index drop scripts
+## <a name="generateinformationstoreindexdropscripts"></a> Generate Information Store index drop scripts
 
 The `generateInformationStoreIndexDropScript` tool generates the scripts that drop the indexes for each item type in the Information Store. For more information about Database index management, see [Database index management](https://www.ibm.com/support/knowledgecenter/SSXVTH_latest/com.ibm.i2.iap.admin.ingestion.doc/bulk_index_management.html)
 
@@ -166,7 +166,7 @@ runEtlToolkitTask
     -stid <> "
 ```
 
-## Delete orphaned database objects
+## <a name="deleteorphaneddatabaseobjects"></a> Delete orphaned database objects
 
 The `deleteOrphanedDatabaseObjects` tool deletes (entity/link) database objects that are not associated with an i2 Analyze record from the Information Store.
 
@@ -186,7 +186,7 @@ runEtlToolkitToolAsi2ETL
         -iti <> "
 ```
 
-## Disable merged property values
+## <a name="disablemergedpropertyvalues"></a> Disable merged property values
 
 The `disableMergedPropertyValues` tool removes the database views used to define the property values of merged i2 Analyze records.
 
@@ -210,7 +210,7 @@ runEtlToolkitToolAsi2ETL
 
 For more information about correlation, see [Information Store data correlation](https://www.ibm.com/support/knowledgecenter/SSXVTH_4.3.2/com.ibm.i2.iap.admin.correlation.doc/c_correlation_intro.html?cp=SSXVXZ_2.3.2)
 
-## Enable merge property values
+## <a name="enablemergepropertyvalues"></a> Enable merge property values
 
 The `enableMergedPropertyValues` tool creates the database views used to define the property values of merged i2 Analyze records.
 

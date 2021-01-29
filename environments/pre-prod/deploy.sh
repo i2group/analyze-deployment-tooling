@@ -10,7 +10,7 @@
 set -e
 
 SCRIPT_DIR="$(dirname "$0")"
-cd "${SCRIPT_DIR}"
+cd "$SCRIPT_DIR"
 
 # Loading common variables and functions
 source ./utils/commonFunctions.sh
@@ -167,11 +167,11 @@ function deployLiberty() {
     aws ecs update-service --cluster i2a-stack-ECSCluster --service i2analyze --desired-count 1 --force-new-deployment
     waitForAWSService i2analyze
   else
-    # Run liberty1
+    ### Run liberty1
     runLiberty "${LIBERTY1_CONTAINER_NAME}" "${LIBERTY1_FQDN}" "${LIBERTY1_VOLUME_NAME}" "${LIBERTY1_PORT}" "${LIBERTY1_CONTAINER_NAME}"
-    # Run liberty2
+    ### Run liberty2
     runLiberty "${LIBERTY2_CONTAINER_NAME}" "${LIBERTY2_FQDN}" "${LIBERTY2_VOLUME_NAME}" "${LIBERTY2_PORT}" "${LIBERTY2_CONTAINER_NAME}"
-    # Run load_balancer
+    ### Run load_balancer
     runLoadBalancer
   fi
 }
@@ -182,19 +182,21 @@ function configureI2Analyze() {
   deployLiberty
   waitFori2AnalyzeServiceToBeLive
 
-  ### Configure i2Analyze
+  ### Upload match rules
   print "Uploading system match rules"
   runi2AnalyzeTool "/opt/i2-tools/scripts/runIndexCommand.sh" update_match_rules
 
+  ### Wait for indexes to be built
   waitForIndexesToBeBuilt "match_index1"
 
+  ### Switch standby match index to live
   print "Switching standby match index to live"
   runi2AnalyzeTool "/opt/i2-tools/scripts/runIndexCommand.sh" switch_standby_match_index_to_live
 }
 
 function configureExampleConnector() {
-  runExampleConnector "${CONNECTOR1_CONTAINER_NAME}" "${CONNECTOR1_FQDN}" "${CONNECTOR1_PORT}"
-  waitForConnectorToBeLive "${CONNECTOR1_FQDN}" "${CONNECTOR1_PORT}"
+  runExampleConnector "${CONNECTOR1_CONTAINER_NAME}" "${CONNECTOR1_FQDN}" "${CONNECTOR1_CONTAINER_NAME}"
+  waitForConnectorToBeLive "${CONNECTOR1_FQDN}" "${CONNECTOR1_APP_PORT}"
 }
 
 ###############################################################################

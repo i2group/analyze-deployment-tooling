@@ -13,9 +13,9 @@ Clearing the data from a deployment includes the following high-level steps:
 
 The `clearDataWalkthrough.sh` script is a worked example that demonstrates how to clear the data from the Information Store in a containerized environment.
 
-> Note: Before you complete this walkthrough, reset your environment to the base configuration. For more information, see [Resetting your environment](../reset_walkthroughs.md).
+> Note: Before you complete this walkthrough, reset your environment to the base configuration. For more information, see [Resetting your environment](./reset_walkthroughs.md).
 
-## Removing the Liberty containers
+## <a name="removingthelibertycontainers"></a> Removing the Liberty containers
 
 Before you clear the data from a deployment, you remove the Liberty containers. To do remove the containers, run the following docker commands:
 
@@ -26,9 +26,9 @@ docker rm liberty1 liberty2
 
 See the `Removing the Liberty containers` section of the walkthrough script.
 
-## Clearing the search index
+## <a name="clearingthesearchindex"></a> Clearing the search index
 
-### Creating and running a delete query
+### <a name="creatingandrunningadeletequery"></a> Creating and running a delete query
 
 To clear the search index, run a Solr delete query against your indexes via the Solr API. 
 You can run the delete query by using a curl command. In Solr, data is stored as documents. 
@@ -44,9 +44,9 @@ curl -u "${SOLR_ADMIN_DIGEST_USERNAME}:${SOLR_ADMIN_DIGEST_PASSWORD}" --cacert $
 
 See the `Clearing the search index` section of the walkthrough script.
 
-For more information about command parsing, see [Command parsing](../images%20and%20containers/solr_client.md#Command_parsing)
+For more information about command parsing, see [Command parsing](../images%20and%20containers/solr_client.md#commandparsing)
 
-### Removing the collection properties
+### <a name="removingthecollectionproperties"></a> Removing the collection properties
 
 The `runSolrClientCommand` client function is used to remove the file from ZooKeeper. 
 For more information about the function, see [runSolrClientCommand](../tools%20and%20functions/client_functions.md#runsolrclientcommand).
@@ -62,17 +62,17 @@ The collection properties must be removed for any main, match, or chart collecti
 
 The `collectionprops.json` file is recreated when the i2 Analyze application is started. 
 
-## Clearing data from the Information Store
+## <a name="clearingdatafromtheinformationstore"></a> Clearing data from the Information Store
 
 See the `Clearing the Information Store database` section of the walkthrough script.
 
 The `runSQLServerCommandAsDBA` client function is used to run the `clearInfoStoreData.sh` tool to remove the data from the Information Store.  
   * [runSQLServerCommandAsDBA](../tools%20and%20functions/client_functions.md#runsqlservercommandasdba)
-  * [clearInfoStoreData](../tools%20and%20functions/i2analyze_tools.md#remove-data-from-the-information-store-tool)
+  * [clearInfoStoreData](../tools%20and%20functions/i2analyze_tools.md#removedatafromtheinformationstoretool)
   
-## Running the Liberty containers
+## <a name="runningthelibertycontainers"></a> Running the Liberty containers
 
-The `runLiberty` server function runs a Liberty container. For more information about running a Liberty container, see [Liberty](../images%20and%20containers/liberty.md#Running_a_Liberty_container).
+The `runLiberty` server function runs a Liberty container. For more information about running a Liberty container, see [Liberty](../images%20and%20containers/liberty.md#runningalibertycontainer).
 See the `Running the Liberty containers` section of the walkthrough script.
 
 > Note: You must run both Liberty containers.

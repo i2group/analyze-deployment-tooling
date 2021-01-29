@@ -15,10 +15,15 @@
 # Secretes utilities                                                          #
 ###############################################################################
 
+#######################################
+# Output in plain text the content of the secret.
+# Arguments:
+#   The partial path to secret (e.g solr/ZK_DIGEST_PASSWORD)
+#######################################
 function getSecret() {
-  local secret="${1}"
+  local secret="$1"
   if [[ "${AWS_SECRETS}" == true ]]; then
-    aws --output text secretsmanager get-secret-value --secret-id "$secret" --query SecretString
+    aws --output text secretsmanager get-secret-value --secret-id "${secret}" --query SecretString
   else
     local filePath="${GENERATED_SECRETS_DIR}/${secret}"
     if [[ ! -f "${filePath}" ]]; then
@@ -32,86 +37,54 @@ function getSecret() {
 # Status utilities                                                            #
 ###############################################################################
 
-function waitForSolrToBeLive() {
-  print "Waiting for Solr Node to be live: ${solr_node}"
-  local solr_node="${1}"
-  local max_tries=15
-  for i in $(seq 1 "${max_tries}"); do
-    if [[ $(runSolrClientCommand bash -c "curl --write-out \"%{http_code}\" --silent --output /dev/null \
-        --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/#/admin/info/health\"") == 200 ]]; then
-      jsonResponse=$(
-        runSolrClientCommand bash -c "curl --silent -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" \
-          --cacert /tmp/i2acerts/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CLUSTERSTATUS\""
-      )
-      nodes=$(echo "${jsonResponse}" | jq -r '.cluster.live_nodes | join(", ")')
-      if grep -q "${solr_node}" <<<"$nodes"; then
-        echo "${solr_node} is live" && return 0
-      fi
-    fi
-    echo "${solr_node} is NOT live (attempt: $i). Waiting..."
-    sleep 5
-  done
-  printErrorAndExit "${solr_node} is NOT live. The list of all live nodes: ${nodes}"
+#######################################
+# Get Solr component status from a certain point in time.
+# Arguments:
+#   timestamp
+# Outputs:
+#   Solr status: Active, Degraded, Down
+#######################################
+function getSolrStatus() {
+  local timestamp="$1"
+  local solr_status
+
+  solr_status="$(docker logs --since "${timestamp}" "${LIBERTY1_CONTAINER_NAME}" 2>&1)"
+  if grep -q "^.*\[I2AVAILABILITY] .*  SolrHealthStatusLogger         - '.*', .*'ALL_REPLICAS_ACTIVE'" <<<"${solr_status}"; then
+    grep  "^.*\[I2AVAILABILITY] .*  SolrHealthStatusLogger         - '.*', .*'ALL_REPLICAS_ACTIVE'"  <<<"${solr_status}"
+
+  elif grep -q  "^.*\[I2AVAILABILITY] .*  SolrHealthStatusLogger         - '.*', .*'DOWN'" <<<"${solr_status}"; then
+    grep  "^.*\[I2AVAILABILITY] .*  SolrHealthStatusLogger         - '.*', .*'DOWN'"  <<<"${solr_status}"
+
+  elif grep -q "^.*\[I2AVAILABILITY] .*  SolrHealthStatusLogger         - '.*', .*'DEGRADED'" <<<"${solr_status}"; then
+    grep "^.*\[I2AVAILABILITY] .*  SolrHealthStatusLogger         - '.*', .*'DEGRADED'" <<<"${solr_status}"
+
+  elif grep -q "^.*\[I2AVAILABILITY] .*  SolrHealthStatusLogger         - '.*', .*'RECOVERING'" <<<"${solr_status}"; then
+    grep "^.*\[I2AVAILABILITY] .*  SolrHealthStatusLogger         - '.*', .*'RECOVERING'" <<<"${solr_status}"
+
+  else
+    echo "No response was found from the component availability log (attempt: ${i}). Waiting..."
+  fi
 }
 
-function waitForSQLServerToBeLive() {
-  print "Waiting for Sql Server to be live"
-  local MAX_TRIES=15
-  local OUTPUT
-
-  for i in $(seq 1 "${MAX_TRIES}"); do
-    if runSQLServerCommandAsFirstStartSA bash -c "${SQLCMD} ${SQLCMD_FLAGS} -C -S ${SQL_SERVER_FQDN},${DB_PORT} \
-      -U \"\$DB_USERNAME\" -P \"\$DB_PASSWORD\" -Q 'SELECT 1'" >/dev/null; then
-      echo "SQL Server is live" && return 0
-    fi
-    echo "SQL Server is NOT live (attempt: $i). Waiting..."
-    sleep 5
-  done
-
-  OUTPUT=$(runSQLServerCommandAsFirstStartSA bash -c "${SQLCMD} ${SQLCMD_FLAGS} -C -S ${SQL_SERVER_FQDN},${DB_PORT} \
-    -U \"\$DB_USERNAME\" -P \"\$DB_PASSWORD\" -Q 'SELECT 1'")
-  printErrorAndExit "SQL Server is NOT live. OUTPUT: ${OUTPUT}"
-}
-
-function waitFori2AnalyzeServiceToBeLive() {
-  print "Waiting for i2Analyze service to be live"
-  local MAX_TRIES=50
-
-  for i in $(seq 1 "${MAX_TRIES}"); do
-    http_status_code="$(
-      runi2AnalyzeServiceRequest bash -c \
-        "echo \"\${SSL_CA_CERTIFICATE}\" >> /tmp/CA.cer && \
-        curl \
-        --write-out \"%{http_code}\" \
-        --silent \
-        --output /dev/null  \
-        --cacert /tmp/CA.cer \
-        \"${FRONT_END_URI}/api/v1/health/live\""
-    )"
-
-    if [[ "${http_status_code}" -eq 200 ]]; then
-      echo "i2Analyze service is live" && return 0
-    fi
-    echo "i2Analyze service is NOT live (attempt: $i). Waiting..."
-    sleep 10
-  done
-  printErrorAndExit "i2Analyze service is NOT live"
-}
-
+#######################################
+# Wait for the index to be build by running an admin request
+# against Solr API and checking the index is in the "Ready" state.
+# Arguments:
+#   The name of the index
+#######################################
 function waitForIndexesToBeBuilt() {
-  local MATCH_INDEX="${1}"
-  local MAX_TRIES=15
-  local READY_INDEX
-  local INDEX_STATUS_RESPONSE
+  local match_index="$1"
+  local max_tries=15
+  local ready_index
+  local index_status_response
 
   print "Waiting for indexes to be built"
-  for i in $(seq 1 "${MAX_TRIES}"); do
-    INDEX_STATUS_RESPONSE=$(
-      runi2AnalyzeServiceRequest bash -c "echo \"\${SSL_CA_CERTIFICATE}\" >> /tmp/CA.cer && \
-      curl \
+  for i in $(seq 1 "${max_tries}"); do
+    index_status_response=$(
+      runi2AnalyzeToolAsExternalUser bash -c "curl \
         --silent \
         --cookie-jar /tmp/cookie.txt \
-        --cacert /tmp/CA.cer \
+        --cacert /tmp/i2acerts/CA.cer \
         --request POST \"${FRONT_END_URI}/j_security_check\" \
         --header 'Origin: ${FRONT_END_URI}' \
         --header 'Content-Type: application/x-www-form-urlencoded' \
@@ -120,52 +93,59 @@ function waitForIndexesToBeBuilt() {
       && curl \
         --silent \
         --cookie /tmp/cookie.txt \
-        --cacert /tmp/CA.cer\
+        --cacert /tmp/i2acerts/CA.cer\
         \"${FRONT_END_URI}/api/v1/admin/indexes/status\""
     )
-
-    READY_INDEX=$(echo "${INDEX_STATUS_RESPONSE}" | jq -r ".match[] | select(.state == \"READY\") | .name")
-    if [[ "${READY_INDEX}" == "${MATCH_INDEX}" ]]; then
-      echo "${MATCH_INDEX} is built" && return 0
+    ready_index=$(echo "${index_status_response}" | jq -r ".match[] | select(.state == \"READY\") | .name")
+    if [[ "${ready_index}" == "${match_index}" ]]; then
+      echo "${match_index} is ready" && return 0
     fi
-
-    echo "${MATCH_INDEX} is not ready. Waiting..."
+    echo "${match_index} is not ready (attempt: ${i}). Waiting..."
     sleep 5
   done
-  printErrorAndExit "${MATCH_INDEX} is NOT built"
+
+  # If you get here, waitForIndexesToBeBuilt has not been succesfull
+  printErrorAndExit "${match_index} is NOT ready."
 }
 
+#######################################
+# Wait for the connector to be live.
+# Arguments:
+#   Connector fqdn
+#   Connector port
+#######################################
 function waitForConnectorToBeLive() {
-  print "Waiting for Connector to be live"
-  local CONNECTOR_FQDN=${1}
-  local CONNECTOR_PORT=${2}
-  local MAX_TRIES=50
-  local CONNECTOR_CONFIG_URL
-
-  if [[ ${GATEWAY_SSL_CONNECTION} == true ]]; then
-    CONNECTOR_CONFIG_URL="https://${CONNECTOR_FQDN}:${CONNECTOR_PORT}/config"
+  local connector_fqdn="$1"
+  local max_tries=50
+  local connector_config_url
+  if [[ "${GATEWAY_SSL_CONNECTION}" == true ]]; then
+    connector_config_url="https://${connector_fqdn}:3700/config"
   else
-    CONNECTOR_CONFIG_URL="http://${CONNECTOR_FQDN}:${CONNECTOR_PORT}/config"
+    connector_config_url="http://${connector_fqdn}:3700/config"
   fi
 
-  for i in $(seq 1 "${MAX_TRIES}"); do
-    http_status_code="$(
-      runConnectorRequest bash -c \
-        "echo \"\${SSL_CA_CERTIFICATE}\" >> /tmp/CA.cer && echo \"\${SSL_PRIVATE_KEY}\" >> /tmp/i2Analyze.pem && echo \"\${SSL_CERTIFICATE}\" >> /tmp/i2Analyze.pem && \
-        curl \
-        --write-out \"%{http_code}\" \
-        --silent \
-        --output /dev/null  \
-       --cert /tmp/i2Analyze.pem \
-       --cacert /tmp/CA.cer \"${CONNECTOR_CONFIG_URL}\""
-    )"
-
+  print "Waiting for Connector to be live"
+  for i in $(seq 1 "${max_tries}"); do
+    if [ "$(
+      runi2AnalyzeToolAsGatewayUser bash -c "curl --silent --output /dev/null --write-out \"%{http_code}\" \
+        --cert /tmp/i2acerts/i2Analyze.pem --cacert /tmp/i2acerts/CA.cer \"${connector_config_url}\""
+    )" ]; then
+      http_status_code="$(
+        runi2AnalyzeToolAsGatewayUser bash -c "curl --silent --output /dev/null --write-out \"%{http_code}\" \
+        --cert /tmp/i2acerts/i2Analyze.pem --cacert /tmp/i2acerts/CA.cer \"${connector_config_url}\""
+      )"
+    else
+      echo "Curl request to the connector: ${connector_config_url} has failed"
+    fi
     if [[ "${http_status_code}" -eq 200 ]]; then
       echo "Connector is live" && return 0
     fi
-    echo "Connector is NOT live (attempt: $i). Waiting..."
+    echo "Connector is NOT live (attempt: ${i}). Waiting..."
     sleep 5
   done
+
+  # If you get here, waitForConnectorToBeLive has not been succesfull
+  runi2AnalyzeToolAsGatewayUser bash -c "curl --cert /tmp/i2acerts/i2Analyze.pem --cacert /tmp/i2acerts/CA.cer \"${connector_config_url}\""
   printErrorAndExit "Connector is NOT live"
 }
 
@@ -173,6 +153,11 @@ function waitForConnectorToBeLive() {
 # Database Security Utilities                                                 #
 ###############################################################################
 
+#######################################
+# Change the initial password for the SA user.
+# Arguments:
+#   None
+#######################################
 function changeSAPassword() {
   local SA_PASSWORD
   local SA_INITIAL_PASSWORD
@@ -197,7 +182,9 @@ function changeSAPassword() {
 }
 
 #######################################
-# Sets up a user in the database and assigns role
+# Use an ephemeral SQL Client container to
+# create the database logins and users.
+# The login and user are created by the `sa` user.
 # Arguments:
 #   1: The database user name
 #   2: The database role name
@@ -234,6 +221,11 @@ function createDbLoginAndUser() {
 # Execution Utilities                                                          #
 ###############################################################################
 
+#######################################
+# Use an ephemeral Solr client container to run commands against Solr.
+# Arguments:
+#   None
+#######################################
 function runSolrClientCommand() {
   local ZOO_DIGEST_PASSWORD
   local ZOO_DIGEST_READONLY_PASSWORD
@@ -269,6 +261,11 @@ function runSolrClientCommand() {
     "${SOLR_IMAGE_NAME}" "$@"
 }
 
+#######################################
+# Use an ephemeral Java container to run the i2 Analyze tools.
+# Arguments:
+#   None
+#######################################
 function runi2AnalyzeTool() {
   local ZOO_DIGEST_PASSWORD
   local ZOO_DIGEST_READONLY_PASSWORD
@@ -319,6 +316,12 @@ function runi2AnalyzeTool() {
     "${I2A_TOOLS_IMAGE_NAME}" "$@"
 }
 
+#######################################
+# Use an ephemeral SQL Client container to run database scripts or commands
+# against the Information Store database as the `etl` user.
+# Arguments:
+#   None
+#######################################
 function runSQLServerCommandAsETL() {
   local DB_PASSWORD
   local SSL_CA_CERTIFICATE
@@ -341,6 +344,13 @@ function runSQLServerCommandAsETL() {
     "${SQL_CLIENT_IMAGE_NAME}" "$@"
 }
 
+#######################################
+# Use an ephemeral SQL Client container  to run database scripts
+# or commands against the Information Store database as the `i2etl` user,
+# such as executing generated drop/create index scripts, created by the ETL toolkit.
+# Arguments:
+#   None
+#######################################
 function runSQLServerCommandAsi2ETL() {
   local DB_PASSWORD
   local SSL_CA_CERTIFICATE
@@ -364,6 +374,12 @@ function runSQLServerCommandAsi2ETL() {
     "${SQL_CLIENT_IMAGE_NAME}" "$@"
 }
 
+#######################################
+# Use an ephemeral SQL Client container to run database scripts or commands
+# against the Information Store database as the `sa` user with the initial SA password.
+# Arguments:
+#   None
+#######################################
 function runSQLServerCommandAsFirstStartSA() {
   local DB_PASSWORD
   local SSL_CA_CERTIFICATE
@@ -386,6 +402,12 @@ function runSQLServerCommandAsFirstStartSA() {
     "${SQL_CLIENT_IMAGE_NAME}" "$@"
 }
 
+#######################################
+# Use an ephemeral SQL Client container to run database scripts or commands
+# against the Information Store database as the `sa` user.
+# Arguments:
+#   None
+#######################################
 function runSQLServerCommandAsSA() {
   local DB_PASSWORD
   local SSL_CA_CERTIFICATE
@@ -408,6 +430,12 @@ function runSQLServerCommandAsSA() {
     "${SQL_CLIENT_IMAGE_NAME}" "$@"
 }
 
+#######################################
+# Use an ephemeral SQL Client container to run database scripts or commands
+# against the Information Store database as the `sa` user.
+# Arguments:
+#   None
+#######################################
 function runSQLServerCommandAsDBA() {
   local DB_PASSWORD
   local SSL_CA_CERTIFICATE
@@ -430,6 +458,12 @@ function runSQLServerCommandAsDBA() {
     "${SQL_CLIENT_IMAGE_NAME}" "$@"
 }
 
+#######################################
+# Use an ephemeral ETL toolkit container to run ETL toolkit tasks
+# against the Information Store using the i2 ETL user credentials.
+# Arguments:
+#   None
+#######################################
 function runEtlToolkitToolAsi2ETL() {
   local DB_PASSWORD
   local SSL_CA_CERTIFICATE
@@ -458,6 +492,12 @@ function runEtlToolkitToolAsi2ETL() {
     "${ETL_CLIENT_IMAGE_NAME}" "$@"
 }
 
+#######################################
+# Use an ephemeral ETL toolkit container to run ETL toolkit tasks
+# against the Information Store using the DBA user credentials.
+# Arguments:
+#   None
+#######################################
 function runEtlToolkitToolAsDBA() {
   local DB_PASSWORD
   local SSL_CA_CERTIFICATE
@@ -486,31 +526,24 @@ function runEtlToolkitToolAsDBA() {
     "${ETL_CLIENT_IMAGE_NAME}" "$@"
 }
 
-function runi2AnalyzeServiceRequest() {
+#######################################
+# Use the i2 Analyze Tool container to execute any command passed to it,
+# but is intended to be used for curl commands against i2Analyze services,
+# as it has the required trust and connectivity to do so.
+# Arguments:
+#   None
+#######################################
+function runi2AnalyzeToolAsExternalUser() {
   local SSL_CA_CERTIFICATE
   SSL_CA_CERTIFICATE=$(getSecret certificates/externalCA/CA.cer)
 
   docker run --rm \
     --network "${DOMAIN_NAME}" \
-    -e SSL_CA_CERTIFICATE="${SSL_CA_CERTIFICATE}" \
+    -e "SERVER_SSL=true" \
+    -e "SSL_CA_CERTIFICATE=${SSL_CA_CERTIFICATE}" \
     "${I2A_TOOLS_IMAGE_NAME}" "$@"
 }
 
-function runConnectorRequest() {
-  local SSL_PRIVATE_KEY
-  local SSL_CERTIFICATE
-  local SSL_CA_CERTIFICATE
-  SSL_PRIVATE_KEY=$(getSecret certificates/gateway_user/server.key)
-  SSL_CERTIFICATE=$(getSecret certificates/gateway_user/server.cer)
-  SSL_CA_CERTIFICATE=$(getSecret certificates/CA/CA.cer)
-
-  docker run --rm \
-    --network "${DOMAIN_NAME}" \
-    -e SSL_PRIVATE_KEY="${SSL_PRIVATE_KEY}" \
-    -e SSL_CERTIFICATE="${SSL_CERTIFICATE}" \
-    -e SSL_CA_CERTIFICATE="${SSL_CA_CERTIFICATE}" \
-    "${I2A_TOOLS_IMAGE_NAME}" "$@"
-}
 ###############################################################################
 # End of function definitions.                                                #
 ###############################################################################

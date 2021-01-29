@@ -3,10 +3,10 @@ This topic describes how to deploy and start i2 Analyze in a containerized envir
 
 For an example of the activities described, see the [deploy.sh](../../environments/pre-prod/deploy.sh)
 
-## Running Solr and ZooKeeper
+## <a name="runningsolrandzookeeper"></a> Running Solr and ZooKeeper
 The running Solr and ZooKeeper section runs the required containers and creates the Solr cluster and ZooKeeper ensemble.
 
-### Create Solr cluster
+### <a name="createsolrcluster"></a> Create Solr cluster
 The `createSecureCluster` function creates the secure Solr cluster for the deployment. The function includes a number of calls that complete the following actions:
 
 1. The `runZK` server function runs the ZooKeeper containers that make up the ZooKeeper ensemble. For more information about running a ZooKeeper container, see [ZooKeeper](../images and containers/zookeeper.md). 
@@ -25,26 +25,26 @@ The `createSecureCluster` function creates the secure Solr cluster for the deplo
 
 At this point, your ZooKeepers are running in an ensemble, and your Solr containers are running in SolrCloud Mode managed by ZooKeeper.
 
-## Initializing the Information Store database 
+## <a name="initializingtheinformationstoredatabase"></a> Initializing the Information Store database 
 The initializing the Information Store database section runs the database container and configures the database management system.
 
-### Running the database server container
+### <a name="runningthedatabaseservercontainer"></a> Running the database server container
 The `runSQLServer` server function creates the secure SQL Server container for the deployment.
 
 For more information about building the SQL Server image and running a container, see [Microsoft SQL Server](../images%20and%20containers/sql_server.md).
 
-Before continuing, `deploy.sh` uses the `waitForSolrToBeLive` and `waitForSQLServerToBeLive` client functions to ensure that Solr and SQL Server are running. For more information, see [Status utilities](./client_functions.md#status-utilities)
+Before continuing, `deploy.sh` uses the `waitForSolrToBeLive` client function and `waitForSQLServerToBeLive` common function to ensure that Solr and SQL Server are running. For more information, see [Status utilities](./client_functions.md#statusutilities)
 
-### Configuring SQL Server
+### <a name="configuringsqlserver"></a> Configuring SQL Server
 The `configureSecureSqlServer` function uses a number of client and server functions to complete the following actions:
 
 1. The `changeSAPassword` client function is used to change the `sa` user's password.  
-  For more information, see [changeSAPassword](../security%20and%20users/db_users.md#changing-sa-password)
+  For more information, see [changeSAPassword](../security%20and%20users/db_users.md#changingsapassword)
 
 1. Generate the static Information Store database scripts.
    * The `runi2AnalyzeTool` client function is used to run the `generateStaticInfoStoreCreationScripts.sh` tool.  
       * [runi2AnalyzeTool](./client_functions.md#runi2analyzetool)
-      * [Generate static database scripts tool](./i2analyze_tools.md#generate-static-database-scripts-tool)
+      * [Generate static database scripts tool](./i2analyze_tools.md#generatestaticdatabasescriptstool)
 
 1. Create the Information Store database and schemas.
    * The `runSQLServerCommandAsSA` client function is used to run the `runDatabaseCreationScripts.sh` tool.  
@@ -60,9 +60,9 @@ For more information about the database users and their permissions, see [Databa
 1. Run the static scripts that create the Information Store database objects.
    * The `runSQLServerCommandAsSA` client function is used to run the `runStaticScripts.sh` tool.  
       * [runSQLServerCommandAsSA](./client_functions.md#runsqlservercommandassa)
-      * [Run static database scripts tool](./i2analyze_tools.md#run-static-database-scripts-tool)
+      * [Run static database scripts tool](./i2analyze_tools.md#runstaticdatabasescriptstool)
 
-## Configuring Solr and ZooKeeper
+## <a name="configuringsolrandzookeeper"></a> Configuring Solr and ZooKeeper
 The configuring Solr and ZooKeeper sections configures the Solr cluster and creates the Solr collections.
 
 1. The `configureSecureSolr` function uses the `runSolrClientCommand` client function to upload the `managed-schema`, `solr.xml`, and synonyms file for each collection to ZooKeeper.  
@@ -91,32 +91,32 @@ The configuring Solr and ZooKeeper sections configures the Solr cluster and crea
    ```
    For more information about the Solr collection API call, see [CREATE: Create a Collection](https://lucene.apache.org/solr/guide/8_6/collection-management.html#create).
 
-## Configuring the Information Store database
+## <a name="configuringtheinformationstoredatabase"></a> Configuring the Information Store database
 The configuring the Information Store database section creates objects within in the database.
 
 1. Generate the dynamic database scripts that create the schema specific database objects.
    * The `runi2AnalyzeTool` client function is used to run the `generateDynamicInfoStoreCreationScripts.sh` tool.
       * [runi2AnalyzeTool](./client_functions.md#runi2analyzetool)
-      * [Generate dynamic Information Store creation scripts tool](./i2analyze_tools.md#generate-dynamic-information-store-creation-scripts-tool)
+      * [Generate dynamic Information Store creation scripts tool](./i2analyze_tools.md#generatedynamicinformationstorecreationscriptstool)
 1. Run the generated dynamic database scripts.
    * The `runSQLServerCommandAsSA` client function is used to run the `runDynamicScripts.sh` tool.
       * [runSQLServerCommandAsSA](./client_functions.md#runsqlservercommandassa)
-      * [Run dynamic Information Store creation scripts tool](./i2analyze_tools.md#run-dynamic-information-store-creation-scripts-tool)
+      * [Run dynamic Information Store creation scripts tool](./i2analyze_tools.md#rundynamicinformationstorecreationscriptstool)
 
-## Configuring the Example Connector
+## <a name="configuringtheexampleconnector"></a> Configuring the Example Connector
 The configuring example connector section runs the example connector used by the i2 Analyze application.
 
 1. The `runExampleConnector` server function runs the example connector application.
 
 1. The `waitForConnectorToBeLive` client function checks the connector is live before allowing the script to proceed.
 
-## Configuring i2 Analyze 
+## <a name="configuringi2analyze"></a> Configuring i2 Analyze 
 The configuring i2 Analyze section runs the Liberty containers that run the i2 Analyze application.
 
-1. The `buildLibertyConfiguredImage` server function builds the configured Liberty image.  For more information, see [Building a configured Liberty image](../images%20and%20containers/liberty.md#building-a-configured-liberty-image).
+1. The `buildLibertyConfiguredImage` server function builds the configured Liberty image.  For more information, see [Building a configured Liberty image](../images%20and%20containers/liberty.md#buildingaconfiguredlibertyimage).
 
 1. The `runLiberty` server function runs a Liberty container from the configured image.  
-For more information, see [Running a Liberty container](../images%20and%20containers/liberty.md#running-a-liberty-container)
+For more information, see [Running a Liberty container](../images%20and%20containers/liberty.md#runningalibertycontainer)
    In `deploy.sh`, 2 liberty containers are used.
 
 1. Starting the load balancer.  
@@ -126,8 +126,8 @@ For more information, see [Running a Liberty container](../images%20and%20contai
 
    For more information about configuring a load balancer with i2 Analyze, see [Load balancer](https://www.ibm.com/support/knowledgecenter/SSXVXZ_latest/com.ibm.i2.deploy.example.doc/hadr_loadbalancer.html).
 
-1. Before continuing, `deploy.sh` uses the `waitFori2AnalyzeServiceToBeLive` client function to ensure that Liberty is running. For more information, see [Status utilities](./client_functions.md#status-utilities)
+1. Before continuing, `deploy.sh` uses the `waitFori2AnalyzeServiceToBeLive` client function to ensure that Liberty is running. For more information, see [Status utilities](./client_functions.md#statusutilities)
 
 1. Deploy the system match rules.
    * The `runSolrClientCommand` client function is used to run the `runIndexCommand.sh` tool. The tool is run twice, once to update the match rules file and once to switch the match indexes.  
-   For more information, see [Manage Solr indexes tool](./i2analyze_tools.md#manage-solr-indexes-tool).
+   For more information, see [Manage Solr indexes tool](./i2analyze_tools.md#managesolrindexestool).
