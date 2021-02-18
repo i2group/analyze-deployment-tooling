@@ -16,6 +16,16 @@ If the indexes are not all built after 5 retries the function will print an erro
 This function takes (1) the fully qualified domain name of a connector and (2) the port of the connector as its arguments.
 The `waitForConnectorToBeLive` function sends a request to the connector's`/config` endpoint. If the response is `200`, the connector is live. If the connector is not live after 50 tires the function will print an error and exit.
 
+
+### <a name="getasycrequeststatus"></a> getAsyncRequestStatus
+This function takes (1) the request id of the asynchronous request to get the status of.  
+
+The `getAsyncRequestStatus` function makes a request to the Asynchronous Collection API and check the state is marked as `completed` in the JSON response returned.
+
+If the state is not marked as `completed`, the function returns the response message which contains any error messages that are reported with the asynchronous request.
+
+For more information about the Asynchronous Collection API, see [REQUESTSTATUS: Request Status of an Async Call](https://lucene.apache.org/solr/guide/8_7/collections-api.html#requeststatus).
+
 ### <a name="getsolrstatus"></a> getSolrStatus
 This function takes (1) a timestamp that is used to specify the point in the logs after which the logs are monitored.  
 
@@ -132,6 +142,19 @@ The `runSQLServerCommandAsDBA` function takes the database script or commands th
 
 ```bash
 runSQLServerCommandAsDBA "/opt/i2-tools/scripts/clearInfoStoreData.sh"
+```
+### <a name="runsqlservercommandasdbb"></a> runSQLServerCommandAsDBB
+The `runSQLServerCommandAsDBB` function uses an ephemeral SQL Client container to run database scripts or commands against the Information Store database as the `dbb` (the backup operator) user.
+
+For more information about running a SQL Client container and the environment variables required for the container, see [SQL Client](../images%20and%20containers/sql_client.md).
+
+The `runSQLServerCommandAsDBB` function takes the database script or commands that you want to run as an argument. For example:
+```bash
+runSQLServerCommandAsDBA "runSQLServerCommandAsDBB bash -c " "/opt/mssql-tools/bin/sqlcmd -N -b -C -S sqlserver.eia,1433 -U \"\${DB_USERNAME}\" -P \"\${DB_PASSWORD}\" \
+    -Q \"USE ISTORE; 
+        BACKUP DATABASE ISTORE
+        TO DISK = '/backup/istore.bak'
+            WITH FORMAT;\"""
 ```
 
 ### <a name="runetltoolkittoolasi2etl"></a> runEtlToolkitToolAsi2ETL

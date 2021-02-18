@@ -3,6 +3,7 @@
 Welcome to the GitHub home page for the IBM i2 Analyze-Containers material. The Analyze-Containers repository provides Dockerfiles and example scripts that provide a reference architecture for creating a containerised deployment of i2 Analyze. The scripts demonstrate how to build Docker images and enable you to deploy, configure, and run i2 Analyze on Docker containers.
 
 - [Read the getting started documentation](./docs/getting_started.md)
+- [Read the understanding information](./docs/understanding.md)
 - [Documentation index](./docs/index.md)
 - [Clone or download the Analyze-Containers zip file](https://github.com/IBM-i2/Analyze-Containers/releases)
 

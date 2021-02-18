@@ -7,4 +7,6 @@
 - [Configuring SQL Server](./images%20and%20containers/sql_server.md)
 - [Configuring SQL Client](./images%20and%20containers/sql_client.md)
 - [Configuring Liberty](./images%20and%20containers/liberty.md)
-- [Change Management Walkthroughs](./walkthroughs/walkthroughs.md)
+- [Change Management walkthroughs](./walkthroughs/walkthroughs.md)
+- [HADR walkthroughs](./HA%20walkthroughs/)
+- [Backup and restore walkthroughs](./backup%20and%20restore/)

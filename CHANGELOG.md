@@ -12,6 +12,16 @@ The format is based on [Keep a Changelog], and this project adheres to
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
 
+## [1.1.0] - 18/02/2021
+
+### Added
+
+* Walkthroughs to demonstrate backup and restore
+* New client function added - getAsyncRequestStatus
+* New volumes added to Solr and SQL Server containers for backup and restore
+* Updated for compatibility with i2 Analyze 4.3.3.1
+
+[1.1.0]: https://github.com/IBM-i2/Analyze-Containers/tree/v1.1.0
 ## [1.0.1] - 29/01/2021
 
 ### Added

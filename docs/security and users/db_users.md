@@ -33,6 +33,7 @@ Additionally, the role requires access to two roles in the `msdb` database:
 - `db_datareader` - for more information, see [Fixed-Database Roles](https://docs.microsoft.com/en-us/sql/relational-databases/security/authentication-access/database-level-roles?view=sql-server-ver15#fixed-database-roles)
 
 These roles are required for database creation, to initialize the deletion-by-rule objects, and to create the SQL Server Agent jobs for the deletion rules.
+Note: The `configureDbaRolesAndPermissions.sh` script is exectued during deploy to grant the correct permissions.
 
 The following table provides an overview of the permissions required on the schemas in the Information Store database:
 
@@ -57,6 +58,8 @@ The following table provides an overview of the permissions required on the sche
 | All        | VIEW SERVER STATE                     | Required for deletion-by-rule automated jobs via the SQL Server Agent. |
 | sys        | EXECUTE ON fn_hadr_is_primary_replica | Required for deletion-by-rule automated jobs.                          |
 
+The `configureDbaRolesAndPermissions.sh` script is used to configure the DBA user with all the required role memberships and permissions.
+
 ### <a name="externaletlrole"></a> External_ETL_Role
 
 The `External_ETL_Role` requires permissions to move data from external systems into the Information Store staging tables.
@@ -68,6 +71,10 @@ The following table provides an overview of the permissions required on the sche
 | Schema     | Permissions                      | Notes                                                             |
 |------------|----------------------------------|-------------------------------------------------------------------|
 | IS_Staging | SELECT, UPDATE, INSERT, DELETE   | Required to populate the staging tables with date to be ingested or deleted. |
+
+In addition to these permissions, in an environment running SQL server in a Linux container, users with this role must also be a member of the `sysadmin` group in order to perform BULK INSERT into the external staging tables.
+
+The `addEtlUserToSysAdminRole.sh` script is used to make the `etl` user a member of the `sysadmin` fixed-server role. 
 
 ### <a name="i2etlrole"></a> i2_ETL_Role
 
@@ -103,6 +110,11 @@ The following table provides an overview of the permissions required on the sche
 | IS_FP      | SELECT, INSERT, EXEC                  | Required to complete Find Path operations. |
 | IS_WC      | SELECT, UPDATE, INSERT, DELETE        | Required to work with Web Charts. |
 
+### The database backup operator role
+
+The example also demonstrates how to perform a database backup, the `dbb` user will perform this action and is a member of the SQL server built in role `db_backupoperator`. This gives this user the correct permissions for performing a backup and nothing else.
+
+For more information, see [Fixed-Database Roles](https://docs.microsoft.com/en-us/sql/relational-databases/security/authentication-access/database-level-roles?view=sql-server-ver15#fixed-database-roles) for more details.
 
 ## <a name="databaseusersandlogins"></a> Database users and logins
 
@@ -118,12 +130,13 @@ The following users and logins are used in the example:
 | `etl`           | The `etl` user is a member of `External_ETL_Role`. | The password is in the `DB_PASSWORD` file, and the username is in the `DB_USERNAME` file in the `secrets/etl` directory.      |
 | `i2etl`         | The `i2etl` user is a member of `i2_ETL_Role`. | The password is in the `DB_PASSWORD` file, and the username is in the `DB_USERNAME` file in the `secrets/i2etl` directory.    |
 | `dba`           | The `dba` user is a member of `DBA_Role`. | The password is in the `DB_PASSWORD` file, and the username is in the `DB_USERNAME` file in the `secrets/dba` directory.      |
+| `dbb`           | The `dbb` user is the database backup user, it is a member of the SQL Server built in role: `db_backupoperator`. | The password is in the `DB_PASSWORD` file, and the username is in the `DB_USERNAME` file in the `secrets/dbb` directory.      |
 
 The `sa` user and login exists on the base SQL Server image. The `sa` user is used to create the following artefacts:  
 - Database: `ISTORE` 
 - Roles: `i2analyze_Role`, `External_ETL_Role,`, `i2_ETL_Role` and `DBA_Role`
-- Logins: `i2analyze`, `etl`, `i2etl`, and `dba`
-- Users: `i2analyze`, `etl`, `i2etl`, and `dba`
+- Logins: `i2analyze`, `etl`, `i2etl`, `dba`, and `dbb`
+- Users: `i2analyze`, `etl`, `i2etl`, `dba`, and `dbb`
 
 The roles and users must be created after the Information Store database is created.
 

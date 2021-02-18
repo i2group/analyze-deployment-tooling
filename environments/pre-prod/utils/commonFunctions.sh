@@ -12,6 +12,36 @@
 ###############################################################################
 
 #######################################
+# Wait for a solr Asynchronous process to be completed.
+# Arguments:
+#   The Asynchronous ID used to monitor the asynchronous operation.
+#######################################
+function waitForAsyncrhonousRequestStatusToBeCompleted() {
+  local async_id="$1"
+  local tries=1
+  local max_tries=30
+
+  print "Waiting for ${async_id} to be completed"
+  while [[ "${tries}" -le "${max_tries}" ]]; do
+    response=$(getAsyncRequestStatus "${async_id}")
+    if [[ "${response}" == "completed" ]]; then
+      echo "${async_id} status has been marked completed" && return 0
+    fi
+
+    echo "${async_id} status has not been marked as completed"
+    echo "Waiting..."
+    sleep 5
+    if [[ "${tries}" -ge "${max_tries}" ]]; then
+      printErrorAndExit "ERROR: ${async_id} could not be completed: '${response}'"
+    fi
+    ((tries++))
+  done
+}
+
+
+
+
+#######################################
 # Wait for solr to be live
 # Arguments:
 #   Solr node to wait for to be live
@@ -57,7 +87,7 @@ function getSolrNodeStatus() {
   local solr_node="$1"
 
   if [[ "$(runSolrClientCommand bash -c "curl --silent --output /dev/null --write-out \"%{http_code}\" \
-        -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert "${CONTAINER_CERTS_DIR}/CA.cer" \
+        -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert \"${CONTAINER_CERTS_DIR}/CA.cer\" \
         \"${SOLR1_BASE_URL}/solr/admin/info/health\"")" == 200 ]]; then
     jsonResponse=$(
       runSolrClientCommand bash -c "curl --silent -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" \
@@ -78,7 +108,7 @@ function getSolrNodeStatus() {
 # Arguments:
 #   Liberty instance name. E.g liberty1, liberty2 (defaults to 'all').
 # Outputs:
-#   i2 Analyze service status: Active, Degarded, Down
+#   i2 Analyze service status: Active, Degraded, Down
 #######################################
 function geti2AnalyzeServiceStatus() {
   local liberty_instance_name="${1:-all}"
@@ -107,7 +137,7 @@ function geti2AnalyzeServiceStatus() {
         if grep -q "BACKEND" <<<"${load_balancer_stats_response}"; then
           liberty_stats=$(grep "BACKEND" <<<"${load_balancer_stats_response}")
           # Parse line of csv into a $liberty_stats array
-          # IFS is a seperator used by the 'read' command
+          # IFS is a separator used by the 'read' command
           IFS=',' read -r -a liberty_stats_array <<<"${liberty_stats}"
           liberty_status="${liberty_stats_array[${liberty_status_number}]}"
           if [[ "${liberty_status}" != "UP" ]]; then
@@ -217,7 +247,7 @@ function waitFori2AnalyzeServiceToBeLive() {
 }
 
 #######################################
-# Wait for Sql Server to be live. The functions performs
+# Wait for SQL Server to be live. The functions performs
 # a simple non consequential query to check whether SQL Server is live.
 # Arguments:
 #   None
@@ -242,7 +272,7 @@ function waitForSQLServerToBeLive() {
 }
 
 #######################################
-# Runs i2 analyze request as a gateway user
+# Runs i2 Analyze request as a gateway user
 # Arguments:
 #   None
 #######################################
@@ -370,6 +400,18 @@ function quietlyRemoveDockerVolume() {
 }
 
 #######################################
+# Runs a Solr container as root to change permissions on the Solr backup volume.
+# Arguments:
+#   None
+#######################################
+function runSolrContainerWithBackupVolume() {
+  docker run --rm \
+    -v "${SOLR_BACKUP_VOLUME_NAME}:${SOLR_BACKUP_VOLUME_LOCATION}" \
+    --user="root" \
+    "${SOLR_IMAGE_NAME}" "$@"
+}
+
+#######################################
 # Removes all the i2Analyze related docker volumes.
 # Arguments:
 #   None
@@ -377,6 +419,7 @@ function quietlyRemoveDockerVolume() {
 function removeDockerVolumes() {
   print "Removing all associated volumes"
   quietlyRemoveDockerVolume "${SQL_SERVER_VOLUME_NAME}"
+  quietlyRemoveDockerVolume "${SQL_SERVER_BACKUP_VOLUME_NAME}"
   quietlyRemoveDockerVolume "${SOLR1_VOLUME_NAME}"
   quietlyRemoveDockerVolume "${SOLR2_VOLUME_NAME}"
   quietlyRemoveDockerVolume "${SOLR3_VOLUME_NAME}"
@@ -391,6 +434,7 @@ function removeDockerVolumes() {
   quietlyRemoveDockerVolume "${ZK3_LOG_VOLUME_NAME}"
   quietlyRemoveDockerVolume "${LIBERTY1_VOLUME_NAME}"
   quietlyRemoveDockerVolume "${LIBERTY2_VOLUME_NAME}"
+  quietlyRemoveDockerVolume "${SOLR_BACKUP_VOLUME_NAME}"
 }
 
 #######################################

@@ -26,7 +26,14 @@ The `createSecureCluster` function creates the secure Solr cluster for the deplo
 At this point, your ZooKeepers are running in an ensemble, and your Solr containers are running in SolrCloud Mode managed by ZooKeeper.
 
 ## <a name="initializingtheinformationstoredatabase"></a> Initializing the Information Store database 
-The initializing the Information Store database section runs the database container and configures the database management system.
+The initializing the Information Store database section creates a persistnt database backup volume, runs the database container and configures the database management system.
+
+The database backup volume is created first with the docker command
+```bash
+docker volume create "${SQL_SERVER_BACKUP_VOLUME_NAME}"
+``` 
+so that the volume will not be automaically deleted when the sql server container is remove. This helps maintain any backups created while running a SQL server container.
+For more information about docker storage, see [Docker Storage](https://docs.docker.com/storage/).
 
 ### <a name="runningthedatabaseservercontainer"></a> Running the database server container
 The `runSQLServer` server function creates the secure SQL Server container for the deployment.
@@ -55,7 +62,13 @@ The `configureSecureSqlServer` function uses a number of client and server funct
 For more information about the database users and their permissions, see [Database users](../security%20and%20users/db_users.md).
    1. The `runSQLServerCommandAsSA` client function runs the `createDbRoles.sh` script.
    1. The `createDbLoginAndUser` client function creates the logins and users.
-   1. The `runSQLServerCommandAsSA` client function runs the `addEtlUserToSysAdminRole.sh` script.
+   1. The `runSQLServerCommandAsSA` client function runs the `applyBuiltInSQLServerRoles.sh` script.
+
+1. Grant the `dba` user the required permissions in the `msdb` and `master` databases, this grants the correct permissions for the Deletion by Rule feature of i2Analyze.
+    1. The `runSQLServerCommandAsSA` client function runs the `configureDbaRolesAndPermissions.sh` script.
+   
+1. Make the `etl` user a member of the SQL server `sysadmin` group to allow this user to perfom bulk inserts into the external staging tables.
+    1. The `runSQLServerCommandAsSA` client function runs the `addEtlUserToSysAdminRole.sh` script.
 
 1. Run the static scripts that create the Information Store database objects.
    * The `runSQLServerCommandAsSA` client function is used to run the `runStaticScripts.sh` tool.  

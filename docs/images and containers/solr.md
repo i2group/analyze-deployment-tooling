@@ -72,17 +72,21 @@ runSolr solr1 solr1.eia solr1_data 8983
 
 ### <a name="volumes"></a> Volumes
 
-A named volume is used to persist data and logs that are generated and used in the Solr container, outside of the container. 
+A named volume is used to persist data and logs that are generated and used in the Solr container, as well as a separate volume for backups, outside of the container. 
 
 To configure the Solr container to use the volume, specify the `-v` option with the name of the volume and the path where the directory is mounted in the container. By setting `-v` option in the docker run command, a named volume is created. For Solr, the directory that must be mounted is `/var/solr`.
 For example:
+
 ```sh
--v solr1_data:/var/solr
+-v solr1_data:/var/solr \
+-v solr_backup:/backup 
 ```
 
 A unique volume name must be used for each Solr container.
 
 For more information, see [How the image works](https://github.com/docker-solr/docker-solr#how-the-image-works).
+
+
 
 
 ### <a name="bindmounts"></a> Bind mounts

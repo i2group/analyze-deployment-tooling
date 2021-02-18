@@ -132,11 +132,12 @@ function initializeIStoreDatabase() {
   runSQLServerCommandAsSA "/opt/db-scripts/createDbRoles.sh"
 
   print "Creating database logins and users"
+  createDbLoginAndUser "dbb" "db_backupoperator"
   createDbLoginAndUser "dba" "DBA_Role"
-  runSQLServerCommandAsSA "/opt/db-scripts/grantDBAServerStatePermissions.sh"
   createDbLoginAndUser "i2analyze" "i2Analyze_Role"
   createDbLoginAndUser "i2etl" "i2_ETL_Role"
   createDbLoginAndUser "etl" "External_ETL_Role"
+  runSQLServerCommandAsSA "/opt/db-scripts/configureDbaRolesAndPermissions.sh"
   runSQLServerCommandAsSA "/opt/db-scripts/addEtlUserToSysAdminRole.sh"
 
   print "Initializing IStore database tables"
@@ -148,6 +149,7 @@ function deploySecureSQLServer() {
     aws ecs update-service --cluster i2a-stack-ECSCluster --service sqlserver --desired-count 1 --force-new-deployment
     waitForAWSService sqlserver
   else
+    docker volume create "${SQL_SERVER_BACKUP_VOLUME_NAME}"
     runSQLServer
     waitForSQLServerToBeLive
   fi

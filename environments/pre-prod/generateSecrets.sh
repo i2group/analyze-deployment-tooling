@@ -139,6 +139,7 @@ function generateSqlserverPasswords() {
   securelyDeleteFolderIfExistsAndCreate "${GENERATED_SECRETS_DIR}/sqlserver"
 
   print "Generating Sqlserver Passwords"
+  generateRandomPassword "${GENERATED_SECRETS_DIR}/sqlserver/dbb_PASSWORD"
   generateRandomPassword "${GENERATED_SECRETS_DIR}/sqlserver/i2analyze_PASSWORD"
   generateRandomPassword "${GENERATED_SECRETS_DIR}/sqlserver/i2etl_PASSWORD"
   generateRandomPassword "${GENERATED_SECRETS_DIR}/sqlserver/etl_PASSWORD"

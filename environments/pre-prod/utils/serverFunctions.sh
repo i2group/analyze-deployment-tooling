@@ -12,10 +12,10 @@
 ###############################################################################
 
 #######################################
-# Run a Zookeeper server conatiner.
+# Run a Zookeeper server container.
 # Arguments:
 #   1. ZK container name
-#   2. ZK cotnaienr FQDN
+#   2. ZK container FQDN
 #   3  ZK data volume name
 #   4. ZK datalog volume name
 #   5. ZK log volume name
@@ -53,7 +53,7 @@ function runZK() {
 }
 
 #######################################
-# Run a Solr server conatiner.
+# Run a Solr server container.
 # Arguments:
 #   1. Solr container name
 #   2. Solr container FQDN
@@ -73,7 +73,9 @@ function runSolr() {
     --init \
     -p "${HOST_PORT}":8983 \
     -v "${VOLUME}:/var/solr" \
+    -v "${SOLR_BACKUP_VOLUME_NAME}:${SOLR_BACKUP_VOLUME_LOCATION}" \
     -v "${LOCAL_KEYS_DIR}/${CONTAINER}:${CONTAINER_SECRETS_DIR}" \
+    -e SOLR_OPTS="-Dsolr.allowPaths=${SOLR_BACKUP_VOLUME_LOCATION}" \
     -e "ZK_HOST=${ZK_HOST}" \
     -e "SOLR_HOST=${FQDN}" \
     -e "ZOO_DIGEST_USERNAME=${ZK_DIGEST_USERNAME}" \
@@ -89,7 +91,7 @@ function runSolr() {
 }
 
 #######################################
-# Run a SQL Server conatiner.
+# Run a SQL Server container.
 # Arguments:
 #   None
 #######################################
@@ -101,6 +103,7 @@ function runSQLServer() {
     --net-alias "${SQL_SERVER_FQDN}" \
     -p "1433:${DB_PORT}" \
     -v "${SQL_SERVER_VOLUME_NAME}:/var/opt/mssql" \
+    -v "${SQL_SERVER_BACKUP_VOLUME_NAME}:${DB_CONTAINER_BACKUP_DIR}" \
     -v "${LOCAL_KEYS_DIR}/sqlserver:${CONTAINER_SECRETS_DIR}" \
     -v "${LOCAL_TOOLKIT_DIR}/examples/data:/tmp/examples/data" \
     -e "ACCEPT_EULA=${ACCEPT_EULA}" \
@@ -114,7 +117,7 @@ function runSQLServer() {
 }
 
 #######################################
-# Run a Liberty Server conatiner.
+# Run a Liberty Server container.
 # Arguments:
 #   1. Liberty container name
 #   2. Liberty container FQDN

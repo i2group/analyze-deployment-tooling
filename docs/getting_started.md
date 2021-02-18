@@ -3,7 +3,7 @@
 ## <a name="prerequisites"></a> Prerequisites
 
 ### <a name="code"></a> Code
-Clone or download the Analyze-Containers repository from https://github.com/IBM-i2/Analyze-Containers/releases.
+Download the `tar.gz` or clone the Analyze-Containers repository from https://github.com/IBM-i2/Analyze-Containers/releases.
 
 ### <a name="windowssubsystemforlinux"></a> Windows Subsystem for Linux (WSL)
 
@@ -55,8 +55,8 @@ To make the environment easier to use, install the following extensions in VS Co
 
 ### <a name="i2analyzeminimaltoolkit"></a> i2 Analyze minimal toolkit
 
-1. Download the i2 Analyze V4.3.3 Minimal for Linux package using the following part number: *CC96NML*.
-1. Rename the `IBM_I2A_V4.3.3_MIN_LIN.tar.gz` file to `i2analyzeMinimal.tar.gz`, then copy it to the `Analyze-Containers/pre-reqs` directory.
+1. Download the i2 Analyze V4.3.3 Fix Pack 1 Minimal archive for Linux package from the IBM i2 Enterprise Insight Analysis 2.3.4 Fix Pack 1 on Fix Central: [Fix Central](https://www.ibm.com/support/fixcentral/swg/identifyFixes?query.parent=i2&query.product=ibm~Other%20software~i2%20Enterprise%20Insight%20Analysis&query.release=2.3.4.0&query.platform=All).
+1. Rename the `IBM_i2_Analyze_4.3.3_Fix_Pack_1_Linux_Minimal_Archive.tar.gz` file to `i2analyzeMinimal.tar.gz`, then copy it to the `Analyze-Containers/pre-reqs` directory.
 
 ### <a name="jdbcdrivers"></a> JDBC drivers
 

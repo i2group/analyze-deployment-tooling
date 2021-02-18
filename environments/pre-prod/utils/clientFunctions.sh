@@ -66,6 +66,20 @@ function getSolrStatus() {
   fi
 }
 
+function getAsyncRequestStatus() {
+  local async_id="$1"
+  local asynch_response
+  local error_response
+
+  asynch_response="$(runSolrClientCommand bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=REQUESTSTATUS&requestid=${async_id}&wt=json\"")"
+  if [[ $(echo "${asynch_response}" | jq -r ".status.state") == "completed" ]]; then
+    echo "completed" && return 0
+  else
+    error_response=$(echo "${asynch_response}" | jq -r ".success.*.response")
+    echo "${error_response}"
+  fi
+}
+
 #######################################
 # Wait for the index to be build by running an admin request
 # against Solr API and checking the index is in the "Ready" state.
@@ -247,6 +261,7 @@ function runSolrClientCommand() {
     --net "${DOMAIN_NAME}" \
     --init \
     -v "${LOCAL_CONFIG_DIR}:/opt/configuration" \
+    -v "${SOLR_BACKUP_VOLUME_NAME}:${SOLR_BACKUP_VOLUME_LOCATION}" \
     -e SOLR_ADMIN_DIGEST_USERNAME="${SOLR_ADMIN_DIGEST_USERNAME}" \
     -e SOLR_ADMIN_DIGEST_PASSWORD="${SOLR_ADMIN_DIGEST_PASSWORD}" \
     -e ZOO_DIGEST_USERNAME="${ZK_DIGEST_USERNAME}" \
@@ -432,7 +447,7 @@ function runSQLServerCommandAsSA() {
 
 #######################################
 # Use an ephemeral SQL Client container to run database scripts or commands
-# against the Information Store database as the `sa` user.
+# against the Information Store database as the `dba` user.
 # Arguments:
 #   None
 #######################################
@@ -452,6 +467,34 @@ function runSQLServerCommandAsDBA() {
     -e "DB_NAME=${DB_NAME}" \
     -e "GENERATED_DIR=/opt/databaseScripts/generated" \
     -e "DB_USERNAME=${DBA_USERNAME}" \
+    -e "DB_PASSWORD=${DB_PASSWORD}" \
+    -e "DB_SSL_CONNECTION=${DB_SSL_CONNECTION}" \
+    -e "SSL_CA_CERTIFICATE=${SSL_CA_CERTIFICATE}" \
+    "${SQL_CLIENT_IMAGE_NAME}" "$@"
+}
+
+#######################################
+# Use an ephemeral SQL Client container to run database scripts or commands
+# against the Information Store database as the `dbb` user.
+# Arguments:
+#   None
+#######################################
+function runSQLServerCommandAsDBB() {
+  local DB_PASSWORD
+  local SSL_CA_CERTIFICATE
+  DB_PASSWORD=$(getSecret sqlserver/dbb_PASSWORD)
+  SSL_CA_CERTIFICATE=$(getSecret certificates/CA/CA.cer)
+
+  docker run \
+    --rm \
+    --name "${SQL_CLIENT_CONTAINER_NAME}" \
+    --network "${DOMAIN_NAME}" \
+    -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -e "DB_SERVER=${SQL_SERVER_FQDN}" \
+    -e "DB_PORT=${DB_PORT}" \
+    -e "DB_NAME=${DB_NAME}" \
+    -e "GENERATED_DIR=/opt/databaseScripts/generated" \
+    -e "DB_USERNAME=${DBB_USERNAME}" \
     -e "DB_PASSWORD=${DB_PASSWORD}" \
     -e "DB_SSL_CONNECTION=${DB_SSL_CONNECTION}" \
     -e "SSL_CA_CERTIFICATE=${SSL_CA_CERTIFICATE}" \

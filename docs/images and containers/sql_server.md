@@ -34,6 +34,7 @@ docker run -d \
    --net-alias "sqlserver.eia" \
    -p "1433:1433" \
    -v "sqlserver_data:/var/opt/mssql" \
+   -v "sqlserver_sqlbackup:/backup" \
    -v "/environments/pre-prod/simulated-secret-store/sqlserver:/run/secrets/" \
    -v "/i2analyze/toolkit/examples/data:/tmp/examples/data" \
    -e ACCEPT_EULA="Y" \
@@ -50,12 +51,14 @@ For an example of the `docker run` command, see [serverFunctions.sh](../../envir
 
 ### <a name="volumes"></a> Volumes
 
-A named volume is used to persist data and logs that are generated and used in the SQL Server container, outside of the container. 
+Named volumes are used to persist data and logs that are generated and used in the SQL Server container, as well as a separate volume for backups, outside of the container. 
+> Note: It is good practice to have a separate volume for the backup from the database storage. For more information, see [SQL Server Backup best practices](https://docs.microsoft.com/en-us/sql/relational-databases/backup-restore/back-up-and-restore-of-sql-server-databases?view=sql-server-ver15#best-practice-recommendations).
 
-To configure the SQL Server container to use the volume, specify the `-v` option with the name of the volume and the path where the directory is mounted in the container. By setting `-v` option in the docker run command, a named volume is created. For SQL Server, the path to the directory that must be mounted is `/var/opt/mssql`.
+To configure the SQL Server container to use these volumes, specify the `-v` option with the name of the volume and the path where the directory is mounted in the container. By setting `-v` option in the docker run command, a named volume is created. For SQL Server, the path to the directory that must be mounted is `/var/opt/mssql`.
 For example:
 ```sh
--v sqlvolume:/var/opt/mssql
+-v sqlvolume:/var/opt/mssql 
+-v sqlserver_sqlbackup:/backup
 ```
 
 For more information, see [Use Data Volume Containers](https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-docker-container-configure?view=sql-server-ver15&pivots=cs1-bash#use-data-volume-containers).

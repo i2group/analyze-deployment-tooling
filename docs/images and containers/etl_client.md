@@ -22,7 +22,7 @@ For examples of the build commands, see the [buildImages.sh](../../environments/
 
 ## Running an ETL Client container
 
-A ETL Client container uses ELT Client image. In the `docker run` command, you can use `-e` to pass environment variables to the container. The environment variables are described in [environment variables](#environment-variables)
+A ETL Client container uses ETL Client image. In the `docker run` command, you can use `-e` to pass environment variables to the container. The environment variables are described in [environment variables](#environment-variables)
 
 For more information about the command, see [docker run reference](https://docs.docker.com/engine/reference/run/).
 
@@ -32,7 +32,7 @@ The following `docker run` command runs the ETL Client container:
 
 ```sh
 docker run --rm \
-    --name "elt_client" \
+    --name "etl_client" \
     --network "eia" \
     --user "$(id -u "${USER}"):$(id -u "${USER}")" \
     -v "/environments/pre-prod/configuration/logs:/opt/configuration/logs" \

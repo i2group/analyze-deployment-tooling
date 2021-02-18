@@ -13,7 +13,7 @@
 ###############################################################################
 LIC_AGREEMENT=REJECT
 MSSQL_PID=REJECT
-ACCEPT_EULA="N"
+ACCEPT_EULA=N
 
 ###############################################################################
 # AWS Support Variables - For future use do not change                        #
@@ -173,7 +173,6 @@ SOLR2_CONTAINER_NAME="solr2"
 SOLR3_CONTAINER_NAME="solr3"
 SQL_CLIENT_CONTAINER_NAME="sqlclient"
 SQL_SERVER_CONTAINER_NAME="sqlserver"
-SQL_SERVER_VOLUME_NAME="sqlvolume"
 LIBERTY1_CONTAINER_NAME="liberty1"
 LIBERTY2_CONTAINER_NAME="liberty2"
 LOAD_BALANCER_CONTAINER_NAME="load_balancer"
@@ -197,6 +196,9 @@ SOLR2_VOLUME_NAME="${SOLR2_CONTAINER_NAME}_data"
 SOLR3_VOLUME_NAME="${SOLR3_CONTAINER_NAME}_data"
 LIBERTY1_VOLUME_NAME="${LIBERTY1_CONTAINER_NAME}_data"
 LIBERTY2_VOLUME_NAME="${LIBERTY2_CONTAINER_NAME}_data"
+SQL_SERVER_VOLUME_NAME="${SQL_SERVER_CONTAINER_NAME}_sqlvolume"
+SQL_SERVER_BACKUP_VOLUME_NAME="${SQL_SERVER_CONTAINER_NAME}_sqlbackup"
+SOLR_BACKUP_VOLUME_NAME="solr_backup"
 
 ###############################################################################
 # User names                                                                  #
@@ -207,6 +209,7 @@ ZK_DIGEST_USERNAME="solr"
 ZK_DIGEST_READONLY_USERNAME="readonly-user"
 SA_USERNAME="sa"
 DBA_USERNAME="dba"
+DBB_USERNAME="dbb"
 I2_ETL_USERNAME="i2etl"
 ETL_USERNAME="etl"
 I2_ANALYZE_USERNAME="i2analyze"
@@ -228,9 +231,20 @@ CA_KEY_SIZE=4096
 I2_ANALYZE_CERT_FOLDER_NAME="i2analyze"
 GATEWAY_CERT_FOLDER_NAME="gateway_user"
 
+
+###############################################################################
+# Backup and restore variables                                                #
+###############################################################################
+SOLR_BACKUP_VOLUME_LOCATION="/backup"
+MAIN_INDEX_BACKUP_NAME="main_index_backup"
+MATCH_INDEX_BACKUP_NAME="match1_index_backup"
+CHART_INDEX_BACKUP_NAME="chart_index_backup"
+
 ###############################################################################
 # Database variables                                                          #
 ###############################################################################
+DB_CONTAINER_BACKUP_DIR="/backup"
+DB_BACKUP_FILE_NAME="ISTORE.bak"
 DB_DIALECT="sqlserver"
 DB_NAME="ISTORE"
 DB_PORT="1433"
