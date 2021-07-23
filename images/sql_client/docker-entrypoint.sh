@@ -1,13 +1,28 @@
-#!/bin/bash
-# (C) Copyright IBM Corporation 2018, 2020.
+#!/usr/bin/env bash
+# MIT License
 #
-# This program and the accompanying materials are made available under the
-# terms of the Eclipse Public License 2.0 which is available at
-# http://www.eclipse.org/legal/epl-2.0.
+# Copyright (c) 2021, IBM Corporation
 #
-# SPDX-License-Identifier: EPL-2.0
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
 . /opt/db-scripts/environment.sh
+. /opt/db-scripts/commonFunctions.sh
 
 file_env 'SA_USERNAME'
 file_env 'SA_PASSWORD'
@@ -35,5 +50,11 @@ if [[ ${DB_SSL_CONNECTION} == true ]]; then
   done
 fi
 
-set +e
-exec "$@"
+if [[ "${1}" == "runSQLQuery" ]]; then
+  runSQLQuery "${2}"
+elif [[ "${1}" == "runSQLQueryForDB" ]]; then
+  runSQLQueryForDB "${2}" "${3}"
+else
+  set +e
+  exec "$@"
+fi
