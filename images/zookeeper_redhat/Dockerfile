@@ -1,10 +1,24 @@
-# (C) Copyright IBM Corporation 2018, 2020.
+# MIT License
 #
-# This program and the accompanying materials are made available under the
-# terms of the Eclipse Public License 2.0 which is available at
-# http://www.eclipse.org/legal/epl-2.0.
+# Copyright (c) 2021, IBM Corporation
 #
-# SPDX-License-Identifier: EPL-2.0
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
 FROM adoptopenjdk/openjdk11:ubi-jre
 LABEL maintainer="IBM"
@@ -67,9 +81,18 @@ RUN set -eux; \
     ddist "$DISTRO_NAME.tar.gz" "zookeeper/$SHORT_DISTRO_NAME/$DISTRO_NAME.tar.gz"; \
     ddist "$DISTRO_NAME.tar.gz.asc" "zookeeper/$SHORT_DISTRO_NAME/$DISTRO_NAME.tar.gz.asc"; \
     export GNUPGHOME="$(mktemp -d)"; \
-    gpg --keyserver ha.pool.sks-keyservers.net --recv-key "$GPG_KEY" || \
-    gpg --keyserver pgp.mit.edu --recv-keys "$GPG_KEY" || \
-    gpg --keyserver keyserver.pgp.com --recv-keys "$GPG_KEY"; \
+    found=''; \
+    for server in \
+      ha.pool.sks-keyservers.net \
+      hkp://keyserver.ubuntu.com:80 \
+      hkp://p80.pool.sks-keyservers.net:80 \
+      pgp.mit.edu \
+    ; do \
+      echo "  trying $server for $GPG_KEY"; \
+      gpg --keyserver "$server" --keyserver-options timeout=10 --recv-key "$GPG_KEY" && found=yes && break; \
+      gpg --keyserver "$server" --keyserver-options timeout=10 --recv-key "$GPG_KEY" && found=yes && break; \
+    done; \
+    test -z "$found" && echo >&2 "error: failed to fetch $GPG_KEY from several disparate servers -- network issues?" && exit 1; \
     gpg --batch --verify "$DISTRO_NAME.tar.gz.asc" "$DISTRO_NAME.tar.gz"; \
     tar -zxf "$DISTRO_NAME.tar.gz"; \
     mv "$DISTRO_NAME/conf/"* "$ZOO_CONF_DIR"; \

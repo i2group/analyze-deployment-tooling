@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Custom oom handler loosely based on
 # https://github.com/apache/lucene-solr/blob/master/solr/bin/oom_solr.sh
