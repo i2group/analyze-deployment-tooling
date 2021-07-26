@@ -125,7 +125,7 @@ ACCEPT_EULA=Y
 <blockquote><p>You must run Analyst&#39;s Notebook Premium on Windows. If you deploy on MacOS, you can use a Windows virtual machine to host Analyst&#39;s Notebook Premium. For your virtual machine to connect to i2 Analyze, complete the following:</p>
 <p>On your MacOS terminal, run <code>ifconfig</code> and identify the IP address for your virtual machine in a section such as <code>vmnet1</code>. For example, <code>172.16.100.1</code>.</p>
 <p>Then, on your Windows virtual machine add the following line to the <code>C:\Windows\System32\drivers\etc\hosts</code> file:</p>
-<pre><code class="lang-sh">  172.16.100.1 i2demo
+<pre><code class="lang-sh">  172.16.100.1 i2analyze.eia
   ```
 </code></pre></blockquote>
 <h3 id="installingcertificate"> Installing the certificate</h3>
@@ -163,13 +163,13 @@ ACCEPT_EULA=Y
 <ul>
 <li><code>HOST_PORT_SOLR</code> specifies the port that you use to connect to the Solr Web UI from the host machine. By default, <code>8983</code>.</li>
 <li><code>HOST_PORT_DB</code> specifies the port that you use to connect to the database from the host machine. By default, <code>1433</code>.</li>
-<li><code>HOST_PORT_I2ANALYZE_SERVICE</code> specifies the port that you use to connect to the deployment from the host machine. By default, <code>9082</code>.</li>
+<li><code>HOST_PORT_I2ANALYZE_SERVICE</code> specifies the port that you use to connect to the deployment from the host machine. By default, <code>9443</code>.</li>
 </ul>
 <p>For example, to deploy with the i2 Connect gateway only for schema development and to use the default ports:</p>
 <pre><code class="lang-sh">DEPLOYMENT_PATTERN=&quot;schema_dev&quot;
 HOST_PORT_SOLR=&quot;8983&quot;
 HOST_PORT_DB=&quot;1433&quot;
-HOST_PORT_I2ANALYZE_SERVICE=&quot;9082&quot;
+HOST_PORT_I2ANALYZE_SERVICE=&quot;9443&quot;
 </code></pre></li>
 </ul>
 </li>
@@ -197,7 +197,7 @@ The i2 Analyze toolkit includes example files that you can use as a starting poi
 <pre><code class="lang-sh">./deploy.sh -c config-development
 </code></pre><p>You can run only one environment at a time. When you run the <code>deploy.sh</code> script, it stops any containers on the Docker network. If you are deploying with the same config, it update the images and recreates the containers to update the environment with any configuration changes. For more information, see <a href="managing_config_dev.html">Managing configs</a>.</p>
 <h2 id="accessingthesystem"> Accessing the system</h2>
-<p>To connect to the deployment, the URL to use is: <code>https://i2analyze.eia:9082/opal</code></p>
+<p>To connect to the deployment, the URL to use is: <code>https://i2analyze.eia:9443/opal</code></p>
 <blockquote><p><strong>Note:</strong> If you are using the i2 Connect gateway only deployment pattern, you must connect using Analyst&#39;s Notebook Premium.</p>
 </blockquote>
 <p>Log in as a user that is specified in the user registry file. If you are using the example user registry, the example user has the following credentials:</p>

@@ -145,12 +145,15 @@
       "version": ""
     },
     {
+      "log_codes": [
+        "InvalidYamlHeader"
+      ],
       "type": "Conceptual",
       "source_relative_path": "content/deploy_config_dev.md",
       "output": {
         ".html": {
           "relative_path": "content/deploy_config_dev.html",
-          "hash": "70VKtd1VA7HV8+Qbz1pl8g=="
+          "hash": "Midy1rK+tFPRJySmLl7m1Q=="
         }
       },
       "is_incremental": false,
@@ -759,7 +762,7 @@
           "can_incremental": true,
           "incrementalPhase": "build",
           "total_file_count": 54,
-          "skipped_file_count": 54
+          "skipped_file_count": 53
         },
         "ResourceDocumentProcessor": {
           "can_incremental": false,
