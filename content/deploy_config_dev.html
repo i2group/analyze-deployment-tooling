@@ -125,8 +125,7 @@ ACCEPT_EULA=Y
 <blockquote><p>You must run Analyst&#39;s Notebook Premium on Windows. If you deploy on MacOS, you can use a Windows virtual machine to host Analyst&#39;s Notebook Premium. For your virtual machine to connect to i2 Analyze, complete the following:</p>
 <p>On your MacOS terminal, run <code>ifconfig</code> and identify the IP address for your virtual machine in a section such as <code>vmnet1</code>. For example, <code>172.16.100.1</code>.</p>
 <p>Then, on your Windows virtual machine add the following line to the <code>C:\Windows\System32\drivers\etc\hosts</code> file:</p>
-<pre><code class="lang-sh">  172.16.100.1 i2analyze.eia
-  ```
+<pre><code class="lang-sh"> 172.16.100.1 i2analyze.eia
 </code></pre></blockquote>
 <h3 id="installingcertificate"> Installing the certificate</h3>
 <p>To access the system, the server that you are connecting from must trust the certificate that it receives from the deployment. To enable trust, install the <code>/dev-environment-secrets/generated-secrets/certificates/externalCA/CA.cer</code> certificate as a trusted root certificate authority in your browser and operating system&#39;s certificate store.</p>

@@ -153,7 +153,7 @@
       "output": {
         ".html": {
           "relative_path": "content/deploy_config_dev.html",
-          "hash": "Midy1rK+tFPRJySmLl7m1Q=="
+          "hash": "uo8rBq2o505BWaiveJrdvA=="
         }
       },
       "is_incremental": false,
@@ -762,7 +762,7 @@
           "can_incremental": true,
           "incrementalPhase": "build",
           "total_file_count": 54,
-          "skipped_file_count": 53
+          "skipped_file_count": 54
         },
         "ResourceDocumentProcessor": {
           "can_incremental": false,
