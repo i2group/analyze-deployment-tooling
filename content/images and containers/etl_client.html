@@ -81,16 +81,16 @@
 
 <p>An ETL Client container is an ephemeral container that is used to run ETL tasks.</p>
 <h2 id="building-an-etl-client-image">Building an ETL Client image</h2>
-<p>ETL Client image is built is built from the Dockerfile in <code>images/etl_client</code>. ETL Client image uses the i2Analyze Tools image as the base image.</p>
+<p>The ETL Client image is built from the Dockerfile in <code>images/etl_client</code>. It uses the i2 Analyze Tools image as the base image.</p>
 <h3 id="docker-build-command">Docker build command</h3>
 <p>The following <code>docker build</code> command builds the ETL Client image:</p>
 <pre><code class="lang-sh">docker build -t &quot;etlclient_redhat&quot; &quot;/images/etl_client&quot; \
     --build-arg USER_UID=&quot;$(id -u &quot;${USER}&quot;)&quot; \
     --build-arg BASE_IMAGE=&quot;i2a_tools_redhat&quot;
-</code></pre><p>The <code>--build-arg</code> flag is used to provide your local user ID to the Docker image when it is built. sThe value of <code>$USER</code> comes from your shell.</p>
+</code></pre><p>The <code>--build-arg</code> flag is used to provide your local user ID to the Docker image when it is built. The value of <code>$USER</code> comes from your shell.</p>
 <p>For examples of the build commands, see the <a href="https://github.com/IBM-i2/analyze-containers/blob/main/utils/buildImages.sh">buildImages.sh</a> script. </p>
 <h2 id="running-an-etl-client-container">Running an ETL Client container</h2>
-<p>A ETL Client container uses ETL Client image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to the container. The environment variables are described in <a href="#environment-variables">environment variables</a></p>
+<p>A ETL Client container uses the ETL Client image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to the container. The environment variables are described in <a href="#environment-variables">environment variables</a></p>
 <p>For more information about the command, see <a href="https://docs.docker.com/engine/reference/run/">docker run reference</a>.</p>
 <h3 id="docker-run-command">Docker run command</h3>
 <p>The following <code>docker run</code> command runs the ETL Client container:</p>
@@ -113,10 +113,10 @@
     -e DB_SSL_CONNECTION=true \
     -e SSL_CA_CERTIFICATE=&quot;SSL_CA_CERTIFICATE&quot; \
     &quot;etlclient_image&quot; &quot;$@&quot;
-</code></pre><p>For an example of the <code>docker run</code> command, see <code>runEtlToolkitToolAsi2ETL</code> function in <a href="https://github.com/IBM-i2/analyze-containers/blob/main/utils/clientFunctions.sh">clientFunctions.sh</a> script.
+</code></pre><p>For an example of the <code>docker run</code> command, see <code>runEtlToolkitToolAsi2ETL</code> function in the <a href="https://github.com/IBM-i2/analyze-containers/blob/main/utils/clientFunctions.sh">clientFunctions.sh</a> script.
 For an example of how to use <code>runEtlToolkitToolAsi2ETL</code> function, see <a href="../tools%20and%20functions/client_functions.html#runetltoolkittoolasi2etl">runEtlToolkitToolAsi2ETL</a>.</p>
 <h2 id="environment-variables">Environment variables</h2>
-<p>The ETl Client is built on top of the SQL Client. Any environment variables referenced in the <a href="sql_client.html#environmentvariables">SQL Client</a> can be used in the Etl Client.</p>
+<p>The ETl Client is built on top of the SQL Client. Any environment variables referenced in the <a href="sql_client.html#environmentvariables">SQL Client</a> can be used in the ETL Client.</p>
 <h3 id="additional-environment-variables">Additional Environment variables</h3>
 <table>
 <thead>

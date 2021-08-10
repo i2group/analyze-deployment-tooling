@@ -5,9 +5,9 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Getting started with the Analyze-Containers repository </title>
+    <title>Getting started with the analyze-containers repository </title>
     <meta name="viewport" content="width=device-width">
-    <meta name="title" content="Getting started with the Analyze-Containers repository ">
+    <meta name="title" content="Getting started with the analyze-containers repository ">
     <meta name="generator" content="docfx 2.56.2.0">
     
     <link rel="shortcut icon" href="../images/favicon.png">
@@ -77,11 +77,13 @@
             </div>
           </div>
             <article class="content wrap" id="_content" data-uid="">
-<h1 id="getting-started-with-the-analyze-containers-repository">Getting started with the Analyze-Containers repository</h1>
+<h1 id="getting-started-with-the-analyze-containers-repository">Getting started with the analyze-containers repository</h1>
 
 <h2 id="prerequisites"> Prerequisites</h2>
+<p>You can run the code in the analyze-containers repository on Windows with Windows Subsystem for Linux and MacOS.</p>
 <h3 id="code"> Code</h3>
-<p>Download the <code>tar.gz</code> or clone the Analyze-Containers repository from <a href="https://github.com/IBM-i2/analyze-containers/releases">https://github.com/IBM-i2/analyze-containers/releases</a>.</p>
+<p>Download the <code>tar.gz</code> or clone the analyze-containers repository from <a href="https://github.com/IBM-i2/analyze-containers/releases">https://github.com/IBM-i2/analyze-containers/releases</a>.</p>
+<p>If you download the <code>tar.gz</code> file, extract it.</p>
 <h3 id="windowssubsystemforlinux"> Windows Subsystem for Linux (WSL)</h3>
 <p>If you are on Windows, you must use WSL 2 to run the shell scripts in this repository.</p>
 <p>For information about installing WSL, see <a href="https://docs.microsoft.com/en-us/windows/wsl/install-win10">Windows Subsystem for Linux Installation Guide</a>.</p>
@@ -95,7 +97,7 @@
 </ol>
 </li>
 </ul>
-<p>When you configure Docker, give Docker permission to mount files from the <code>Analyze-Containers</code> directory on your local file system. In the <em>Docker Desktop</em> application, navigate to  <code>Settings &gt; Resources &gt; File Sharing</code>.</p>
+<p>When you configure Docker, give Docker permission to mount files from the <code>analyze-containers</code> directory on your local file system. In the <em>Docker Desktop</em> application, navigate to  <code>Settings &gt; Resources &gt; File Sharing</code>.</p>
 <p>After you install Docker, you must allocate enough memory to Docker to run the containers in the example deployment. For this deployment, allocate at least 5GB of memory.</p>
 <p>For more information about modifying the resources allocated to Docker, see:</p>
 <ul>
@@ -155,6 +157,10 @@ echo &#39;export PATH=&quot;$(brew --prefix)/opt/coreutils/libexec/gnubin:$PATH&
 },
 &quot;terminal.integrated.defaultProfile.osx&quot;: &quot;bash&quot;,
 </code></pre></li>
+</ol>
+<p>To run the scripts in the analyze-containers repository, use the VS Code integrated terminal.</p>
+<ol>
+<li>To open the integrated terminal, click <strong>Terminal</strong> &gt; <strong>New Terminal</strong><br> On Windows, ensure that you are in a WSL terminal.</li>
 </ol>
 <h3 id="i2analyzeminimaltoolkit"> i2 Analyze minimal toolkit</h3>
 <ol>

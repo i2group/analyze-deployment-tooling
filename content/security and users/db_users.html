@@ -328,7 +328,7 @@ Note: The <code>configureDbaRolesAndPermissions.sh</code> script is run during d
 </tbody>
 </table>
 <h3 id="the-database-backup-operator-role">The database backup operator role</h3>
-<p>The example also demonstrates how to perform a database backup, the <code>dbb</code> user will perform this action and is a member of the SQL server built in role <code>db_backupoperator</code>. This gives this user the correct permissions for performing a backup and nothing else.</p>
+<p>The example also demonstrates how to perform a database backup. The <code>dbb</code> user will perform this action and is a member of the SQL Server built-in role, <code>db_backupoperator</code>. This gives this user the correct permissions for performing a backup and nothing else.</p>
 <p>For more information, see <a href="https://docs.microsoft.com/en-us/sql/relational-databases/security/authentication-access/database-level-roles?view=sql-server-ver15#fixed-database-roles">Fixed-Database Roles</a> for more details.</p>
 <h2 id="databaseusersandlogins"> Database users and logins</h2>
 <p>In the example, a user is created for each role described previously. These users are then used throughout the deployment and administration steps to provide a reference for when each role is required.</p>
@@ -383,20 +383,21 @@ Note: The <code>configureDbaRolesAndPermissions.sh</code> script is run during d
 </ul>
 <p>The roles and users must be created after the Information Store database is created.</p>
 <h2 id="creatingtheroles"> Creating the roles</h2>
-<p>The <code>sa</code> user is used to run the <code>createDbRoles.sh</code> client function that creates the <code>i2Analyze_Role</code>, <code>External_ETL_Role&quot;, i2_ETL_Role</code>, and <code>DBA_Role</code> roles. </p>
+<p>The <code>sa</code> user is used to run the <code>createDbRoles.sh</code> client function that creates the <code>i2Analyze_Role</code>, <code>External_ETL_Role</code>, <code>i2_ETL_Role</code>, and <code>DBA_Role</code> roles. </p>
 <p>To create the roles, the <code>createDbRoles.sh</code> script is run using the <code>runSQLServerCommandAsSA</code> client function. This function uses an ephemeral SQL Server client container to create the database roles. For more information about the client function, see:</p>
 <ul>
 <li><a href="../tools%20and%20functions/client_functions.html#runsqlservercommandassa">runSQLServerCommandAsSA</a></li>
 <li><a href="https://github.com/IBM-i2/analyze-containers/blob/main/images/sql_client/db-scripts/createDbRoles.sh">createDbRoles.sh</a></li>
 </ul>
 <p>All the secrets required at runtime by the client container are made available by providing a file path to the secret which is converted to an environment variable by the docker container.</p>
-<p>For example to provide the <code>SA_USERNAME</code> environment variable to the client container, a file containing the secret in declared in the docker run command: 
-<code>-e &quot;SA_USERNAME_FILE=${CONTAINER_SECRETS_DIR}/SA_USERNAME_FILE&quot; \</code> the file name can be anything, but the environment variable is fixed.  For more information see: <a href="security.html">Managing container security</a></p>
+<p>For example, to provide the <code>SA_USERNAME</code> environment variable to the client container, a file containing the secret is declared in the docker run command: </p>
+<pre><code class="lang-sh">-e &quot;SA_USERNAME_FILE=${CONTAINER_SECRETS_DIR}/SA_USERNAME_FILE&quot;
+</code></pre><p>The file name can be anything, but the environment variable is fixed. For more information see, <a href="security.html">managing container security</a></p>
 <p>In the example, the <code>createDbRoles.sh</code> script is called in <code>deploy.sh</code>.</p>
 <h2 id="createtheloginanduser"> Create the login and user</h2>
 <p>Use the <code>sa</code> user to create the login and the user on the <code>ISTORE</code>, and make the user a member of the role.</p>
 <p>You can use an ephemeral SQL Client container to create the login and the user.</p>
-<p>The <a href="https://github.com/IBM-i2/analyze-containers/blob/main/images/sql_client/db-scripts/createDbLoginAndUser.sh">createDbLoginAndUser.sh</a> script in <code>/images/sql_client/db-scripts</code> is used to create the login and user. The scripts is called from the  <code>deploy.sh</code> scripts.</p>
+<p>The <a href="https://github.com/IBM-i2/analyze-containers/blob/main/images/sql_client/db-scripts/createDbLoginAndUser.sh">createDbLoginAndUser.sh</a> script in <code>/images/sql_client/db-scripts</code> is used to create the login and user. The scripts are called from the <code>deploy.sh</code> scripts.</p>
 <h3 id="thecreatedbloginanduserfunction"> The <code>createDbLoginAndUser</code> function</h3>
 <p>The <code>createDbLoginAndUser</code> function uses an ephemeral SQL Client container to create the database administrator login and user. The login and user are created by the <code>sa</code> user.</p>
 <p>For more information about running a SQL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>

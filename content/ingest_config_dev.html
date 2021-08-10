@@ -90,7 +90,7 @@
 </ul>
 <p>If you have deployed with the law enforcement schema, complete the steps in <a href="#exampleprocess">Example ingestion process</a> to ingest example data into your Information Store.</p>
 <h2 id="data-sets">Data sets</h2>
-<p>The <code>/i2a-data</code> directory is used to contain the data sets that you ingest into the Information Store of a deployment. The data the you ingest into the Information Store must conform to the Information Store schema, however one data set can be ingested with different configs. There is not a 1-to-1 mapping between data sets and configs. Each data set must contain at least one ingestion script. This script is contains the functions that populate the staging tables with your data, and call the ETL toolkit tools that ingest the data.</p>
+<p>The <code>/i2a-data</code> directory is used to contain the data sets that you ingest into the Information Store of a deployment. The data that you ingest into the Information Store must conform to the Information Store schema. However, one data set can be ingested with different configs. There is not a 1-to-1 mapping between data sets and configs. Each data set must contain at least one ingestion script. This script contains the functions that populate the staging tables with your data and calls the ETL toolkit tools that ingest the data.</p>
 <p>The expected directory structure is as follows:  </p>
 <pre><code class="lang-sh">- i2a-data
     - &lt;data_set&gt;

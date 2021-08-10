@@ -138,22 +138,19 @@
       "output": {
         ".html": {
           "relative_path": "content/connector_config_dev.html",
-          "hash": "KIGCdlNFj+K6XF0xzXXqgQ=="
+          "hash": "uyEAd4ZuAGGGnNiiQWGIkg=="
         }
       },
       "is_incremental": false,
       "version": ""
     },
     {
-      "log_codes": [
-        "InvalidYamlHeader"
-      ],
       "type": "Conceptual",
       "source_relative_path": "content/deploy_config_dev.md",
       "output": {
         ".html": {
           "relative_path": "content/deploy_config_dev.html",
-          "hash": "uo8rBq2o505BWaiveJrdvA=="
+          "hash": "AveDizmJMG62zwFlUE1/1Q=="
         }
       },
       "is_incremental": false,
@@ -204,7 +201,7 @@
       "output": {
         ".html": {
           "relative_path": "content/getting_started.html",
-          "hash": "WJFkmWxME6IAqQtbJOb1Cg=="
+          "hash": "crmo8M4y3FsVt5HTx2AFRw=="
         }
       },
       "is_incremental": false,
@@ -216,7 +213,7 @@
       "output": {
         ".html": {
           "relative_path": "content/images and containers/etl_client.html",
-          "hash": "96TXa4Qi3G+RcqPYApZuUA=="
+          "hash": "NFC1CMf8Z8mAi4+BvXtKOQ=="
         }
       },
       "is_incremental": false,
@@ -288,7 +285,7 @@
       "output": {
         ".html": {
           "relative_path": "content/images and containers/sql_client.html",
-          "hash": "Ol+F9YSJjAzXIe3DT6KYzQ=="
+          "hash": "yaw/wDB8K6wWVABlQqk0tg=="
         }
       },
       "is_incremental": false,
@@ -324,7 +321,7 @@
       "output": {
         ".html": {
           "relative_path": "content/ingest_config_dev.html",
-          "hash": "+sVKgkyt98ryU+yplqC2Jw=="
+          "hash": "5gZ9SmeR/6UHLa9bKoN92g=="
         }
       },
       "is_incremental": false,
@@ -336,7 +333,7 @@
       "output": {
         ".html": {
           "relative_path": "content/manage_backup_restore.html",
-          "hash": "YkEFI6Ve/D8P0fFX0GTt+A=="
+          "hash": "KcA9H6Xl87Mu8lt2gBl6aw=="
         }
       },
       "is_incremental": false,
@@ -348,16 +345,13 @@
       "output": {
         ".html": {
           "relative_path": "content/managing_config_dev.html",
-          "hash": "u+Bjf8ctQhllqgoh/X/HmQ=="
+          "hash": "gmMdMEHjIvVcf4Q9tztANg=="
         }
       },
       "is_incremental": false,
       "version": ""
     },
     {
-      "log_codes": [
-        "InvalidYamlHeader"
-      ],
       "type": "Conceptual",
       "source_relative_path": "content/reference architecture/deploy_pre_prod.md",
       "output": {
@@ -387,7 +381,7 @@
       "output": {
         ".html": {
           "relative_path": "content/security and users/db_users.html",
-          "hash": "g64pvhHbWK7YXME6cAIAAg=="
+          "hash": "5ccA6srYmUqEsE5oLGOxww=="
         }
       },
       "is_incremental": false,
@@ -483,7 +477,7 @@
       "output": {
         ".html": {
           "relative_path": "content/tools and functions/etl_tools.html",
-          "hash": "9mmDgsBHidoJ5Taq1Ns8Gg=="
+          "hash": "1N3+inllcuQctr7K8/De7w=="
         }
       },
       "is_incremental": false,

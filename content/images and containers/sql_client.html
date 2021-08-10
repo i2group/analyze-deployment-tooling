@@ -112,7 +112,7 @@ For an example of how to use <code>runSQLServerCommandAsETL</code> function, see
 </blockquote>
 <h2 id="bindmounts"> Bind mounts</h2>
 <ul>
-<li><p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access zookeeper and certificates used in SSL.<br>The directory is mounted to a location in the container defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>SSL_CA_CERTIFICATE_FILE</code> to locate the secrets. 
+<li><p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access ZooKeeper and certificates used in SSL.<br>The directory is mounted to a location in the container defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>SSL_CA_CERTIFICATE_FILE</code> to locate the secrets. 
 In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files. This is achieved by using a bind mount. In production this would not be required.</p>
 </li>
 <li><p><strong>Toolkit</strong>:<br>For the SQL Server Client to use the tools in <code>/opt/toolkit/i2-tools/scripts</code>, 
