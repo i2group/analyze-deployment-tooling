@@ -84,9 +84,10 @@
 <li>Before you update your environment:  <ol>
 <li>Back up any databases that are associated with your configs. For more information, see <a href="manage_backup_restore.html">Back up and restore a development database</a>.</li>
 <li>Back up the following directories from your existing copy of the repository:<ul>
+<li><code>backups</code></li>
 <li><code>configs</code></li>
-<li><code>dev-environment-secrets</code></li>
 <li><code>connector-images</code></li>
+<li><code>dev-environment-secrets</code></li>
 <li><code>gateway-schemas</code></li>
 <li><code>i2a-data</code></li>
 </ul>
@@ -103,6 +104,22 @@
 <li><p>To update the images and secrets, run the <code>createDevEnvironment.sh</code> script from the <code>scripts</code> directory.</p>
 <pre><code class="lang-sh">./createDevEnvironment.sh
 </code></pre></li>
+<li><p>Before you can use i2 Analyze and the tools, you must read the licence agreement and copyright notices. The licence file is in the <code>pre-reqs/i2analyze/license</code> directory.  </p>
+<ol>
+<li>To accept the licence agreement, change the value of the <code>LIC_AGREEMENT</code> environment variable to <code>ACCEPT</code>. The environment variable is in the <code>utils/simulatedExternalVariables.sh</code> script.</li>
+</ol>
+</li>
+<li><p>Before you can use Microsoft SQL Server, you must accept the licence agreement and the EULA. For more information about using the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables, see <a href="https://docs.microsoft.com/sql/linux/sql-server-linux-configure-environment-variables?view=sql-server-ver15#environment-variables">Configure SQL Server settings with environment variables on Linux</a>  </p>
+<ol>
+<li>To accept the licence in this environment, change the value of the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables. The environment variables are in the <code>utils/simulatedExternalVariables.sh</code> script.</li>
+</ol>
+</li>
+</ol>
+<p>For example:</p>
+<pre><code class="lang-sh">LIC_AGREEMENT=ACCEPT
+MSSQL_PID=Developer
+ACCEPT_EULA=Y
+</code></pre><ol>
 <li><p>To update any deployed configs, run the <code>deploy.sh</code> script from the <code>scripts</code> directory with your config name. You must run the script twice, once with the <code>clean</code> task.<br> For example:</p>
 <pre><code class="lang-sh">./deploy.sh -c &lt;config_name&gt; -t clean
 ./deploy.sh -c &lt;config_name&gt;
