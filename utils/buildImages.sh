@@ -126,6 +126,18 @@ print "Building ZooKeeper image"
 docker build -t "${ZOOKEEPER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/zookeeper_redhat"
 
 ###############################################################################
+# Building Db2 Server image                                                   #
+###############################################################################
+print "Building Db2 Server image"
+docker build -t "${DB2_SERVER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/db2_server"
+
+###############################################################################
+# Building Db2 Client image                                                   #
+###############################################################################
+print "Building Db2 Client image"
+docker build -t "${DB2_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/db2_client"
+
+###############################################################################
 # Building SQL Server image                                                   #
 ###############################################################################
 print "Building SQL Server image"
@@ -156,6 +168,7 @@ echo "Populating etltoolkit classes folder"
 mkdir "${IMAGES_DIR}/etl_client/etltoolkit/classes"
 cp "${LOCAL_CONFIG_I2_TOOLS_DIR}/"* "${IMAGES_DIR}/etl_client/etltoolkit/classes"
 cp "${LOCAL_ISTORE_NAMES_SQL_SERVER_PROPERTIES_FILE}" "${IMAGES_DIR}/etl_client/etltoolkit/classes"
+cp "${LOCAL_ISTORE_NAMES_DB2_PROPERTIES_FILE}" "${IMAGES_DIR}/etl_client/etltoolkit/classes"
 docker build -t "${ETL_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/etl_client" \
   --build-arg USER_UID="$(id -u "${USER}")" \
   --build-arg BASE_IMAGE="${I2A_TOOLS_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}"
@@ -164,3 +177,14 @@ docker build -t "${ETL_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMA
 # Building Example connector image                                            #
 ###############################################################################
 docker build -t "${CONNECTOR_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/example_connector"
+
+###############################################################################
+# Building i2Connect Server base image                                        #
+###############################################################################
+if [[ "${AWS_ARTEFACTS}" == "true" ]]; then
+  print "Running buildi2ConnectServerBaseImage.sh"
+  "${ROOT_DIR}/utils/buildi2ConnectServerBaseImage.sh" -a -l "${I2A_DEPENDENCIES_IMAGES_TAG}"
+else
+  print "Running buildi2ConnectServerBaseImage.sh"
+  "${ROOT_DIR}/utils/buildi2ConnectServerBaseImage.sh"
+fi

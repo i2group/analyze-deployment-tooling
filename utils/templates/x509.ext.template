@@ -67,8 +67,3 @@ subjectAltName          = @subject_alt_names
 
 [ subject_alt_names ]
 DNS.1 = HOST_NAME
-
-
-[ sqlserver ]
-subjectKeyIdentifier    = hash
-authorityKeyIdentifier  = keyid,issuer:always

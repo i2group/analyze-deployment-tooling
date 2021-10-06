@@ -37,9 +37,14 @@
 #   None
 #######################################
 function checkClientFunctionsEnvironmentVariablesAreSet() {
-  while read var_name; do
+  while read -r var_name; do
     checkVariableIsSet "${!var_name}" "${var_name} environment variable is not set"
   done <"${ROOT_DIR}/utils/requiredEnvironmentVariables.txt"
+}
+
+function isSecret() {
+  local secret="$1"
+  aws secretsmanager describe-secret --secret-id "${DEPLOYMENT_NAME}/${secret}" --region "${AWS_REGION}" > /dev/null
 }
 
 #######################################
@@ -118,7 +123,9 @@ function waitForIndexesToBeBuilt() {
   local max_tries=15
   local ready_index
   local index_status_response
+  local app_admin_password
 
+  app_admin_password=$(getApplicationAdminPassword)
   print "Waiting for indexes to be built"
   for i in $(seq 1 "${max_tries}"); do
     index_status_response=$(
@@ -129,8 +136,8 @@ function waitForIndexesToBeBuilt() {
         --request POST \"${FRONT_END_URI}/j_security_check\" \
         --header 'Origin: ${FRONT_END_URI}' \
         --header 'Content-Type: application/x-www-form-urlencoded' \
-        --data-urlencode 'j_username=Jenny' \
-        --data-urlencode 'j_password=Jenny' \
+        --data-urlencode 'j_username=${I2_ANALYZE_ADMIN}' \
+        --data-urlencode 'j_password=${app_admin_password}' \
       && curl \
         --silent \
         --cookie /tmp/cookie.txt \
@@ -162,9 +169,9 @@ function waitForConnectorToBeLive() {
   local connector_config_url
   
   if [[ "${GATEWAY_SSL_CONNECTION}" == true ]]; then
-    connector_config_url="https://${connector_fqdn}:3700${configuration_path}"
+    connector_config_url="https://${connector_fqdn}:3443${configuration_path}"
   else
-    connector_config_url="http://${connector_fqdn}:3700${configuration_path}"
+    connector_config_url="http://${connector_fqdn}:3443${configuration_path}"
   fi
 
   print "Waiting for Connector to be live on ${connector_config_url}"
@@ -225,6 +232,40 @@ function changeSAPassword() {
     -e "DB_PORT=${DB_PORT}" \
     "${SQL_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" \
     "/opt/db-scripts/changeSAPassword.sh"
+}
+
+#######################################
+# Change the initial password for the db2inst1 user.
+# Arguments:
+#   None
+#######################################
+function changeDb2inst1Password() {
+  local DB2INST1_PASSWORD
+  local DB2INST1_INITIAL_PASSWORD
+  local SSL_CA_CERTIFICATE
+  DB2INST1_PASSWORD=$(getSecret db2server/db2inst1_PASSWORD)
+  DB2INST1_INITIAL_PASSWORD=$(getSecret db2server/db2inst1_INITIAL_PASSWORD)
+
+  if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
+    SSL_CA_CERTIFICATE=$(getSecret certificates/CA/CA.cer)
+  fi
+
+  docker run \
+    --rm \
+    "${EXTRA_ARGS[@]}" \
+    --name "${DB2_CLIENT_CONTAINER_NAME}" \
+    --privileged=true \
+    -e "SQLCMD=${SQLCMD}" \
+    -e "DB2INST1_USERNAME=${DB2INST1_USERNAME}" \
+    -e "DB2INST1_OLD_PASSWORD=${DB2INST1_INITIAL_PASSWORD}" \
+    -e "DB2INST1_NEW_PASSWORD=${DB2INST1_PASSWORD}" \
+    -e "DB_SSL_CONNECTION=${DB_SSL_CONNECTION}" \
+    -e "SSL_CA_CERTIFICATE=${SSL_CA_CERTIFICATE}" \
+    -e "DB_SERVER=${DB2_SERVER_FQDN}" \
+    -e "DB_PORT=${DB_PORT}" \
+    -e "DB_NODE=${DB_NODE}" \
+    "${DB2_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" \
+    "/opt/db-scripts/changeDb2inst1Password.sh"
 }
 
 #######################################
@@ -325,14 +366,28 @@ function runi2AnalyzeTool() {
   local ZOO_DIGEST_PASSWORD
   local ZOO_DIGEST_READONLY_PASSWORD
   local SOLR_ADMIN_DIGEST_PASSWORD
-  local DBA_PASSWORD
+  local DB_SERVER_FQDN
+  local DB_USERNAME
+  local DB_PASSWORD
   local SSL_PRIVATE_KEY
   local SSL_CERTIFICATE
   local SSL_CA_CERTIFICATE
   ZOO_DIGEST_PASSWORD=$(getSecret solr/ZK_DIGEST_PASSWORD)
   ZOO_DIGEST_READONLY_PASSWORD=$(getSecret solr/ZK_DIGEST_READONLY_PASSWORD)
   SOLR_ADMIN_DIGEST_PASSWORD=$(getSecret solr/SOLR_ADMIN_DIGEST_PASSWORD)
-  DBA_PASSWORD=$(getSecret sqlserver/dba_PASSWORD)
+
+  case "${DB_DIALECT}" in
+    db2)
+      DB_USERNAME="${DB2INST1_USERNAME}"
+      DB_PASSWORD=$(getSecret db2server/db2inst1_PASSWORD)
+      DB_SERVER_FQDN="${DB2_SERVER_FQDN}"
+      ;;
+    sqlserver)
+      DB_USERNAME="${DBA_USERNAME}"
+      DB_PASSWORD=$(getSecret sqlserver/dba_PASSWORD)
+      DB_SERVER_FQDN="${SQL_SERVER_FQDN}"
+      ;;
+  esac
 
   if [[ "${SOLR_ZOO_SSL_CONNECTION}" == "true" ]]; then
     SSL_PRIVATE_KEY=$(getSecret certificates/solrClient/server.key)
@@ -350,13 +405,13 @@ function runi2AnalyzeTool() {
     -e "LIC_AGREEMENT=${LIC_AGREEMENT}" \
     -e ZK_HOST="${ZK_MEMBERS}" \
     -e "DB_DIALECT=${DB_DIALECT}" \
-    -e "DB_SERVER=${SQL_SERVER_FQDN}" \
+    -e "DB_SERVER=${DB_SERVER_FQDN}" \
     -e "DB_PORT=${DB_PORT}" \
     -e "DB_NAME=${DB_NAME}" \
     -e "CONFIG_DIR=/opt/configuration" \
     -e "GENERATED_DIR=/opt/databaseScripts/generated" \
-    -e "DB_USERNAME=${DBA_USERNAME}" \
-    -e "DB_PASSWORD=${DBA_PASSWORD}" \
+    -e "DB_USERNAME=${DB_USERNAME}" \
+    -e "DB_PASSWORD=${DB_PASSWORD}" \
     -e "DB_OS_TYPE=${DB_OS_TYPE}" \
     -e "DB_INSTALL_DIR=${DB_INSTALL_DIR}" \
     -e "DB_LOCATION_DIR=${DB_LOCATION_DIR}" \
@@ -581,9 +636,24 @@ function runSQLServerCommandAsDBB() {
 #   None
 #######################################
 function runEtlToolkitToolAsi2ETL() {
+  local DB_USERNAME
   local DB_PASSWORD
+  local DB_SERVER_FQDN
   local SSL_CA_CERTIFICATE
-  DB_PASSWORD=$(getSecret sqlserver/i2etl_PASSWORD)
+
+  case "${DB_DIALECT}" in
+    db2)
+      DB_USERNAME="${DB2INST1_USERNAME}"
+      DB_PASSWORD=$(getSecret db2server/db2inst1_PASSWORD)
+      DB_SERVER_FQDN="${DB2_SERVER_FQDN}"
+      ;;
+    sqlserver)
+      DB_USERNAME="${I2_ETL_USERNAME}"
+      DB_PASSWORD=$(getSecret sqlserver/i2etl_PASSWORD)
+      DB_SERVER_FQDN="${SQL_SERVER_FQDN}"
+      ;;
+  esac
+  
 
   if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
     SSL_CA_CERTIFICATE=$(getSecret certificates/CA/CA.cer)
@@ -596,7 +666,7 @@ function runEtlToolkitToolAsi2ETL() {
     --user "$(id -u "${USER}"):$(id -u "${USER}")" \
     -v "${LOCAL_CONFIG_DIR}/logs:/opt/configuration/logs" \
     -v "${DATA_DIR}:/var/i2a-data" \
-    -e "DB_SERVER=${SQL_SERVER_FQDN}" \
+    -e "DB_SERVER=${DB_SERVER_FQDN}" \
     -e "DB_PORT=${DB_PORT}" \
     -e "DB_NAME=${DB_NAME}" \
     -e "DB_DIALECT=${DB_DIALECT}" \
@@ -604,7 +674,7 @@ function runEtlToolkitToolAsi2ETL() {
     -e "DB_INSTALL_DIR=${DB_INSTALL_DIR}" \
     -e "DB_LOCATION_DIR=${DB_LOCATION_DIR}" \
     -e "ETL_TOOLKIT_JAVA_HOME=/opt/java/openjdk" \
-    -e "DB_USERNAME=${I2_ETL_USERNAME}" \
+    -e "DB_USERNAME=${DB_USERNAME}" \
     -e "DB_PASSWORD=${DB_PASSWORD}" \
     -e "DB_SSL_CONNECTION=${DB_SSL_CONNECTION}" \
     -e "SSL_CA_CERTIFICATE=${SSL_CA_CERTIFICATE}" \
@@ -618,10 +688,21 @@ function runEtlToolkitToolAsi2ETL() {
 #   None
 #######################################
 function runEtlToolkitToolAsDBA() {
+  local DB_USERNAME
   local DB_PASSWORD
   local SSL_CA_CERTIFICATE
-  DB_PASSWORD=$(getSecret sqlserver/dba_PASSWORD)
 
+  case "${DB_DIALECT}" in
+    db2)
+      DB_USERNAME="${DB2INST1_USERNAME}"
+      DB_PASSWORD=$(getSecret db2server/db2inst1_PASSWORD)
+      ;;
+    sqlserver)
+      DB_USERNAME="${DBA_USERNAME}"
+      DB_PASSWORD=$(getSecret sqlserver/dba_PASSWORD)
+      ;;
+  esac
+  
   if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
     SSL_CA_CERTIFICATE=$(getSecret certificates/CA/CA.cer)
   fi
@@ -641,11 +722,85 @@ function runEtlToolkitToolAsDBA() {
     -e "DB_INSTALL_DIR=${DB_INSTALL_DIR}" \
     -e "DB_LOCATION_DIR=${DB_LOCATION_DIR}" \
     -e "ETL_TOOLKIT_JAVA_HOME=/opt/java/openjdk" \
-    -e "DB_USERNAME=${DBA_USERNAME}" \
+    -e "DB_USERNAME=${DB_USERNAME}" \
     -e "DB_PASSWORD=${DB_PASSWORD}" \
     -e "DB_SSL_CONNECTION=${DB_SSL_CONNECTION}" \
     -e "SSL_CA_CERTIFICATE=${SSL_CA_CERTIFICATE}" \
     "${ETL_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "$@"
+}
+
+#######################################
+# Use an ephemeral Db2 Client container to run database scripts or commands
+# against the Information Store database as the `db2inst1` user.
+# Arguments:
+#   None
+#######################################
+function runDb2ServerCommandAsDb2inst1() {
+  local DB_PASSWORD
+  local SSL_CA_CERTIFICATE
+  DB_PASSWORD=$(getSecret db2server/db2inst1_PASSWORD)
+
+  if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
+    SSL_CA_CERTIFICATE=$(getSecret certificates/CA/CA.cer)
+  fi
+
+  docker run \
+    --rm \
+    "${EXTRA_ARGS[@]}" \
+    --name "${DB2_CLIENT_CONTAINER_NAME}" \
+    --privileged=true \
+    -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -v "${LOCAL_CONFIG_DIR}:/opt/configuration" \
+    -e "SQLCMD=${SQLCMD}" \
+    -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
+    -e "DB_INSTALL_DIR=${DB_INSTALL_DIR}" \
+    -e "DB_LOCATION_DIR=${DB_LOCATION_DIR}" \
+    -e "DB_SERVER=${DB2_SERVER_FQDN}" \
+    -e "DB_PORT=${DB_PORT}" \
+    -e "DB_NAME=${DB_NAME}" \
+    -e "DB_NODE=${DB_NODE}" \
+    -e "GENERATED_DIR=/opt/databaseScripts/generated" \
+    -e "DB_USERNAME=${DB2INST1_USERNAME}" \
+    -e "DB_PASSWORD=${DB_PASSWORD}" \
+    -e "DB_SSL_CONNECTION=${DB_SSL_CONNECTION}" \
+    -e "SSL_CA_CERTIFICATE=${SSL_CA_CERTIFICATE}" \
+    "${DB2_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "$@"
+}
+
+#######################################
+# Use an ephemeral Db2 Client container to run database scripts or commands
+# against the Information Store database as the `db2inst1` user with the initial db2inst1 password.
+# Arguments:
+#   None
+#######################################
+function runDb2ServerCommandAsAsFirstStartDb2inst1() {
+  local DB_PASSWORD
+  local SSL_CA_CERTIFICATE
+  DB_PASSWORD=$(getSecret db2server/db2inst1_INITIAL_PASSWORD)
+
+  if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
+    SSL_CA_CERTIFICATE=$(getSecret certificates/CA/CA.cer)
+  fi
+
+  docker run \
+    --rm \
+    "${EXTRA_ARGS[@]}" \
+    --name "${DB2_CLIENT_CONTAINER_NAME}" \
+    --privileged=true \
+    -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -e "SQLCMD=${SQLCMD}" \
+    -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
+    -e "DB_INSTALL_DIR=${DB_INSTALL_DIR}" \
+    -e "DB_SERVER=${DB2_SERVER_FQDN}" \
+    -e "DB_PORT=${DB_PORT}" \
+    -e "DB_NAME=${DB_NAME}" \
+    -e "DB_NODE=${DB_NODE}" \
+    -e "GENERATED_DIR=/opt/databaseScripts/generated" \
+    -e "DB_USERNAME=${DB2INST1_USERNAME}" \
+    -e "DB_PASSWORD=${DB_PASSWORD}" \
+    -e "DB_SSL_CONNECTION=${DB_SSL_CONNECTION}" \
+    -e "SSL_CA_CERTIFICATE=${SSL_CA_CERTIFICATE}" \
+    "${DB2_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "$@"
 }
 
 #######################################

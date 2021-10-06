@@ -33,6 +33,10 @@
 if [[ "$AWS_ARTEFACTS" == "true" ]]; then
   AWS_SECRETS="true"
   AWS_IMAGES="true"
+  # aws cli [v2] - Default command output to a pager (https://github.com/aws/aws-cli/pull/4702)
+  # Disable opening 'less' (default pager)
+  export AWS_PAGER=""
+  export AWS_DEFAULT_OUTPUT="json"
 else 
   AWS_SECRETS="false"
   AWS_IMAGES="false"
@@ -44,6 +48,8 @@ fi
 if [[ "$AWS_IMAGES" == "true" ]]; then
   ZOOKEEPER_IMAGE_NAME="${ECR_BASE_NAME}/zookeeper_redhat"
   SOLR_IMAGE_NAME="${ECR_BASE_NAME}/solr_redhat"
+  DB2_SERVER_IMAGE_NAME="${ECR_BASE_NAME}/db2_redhat"
+  DB2_CLIENT_IMAGE_NAME="${ECR_BASE_NAME}/db2_client_redhat"
   SQL_SERVER_IMAGE_NAME="${ECR_BASE_NAME}/sqlserver_redhat"
   SQL_CLIENT_IMAGE_NAME="${ECR_BASE_NAME}/sqlserver_client_redhat"
   LIBERTY_BASE_IMAGE_NAME="${ECR_BASE_NAME}/liberty_redhat"
@@ -53,12 +59,14 @@ if [[ "$AWS_IMAGES" == "true" ]]; then
   LOAD_BALANCER_IMAGE_NAME="ha_proxy_image"
   CONNECTOR_IMAGE_NAME="${ECR_BASE_NAME}/example_connector"
   CONNECTOR_IMAGE_BASE_NAME="${ECR_BASE_NAME}/"
-  SEL_CONNECTOR_BASE_IMAGE_NAME="${ECR_BASE_NAME}/sel_connector"
+  I2CONNECT_SERVER_BASE_IMAGE_NAME="${ECR_BASE_NAME}/i2connect_sdk"
 else
   ZOOKEEPER_IMAGE_NAME="zookeeper_redhat"
   SOLR_IMAGE_NAME="solr_redhat"
   SQL_SERVER_IMAGE_NAME="sqlserver_redhat"
   SQL_CLIENT_IMAGE_NAME="sqlserver_client_redhat"
+  DB2_SERVER_IMAGE_NAME="db2_redhat"
+  DB2_CLIENT_IMAGE_NAME="db2_client_redhat"
   LIBERTY_BASE_IMAGE_NAME="liberty_redhat"
   LIBERTY_CONFIGURED_IMAGE_NAME="liberty_configured_redhat"
   ETL_CLIENT_IMAGE_NAME="etlclient_redhat"
@@ -66,7 +74,7 @@ else
   LOAD_BALANCER_IMAGE_NAME="ha_proxy_image"
   CONNECTOR_IMAGE_NAME="example_connector"
   CONNECTOR_IMAGE_BASE_NAME=""
-  SEL_CONNECTOR_BASE_IMAGE_NAME="sel_connector"
+  I2CONNECT_SERVER_BASE_IMAGE_NAME="i2connect_sdk"
 fi
 
 ###############################################################################
@@ -101,6 +109,8 @@ else
   SOLR3_CONTAINER_NAME="solr3.${CONFIG_NAME}"
   SQL_CLIENT_CONTAINER_NAME="sqlclient.${CONFIG_NAME}"
   SQL_SERVER_CONTAINER_NAME="sqlserver.${CONFIG_NAME}"
+  DB2_CLIENT_CONTAINER_NAME="db2client.${CONFIG_NAME}"
+  DB2_SERVER_CONTAINER_NAME="db2server.${CONFIG_NAME}"
   LIBERTY1_CONTAINER_NAME="liberty1.${CONFIG_NAME}"
   LIBERTY2_CONTAINER_NAME="liberty2.${CONFIG_NAME}"
   LOAD_BALANCER_CONTAINER_NAME="load_balancer.${CONFIG_NAME}"
@@ -120,6 +130,7 @@ DBA_USERNAME="dba"
 DBB_USERNAME="dbb"
 I2_ETL_USERNAME="i2etl"
 ETL_USERNAME="etl"
+DB2INST1_USERNAME="db2inst1"
 I2_ANALYZE_USERNAME="i2analyze"
 I2_GATEWAY_USERNAME="gateway.user"
 
@@ -152,3 +163,8 @@ case "${DEPLOYMENT_PATTERN}" in
   APPLICATION_BASE_TYPE="opal-services-is"
   ;;
 esac
+
+###############################################################################
+# Gateway variables                                                           #
+###############################################################################
+declare -gA GATEWAY_SHORT_NAME_SET

@@ -126,7 +126,7 @@ function initializeIStoreDatabase() {
 }
 
 function deploySecureSQLServer() {
-  docker volume create "${SQL_SERVER_BACKUP_VOLUME_NAME}"
+  docker volume create "${DB_BACKUP_VOLUME_NAME}"
   runSQLServer
   waitForSQLServerToBeLive "true"
   changeSAPassword
@@ -170,10 +170,10 @@ function configureExampleConnector() {
   waitForConnectorToBeLive "${CONNECTOR1_FQDN}"
 }
 
-function createDataSourceProperties() {
+function createDataSourceId() {
   local dsid_properties_file_path="${LOCAL_CONFIG_DIR}/environment/dsid/dsid.infostore.properties"
 
-  createDsidInfoStorePropertiesFile "${dsid_properties_file_path}"
+  createDsidPropertiesFile "${dsid_properties_file_path}"
 }
 
 ###############################################################################
@@ -189,7 +189,7 @@ createDockerNetwork "${DOMAIN_NAME}"
 ###############################################################################
 # Create dsid.infostore.properties file                                       #
 ###############################################################################
-createDataSourceProperties
+createDataSourceId
 
 ###############################################################################
 # Running Solr and ZooKeeper                                                  #

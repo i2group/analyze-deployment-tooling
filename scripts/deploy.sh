@@ -33,9 +33,11 @@ ROOT_DIR=$(pushd . 1> /dev/null ; while [ "$(pwd)" != "/" ]; do test -e .root &&
 function printUsage() {
   echo "Usage:"
   echo "  deploy.sh -c <config_name> [-t {clean}] [-v] [-y]"
-  echo "  deploy.sh -c <config_name> [-t {connectors}] [-v] [-y]"
+  echo "  deploy.sh -c <config_name> [-t {connectors} [-i <connector1_name>] [-e <connector1_name>]] [-v] [-y]"
+  echo "  deploy.sh -c <config_name> [-t {extensions} [-i <extension1_name>] [-e <extension1_name>]] [-v] [-y]"
   echo "  deploy.sh -c <config_name> [-t {backup|restore} [-b <backup_name>]] [-v] [-y]"
-  echo "  deploy.sh -c <config_name> [-a [-t {connectors}] -d <deployment_name> -l <dependency_label>] [-v] [-y]"
+  echo "  deploy.sh -c <config_name> -a [-t {connectors} [-i <connector1_name>] [-e <connector1_name>]] -d <deployment_name> -l <dependency_label>] [-v] [-y]"
+  echo "  deploy.sh -c <config_name> -a -t {package} -d <deployment_name> -l <dependency_label> [-v]"
   echo "  deploy.sh -h" 1>&2
 }
 
@@ -47,31 +49,43 @@ function usage() {
 function help() {
   printUsage
   echo "Options:" 1>&2
-  echo "  -c <config_name>      Name of the config to use." 1>&2
-  echo "  -t {clean}            Clean the deployment. Will permanently remove all containers and data." 1>&2
-  echo "  -t {connectors}       Deploy or update the connectors" 1>&2
-  echo "  -t {backup}           Backup the database." 1>&2
-  echo "  -t {restore}          Restore the database." 1>&2
-  echo "  -b <backup_name>      Name of the backup to create or restore. If not specified, the default backup is used." 1>&2
-  echo "  -a                    Produce or use artefacts on AWS." 1>&2
-  echo "  -d <deployment_name>  Name of deployment to use on AWS." 1>&2
-  echo "  -l <dependency_label> Name of dependency image label to use on AWS." 1>&2
-  echo "  -v                    Verbose output." 1>&2
-  echo "  -y                    Answer 'yes' to all prompts." 1>&2
-  echo "  -h                    Display the help." 1>&2
+  echo "  -c <config_name>                       Name of the config to use." 1>&2
+  echo "  -t {clean}                             Clean the deployment. Will permanently remove all containers and data." 1>&2
+  echo "  -t {extensions}                        Deploy or update the extensions." 1>&2
+  echo "  -t {connectors}                        Deploy or update the connectors" 1>&2
+  echo "  -t {backup}                            Backup the database." 1>&2
+  echo "  -t {restore}                           Restore the database." 1>&2
+  echo "  -t {package}                           Prepare production artefacts." 1>&2
+  echo "  -i <connector_name>|<extension_name>   Name of the connectors or extensions to deploy and update. To specify multiple values, add additional -i options." 1>&2
+  echo "  -e <connector_name>|<extension_name>   Name of the connectors or extensions to not deploy and update. To specify multiple values, add additional -e options." 1>&2
+  echo "  -b <backup_name>                       Name of the backup to create or restore. If not specified, the default backup is used." 1>&2
+  echo "  -a                                     Produce or use artefacts on AWS." 1>&2
+  echo "  -d <deployment_name>                   Name of deployment to use on AWS." 1>&2
+  echo "  -l <dependency_label>                  Name of dependency image label to use on AWS." 1>&2
+  echo "  -v                                     Verbose output." 1>&2
+  echo "  -y                                     Answer 'yes' to all prompts." 1>&2
+  echo "  -h                                     Display the help." 1>&2
   exit 1
 }
 
 AWS_DEPLOY="false"
 
-while getopts ":c:t:b:d:l:vayh" flag; do
+while getopts ":c:t:i:e:b:d:l:vayh" flag; do
   case "${flag}" in
   c)
     CONFIG_NAME="${OPTARG}"
     ;;
   t)
     TASK="${OPTARG}"
-    [[ "${TASK}" == "clean" || "${TASK}" == "backup" || "${TASK}" == "restore" || "${TASK}" == "connectors"  ]] || usage
+    [[ "${TASK}" == "clean" || "${TASK}" == "backup" || "${TASK}" == "restore" || "${TASK}" == "connectors" || "${TASK}" == "package" || "${TASK}" == "extensions" ]] || usage
+    ;;
+  i)
+    INCLUDED_CONNECTORS+=("$OPTARG")
+    INCLUDED_EXTENSIONS+=("$OPTARG")
+    ;;
+  e)
+    EXCLUDED_CONNECTORS+=("${OPTARG}")
+    EXCLUDED_EXTENSIONS+=("${OPTARG}")
     ;;
   b)
     BACKUP_NAME="${OPTARG}"
@@ -115,6 +129,12 @@ if [[ -z "${AWS_ARTEFACTS}" ]]; then
   AWS_ARTEFACTS="false"
 fi
 
+if [[ "${AWS_ARTEFACTS}" == "true" && "${TASK}" == "package" ]]; then
+  EXTENSIONS_DEV="false"
+else
+  EXTENSIONS_DEV="true"
+fi
+
 if [[ -z "${YES_FLAG}" ]]; then
   YES_FLAG="false"
 fi
@@ -134,6 +154,13 @@ if [[ -z "${I2A_DEPENDENCIES_IMAGES_TAG}" ]]; then
   I2A_DEPENDENCIES_IMAGES_TAG="latest"
 fi
 
+if [[ "${INCLUDED_CONNECTORS[*]}" && "${EXCLUDED_CONNECTORS[*]}" ]]; then
+  printf "\e[31mERROR: Incompatible options: Both (-i) and (-e) were specified.\n" >&2
+  printf "\e[0m" >&2
+  usage
+  exit 1
+fi
+
 # Load common functions
 source "${ROOT_DIR}/utils/commonFunctions.sh"
 source "${ROOT_DIR}/utils/serverFunctions.sh"
@@ -146,69 +173,8 @@ source "${ROOT_DIR}/utils/commonVariables.sh"
 source "${ROOT_DIR}/utils/internalHelperVariables.sh"
 
 ###############################################################################
-# Shared variables                                                            #
-###############################################################################
-declare -A GATEWAY_SHORT_NAME_SET
-
-###############################################################################
 # Create Helper Functions                                                     #
 ###############################################################################
-
-function createDataSourceProperties() {
-  local dsid_properties_file_path="${ROOT_DIR}/configs/${CONFIG_NAME}/configuration/environment/dsid/dsid.infostore.properties"
-
-  createDsidInfoStorePropertiesFile "${dsid_properties_file_path}"
-}
-
-#######################################
-# Create .configuration folder that is used by the i2 tools
-# Arguments:
-#   None
-#######################################
-function createMountedConfigStructure() {
-  local OPAL_SERVICES_IS_PATH="${LOCAL_CONFIG_DIR}/fragments/opal-services-is/WEB-INF/classes"
-  local OPAL_SERVICES_PATH="${LOCAL_CONFIG_DIR}/fragments/opal-services/WEB-INF/classes"
-  local COMMON_PATH="${LOCAL_CONFIG_DIR}/fragments/common/WEB-INF/classes"
-  local ENV_PATH="${LOCAL_CONFIG_DIR}/environment/common"
-  local LIVE_PATH="${LOCAL_CONFIG_DIR}/live"
-  local LOG4J_PATH="${LOCAL_CONFIG_DIR}/i2-tools/classes"
-
-  # Create hidden configuration folder
-  deleteFolderIfExistsAndCreate "${LOCAL_CONFIG_DIR}"
-  cp -pr "${GENERATED_LOCAL_CONFIG_DIR}/." "${LOCAL_CONFIG_DIR}"
-
-  # Add jdbc drivers from pre-reqs folder
-  deleteFolderIfExistsAndCreate "${ENV_PATH}"
-  cp -pr "${PRE_REQS_DIR}/jdbc-drivers" "${ENV_PATH}"
-
-  # Recreate structure and copy right files
-  mkdir -p "${LOG4J_PATH}" "${ENV_PATH}" "${OPAL_SERVICES_IS_PATH}" "${OPAL_SERVICES_PATH}" "${COMMON_PATH}" "${LIVE_PATH}"
-  mv "${LOCAL_CONFIG_DIR}/analyze-settings.properties" \
-    "${LOCAL_CONFIG_DIR}/analyze-connect.properties" \
-    "${LOCAL_CONFIG_DIR}/ApolloServerSettingsMandatory.properties" \
-    "${LOCAL_CONFIG_DIR}/ApolloServerSettingsConfigurationSet.properties" \
-    "${LOCAL_CONFIG_DIR}/server.extensions.xml" "${LOCAL_CONFIG_DIR}/schema-charting-schemes.xml" \
-    "${LOCAL_CONFIG_DIR}/schema.xml" "${LOCAL_CONFIG_DIR}/security-schema.xml" \
-    "${LOCAL_CONFIG_DIR}/log4j2.xml" "${COMMON_PATH}"
-  mv "${LOCAL_CONFIG_DIR}/schema-results-configuration.xml" "${LOCAL_CONFIG_DIR}/schema-vq-configuration.xml" \
-    "${LOCAL_CONFIG_DIR}/schema-source-reference-schema.xml" \
-    "${LOCAL_CONFIG_DIR}/command-access-control.xml" \
-    "${LOCAL_CONFIG_DIR}/DiscoSolrConfiguration.properties" \
-    "${LOCAL_CONFIG_DIR}/connectors-template.json" \
-    "${LOCAL_CONFIG_DIR}/mapping-configuration.json" \
-    "${OPAL_SERVICES_PATH}"
-  mv "${LOCAL_CONFIG_DIR}/InfoStoreNamesDb2.properties" "${LOCAL_CONFIG_DIR}/InfoStoreNamesSQLServer.properties" "${OPAL_SERVICES_IS_PATH}"
-  mv "${LOCAL_CONFIG_DIR}/fmr-match-rules.xml" "${LOCAL_CONFIG_DIR}/system-match-rules.xml" \
-    "${LOCAL_CONFIG_DIR}/highlight-queries-configuration.xml" "${LOCAL_CONFIG_DIR}/geospatial-configuration.json" \
-    "${LOCAL_CONFIG_DIR}/type-access-configuration.xml" \
-    "${LIVE_PATH}"
-
-  # Add gateway schemas
-  for gateway_short_name in "${!GATEWAY_SHORT_NAME_SET[@]}"; do
-    mv "${LOCAL_CONFIG_DIR}/${gateway_short_name}-schema.xml" "${COMMON_PATH}"
-    mv "${LOCAL_CONFIG_DIR}/${gateway_short_name}-schema-charting-schemes.xml" "${COMMON_PATH}"
-  done
-}
 
 #######################################
 # Bash Array pretending to be a dict (using Parameter Substitution)
@@ -229,10 +195,13 @@ function compareCurrentConfiguration() {
         [highlight-queries-configuration.xml]=1
         [type-access-configuration.xml]=1
         [user.registry.xml]=1
+        [server.extensions.xml]=1
+        [server.extensions.dev.xml]=1
         [mapping-configuration.json]=2
         [analyze-settings.properties]=2
         [analyze-connect.properties]=2
         [connectors-template.json]=2
+        [extension-references.json]=2
         [log4j2.xml]=2
         [schema-charting-schemes.xml]=2
         [schema-results-configuration.xml]=2
@@ -241,7 +210,8 @@ function compareCurrentConfiguration() {
         [command-access-control.xml]=2
         [DiscoSolrConfiguration.properties]=2
         [schema.xml]=3
-        [security-schema.xml]=3)
+        [security-schema.xml]=3
+        [environment/dsid/dsid.properties]=3)
   #Add gateway schemas
   for gateway_short_name in "${!GATEWAY_SHORT_NAME_SET[@]}"; do
     checkFilesArray+=([${gateway_short_name}-schema.xml]=1)
@@ -292,6 +262,48 @@ function compareCurrentConfiguration() {
     printInfo "No checksum differences found, configuration files are in sync"
   else
     printInfo "File changes detected, action code is '${configFinalActionCode}'"
+  fi
+  printInfo "Results in array '${filesChangedArray[*]}'"
+}
+
+function compareCurrentExtensions() {
+  local extension_references_file="${LOCAL_USER_CONFIG_DIR}/extension-references.json"
+  local extension_files
+  # Any change to extensions require the same action code 2
+  local configActionCode=2
+
+  printInfo "Checking extensions for '${CONFIG_NAME}' ..."
+  #Add extensions
+  readarray -t extension_files < <( jq -r '.extensions[] | .name + "-" + .version' < "${extension_references_file}")
+  for filename in "${extension_files[@]}"; do
+    # check if filename exists in previous, if so then calc checksum
+    if [ -f "${PREVIOUS_CONFIGURATION_LIB_PATH}/${filename}.jar" ]; then
+      checksumPrevious=$(shasum -a 256 "${PREVIOUS_CONFIGURATION_LIB_PATH}/${filename}.jar" | cut -d ' ' -f 1 )
+    else
+      continue
+    fi
+    # check if filename exists in current, if so then calc checksum
+    if [ -f "${LOCAL_LIB_DIR}/${filename}.jar" ]; then
+      checksumCurrent=$(shasum -a 256 "${LOCAL_LIB_DIR}/${filename}.jar" | cut -d ' ' -f 1 )
+    else
+      continue
+    fi
+    # if checksums different then store filename changed and action
+    if [[ "$checksumPrevious" != "$checksumCurrent" ]]; then
+      printInfo "Previous checksum '${checksumPrevious}' and current checksum '${checksumCurrent}' do not match for filename '${filename}.jar'"
+      filesChangedArray+=( "lib/${filename}.jar" )
+      # set action if higher severity code
+      if [[ "${configActionCode}" -gt "${configFinalActionCode}" ]]; then
+        configFinalActionCode="${configActionCode}"
+      fi
+    fi
+  done
+
+  # count number of files changed (elements) in the array
+  if [ "${#filesChangedArray[@]}" -eq 0 ]; then
+    printInfo "No checksum differences found, extension jars are in sync"
+  else
+    printInfo "Jar changes detected, action code is '${configFinalActionCode}'"
   fi
   printInfo "Results in array '${filesChangedArray[*]}'"
 }
@@ -359,6 +371,35 @@ function createSolrCollections() {
   runSolrClientCommand bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=highlight_index&collection.configName=highlight_index&numShards=1&maxShardsPerNode=4&replicationFactor=1\""
 }
 
+function createDatabase() {
+  printInfo "Removing existing database container"
+  case "${DB_DIALECT}" in
+  db2)
+    deleteContainer "${DB2_SERVER_CONTAINER_NAME}"
+    docker volume rm -f "${DB2_SERVER_VOLUME_NAME}" "${DB_BACKUP_VOLUME_NAME}"
+    createFolder "${DB_BACKUP_VOLUME_NAME}"
+    initializeDb2Server
+    ;;
+  sqlserver)
+    deleteContainer "${SQL_SERVER_CONTAINER_NAME}"
+    docker volume rm -f "${SQL_SERVER_VOLUME_NAME}" "${DB_BACKUP_VOLUME_NAME}"
+    createFolder "${DB_BACKUP_VOLUME_NAME}"
+    initializeSQLServer
+    ;;
+  esac
+}
+
+function restoreDatabase() {
+  case "${DB_DIALECT}" in
+  db2)
+    printErrorAndExit "Not implemented yet"
+    ;;
+  sqlserver)
+    restoreSQlServer
+    ;;
+  esac
+}
+
 function restoreSQlServer() {
   deploySecureSQLServer
   restoreIstoreDatabase
@@ -397,6 +438,19 @@ function recreateSQLServerUsers() {
   runSQLServerCommandAsSA "/opt/db-scripts/addEtlUserToSysAdminRole.sh"
 }
 
+function initializeDb2Server() {
+  deploySecureDb2Server
+  initializeIStoreDatabase
+  configureIStoreDatabase
+  docker exec "${DB2_SERVER_CONTAINER_NAME}" bash -c "su -p db2inst1 -c \". ${DB_LOCATION_DIR}/sqllib/db2profile && db2 UPDATE DB CFG FOR ${DB_NAME} USING extbl_location '${DB_LOCATION_DIR};/var/i2a-data'\""
+}
+
+function deploySecureDb2Server() {
+  runDb2Server
+  waitForDb2ServerToBeLive "true"
+  changeDb2inst1Password
+}
+
 function initializeSQLServer() {
   deploySecureSQLServer
   initializeIStoreDatabase
@@ -409,11 +463,14 @@ function deploySecureSQLServer() {
   changeSAPassword
 }
 
-function initializeIStoreDatabase() {
-  print "Initializing ISTORE database"
-  printInfo "Configuring ISTORE database security"
-  runi2AnalyzeTool "/opt/i2-tools/scripts/generateInfoStoreToolScripts.sh"
-  runi2AnalyzeTool "/opt/i2-tools/scripts/generateStaticInfoStoreCreationScripts.sh"
+function initializeIStoreDatabaseForDb2Server() {
+  runDb2ServerCommandAsDb2inst1 "/opt/databaseScripts/generated/runDatabaseCreationScripts.sh"
+
+  print "Initializing ISTORE database tables"
+  runDb2ServerCommandAsDb2inst1 "/opt/databaseScripts/generated/runStaticScripts.sh"
+}
+
+function initializeIStoreDatabaseForSQLServer() {
   runSQLServerCommandAsSA "/opt/databaseScripts/generated/runDatabaseCreationScripts.sh"
 
   printInfo "Creating database roles"
@@ -432,10 +489,34 @@ function initializeIStoreDatabase() {
   runSQLServerCommandAsDBA "/opt/databaseScripts/generated/runStaticScripts.sh"
 }
 
+function initializeIStoreDatabase() {
+  print "Initializing ISTORE database"
+  printInfo "Generating ISTORE scripts"
+  runi2AnalyzeTool "/opt/i2-tools/scripts/generateInfoStoreToolScripts.sh"
+  runi2AnalyzeTool "/opt/i2-tools/scripts/generateStaticInfoStoreCreationScripts.sh"
+  
+  printInfo "Running ISTORE static scripts"
+  case "${DB_DIALECT}" in
+    db2)
+      initializeIStoreDatabaseForDb2Server
+      ;;
+    sqlserver)
+      initializeIStoreDatabaseForSQLServer
+      ;;
+  esac
+}
+
 function configureIStoreDatabase() {
   print "Configuring ISTORE database"
   runi2AnalyzeTool "/opt/i2-tools/scripts/generateDynamicInfoStoreCreationScripts.sh"
-  runSQLServerCommandAsDBA "/opt/databaseScripts/generated/runDynamicScripts.sh"
+  case "${DB_DIALECT}" in
+    db2)
+      runDb2ServerCommandAsDb2inst1 "/opt/databaseScripts/generated/runDynamicScripts.sh"
+      ;;
+    sqlserver)
+      runSQLServerCommandAsDBA "/opt/databaseScripts/generated/runDynamicScripts.sh"
+      ;;
+  esac
 }
 
 function deployLiberty() {
@@ -458,93 +539,6 @@ function restartConnectorsForConfig() {
       print "Restarting connector container"
       docker start "${CONNECTOR_PREFIX}${gateway_short_name}"
     fi
-  done
-}
-
-function generateArtefacts() {
-  # Auto generate dsid into config folder before we create generated folder
-  createDataSourceProperties
-  generateConnectorsArtefacts
-  generateBoilerPlateFiles
-}
-
-function generateBoilerPlateFiles() {
-  local all_patterns_config_dir="${LOCAL_TOOLKIT_DIR}/examples/configurations/all-patterns/configuration"
-  local toolkit_common_clases_dir="${all_patterns_config_dir}/fragments/common/WEB-INF/classes"
-  local toolkit_opal_services_classes_dir="${all_patterns_config_dir}/fragments/opal-services/WEB-INF/classes"
-
-  cp -p "${toolkit_common_clases_dir}/ApolloServerSettingsMandatory.properties" "${GENERATED_LOCAL_CONFIG_DIR}"
-  cp -p "${toolkit_common_clases_dir}/ApolloServerSettingsConfigurationSet.properties" "${GENERATED_LOCAL_CONFIG_DIR}"
-  
-  print "Configuring form based authentication"
-  echo '<?xml version="1.0" encoding="UTF-8"?><server>
-    <webAppSecurity overrideHttpAuthMethod="FORM" allowAuthenticationFailOverToAuthMethod="FORM"  loginFormURL="opal/login.html" loginErrorURL="opal/login.html?failed"/>
-    <featureManager>
-        <feature>restConnector-2.0</feature>
-    </featureManager>
-    <applicationMonitor updateTrigger="mbean" dropinsEnabled="false"/>
-    <config updateTrigger="mbean"/>
-    <administrator-role>
-        <user>Jenny</user>
-        <group>Administrator</group>
-    </administrator-role>
-  </server>' >"${GENERATED_LOCAL_CONFIG_DIR}/server.extensions.xml"
-}
-
-function generateConnectorsArtefacts() {
-  local connector_references_file=${LOCAL_USER_CONFIG_DIR}/connector-references.json
-
-  local connector_definitions_file=${GENERATED_LOCAL_CONFIG_DIR}/connectors-template.json
-  local gateway_properties_file=${GENERATED_LOCAL_CONFIG_DIR}/analyze-connect.properties
-  local temp_file=${LOCAL_USER_CONFIG_DIR}/temp.json
-
-  # Create hidden configuration folder
-  rm -rf "${GENERATED_LOCAL_CONFIG_DIR}"
-  mkdir -p "${GENERATED_LOCAL_CONFIG_DIR}"
-  rsync -qpr \
-  --exclude "**.xsd" \
-  --exclude "**/connector-references.json" \
-  "${LOCAL_USER_CONFIG_DIR}/." "${GENERATED_LOCAL_CONFIG_DIR}"
-
-  #Find all connector names from connector-references.json and combine connector-definition from each connector together
-  IFS=' ' read -ra all_connector_names <<< "$( jq -r '.connectors[].name' < "${connector_references_file}" | xargs)"
-  jq -n '. += {connectors: []}' > "${connector_definitions_file}"
-
-  for connector_name in "${all_connector_names[@]}"; do
-    connector_json=$(cat "${CONNECTOR_IMAGES_DIR}/${connector_name}/connector-definition.json")
-    jq -r --argjson connector_json "${connector_json}"\
-      '.connectors += [$connector_json]' \
-      < "${connector_definitions_file}" > "${temp_file}"
-    mv "${temp_file}" "${connector_definitions_file}"
-  done
-
-  #Find all gateway schemas declared in connectors
-  for connector_name in "${all_connector_names[@]}"; do
-    gateway_short_name=$(jq -r '.gatewaySchema' <"${CONNECTOR_IMAGES_DIR}/${connector_name}/connector-definition.json")
-    #May not declare a gateway
-    if [[ -n ${gateway_short_name} ]]; then
-      GATEWAY_SHORT_NAME_SET["${gateway_short_name}"]=$gateway_short_name
-    fi
-  done
-
-  #Find all gateway schemas declared for this configuration
-  readarray -t config_gateway_schemas < <( jq -r '.gatewaySchemas[].shortName' < "${connector_references_file}")
-
-  for gateway_short_name in "${config_gateway_schemas[@]}"; do
-    GATEWAY_SHORT_NAME_SET["${gateway_short_name}"]=$gateway_short_name
-  done
-
-  echo "# ------------------------ Gateway schemas and charting schemes -----------------------" > "${gateway_properties_file}"
-  #Create configuration file
-  for gateway_short_name in "${!GATEWAY_SHORT_NAME_SET[@]}"; do
-    echo "Gateway.${gateway_short_name}.SchemaResource=${gateway_short_name}-schema.xml" >> "${gateway_properties_file}"
-    echo "Gateway.${gateway_short_name}.ChartingSchemesResource=${gateway_short_name}-schema-charting-schemes.xml" >> "${gateway_properties_file}"
-  done
-
-  #Copy in gateway schemas
-  for gateway_short_name in "${!GATEWAY_SHORT_NAME_SET[@]}"; do
-    cp "${GATEWAY_SCHEMA_DIR}/${gateway_short_name}-schema.xml" "${GENERATED_LOCAL_CONFIG_DIR}"
-    cp "${GATEWAY_SCHEMA_DIR}/${gateway_short_name}-schema-charting-schemes.xml" "${GENERATED_LOCAL_CONFIG_DIR}"
   done
 }
 
@@ -573,13 +567,9 @@ function createDeployment() {
     # Configuring ISTORE
     if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
       if [[ "${TASK}" == "create" ]]; then
-        printInfo "Removing existing SQL Server container"
-        deleteContainer "${SQL_SERVER_CONTAINER_NAME}"
-        docker volume rm -f "${SQL_SERVER_VOLUME_NAME}" "${SQL_SERVER_BACKUP_VOLUME_NAME}"
-        createFolder "${SQL_SERVER_BACKUP_VOLUME_NAME}"
-        initializeSQLServer
+        createDatabase
       elif [[ "${TASK}" == "restore" ]]; then
-        restoreSQlServer
+        restoreDatabase
       else
         printErrorAndExit "Unknown task: ${TASK}"
       fi
@@ -597,11 +587,13 @@ function createDeployment() {
   fi
   deployLiberty
   updateLog4jFile
+  addConfigAdmin
 
   # Creating a copy of the configuration that was deployed originally
   printInfo "Initializing diff tool"
   deleteFolderIfExistsAndCreate "${PREVIOUS_CONFIGURATION_PATH}"
-  updatePriviousConfigurationWithCurrent
+  updatePreviousConfigurationWithCurrent
+  cp -pr "${LOCAL_LIB_DIR}" "${PREVIOUS_CONFIGURATION_LIB_PATH}"
 
   # Validate Configuration
   checkLibertyStatus
@@ -617,7 +609,7 @@ function createDeployment() {
 # Update Helper Functions                                                     #
 ###############################################################################
 
-function updateUserRegistry() {
+function notifyUpdateUserRegistry() {
   printInfo "Updating user.registry.xml on i2 Analyze Application"
   if curl \
     -s -o "/tmp/response.txt" \
@@ -645,7 +637,7 @@ function updateLiveConfiguration() {
 
   for fileName in "${filesChangedArray[@]}"; do
     if [[ "${fileName}" == "user.registry.xml" ]]; then
-      updateUserRegistry
+      notifyUpdateUserRegistry
       break
     fi
   done 
@@ -694,8 +686,12 @@ function callGatewayReload() {
 }
 
 function loginToLiberty() {
-  printInfo "Getting Auth cookie"
   local MAX_TRIES=10
+  local app_admin_password
+
+  app_admin_password=$(getApplicationAdminPassword)
+
+  printInfo "Getting Auth cookie"
   for i in $(seq 1 "${MAX_TRIES}"); do
     if curl \
       -s -o /tmp/response.txt \
@@ -705,8 +701,8 @@ function loginToLiberty() {
       --request POST "${BASE_URI}/IBMJMXConnectorREST/j_security_check" \
       --header "Origin: ${BASE_URI}" \
       --header 'Content-Type: application/x-www-form-urlencoded' \
-      --data-urlencode 'j_username=Jenny' \
-      --data-urlencode 'j_password=Jenny' > /tmp/http_code.txt; then
+      --data-urlencode "j_username=${I2_ANALYZE_ADMIN}" \
+      --data-urlencode "j_password=${app_admin_password}" > /tmp/http_code.txt; then
       http_status_code=$(cat /tmp/http_code.txt)
       if [[ "${http_status_code}" -eq 302 ]]; then
         echo "Logged in to Liberty server" && return 0
@@ -758,15 +754,13 @@ function startApplication() {
 }
 
 function copyLocalConfigToTheLibertyContainer() {
+  local liberty_server_path="liberty/wlp/usr/servers/defaultServer"
   printInfo "Copying configuration to the Liberty container (${LIBERTY1_CONTAINER_NAME})"
-
-  # The user registry configuration is copied to the Liberty shared/config directory.
-  docker cp "${GENERATED_LOCAL_CONFIG_DIR}/user.registry.xml" "${LIBERTY1_CONTAINER_NAME}:liberty/wlp/usr/shared/config"
 
   # All other configuration is copied to the application WEB-INF/classes directory.
   local tmp_classes_dir="${ROOT_DIR}/tmp_classes"
   createFolder "${tmp_classes_dir}"
-  find "${GENERATED_LOCAL_CONFIG_DIR}" -maxdepth 1 -type f ! -name user.registry.xml ! -name connector-references.json ! -name '*.xsd' -exec cp -t "${tmp_classes_dir}" {} \;
+  find "${GENERATED_LOCAL_CONFIG_DIR}" -maxdepth 1 -type f ! -name user.registry.xml ! -name extension-references.json ! -name connector-references.json ! -name '*.xsd' ! -name server.extensions.xml ! -name server.extensions.dev.xml -exec cp -t "${tmp_classes_dir}" {} \;
 
   # In the schema_dev deployment point Gateway schemes to the ISTORE schemes
   if [[ "${DEPLOYMENT_PATTERN}" == "schema_dev" ]]; then
@@ -774,10 +768,17 @@ function copyLocalConfigToTheLibertyContainer() {
     sed -i 's/^ChartingSchemesResource=/Gateway.External.ChartingSchemesResource=/' "${tmp_classes_dir}/ApolloServerSettingsMandatory.properties"
   fi
 
-  docker cp "${tmp_classes_dir}/." "${LIBERTY1_CONTAINER_NAME}:liberty/wlp/usr/servers/defaultServer/apps/opal-services.war/WEB-INF/classes"
+  docker cp "${tmp_classes_dir}/." "${LIBERTY1_CONTAINER_NAME}:${liberty_server_path}/apps/opal-services.war/WEB-INF/classes"
+  if [[ -f "${GENERATED_LOCAL_CONFIG_DIR}/server.extensions.xml" ]]; then
+    docker cp "${GENERATED_LOCAL_CONFIG_DIR}/server.extensions.xml" "${LIBERTY1_CONTAINER_NAME}:${liberty_server_path}"
+  fi
+  if [[ -f "${GENERATED_LOCAL_CONFIG_DIR}/server.extensions.dev.xml" ]]; then
+    docker cp "${GENERATED_LOCAL_CONFIG_DIR}/server.extensions.dev.xml" "${LIBERTY1_CONTAINER_NAME}:${liberty_server_path}"
+  fi
   rm -rf "${tmp_classes_dir}"
 
   updateLog4jFile
+  addConfigAdmin
 
   connector_url_map_new=$(cat "${CONNECTOR_IMAGES_DIR}"/connector-url-mappings-file.json)
 
@@ -787,7 +788,7 @@ function copyLocalConfigToTheLibertyContainer() {
     /opt/create-connector-config.sh"
 }
 
-function updatePriviousConfigurationWithCurrent() {
+function updatePreviousConfigurationWithCurrent() {
   printInfo "Copying configuration from (${CURRENT_CONFIGURATION_PATH}) to (${PREVIOUS_CONFIGURATION_PATH})"
   cp -pR "${CURRENT_CONFIGURATION_PATH}"/* "${PREVIOUS_CONFIGURATION_PATH}"
   createFolder "${PREVIOUS_CONFIGURATION_UTILS_PATH}"
@@ -814,12 +815,22 @@ function updateMatchRules() {
   docker exec "${LIBERTY1_CONTAINER_NAME}" bash -c "rm ${stand_by_match_index_ready_file_path} > /dev/null 2>&1"
 }
 
-function rebuildSQLServer() {
+function rebuildDatabase() {
   waitForUserReply "Do you wish to rebuild the ISTORE database? This will permanently remove data from the deployment."
-  printInfo "Removing existing SQL Server container"
-  deleteContainer "${SQL_SERVER_CONTAINER_NAME}"
-  docker volume rm -f "${SQL_SERVER_VOLUME_NAME}" "${SQL_SERVER_BACKUP_VOLUME_NAME}"
-  initializeSQLServer
+  case "${DB_DIALECT}" in
+    db2)
+      printInfo "Removing existing Db2 Server container"
+      deleteContainer "${DB2_SERVER_CONTAINER_NAME}"
+      docker volume rm -f "${DB2_SERVER_VOLUME_NAME}" "${DB_BACKUP_VOLUME_NAME}"
+      initializeDb2Server
+      ;;
+    sqlserver)
+      printInfo "Removing existing SQL Server container"
+      deleteContainer "${SQL_SERVER_CONTAINER_NAME}"
+      docker volume rm -f "${SQL_SERVER_VOLUME_NAME}" "${DB_BACKUP_VOLUME_NAME}"
+      initializeSQLServer
+      ;;
+  esac
 }
 
 function updateSchema() {
@@ -856,7 +867,14 @@ function updateSchema() {
       if [ -d "${LOCAL_GENERATED_DIR}/update" ]; then
         if [ "$(ls -A "${LOCAL_GENERATED_DIR}/update")" ]; then
           printInfo "Running the generated scripts"
-          runSQLServerCommandAsDBA "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
+          case "${DB_DIALECT}" in
+            db2)
+              runDb2ServerCommandAsDb2inst1 "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
+              ;;
+            sqlserver)
+              runSQLServerCommandAsDBA "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
+              ;;
+          esac
         else
           printInfo "No files present in update schema scripts folder"
         fi
@@ -896,17 +914,25 @@ function updateSecuritySchema() {
 }
 
 function destructiveSchemaOrSecuritySchemaChange() {
-  rebuildSQLServer
+  rebuildDatabase
   deleteSolrCollections
   createSolrCollections
 }
 
+function updateDataSourceIdFile() {
+  local tmp_dir="/tmp"
+  createDataSourceProperties "${tmp_dir}"
+
+  docker cp "${tmp_dir}/DataSource.properties" "${LIBERTY1_CONTAINER_NAME}:liberty/wlp/usr/servers/defaultServer/apps/opal-services.war/WEB-INF/classes"
+}
+
 function handleConfigurationChange() {
   compareCurrentConfiguration
+  compareCurrentExtensions
 
   if [[ "${configFinalActionCode}" == "0" ]]; then
     print "No updates to the configuration"
-    updatePriviousConfigurationWithCurrent
+    updatePreviousConfigurationWithCurrent
     waitForLibertyToBeLive
     updateStateFile "4"
     return
@@ -922,7 +948,14 @@ function handleConfigurationChange() {
     elif [[ "${fileName}" == "security-schema.xml" ]]; then
       updateSecuritySchema
     elif [[ "${fileName}" == "user.registry.xml" ]]; then
-      cp -pr "${LOCAL_USER_CONFIG_DIR}/user.registry.xml" "${LOCAL_CONFIG_DIR}/user.registry.xml"
+      addConfigAdminToUserRegistry
+    elif [[ "${fileName}" == "environment/dsid/dsid.properties" ]]; then
+      updateDataSourceIdFile
+      if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
+        destructiveSchemaOrSecuritySchemaChange
+      fi
+    elif [[ "${fileName}" == "extension-references.json" || "${fileName}" = lib/*.jar ]]; then
+      handleExtensionChange
     fi
   done
 
@@ -945,7 +978,7 @@ function handleConfigurationChange() {
     waitForLibertyToBeLive
     updateLiveConfiguration
   fi
-  updatePriviousConfigurationWithCurrent
+  updatePreviousConfigurationWithCurrent
   updateStateFile "4"
 }
 
@@ -961,6 +994,7 @@ function handleDeploymentPatternChange() {
     deleteContainer "${LIBERTY1_CONTAINER_NAME}"
     deployLiberty
     updateLog4jFile
+    addConfigAdmin
     loginToLiberty
 
     if [[ "${PREVIOUS_DEPLOYMENT_PATTERN}" == *"store"* ]] && [[ "${CURRENT_DEPLOYMENT_PATTERN}" != *"store"* ]]; then
@@ -980,7 +1014,7 @@ function handleDeploymentPatternChange() {
         updateSchema
       else
         print "Removing SQL Server volumes"
-        docker volume rm -f "${SQL_SERVER_VOLUME_NAME}" "${SQL_SERVER_BACKUP_VOLUME_NAME}"
+        docker volume rm -f "${SQL_SERVER_VOLUME_NAME}" "${DB_BACKUP_VOLUME_NAME}"
 
         updateStateFile "1"
         initializeSQLServer
@@ -998,8 +1032,42 @@ function handleDeploymentPatternChange() {
   fi
 }
 
-function updateDeployment() {
+function handleExtensionChange() {
+  local jars_liberty_path="liberty/wlp/usr/servers/defaultServer/apps/opal-services.war/WEB-INF/lib"
+  local extension_references_file="${LOCAL_USER_CONFIG_DIR}/extension-references.json"
+  local extension_files
+  local filename 
 
+  print "Updating i2Analyze extensions"
+
+  # Remove jars that aren't there anymore
+  if [[ -d "${PREVIOUS_CONFIGURATION_LIB_PATH}" ]]; then
+    for path in "${PREVIOUS_CONFIGURATION_LIB_PATH}"/*; do
+      if [[ ! -e "${path}" ]]; then 
+        continue
+      fi
+      filename=$(basename "${path}")
+      if [ ! -f "${LOCAL_LIB_DIR}/${filename}" ]; then
+        printInfo "Delete old library ${jars_liberty_path}/${filename}"
+        docker exec "${LIBERTY1_CONTAINER_NAME}" bash -c "rm ${jars_liberty_path}/${filename} > /dev/null 2>&1"
+      fi
+    done
+  fi
+  
+  deleteFolderIfExistsAndCreate "${PREVIOUS_CONFIGURATION_LIB_PATH}"
+  readarray -t extension_files < <( jq -r '.extensions[] | .name + "-" + .version' < "${extension_references_file}")
+
+  for filename in "${extension_files[@]}"; do
+    cp -pr "${LOCAL_LIB_DIR}/${filename}.jar" "${PREVIOUS_CONFIGURATION_LIB_PATH}"
+  done
+
+  # Update all Extension jars
+  printInfo "Copy current Extension jars to Liberty container"
+  docker cp "${PREVIOUS_CONFIGURATION_LIB_PATH}/." "${LIBERTY1_CONTAINER_NAME}:${jars_liberty_path}"
+}
+
+function updateDeployment() {
+  
   # Validate Configuration
   validateMandatoryFilesPresent
 
@@ -1015,28 +1083,9 @@ function updateDeployment() {
 
   # Handling Configuration Change
   handleConfigurationChange
+
   print "Updated Successfully"
   echo "This application is configured for access on ${FRONT_END_URI}"
-}
-
-function waitForUserReply() {
-  local question="$1"
-  echo "" # print an empty line
-  
-  if [[ "${YES_FLAG}" == "true" ]]; then
-    echo "${question} (y/n) "
-    echo "You selected -y flag, continuing"
-    return 0
-  fi
-
-  while true; do
-    read -r -p "${question} (y/n) " yn
-    case $yn in
-      [Yy]* ) break;;
-      [Nn]* ) exit;;
-      * ) ;;
-    esac
-  done
 }
 
 ###############################################################################
@@ -1057,6 +1106,9 @@ function moveBackupIfExist() {
 }
 
 function createBackup() {
+  if [[ "${DB_DIALECT}" == "db2" ]]; then
+    printErrorAndExit "Not implemented yet"
+  fi
   # Restart Docker containers
   restartDockerContainersForConfig "${CONFIG_NAME}"
   restartConnectorsForConfig
@@ -1121,6 +1173,9 @@ function cleanDeployment() {
 
   removeDockerVolumes
 
+  printInfo "Deleting deployed extensions: ${LOCAL_LIB_DIR}"
+  deleteFolderIfExists "${LOCAL_LIB_DIR}"
+
   printInfo "Deleting previous configuration folder: ${PREVIOUS_CONFIGURATION_DIR}"
   deleteFolderIfExists "${PREVIOUS_CONFIGURATION_DIR}"
 }
@@ -1128,17 +1183,41 @@ function cleanDeployment() {
 ###############################################################################
 # Connector Helper Functions                                                  #
 ###############################################################################
+
 function updateConnectors() {
-  if [[ "${AWS_ARTEFACTS}" == true ]]; then
+  local connector_args
+  local included_connector
+  local excluded_connector
+
+  if [[ -n "${INCLUDED_CONNECTORS[*]}" ]]; then
+    for included_connector in "${INCLUDED_CONNECTORS[@]}"; do
+      connector_args+=(-i "${included_connector}")
+    done
+  elif [[ -n "${EXCLUDED_CONNECTORS[*]}" ]]; then
+    for excluded_connector in "${EXCLUDED_CONNECTORS[@]}"; do
+      connector_args+=(-e "${excluded_connector}")
+    done
+  else
+    connector_args=()
+  fi
+
+  if [[ "${YES_FLAG}" == "true" ]]; then
+    connector_args+=(-y)
+  fi
+  if [[ "${VERBOSE}" == "true" ]]; then
+    connector_args+=(-v)
+  fi
+
+  if [[ "${AWS_ARTEFACTS}" == "true" ]]; then
     print "Running generateSecrets.sh"
-    "${ROOT_DIR}/utils/generateSecrets.sh" -a -l "${I2A_DEPENDENCIES_IMAGES_TAG}" -c connectors
+    "${ROOT_DIR}/utils/generateSecrets.sh" -a -l "${I2A_DEPENDENCIES_IMAGES_TAG}" -c connectors "${connector_args[@]}"
     print "Running buildConnectorImages.sh"
-    "${ROOT_DIR}/utils/buildConnectorImages.sh" -a -d "${DEPLOYMENT_NAME}" -l "${I2A_DEPENDENCIES_IMAGES_TAG}"
+    "${ROOT_DIR}/utils/buildConnectorImages.sh" -a -d "${DEPLOYMENT_NAME}" -l "${I2A_DEPENDENCIES_IMAGES_TAG}" "${connector_args[@]}"
   else
     print "Running generateSecrets.sh"
-    "${ROOT_DIR}/utils/generateSecrets.sh" -c connectors
+    "${ROOT_DIR}/utils/generateSecrets.sh" -c connectors "${connector_args[@]}"
     print "Running buildConnectorImages.sh"
-    "${ROOT_DIR}/utils/buildConnectorImages.sh" 
+    "${ROOT_DIR}/utils/buildConnectorImages.sh" "${connector_args[@]}"
   fi
 }
 
@@ -1148,11 +1227,25 @@ function updateConnectors() {
 
 function initializeDeployment() {
   printInfo "Initializing deployment"
+  if [[ "${AWS_ARTEFACTS}" = "true" ]]; then
+    aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ECR_BASE_NAME}"
+  fi
+
+  # Auto generate dsid into config folder before we create the generated one
+  createDataSourceId
+  
   generateArtefacts
+
+  # Add files that could be missing
+  if [[ ! -f "${LOCAL_USER_CONFIG_DIR}/extension-references.json" ]]; then
+    cp "${LOCAL_CONFIGURATION_DIR}/extension-references.json" "${LOCAL_USER_CONFIG_DIR}/extension-references.json"
+  fi
+
+  addConfigAdminToSecuritySchema
   createMountedConfigStructure
+  mkdir -p "${LOCAL_LIB_DIR}"
 
   if [[ ! -f "${PREVIOUS_STATE_FILE_PATH}" ]]; then
-    print "Creating initial deployment"
     createInitialStateFile
   fi
 }
@@ -1222,6 +1315,12 @@ function workOutTaskToRun() {
       STATE=0
       TASK="create"
     fi
+    if ! checkConnectorContainersExist; then
+      # Reset state
+      STATE=0
+      TASK="create"
+      printErrorAndExit "Some connector containers are missing, the deployment is NOT healthy."    
+    fi
   fi
 }
 
@@ -1260,6 +1359,11 @@ function runTask () {
   esac
 }
 
+function runNormalDeployment() {
+  workOutTaskToRun
+  runTask
+}
+
 ###############################################################################
 # Function Calls                                                              #
 ###############################################################################
@@ -1273,22 +1377,24 @@ initializeDeployment
 
 # Cleaning up Docker resources
 stopContainersInTheNetwork "${CONFIG_NAME}"
-createDockerNetwork
+createDockerNetwork "${DOMAIN_NAME}"
 
 if [[ -z "${TASK}" ]]; then
-  workOutTaskToRun
-  runTask
+  runNormalDeployment
 elif [[ "${TASK}" == "connectors" ]]; then
   #Get connectors uptodate
   updateConnectors
   #Run normal deployment
-  workOutTaskToRun
-  runTask
+  runNormalDeployment
   #Reload gateway
   callGatewayReload
+elif [[ "${TASK}" == "extensions" ]]; then
+  #Get extensions uptodate
+  deployExtensions
+  #Run normal deployment
+  runNormalDeployment
+elif [[ "${TASK}" == "package" ]]; then
+  buildLibertyConfiguredImage
 else
   runTask
 fi
-
-
-

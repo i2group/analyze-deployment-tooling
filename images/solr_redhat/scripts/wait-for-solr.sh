@@ -1,5 +1,19 @@
-#!/usr/bin/env bash
+#!/bin/bash
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
 #
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # A helper script to wait for solr
 #
 # Usage: wait-for-solr.sh [--max-attempts count] [--wait-seconds seconds] [--solr-url url]
@@ -22,8 +36,8 @@ function usage {
 max_attempts=12
 wait_seconds=5
 
-if [[ -v SOLR_PORT ]] && ! grep -E -q '^[0-9]+$' <<<"$SOLR_PORT"; then
-  echo "Invalid SOLR_PORT=$SOLR_PORT environment variable specified"
+if ! [[ ${SOLR_PORT:-8983} =~ ^[0-9]+$ ]]; then
+  echo "Invalid SOLR_PORT=${SOLR_PORT:-} environment variable specified"
   exit 1
 fi
 
@@ -34,7 +48,6 @@ while (( $# > 0 )); do
    --help)
      cat <<EOM
 Usage: $SCRIPT [options]
-
 Options:
   --max-attempts count: number of attempts to check Solr is up. Default: $max_attempts
   --wait-seconds seconds: number of seconds to wait between attempts. Default: $wait_seconds

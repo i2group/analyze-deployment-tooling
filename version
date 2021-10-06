@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # MIT License
 #
 # Copyright (c) 2021, IBM Corporation
@@ -23,6 +23,6 @@
 
 set -e
 
-VERSION=2.0.0
+VERSION=2.1.0
 VERSION_ALIAS="xanadu"
 I2ANALYZE_VERSION=4.3.4.0

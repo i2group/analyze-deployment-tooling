@@ -12,6 +12,23 @@ The format is based on [Keep a Changelog], and this project adheres to
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
 
+## [2.1.0] - 06/10/2021
+
+### Added
+
+- Support for i2 Connect server connectors developed using the i2 Connect SDK
+- Enabled connections to i2 Connect connectors hosted outside of the config development environment
+- Synchronize configuration between the config development environment and the i2 Analyze deployment toolkit
+- Deploy extensions to the config development environment from i2 Analyze Developer Essentials
+
+### Changed
+
+- Additional command line tools required.
+  - See [Updating to the latest version of the analyze-containers repository](https://ibm-i2.github.io/analyze-containers/content/managing_update_env.md).
+
+[2.1.0]: https://github.com/IBM-i2/analyze-containers/tree/v2.1.0
+
+
 ## [2.0.0] - 23/07/2021
 
 ### Added
@@ -34,6 +51,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 - Updated for compatibility with i2 Analyze 4.3.3.1
 
 [1.1.0]: https://github.com/IBM-i2/analyze-containers/tree/v1.1.0
+
 ## [1.0.1] - 29/01/2021
 
 ### Added

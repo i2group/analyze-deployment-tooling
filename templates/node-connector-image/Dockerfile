@@ -45,7 +45,7 @@ RUN npm install
 COPY --chown=1001:0 app/ .
 
 # Expose the port the connector will use
-EXPOSE 3700
+EXPOSE 3000 3443
 
 # The lifecycle of the connector will be attached to node app
 ENTRYPOINT ["/opt/docker-entrypoint.sh"]

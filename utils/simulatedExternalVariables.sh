@@ -37,6 +37,7 @@
 LIC_AGREEMENT=REJECT
 MSSQL_PID=REJECT
 ACCEPT_EULA=N
+DB2_LICENSE=reject
 
 ###############################################################################
 # Domain name                                                                 #
@@ -55,6 +56,8 @@ SOLR2_HOST_NAME="solr2"
 SOLR3_HOST_NAME="solr3"
 SQL_CLIENT_HOST_NAME="sqlclient"
 SQL_SERVER_HOST_NAME="sqlserver"
+DB2_CLIENT_HOST_NAME="db2client"
+DB2_SERVER_HOST_NAME="db2server"
 LIBERTY1_HOST_NAME="liberty1"
 LIBERTY2_HOST_NAME="liberty2"
 I2A_TOOL_HOST_NAME="i2atool"
@@ -75,6 +78,8 @@ SOLR2_FQDN="${SOLR2_HOST_NAME}.${DOMAIN_NAME}"
 SOLR3_FQDN="${SOLR3_HOST_NAME}.${DOMAIN_NAME}"
 SQL_CLIENT_FQDN="${SQL_CLIENT_HOST_NAME}.${DOMAIN_NAME}"
 SQL_SERVER_FQDN="${SQL_SERVER_HOST_NAME}.${DOMAIN_NAME}"
+DB2_CLIENT_FQDN="${DB2_CLIENT_HOST_NAME}.${DOMAIN_NAME}"
+DB2_SERVER_FQDN="${DB2_SERVER_HOST_NAME}.${DOMAIN_NAME}"
 LIBERTY1_FQDN="${LIBERTY1_HOST_NAME}.${DOMAIN_NAME}"
 LIBERTY2_FQDN="${LIBERTY2_HOST_NAME}.${DOMAIN_NAME}"
 I2A_TOOL_FQDN="${I2A_TOOL_HOST_NAME}.${DOMAIN_NAME}"
@@ -116,9 +121,26 @@ LIBERTY2_PORT="9044"
 LIBERTY2_DEBUG_PORT="7778"
 SOLR_PORT="8983"
 ZK_PORT="8080"
-CONNECTOR1_APP_PORT="3700"
-CONNECTOR2_APP_PORT="3700"
-DB_PORT="1433"
+CONNECTOR1_APP_PORT="3443"
+CONNECTOR2_APP_PORT="3443"
+
+if [[ -z "${DB_DIALECT}" ]]; then
+  # Default to sqlserver
+  DB_DIALECT="sqlserver"
+fi
+
+case "${DB_DIALECT}" in
+  db2)
+    DB_PORT="50000"
+    ;;
+  sqlserver)
+    DB_PORT="1433"
+    ;;
+  \?)
+    echo "Invalid option: ${DB_DIALECT}"
+    exit 1
+    ;;
+esac
 
 if [[ "$SOLR_ZOO_SSL_CONNECTION" == true ]]; then
   ZK_ACTIVE_PORT="${ZK_SECURE_CLIENT_PORT}"
@@ -140,25 +162,47 @@ ZK_HOST="${ZK_MEMBERS}/${SOLR_CLUSTER_ID}"
 ###############################################################################
 # Database variables                                                          #
 ###############################################################################
-DB_DIALECT="sqlserver"
-DB_INSTALL_DIR="/opt/mssql-tools"
-DB_LOCATION_DIR="/var/opt/mssql/data"
-DB_CONTAINER_BACKUP_DIR="/backup"
-DB_BACKUP_FILE_NAME="ISTORE.bak"
+
+case "${DB_DIALECT}" in
+  db2)
+    DB_INSTALL_DIR="/opt/ibm/db2/V11.5"
+    DB_LOCATION_DIR="/database/config/db2inst1"
+    DB_BACKUP_FILE_NAME="ISTORE"
+    SQLCMD="${DB_INSTALL_DIR}/bin/db2"
+    SQLCMD_FLAGS="-tsvmf"
+    DB_NODE="dbnode"
+    ;;
+  sqlserver)
+    DB_INSTALL_DIR="/opt/mssql-tools"
+    DB_LOCATION_DIR="/var/opt/mssql/data"
+    DB_BACKUP_FILE_NAME="ISTORE.bak"
+    SQLCMD="${DB_INSTALL_DIR}/bin/sqlcmd"
+    if [[ "$DB_SSL_CONNECTION" == true ]]; then
+      SQLCMD_FLAGS="-N -b"
+    else
+      SQLCMD_FLAGS="-b"
+    fi
+    ;;
+  \?)
+    echo "Invalid option: ${DB_DIALECT}"
+    exit 1
+    ;;
+esac
+
 DB_NAME="ISTORE"
 DB_OS_TYPE="UNIX"
-SQLCMD="${DB_INSTALL_DIR}/bin/sqlcmd"
-if [[ "$DB_SSL_CONNECTION" == true ]]; then
-  SQLCMD_FLAGS="-N -b"
-else
-  SQLCMD_FLAGS="-b"
-fi
+DB_CONTAINER_BACKUP_DIR="/backup"
 
 ###############################################################################
 # URIs                                                                        #
 ###############################################################################
 BASE_URI="https://${I2_ANALYZE_FQDN}:${HOST_PORT_I2ANALYZE_SERVICE}"
 FRONT_END_URI="${BASE_URI}/opal"
+
+###############################################################################
+# User names                                                                  #
+###############################################################################
+I2_ANALYZE_ADMIN="I2AnalyzeConfigDevAdmin"
 
 ###############################################################################
 # Root Paths                                                                  #
@@ -169,6 +213,7 @@ ROOT_DIR=$(pushd . 1> /dev/null ; while [ "$(pwd)" != "/" ]; do test -e .root &&
 LOCAL_USER_CONFIG_DIR="${ROOT_DIR}/configs/${CONFIG_NAME}/configuration"
 LOCAL_CONFIG_DIR="${ROOT_DIR}/.configuration"
 GENERATED_LOCAL_CONFIG_DIR="${ROOT_DIR}/.configuration-generated"
+LOCAL_LIB_DIR="${ROOT_DIR}/.i2a-extensions"
 LOCAL_GENERATED_DIR="${ROOT_DIR}/configs/${CONFIG_NAME}/database-scripts/generated"
 
 PRE_REQS_DIR="${ROOT_DIR}/pre-reqs"

@@ -1,0 +1,54 @@
+# MIT License
+#
+# Copyright (c) 2021, IBM Corporation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+FROM ibmcom/db2:11.5.6.0
+
+USER root
+
+COPY docker-entrypoint.sh /opt/docker-entrypoint.sh
+COPY db-scripts/ /opt/db-scripts
+COPY tools/ /opt/
+
+ENV TOOLKIT_DIR=/opt
+
+RUN yum install -y ca-certificates
+
+RUN mkdir -p /opt/databaseScripts/generated
+RUN mkdir -p /opt/toolkit
+
+RUN groupadd db2iadm1
+RUN groupadd db2fadm1
+RUN useradd -m -g db2iadm1 db2inst1
+RUN useradd -g db2fadm1 db2fenc1
+RUN usermod -aG wheel db2inst1
+
+RUN retry = 0; while [[ "${retry}" -lt 3 ]]; do ( /opt/ibm/db2/V11.5/instance/db2icrt -s client db2inst1 && break ) || sleep 1s; retry+=1; done
+
+# Set the global registry values
+RUN /opt/ibm/db2/V11.5/instance/db2iset -g DB2SYSTEM=db2client
+RUN /opt/ibm/db2/V11.5/instance/db2iset -g DB2INSTDEF=db2inst1
+RUN /opt/ibm/db2/V11.5/instance/db2iset -g DB2COMM=TCPIP,SSL
+
+# Update DB2 registry and DBM cfg settings
+RUN su - db2inst1 -c "/opt/ibm/db2/V11.5/adm/db2set DB2SYSTEM=db2client"
+
+ENTRYPOINT ["/opt/docker-entrypoint.sh"]

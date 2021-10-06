@@ -25,6 +25,25 @@ set -e
 
 . /opt/environment.sh
 
+function addTrustedCertifcates() {
+  local pem_file=$1
+  local trust_store=$2
+  local cert_count
+  
+  # shellcheck disable=SC2126
+  cert_count=$(grep 'END CERTIFICATE' "${pem_file}"| wc -l)
+
+  # For every cert in the PEM file, extract it and import into the JKS keystore
+  # awk command: step 1, if line is in the desired cert, print the line
+  #              step 2, increment counter when last line of cert is found
+  for N in $(seq 0 $(("${cert_count}" - 1))); do
+    alias="${pem_file%.*}-$N"
+    awk "n==$N { print }; /END CERTIFICATE/ { n++ }" "${pem_file}" |
+    keytool -noprompt -import -trustcacerts \
+            -alias "${alias}" -keystore "${trust_store}" -storepass:env KEYSTORE_PASS -storetype PKCS12
+  done
+}
+
 DEFAULT_SERVER_DIR=/opt/ibm/wlp/usr/servers/defaultServer
 DB_NAME="ISTORE"
 
@@ -46,6 +65,7 @@ if [[ ${SERVER_SSL} == true || ${SOLR_ZOO_SSL_CONNECTION} == true || ${GATEWAY_S
   TMP_SECRETS=/tmp/i2acerts
   CA_CER=${TMP_SECRETS}/CA.cer
   TRUSTSTORE=${TMP_SECRETS}/truststore.p12
+  TRUST_EXTRA_CER=${TMP_SECRETS}/TRUST_EXTRA.cer
 
   if [[ -d ${TMP_SECRETS} ]]; then
     rm -r ${TMP_SECRETS}
@@ -56,6 +76,17 @@ if [[ ${SERVER_SSL} == true || ${SOLR_ZOO_SSL_CONNECTION} == true || ${GATEWAY_S
   KEYSTORE_PASS=$(openssl rand -base64 16)
   export KEYSTORE_PASS
   keytool -importcert -noprompt -alias ca -keystore "${TRUSTSTORE}" -file ${CA_CER} -storepass:env KEYSTORE_PASS -storetype PKCS12
+  if [[ -n ${SSL_ADDITIONAL_TRUST_CERTIFICATES} && "${SSL_ADDITIONAL_TRUST_CERTIFICATES}" != "None" ]]; then
+    echo "${SSL_ADDITIONAL_TRUST_CERTIFICATES}" >"${TRUST_EXTRA_CER}"
+    addTrustedCertifcates "${TRUST_EXTRA_CER}" "${TRUSTSTORE}"
+  fi
+
+  file_env 'APP_SECRETS'
+  if [[ -n "${APP_SECRETS}" && "${APP_SECRETS}" != "None" ]]; then
+    while read -r key value; do
+      declare -x "$key"="$value"
+    done < <(jq -r 'keys[] as $k | "\($k) \(.[$k])"' < <(echo "${APP_SECRETS}"))
+  fi
 fi
 
 if [[ ${GATEWAY_SSL_CONNECTION} == true ]]; then
@@ -94,6 +125,12 @@ if [[ ${GATEWAY_SSL_CONNECTION} == true ]]; then
   export LIBERTY_OUT_KEYSTORE_LOCATION
   export LIBERTY_OUT_TRUSTSTORE_PASSWORD
   export LIBERTY_OUT_KEYSTORE_PASSWORD
+
+  LIBERTY_TRUSTSTORE_LOCATION=${TRUSTSTORE}
+  LIBERTY_TRUSTSTORE_PASSWORD=${KEYSTORE_PASS}
+
+  export LIBERTY_TRUSTSTORE_LOCATION
+  export LIBERTY_TRUSTSTORE_PASSWORD
 fi
 
 if [[ ${SERVER_SSL} == true || ${SOLR_ZOO_SSL_CONNECTION} == true ]]; then
@@ -132,6 +169,8 @@ if [[ ${SERVER_SSL} == true ]]; then
 else
   HTTP_PORT="9080"
   HTTPS_PORT="-1"
+  LIBERTY_SSL="true"
+  export LIBERTY_SSL
 fi
 export HTTP_PORT
 export HTTPS_PORT

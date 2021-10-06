@@ -30,5 +30,8 @@ HOST_PORT_SOLR="8983"
 # The port that you use to connect to the deployment from the host machine.
 HOST_PORT_I2ANALYZE_SERVICE="9443"
 
-# The port that you use to connect to the database from the host machine.
+# The port that you use to connect to the database from the host machine. Use "1433" for SQL Server
 HOST_PORT_DB="1433"
+
+# Controls the database dialect. Possible values are: sqlserver
+DB_DIALECT="sqlserver"

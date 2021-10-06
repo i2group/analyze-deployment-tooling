@@ -27,20 +27,23 @@ set -e
 
 # Clear some variables that we don't want runtime
 unset SOLR_USER SOLR_UID SOLR_GROUP SOLR_GID \
-  SOLR_CLOSER_URL SOLR_DIST_URL SOLR_ARCHIVE_URL SOLR_DOWNLOAD_URL SOLR_DOWNLOAD_SERVER SOLR_KEYS SOLR_SHA512
+      SOLR_CLOSER_URL SOLR_DIST_URL SOLR_ARCHIVE_URL SOLR_DOWNLOAD_URL SOLR_DOWNLOAD_SERVER SOLR_KEYS SOLR_SHA512
 
 if [[ "$VERBOSE" == "yes" ]]; then
-  set -x
+    set -x
 fi
 
-if [[ -v SOLR_PORT ]] && ! grep -E -q '^[0-9]+$' <<<"${SOLR_PORT:-}"; then
+if ! [[ ${SOLR_PORT:-} =~ ^[0-9]+$ ]]; then
   SOLR_PORT=8983
   export SOLR_PORT
 fi
 
+# Essential for running Solr
+init-var-solr
+
 # when invoked with e.g.: docker run solr -help
 if [ "${1:0:1}" == '-' ]; then
-  set -- solr-foreground "$@"
+    set -- solr-foreground "$@"
 fi
 
 # Secrets injection

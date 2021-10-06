@@ -26,7 +26,7 @@ set -e
 . /opt/environment.sh
 
 
-if [[ ${SERVER_SSL} == true ]]; then
+if [[ ${SSL_ENABLED} == true ]]; then
   file_env 'SSL_CA_CERTIFICATE'
   file_env 'SSL_CERTIFICATE'
   file_env 'SSL_PRIVATE_KEY'
@@ -51,7 +51,7 @@ if [[ ${SERVER_SSL} == true ]]; then
 fi
 
 echo '{
-  "https": '${SERVER_SSL}', 
+  "https": '"${SSL_ENABLED}"',
   "keyFileName": "'"${SERVER_KEY}"'",
   "keyPassphrase": "",
   "certificateFileName": "'"${SERVER_CER}"'",
@@ -59,6 +59,6 @@ echo '{
   "gatewayCN": "gateway.user"
 }' > security-config.json
 
-export PORT=3700
+export PORT=3443
 
 exec "$@"

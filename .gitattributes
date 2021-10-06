@@ -5,8 +5,10 @@
 *.sh text eol=lf
 *.txt text eol=lf
 *.bash text eol=lf
+*.json text eol=lf
 *.csv    -text
 *.yml text
 *.png text eol=lf
+*.svg text eol=lf
 
 images/** eol=lf

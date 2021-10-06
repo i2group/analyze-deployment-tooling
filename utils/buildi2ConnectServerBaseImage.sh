@@ -32,8 +32,9 @@ ROOT_DIR=$(pushd . 1> /dev/null ; while [ "$(pwd)" != "/" ]; do test -e .root &&
 
 function printUsage() {
   echo "Usage:"
-  echo "  buildSELConnectorImage.sh -a -l <dependency_label>" 1>&2
-  echo "  buildSELConnectorImage.sh -h" 1>&2
+  echo "  buildi2ConnectServerBaseImage.sh" 1>&2
+  echo "  buildi2ConnectServerBaseImage.sh -a -l <dependency_label>" 1>&2
+  echo "  buildi2ConnectServerBaseImage.sh -h" 1>&2
 }
 
 function usage() {
@@ -44,14 +45,14 @@ function usage() {
 function help() {
   printUsage
   echo "Options:" 1>&2
-  echo "  -a Produce or use artefacts on AWS." 1>&2
+  echo "  -a                    Produce or use artefacts on AWS." 1>&2
   echo "  -l <dependency_label> Name of dependency image label to use on AWS." 1>&2
-  echo "  -h Display the help." 1>&2
+  echo "  -h                    Display the help." 1>&2
   exit 1
 }
 
 AWS_DEPLOY="false"
-while getopts "ahl:" flag; do
+while getopts ":ahl:" flag; do
   case "${flag}" in
   a)
     AWS_ARTEFACTS="true"
@@ -93,42 +94,25 @@ source "${ROOT_DIR}/utils/simulatedExternalVariables.sh"
 source "${ROOT_DIR}/utils/commonVariables.sh"
 source "${ROOT_DIR}/utils/internalHelperVariables.sh"
 
-###############################################################################
-# Variables                                                                   #
-###############################################################################
+I2CONNECT_CONNECTOR_IMAGES_DIR="${IMAGES_DIR}/i2connect_server_base"
 
-SEL_IMAGES_DIR="${IMAGES_DIR}/sel_connector"
-LOCAL_SEL_DIR="${PRE_REQS_DIR}/sel-platform"
-SEL_SERVER_DIR="${SEL_IMAGES_DIR}/server"
+function buildImage() {
+  local i2connect_version_file_path="${CONNECTOR_IMAGES_DIR}/i2connect-server-version.json"
+  local latest_i2connect_version_file_path="${CONNECTOR_IMAGES_DIR}/.connector-images/i2connect-server-version.json"
+  local version
 
-###############################################################################
-# Function definitions                                                        #
-###############################################################################
+  version=$(jq -r '.version' <"${i2connect_version_file_path}")
 
-function extractSELPlatform() {
-  print "Setting up SEL Connector Platform"
+  # Track the latest version file to allow check for changes
+  cp "${i2connect_version_file_path}" "${latest_i2connect_version_file_path}"
 
-  deleteFolderIfExists "${LOCAL_SEL_DIR}"
-  mkdir -p "${LOCAL_SEL_DIR}"
-
-  unzip -d "${LOCAL_SEL_DIR}" "${PRE_REQS_DIR}/loopback-connector-server.zip"
-
-  deleteFolderIfExists "${SEL_SERVER_DIR}"
-  mkdir -p "${SEL_SERVER_DIR}"
-  cp -R "${LOCAL_SEL_DIR}/loopback-connector-server/." "${SEL_SERVER_DIR}/"
-
-  # Create the default.json file
-  cat <"${ROOT_DIR}/utils/templates/sel-config.json" | jq '.sslSettings +=
-  {
-    "enabled": true,
-    "port": 3700,
-    "keyFile": "'"${CONTAINER_CERTS_DIR}/server.key"'",
-    "certFile": "'"${CONTAINER_CERTS_DIR}/server.cer"'"
-  }' >"${SEL_SERVER_DIR}/config/default.json"
+  echo "Version: ${version}"
+  docker build --no-cache -t "${I2CONNECT_SERVER_BASE_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" --build-arg I2CONNECT_SERVER_VERSION="${version}" "${I2CONNECT_CONNECTOR_IMAGES_DIR}"
 }
 
 ###############################################################################
-# Building SEL connector image                                                #
+# Building i2Connect connector image                                          #
 ###############################################################################
-#extractSELPlatform
-docker build -t "${SEL_CONNECTOR_BASE_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/sel_connector"
+print "Building i2Connect Server base image"
+buildImage
+echo "Done"

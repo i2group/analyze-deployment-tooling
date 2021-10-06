@@ -20,29 +20,25 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-FROM registry.access.redhat.com/ubi8/nodejs-14
+ARG BASE_IMAGE=registry.access.redhat.com/ubi8/nodejs-14
+FROM ${BASE_IMAGE}
 
 USER 0
 
 # Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-# where available
-COPY server/package*.json ./
+# We want to install all the latest dependencies at the time of building the image
+# This requires that the package-lock.json file is not present.
+COPY app/package.json ./
 
 # Install our dependencies
-RUN npm install --production
-
-# Copy our application code with the appropriate permissions
-COPY --chown=1001:0 server/ ./
-
-# Bundle server source code
-RUN mkdir -p ./node_modules/connector-sdk
-COPY --chown=1001:0 server/connector-sdk ./node_modules/connector-sdk
-
-RUN mkdir -p ./deploy/connectors/default
+RUN npm install
 
 # Node image comes with a non-root node user. Lets avoid running the connector
 # as root. It is a recommended security practise to avoid running containers as root
 
 # Sets the user to be 1001. This user will be used for all subsquent commands
 USER 1001
+
+# Copy our application code with the appropriate permissions
+COPY --chown=1001:0 app/ .
+

@@ -166,7 +166,14 @@ function clearSearchIndex() {
 
 function clearInfoStore() {
   print "Clearing the InfoStore database"
-  runSQLServerCommandAsDBA "/opt/databaseScripts/generated/runClearInfoStoreData.sh"
+  case "${DB_DIALECT}" in
+    db2)
+      runDb2ServerCommandAsDb2inst1 "/opt/databaseScripts/generated/runClearInfoStoreData.sh"
+      ;;
+    sqlserver)
+      runSQLServerCommandAsDBA "/opt/databaseScripts/generated/runClearInfoStoreData.sh"
+      ;;
+  esac
 }
 
 function runClearData() {
@@ -184,6 +191,7 @@ function startLibertyContainer() {
   printInfo "Starting up new Liberty container"
   runLiberty "${LIBERTY1_CONTAINER_NAME}" "${I2_ANALYZE_FQDN}" "${LIBERTY1_VOLUME_NAME}" "${HOST_PORT_I2ANALYZE_SERVICE}" "${I2_ANALYZE_CERT_FOLDER_NAME}" "${LIBERTY1_DEBUG_PORT}"
   updateLog4jFile
+  addConfigAdmin
   checkLibertyStatus
 }
 

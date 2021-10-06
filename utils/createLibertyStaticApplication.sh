@@ -52,9 +52,19 @@ THIRD_PARTY_DIR="$TARGET_DIR/third-party-dependencies"
 ###############################################################################
 # Function definitions                                                        #
 ###############################################################################
+function addDevConfigFragment() {
+  sed -i 's/<include location="server.extensions.xml"\/>/<include location="server.extensions.xml"\/>\n  <include location="server.extensions.dev.xml"\/>/' "$TARGET_DIR/server-config/server.xml"
+}
+
+function addContextRootFragment() {
+  # We want this to output ${CONTEXT_ROOT} without expansion
+  # shellcheck disable=SC2016
+  sed -i 's/<application context-root="opal"/<variable name="CONTEXT_ROOT" defaultValue="opal" \/>\n  <application context-root="${CONTEXT_ROOT}"/' "$TARGET_DIR/server-config/server.xml"
+}
+
 function updateDatasourcesFile() {
   # This is a workaround needs fixing with the next release
-  printInfo "Updating msql server version"
+  printInfo "Updating mssql server version"
   sed -i "s/mssql-jdbc-7.4.1/mssql-jdbc-7.*/" "$TARGET_DIR/server.datasources.sqlserver.xml"
 }
 
@@ -111,5 +121,15 @@ populateLibertyApplication
 # Create jvm.options file                                                     #
 ###############################################################################
 createJvmOptions
+
+###############################################################################
+# Add config framents used in development                                     #
+###############################################################################
+addDevConfigFragment
+
+###############################################################################
+# Make context root configurable                                              #
+###############################################################################
+addContextRootFragment
 
 set +e

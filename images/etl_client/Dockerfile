@@ -36,5 +36,3 @@ RUN chown -R $USER_UID:$USER_GID /opt/ibm/etltoolkit \
 WORKDIR /opt/ibm/etltoolkit/
 
 USER $USERNAME
-
-ENTRYPOINT [ "/opt/docker-entrypoint.sh" ]

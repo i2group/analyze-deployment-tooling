@@ -60,6 +60,8 @@ if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
   source "${ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
 elif [[ "${ENVIRONMENT}" == "config-dev" ]]; then
   source "${ROOT_DIR}/utils/simulatedExternalVariables.sh"
+elif [[ "${ENVIRONMENT}" == "aws" ]]; then
+  source "${ROOT_DIR}/examples/aws/utils/simulatedExternalVariables.sh"
 fi
 source "${ROOT_DIR}/utils/commonVariables.sh"
 source "${ROOT_DIR}/utils/internalHelperVariables.sh"
@@ -76,6 +78,8 @@ ALL_PATTERNS_CONFIG_DIR="${LOCAL_TOOLKIT_DIR}/examples/configurations/all-patter
 function createCleanBaseConfiguration() {
   if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
     createCleanBaseConfigurationForPreProd
+  elif [[ "${ENVIRONMENT}" == "aws" ]]; then
+    createCleanBaseConfigurationForAWS
   elif [[ "${ENVIRONMENT}" == "config-dev" ]]; then
     createCleanBaseConfigurationConfigDev
   fi
@@ -86,6 +90,7 @@ function createCleanBaseConfigurationForPreProd() {
   local toolkit_example_security_config_dir="${LOCAL_TOOLKIT_DIR}/examples/security"
   local toolkit_example_schemas_dir="${LOCAL_TOOLKIT_DIR}/examples/schemas/en_US"
   local local_config_common_classes_dir="${LOCAL_CONFIGURATION_DIR}/fragments/common/WEB-INF/classes"
+  local toolkit_required_config_dir="${LOCAL_TOOLKIT_DIR}/application/required/configuration"
 
   print "Clearing down configuration"
   deleteFolderIfExists "${LOCAL_CONFIGURATION_DIR}"
@@ -93,6 +98,46 @@ function createCleanBaseConfigurationForPreProd() {
   print "Copying all-patterns Configuration to ${LOCAL_CONFIGURATION_DIR}"
   mkdir -p "${LOCAL_CONFIGURATION_DIR}"
   cp -pr "${ALL_PATTERNS_CONFIG_DIR}/"* "${LOCAL_CONFIGURATION_DIR}"
+
+  print "Copying required configuration files"
+  cp -pr "${toolkit_required_config_dir}/"* "${LOCAL_CONFIGURATION_DIR}"
+  
+  print "Configuring form based authentication"
+  echo '<?xml version="1.0" encoding="UTF-8"?><server>
+    <webAppSecurity overrideHttpAuthMethod="FORM" allowAuthenticationFailOverToAuthMethod="FORM"  loginFormURL="opal/login.html" loginErrorURL="opal/login.html?failed"/>
+</server>' >"${local_config_common_classes_dir}/server.extensions.xml"
+
+  print "Configuring command access control and security schema"
+  cp -pr "${toolkit_example_security_config_dir}/command-access-control.xml" "${local_config_opal_services_classes_dir}"
+  cp -pr "${toolkit_example_security_config_dir}/security-schema.xml" "${local_config_common_classes_dir}"
+
+  print "Copying connectors.json"
+  cp -pr "${ROOT_DIR}/examples/pre-prod/utils/templates/connectors.json" "${local_config_opal_services_classes_dir}"
+
+  print "Setting schema and charting schema"
+  cp -pr "${toolkit_example_schemas_dir}/law-enforcement-schema.xml" "${local_config_common_classes_dir}/schema.xml"
+  cp -pr "${toolkit_example_schemas_dir}/law-enforcement-schema-charting-schemes.xml" "${local_config_common_classes_dir}/schema-charting-schemes.xml"
+
+  print "Copying user.registry.xml"
+  cp -pr "${toolkit_example_security_config_dir}/user.registry.xml" "${LOCAL_CONFIGURATION_DIR}"
+}
+
+function createCleanBaseConfigurationForAWS() {
+  local local_config_opal_services_classes_dir="${LOCAL_CONFIGURATION_DIR}/fragments/opal-services/WEB-INF/classes"
+  local toolkit_example_security_config_dir="${LOCAL_TOOLKIT_DIR}/examples/security"
+  local toolkit_example_schemas_dir="${LOCAL_TOOLKIT_DIR}/examples/schemas/en_US"
+  local local_config_common_classes_dir="${LOCAL_CONFIGURATION_DIR}/fragments/common/WEB-INF/classes"
+  local toolkit_required_config_dir="${LOCAL_TOOLKIT_DIR}/application/required/configuration"
+
+  print "Clearing down configuration"
+  deleteFolderIfExists "${LOCAL_CONFIGURATION_DIR}"
+
+  print "Copying all-patterns Configuration to ${LOCAL_CONFIGURATION_DIR}"
+  mkdir -p "${LOCAL_CONFIGURATION_DIR}"
+  cp -pr "${ALL_PATTERNS_CONFIG_DIR}/"* "${LOCAL_CONFIGURATION_DIR}"
+
+  print "Copying required configuration files"
+  cp -pr "${toolkit_required_config_dir}/"* "${LOCAL_CONFIGURATION_DIR}"
   
   print "Configuring form based authentication"
   echo '<?xml version="1.0" encoding="UTF-8"?><server>
@@ -117,6 +162,7 @@ function createCleanBaseConfigurationForPreProd() {
 function createCleanBaseConfigurationConfigDev() {
   local toolkit_common_clases_dir="${ALL_PATTERNS_CONFIG_DIR}/fragments/common/WEB-INF/classes"
   local toolkit_opal_services_classes_dir="${ALL_PATTERNS_CONFIG_DIR}/fragments/opal-services/WEB-INF/classes"
+  local toolkit_required_config_dir="${LOCAL_TOOLKIT_DIR}/application/required/configuration"
 
   print "Clearing down configuration"
   deleteFolderIfExists "${LOCAL_CONFIGURATION_DIR}"
@@ -124,11 +170,8 @@ function createCleanBaseConfigurationConfigDev() {
   print "Copying all-patterns Configuration to ${LOCAL_CONFIGURATION_DIR}"
   mkdir -p "${LOCAL_CONFIGURATION_DIR}"
 
-  cp -pr "${ALL_PATTERNS_CONFIG_DIR}/solr/." "${LOCAL_CONFIGURATION_DIR}/solr"
-
   cp -pr "${ALL_PATTERNS_CONFIG_DIR}/i2-tools" "${LOCAL_CONFIGURATION_DIR}"
 
-  cp -p "${toolkit_common_clases_dir}/ApolloServerSettingsCommon.properties" "${LOCAL_CONFIGURATION_DIR}"
   cp -p "${toolkit_common_clases_dir}/analyze-settings.properties" "${LOCAL_CONFIGURATION_DIR}"
   cp -p "${toolkit_common_clases_dir}/log4j2.xml" "${LOCAL_CONFIGURATION_DIR}"
   
@@ -140,10 +183,12 @@ function createCleanBaseConfigurationConfigDev() {
   cp -pr "${ALL_PATTERNS_CONFIG_DIR}/fragments/opal-services-is/WEB-INF/classes/." "${LOCAL_CONFIGURATION_DIR}"
 
   cp -pr "${ALL_PATTERNS_CONFIG_DIR}/live/." "${LOCAL_CONFIGURATION_DIR}"
+  
+  cp -pr "${toolkit_required_config_dir}/"* "${LOCAL_CONFIGURATION_DIR}"
 
   cp "${ROOT_DIR}/utils/templates/connector-references.json" "${LOCAL_CONFIGURATION_DIR}"
+  cp "${ROOT_DIR}/utils/templates/extension-references.json" "${LOCAL_CONFIGURATION_DIR}"
   cp "${ROOT_DIR}/utils/templates/mapping-configuration.json" "${LOCAL_CONFIGURATION_DIR}"
-
 
   if [[ ! -f "$CONNECTOR_IMAGES_DIR"/connector-url-mappings-file.json ]]; then
     echo "[]" > "$CONNECTOR_IMAGES_DIR"/connector-url-mappings-file.json
@@ -178,6 +223,28 @@ function createIngestionScriptsFolder() {
   fi
 }
 
+function createTemplateConfigurationMods() {
+  if [[ "${ENVIRONMENT}" == "config-dev" ]]; then
+    local toolkit_config_mod_dir="${ROOT_DIR}/templates/toolkit-config-mod"
+    local toolkit_common_classes_dir="${ALL_PATTERNS_CONFIG_DIR}/fragments/common/WEB-INF/classes"
+    local apollo_server_settings_file_path
+
+    cp -p "${toolkit_common_classes_dir}/analyze-settings.properties" \
+    "${toolkit_common_classes_dir}/ApolloServerSettingsConfigurationSet.properties" \
+    "${toolkit_common_classes_dir}/ApolloServerSettingsMandatory.properties" \
+    "${toolkit_config_mod_dir}"
+
+    echo "# ------------------------ Gateway schemas and charting schemes -----------------------" > "${toolkit_config_mod_dir}/analyze-connect.properties"
+
+    # Temporarily add required setting to ApolloServerSettingsMandatory
+    apollo_server_settings_file_path="${toolkit_config_mod_dir}/ApolloServerSettingsMandatory.properties"
+    if ! grep -xq "UserGroupsProvider=.*" "${apollo_server_settings_file_path}" ; then
+      addToPropertiesFile "UserGroupsProvider=com.i2group.disco.user.WebSphereUserGroupsProvider" "${apollo_server_settings_file_path}"
+    fi
+
+  fi
+}
+
 ###############################################################################
 # Re-creating local i2Analyze configuration                                   #
 ###############################################################################
@@ -197,5 +264,10 @@ copyJdbcDriversToConfiguration
 # Creating Ingestion Scripts Folder                                           #
 ###############################################################################
 createIngestionScriptsFolder
+
+###############################################################################
+# Creating Template Configuration Mods                                        #
+###############################################################################
+createTemplateConfigurationMods
 
 print "Configuration has been successfully created"

@@ -1,54 +1,57 @@
-examples/pre-prod/load-balancer/haproxy.cfg
+.DS_Store
+
+**/.configuration
+**/.configuration-generated
+**/.i2a-extensions
+**/.connector-images
+
 examples/pre-prod/configuration
 examples/pre-prod/database-scripts
-examples/pre-prod/deploy-test.sh
-examples/pre-prod/walkthroughs/change-management/clearDataWalkthrough-test.sh
+
+configs/**/.*/
 
 images/liberty_ubi_base/application/**
 images/liberty_ubi_combined/application/**
 images/liberty_ubi_combined/classes/**
+images/liberty_ubi_combined/lib/**
 images/liberty_ubi_combined/server.extensions.xml
+images/liberty_ubi_combined/server.extensions.dev.xml
 images/liberty_ubi_combined/user.registry.xml
 images/solr_redhat/jars/**
-images/sel_connector/server/**
 images/example_connector/app/**
+images/i2connect_server_base/node_modules/**
+images/i2connect_server_base/.npm
+images/i2connect_server_base/.npm-global
+images/i2connect_server_base/.config
 images/etl_client/etltoolkit/**
 images/i2a_tools/classes/**
 images/i2a_tools/tools
 images/sql_client/tools
+images/db2_client/tools
 images/**/environment.sh
-templates/node-connector-image/environment.sh
-templates/springboot-connector-image/environment.sh
+templates/**/environment.sh
+
+templates/**/configuration
+templates/**/database-scripts
+templates/**/environment.sh
+templates/toolkit-config-mod/**/
+templates/toolkit-config-mod/?*.*
 
 pre-reqs/i2analyze
-pre-reqs/sel-platform
 pre-reqs/**/*.jar
 pre-reqs/**/*.tar.gz
 pre-reqs/**/*.zip
 
-**/logs
-**/.configuration
-**/.configuration-generated
-**/cookie.txt
-**/hsperfdata_root
-**backups
-**/*.jks
-**/*.cer
-**/*.key
-**/i2Analyze
-.vscode
-.idea
-.DS_Store
+connector-images/**/.app
+connector-images/**/app/**/connector.secrets.json
+connector-images/**/*.tgz
+connector-images/**/*.tar.gz
 
-**/bld/**
-**/tmp/**
-
-templates/*/configuration
-templates/*/database-scripts
+i2a-extensions/**/target
+i2a-extensions/target
 
 dev-environment-secrets/*
-
-environments/pre-prod/**/*.tar.gz
+.dev-environment-secrets/*
 
 ## DocFx
 obj/

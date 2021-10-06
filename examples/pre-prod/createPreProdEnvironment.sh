@@ -45,7 +45,7 @@ print "Running createConfiguration.sh"
 "${ROOT_DIR}/utils/createConfiguration.sh" -e "${ENVIRONMENT}"
 
 print "Running buildImages.sh"
-"${ROOT_DIR}/utils/buildImages.sh" -e "${ENVIRONMENT}" -l "latest"
+"${ROOT_DIR}/utils/buildImages.sh" -e "${ENVIRONMENT}"
 
 print "Running generateSecrets.sh"
-"${ROOT_DIR}/utils/generateSecrets.sh" -l "latest"
+"${ROOT_DIR}/utils/generateSecrets.sh"

@@ -95,6 +95,8 @@ function populateImagesFoldersWithEnvironmentTool() {
   cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${IMAGES_DIR}/liberty_ubi_base"
   cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${IMAGES_DIR}/sql_client/db-scripts"
   cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${IMAGES_DIR}/sql_server"
+  cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${IMAGES_DIR}/db2_client/db-scripts"
+  cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${IMAGES_DIR}/db2_server"
   cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${IMAGES_DIR}/example_connector"
   cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${IMAGES_DIR}/etl_client"
   cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${IMAGES_DIR}/i2a_tools"
@@ -141,7 +143,7 @@ function populateImageFolderWithToolsResources() {
 function createDatabaseScriptsAndGeneratedFolder() {
   print "Creating ${LOCAL_DATABASE_SCRIPTS_DIR}/generated folder"
   deleteFolderIfExists "${LOCAL_DATABASE_SCRIPTS_DIR}"
-  mkdir -p "${LOCAL_DATABASE_SCRIPTS_DIR}/generated"
+  mkdir -p "${LOCAL_DATABASE_SCRIPTS_DIR}/generated/dynamic"
 }
 
 function createLibertyStaticApplication() {
@@ -168,10 +170,23 @@ function createExampleConnectorApplication() {
   cp -pr "${TOOLKIT_EXAMPLE_CONNECTOR_DIR}/"* "${LOCAL_EXAMPLE_CONNECTOR_APP_DIR}"
 }
 
+function populateConnectorImagesFolder() {
+  local i2connect_server_version_file="${CONNECTOR_IMAGES_DIR}/i2connect-server-version.json"
+  print "Populate connector-images folder with defaults"
+  mkdir -p "${CONNECTOR_IMAGES_DIR}/.connector-images"
+
+  if [[ ! -f "${i2connect_server_version_file}" ]]; then
+    jq -n "{\"version\": \"latest\"}" > "${i2connect_server_version_file}"
+  fi
+}
+
 ###############################################################################
 # Setting up i2 Analyze toolkit                                               #
 ###############################################################################
 extractToolkit
+
+# Add new scripts for db2 until new toolkit is released
+cp -pr "${ROOT_DIR}/utils/templates/i2-tools/scripts/." "${TOOLKIT_SCRIPTS_DIR}"
 
 ###############################################################################
 # Adding environment variable resolution support                              #
@@ -193,6 +208,7 @@ createEtlToolkitImageResources
 ###############################################################################
 populateImageFolderWithToolsResources "i2a_tools"
 populateImageFolderWithToolsResources "sql_client"
+populateImageFolderWithToolsResources "db2_client"
 
 ###############################################################################
 # Creating Example connector application                                      #
@@ -208,5 +224,10 @@ createDatabaseScriptsAndGeneratedFolder
 # Creating Liberty static application                                         #
 ###############################################################################
 createLibertyStaticApplication
+
+###############################################################################
+# Populate Connector Images folder with defaults                              #
+###############################################################################
+populateConnectorImagesFolder
 
 print "Environment has been successfully prepared"

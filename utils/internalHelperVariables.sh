@@ -47,12 +47,13 @@ SOLR3_VOLUME_NAME="${SOLR3_CONTAINER_NAME}_data"
 LIBERTY1_VOLUME_NAME="${LIBERTY1_CONTAINER_NAME}_data"
 LIBERTY2_VOLUME_NAME="${LIBERTY2_CONTAINER_NAME}_data"
 SQL_SERVER_VOLUME_NAME="${SQL_SERVER_CONTAINER_NAME}_sqlvolume"
+DB2_SERVER_VOLUME_NAME="${DB2_SERVER_CONTAINER_NAME}_sqlvolume"
 if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
   # Use named volume in pre-prod
-  SQL_SERVER_BACKUP_VOLUME_NAME="${SQL_SERVER_CONTAINER_NAME}_sqlbackup"
+  DB_BACKUP_VOLUME_NAME="${SQL_SERVER_CONTAINER_NAME}_sqlbackup"
 elif [[ "${ENVIRONMENT}" == "config-dev" ]]; then
   # Use bind mount in config-dev
-  SQL_SERVER_BACKUP_VOLUME_NAME="${ROOT_DIR}/backups/${CONFIG_NAME}"
+  DB_BACKUP_VOLUME_NAME="${ROOT_DIR}/backups/${CONFIG_NAME}"
 fi
 SOLR_BACKUP_VOLUME_NAME="${SOLR1_CONTAINER_NAME}_solr_backup"
 
@@ -65,6 +66,8 @@ CERTIFICATE_KEY_SIZE=4096
 CA_KEY_SIZE=4096
 I2_ANALYZE_CERT_FOLDER_NAME="i2analyze"
 GATEWAY_CERT_FOLDER_NAME="gateway_user"
+ADMIN_ACCESS_PERMISSIONS=("i2:Administrator" "i2:Notes" "i2:RecordsUpload" "i2:RecordsDelete" "i2:ChartsUpload" "i2:ChartsDelete" \
+  "i2:ChartsRead" "i2:RecordsExport" "i2:Connectors" "i2:Connectors:connector-id" "i2:Notebook")
 
 ###############################################################################
 # Backup and restore variables                                                #
@@ -84,25 +87,37 @@ IMAGES_DIR="${ROOT_DIR}/images"
 TEMPLATES_DIR="${ROOT_DIR}/templates"
 CONNECTOR_PREFIX="connector-"
 CONNECTOR_IMAGES_DIR="${ROOT_DIR}/connector-images"
+EXTENSIONS_DIR="${ROOT_DIR}/i2a-extensions"
 GATEWAY_SCHEMA_DIR="${ROOT_DIR}/gateway-schemas"
 LOCAL_ETL_TOOLKIT_DIR="${IMAGES_DIR}/etl_client/etltoolkit"
 LOCAL_EXAMPLE_CONNECTOR_APP_DIR="${IMAGES_DIR}/example_connector/app"
 
 LOCAL_CONFIG_DEV_DIR="${ROOT_DIR}/templates/config-development"
+LOCAL_CONFIG_TOOLKIT_MOD_DIR="${ROOT_DIR}/templates/toolkit-config-mod"
 PRE_PROD_DIR="${ROOT_DIR}/examples/pre-prod"
+AWS_DIR="${ROOT_DIR}/examples/aws"
 
 if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
   LOCAL_PRE_PROD_CONFIG_DIR="${PRE_PROD_DIR}/configuration"
   LOCAL_CONFIGURATION_DIR="${LOCAL_PRE_PROD_CONFIG_DIR}"
   LOCAL_ISTORE_NAMES_SQL_SERVER_PROPERTIES_FILE="${LOCAL_CONFIGURATION_DIR}/fragments/opal-services-is/WEB-INF/classes/InfoStoreNamesSQLServer.properties"
+  LOCAL_ISTORE_NAMES_DB2_PROPERTIES_FILE="${LOCAL_CONFIGURATION_DIR}/fragments/opal-services-is/WEB-INF/classes/InfoStoreNamesDb2.properties"
   LOCAL_DATABASE_SCRIPTS_DIR="${PRE_PROD_DIR}/database-scripts"
+elif [[ "${ENVIRONMENT}" == "aws" ]]; then
+  LOCAL_AWS_CONFIG_DIR="${AWS_DIR}/configuration"
+  LOCAL_CONFIGURATION_DIR="${LOCAL_AWS_CONFIG_DIR}"
+  LOCAL_ISTORE_NAMES_SQL_SERVER_PROPERTIES_FILE="${LOCAL_CONFIGURATION_DIR}/fragments/opal-services-is/WEB-INF/classes/InfoStoreNamesSQLServer.properties"
+  LOCAL_ISTORE_NAMES_DB2_PROPERTIES_FILE="${LOCAL_CONFIGURATION_DIR}/fragments/opal-services-is/WEB-INF/classes/InfoStoreNamesDb2.properties"
+  LOCAL_DATABASE_SCRIPTS_DIR="${AWS_DIR}/database-scripts"
 elif [[ "${ENVIRONMENT}" == "config-dev" ]]; then
   LOCAL_CONFIG_DEV_CONFIG_DIR="${LOCAL_CONFIG_DEV_DIR}/configuration"
   LOCAL_CONFIGURATION_DIR="${LOCAL_CONFIG_DEV_CONFIG_DIR}"
   LOCAL_ISTORE_NAMES_SQL_SERVER_PROPERTIES_FILE="${LOCAL_CONFIGURATION_DIR}/InfoStoreNamesSQLServer.properties"
+  LOCAL_ISTORE_NAMES_DB2_PROPERTIES_FILE="${LOCAL_CONFIGURATION_DIR}/InfoStoreNamesDb2.properties"
   LOCAL_DATABASE_SCRIPTS_DIR="${LOCAL_CONFIG_DEV_DIR}/database-scripts"
   PREVIOUS_CONFIGURATION_DIR="${ROOT_DIR}/configs/${CONFIG_NAME}/.${CONFIG_NAME}"
   PREVIOUS_CONFIGURATION_PATH="${PREVIOUS_CONFIGURATION_DIR}/configuration"
+  PREVIOUS_CONFIGURATION_LIB_PATH="${PREVIOUS_CONFIGURATION_DIR}/lib"
   CURRENT_CONFIGURATION_PATH="${GENERATED_LOCAL_CONFIG_DIR}"
   PREVIOUS_CONFIGURATION_UTILS_PATH="${PREVIOUS_CONFIGURATION_DIR}/utils"
   CURRENT_CONFIGURATION_UTILS_PATH="${ROOT_DIR}/configs/${CONFIG_NAME}/utils"
@@ -133,6 +148,8 @@ LOCAL_KEYS_DIR="${ROOT_DIR}/dev-environment-secrets/simulated-secret-store"
 GENERATED_SECRETS_DIR="${ROOT_DIR}/dev-environment-secrets/generated-secrets"
 LOCAL_CA_CERT_DIR="${GENERATED_SECRETS_DIR}/certificates/CA"
 LOCAL_EXTERNAL_CA_CERT_DIR="${GENERATED_SECRETS_DIR}/certificates/externalCA"
+CONNECTOR_CONFIG_FILE="connector.conf.json"
+CONNECTOR_SECRETS_FILE="connector.secrets.json"
 
 ###############################################################################
 # Walkthrough paths                                                           #
@@ -150,6 +167,12 @@ SOLR_LOCALE="en_US"
 ###############################################################################
 CONTAINER_SECRETS_DIR="/run/secrets"
 CONTAINER_CERTS_DIR="/tmp/i2acerts"
+
+###############################################################################
+# Connector variables                                                         #
+###############################################################################
+I2CONNECT_SERVER_CONNECTOR_TYPE="i2connect-server"
+EXTERNAL_CONNECTOR_TYPE="external"
 
 ###############################################################################
 # Development variables                                                       #

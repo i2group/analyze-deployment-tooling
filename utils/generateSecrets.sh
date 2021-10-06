@@ -32,7 +32,7 @@ ROOT_DIR=$(pushd . 1> /dev/null ; while [ "$(pwd)" != "/" ]; do test -e .root &&
 
 function printUsage() {
   echo "Usage:"
-  echo "  generateSecrets.sh -t generate [-c {all|connectors}] [-v]" 1>&2
+  echo "  generateSecrets.sh -t generate [-c {all|core|connectors[-i <connector1_name>] [-e <connector1_name>]}] [-v]" 1>&2
   echo "  generateSecrets.sh -t clean [-v]" 1>&2
   echo "  generateSecrets.sh -a -t {generate|clean} -l dependency_label [-v]" 1>&2
   echo "  generateSecrets.s -h" 1>&2
@@ -49,7 +49,10 @@ function help() {
   echo "  -t <generate>         Generate certificates. " 1>&2
   echo "  -t <clean>            Clean all certificates." 1>&2
   echo "  -c <all>              Generate certificates for all components." 1>&2
+  echo "  -c <core>             Generate certificates for core components." 1>&2
   echo "  -c <connectors>       Generate certificates for connectors only." 1>&2
+  echo "  -i <connector_name>   Names of the connectors to generate secrets for. To specify multiple connectors, add additional -i options." 1>&2
+  echo "  -e <connector_name>   Names of the connectors to not generate secrets for. To specify multiple connectors, add additional -e options." 1>&2
   echo "  -l <dependency_label> Name of dependency image label to use on AWS." 1>&2
   echo "  -v                    Verbose output." 1>&2
   echo "  -a                    Produce or use artefacts on AWS." 1>&2
@@ -57,7 +60,7 @@ function help() {
   exit 1
 }
 
-while getopts ":t:c:l:vah" flag; do
+while getopts ":t:c:i:e:l:vahy" flag; do
   case "${flag}" in
   t)
     TASK="${OPTARG}"
@@ -65,13 +68,22 @@ while getopts ":t:c:l:vah" flag; do
     ;;
   c)
     COMPONENTS="${OPTARG}"
-    [[ "${COMPONENTS}" == "all" ]] || [[ "${COMPONENTS}" == "connectors" ]] || usage
+    [[ "${COMPONENTS}" == "all" || "${COMPONENTS}" == "connectors" || "${COMPONENTS}" == "core" ]] || usage
+    ;;
+  i)
+    INCLUDED_CONNECTORS+=("$OPTARG")
+    ;;
+  e)
+    EXCLUDED_CONNECTORS+=("${OPTARG}")
     ;;
   l)
     I2A_DEPENDENCIES_IMAGES_TAG="${OPTARG}"
     ;;
   v)
     VERBOSE="true"
+    ;;
+  y)
+    YES_FLAG="true"
     ;;
   a)
     AWS_ARTEFACTS="true"
@@ -112,6 +124,13 @@ if [[ -z "${I2A_DEPENDENCIES_IMAGES_TAG}" ]]; then
   I2A_DEPENDENCIES_IMAGES_TAG="latest"
 fi
 
+if [[ "${INCLUDED_CONNECTORS[*]}" && "${EXCLUDED_CONNECTORS[*]}" ]]; then
+  printf "\e[31mERROR: Incompatible options: Both (-i) and (-e) were specified.\n" >&2
+  printf "\e[0m" >&2
+  usage
+  exit 1
+fi
+
 DEV_ENV_SECRETS_DIR="${ROOT_DIR}/dev-environment-secrets"
 JAVA_CONTAINER_VOLUME_DIR="/simulatedKeyStore"
 AWS_DEPLOY="false"
@@ -143,6 +162,17 @@ function runJava() {
     "${I2A_TOOLS_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "$@"
 }
 
+function checkSecretAlreadyExists() {
+  local secret_name="${1}"
+  local file_path="${2}"
+
+  if [[ -d "${file_path}" ]]; then
+    echo "Secrets for ${secret_name} already exist."
+    echo "If you would like to regenerate the secrets, delete the ${file_path} folder."
+    return 1
+  fi
+}
+
 function createCA() {
   local CONTEXT="$1"
   local CA_CER="${JAVA_CONTAINER_VOLUME_DIR}/${CONTEXT}/CA.cer"
@@ -151,6 +181,18 @@ function createCA() {
   local EXT="${JAVA_CONTAINER_VOLUME_DIR}/${CONTEXT}/x509.ext"
 
   print "Creating Certificate Authority"
+
+  checkSecretAlreadyExists "${CONTEXT}" "${GENERATED_SECRETS_DIR}/certificates/${CONTEXT}" || return 0
+
+  # Invalidate all other certificates
+  if [[ "${CONTEXT}" == *"external"* ]]; then
+    # Any certificate generated for external
+    deleteFolderIfExists "${GENERATED_SECRETS_DIR}/certificates/${I2_ANALYZE_CERT_FOLDER_NAME}"
+  else
+    find "${GENERATED_SECRETS_DIR}/certificates" -maxdepth 1 -type d | while read -r file_location; do
+      deleteFolderIfExists "${file_location}"
+    done
+  fi
 
   deleteFolderIfExistsAndCreate "${GENERATED_SECRETS_DIR}/certificates/${CONTEXT}"
   cp -p "${ROOT_DIR}/utils/templates/x509.ext.template" "${GENERATED_SECRETS_DIR}/certificates/${CONTEXT}/x509.ext.template"
@@ -180,6 +222,7 @@ function createCertificates() {
 
   print "Create Raw Certificates"
 
+  checkSecretAlreadyExists "${HOST_NAME}" "${GENERATED_SECRETS_DIR}/certificates/${HOST_NAME}" || return 0
   deleteFolderIfExistsAndCreate "${GENERATED_SECRETS_DIR}/certificates/${HOST_NAME}"
 
   if [[ "${CONTEXT}" == external ]]; then
@@ -211,6 +254,7 @@ function createSSLCertificates() {
   createCertificates "${I2A_TOOL_HOST_NAME}" "${I2A_TOOL_FQDN}" solr
   createCertificates "${LIBERTY1_HOST_NAME}" "${LIBERTY1_FQDN}" liberty
   createCertificates "${LIBERTY2_HOST_NAME}" "${LIBERTY2_FQDN}" liberty
+  createCertificates "${DB2_SERVER_HOST_NAME}" "${DB2_SERVER_FQDN}" db2
   createCertificates "${SQL_SERVER_HOST_NAME}" "${SQL_SERVER_FQDN}" sqlserver
   createCertificates "${CONNECTOR1_HOST_NAME}" "${CONNECTOR1_FQDN}" connector
   createCertificates "${CONNECTOR2_HOST_NAME}" "${CONNECTOR2_FQDN}" connector
@@ -230,28 +274,53 @@ function generateRandomPassword() {
 }
 
 function generateSolrPasswords() {
-  deleteFolderIfExistsAndCreate "${GENERATED_SECRETS_DIR}/solr"
-
+  local secrets_dir="${GENERATED_SECRETS_DIR}/solr"
   print "Generating Solr Passwords"
 
-  generateRandomPassword "${GENERATED_SECRETS_DIR}/solr/SOLR_APPLICATION_DIGEST_PASSWORD"
-  generateRandomPassword "${GENERATED_SECRETS_DIR}/solr/SOLR_ADMIN_DIGEST_PASSWORD"
-  generateRandomPassword "${GENERATED_SECRETS_DIR}/solr/ZK_DIGEST_PASSWORD"
-  generateRandomPassword "${GENERATED_SECRETS_DIR}/solr/ZK_DIGEST_READONLY_PASSWORD"
+  checkSecretAlreadyExists "Solr" "${secrets_dir}" || return 0
+  deleteFolderIfExistsAndCreate "${secrets_dir}"
+
+  generateRandomPassword "${secrets_dir}/SOLR_APPLICATION_DIGEST_PASSWORD"
+  generateRandomPassword "${secrets_dir}/SOLR_ADMIN_DIGEST_PASSWORD"
+  generateRandomPassword "${secrets_dir}/ZK_DIGEST_PASSWORD"
+  generateRandomPassword "${secrets_dir}/ZK_DIGEST_READONLY_PASSWORD"
+}
+
+function generateApplicationAdminPassword() {
+  local secrets_dir="${GENERATED_SECRETS_DIR}/application"
+
+  print "Generating Application Passwords"
+  checkSecretAlreadyExists "Application" "${secrets_dir}" || return 0
+  deleteFolderIfExistsAndCreate "${secrets_dir}"
+
+  generateRandomPassword "${secrets_dir}/admin_PASSWORD"
 }
 
 function generateSqlserverPasswords() {
-  deleteFolderIfExistsAndCreate "${GENERATED_SECRETS_DIR}/sqlserver"
+  local secrets_dir="${GENERATED_SECRETS_DIR}/sqlserver"
 
   print "Generating SQL Server Passwords"
+  checkSecretAlreadyExists "SQL Server" "${secrets_dir}" || return 0
+  deleteFolderIfExistsAndCreate "${secrets_dir}"
 
-  generateRandomPassword "${GENERATED_SECRETS_DIR}/sqlserver/dbb_PASSWORD"
-  generateRandomPassword "${GENERATED_SECRETS_DIR}/sqlserver/i2analyze_PASSWORD"
-  generateRandomPassword "${GENERATED_SECRETS_DIR}/sqlserver/i2etl_PASSWORD"
-  generateRandomPassword "${GENERATED_SECRETS_DIR}/sqlserver/etl_PASSWORD"
-  generateRandomPassword "${GENERATED_SECRETS_DIR}/sqlserver/dba_PASSWORD"
-  generateRandomPassword "${GENERATED_SECRETS_DIR}/sqlserver/sa_PASSWORD"
-  generateRandomPassword "${GENERATED_SECRETS_DIR}/sqlserver/sa_INITIAL_PASSWORD"
+  generateRandomPassword "${secrets_dir}/dbb_PASSWORD"
+  generateRandomPassword "${secrets_dir}/i2analyze_PASSWORD"
+  generateRandomPassword "${secrets_dir}/i2etl_PASSWORD"
+  generateRandomPassword "${secrets_dir}/etl_PASSWORD"
+  generateRandomPassword "${secrets_dir}/dba_PASSWORD"
+  generateRandomPassword "${secrets_dir}/sa_PASSWORD"
+  generateRandomPassword "${secrets_dir}/sa_INITIAL_PASSWORD"
+}
+
+function generateDb2serverPasswords() {
+  local secrets_dir="${GENERATED_SECRETS_DIR}/db2server"
+
+  print "Generating Db2 Server Passwords"
+  checkSecretAlreadyExists "Db2" "${secrets_dir}" || return 0
+  deleteFolderIfExistsAndCreate "${secrets_dir}"
+
+  generateRandomPassword "${secrets_dir}/db2inst1_PASSWORD"
+  generateRandomPassword "${secrets_dir}/db2inst1_INITIAL_PASSWORD"
 }
 
 function generateSolrSecurityJson() {
@@ -336,6 +405,13 @@ function simulateSqlserverSecretStoreAccess() {
   cp "${GENERATED_SECRETS_DIR}/sqlserver/sa_INITIAL_PASSWORD" "${LOCAL_KEYS_DIR}/sqlserver/SA_PASSWORD"
 }
 
+function simulateDb2serverSecretStoreAccess() {
+  local HOST_NAME="$1"
+
+  simulateContainerSecretStoreAccess "${HOST_NAME}"
+  cp "${GENERATED_SECRETS_DIR}/db2server/db2inst1_INITIAL_PASSWORD" "${LOCAL_KEYS_DIR}/db2server/DB2INST1_PASSWORD"
+}
+
 function simulatei2AnalyzeSecretStoreAccess() {
   local HOST_NAME="$1"
   simulateContainerSecretStoreAccess "${HOST_NAME}" external
@@ -362,66 +438,81 @@ function simulateServerSecretStoreAccess() {
   simulateSolrSecretStoreAccess "${SOLR2_HOST_NAME}"
   simulateSolrSecretStoreAccess "${SOLR3_HOST_NAME}"
   simulateSqlserverSecretStoreAccess "${SQL_SERVER_HOST_NAME}"
+  simulateDb2serverSecretStoreAccess "${DB2_SERVER_HOST_NAME}"
   simulatei2AnalyzeSecretStoreAccess "${I2ANALYZE_HOST_NAME}"
 }
 
 function generateConnectorSecrets() {
+  local connector_image_dir
+
+  for connector_name in "${CONNECTOR_NAMES[@]}"; do
+    connector_image_dir=${CONNECTOR_IMAGES_DIR}/${connector_name}
+    [[ ! -d "${connector_image_dir}" ]] && continue
+    generateConnectorSecret "${connector_image_dir}"
+  done
+}
+
+function generateConnectorSecret() {
+  local connector_image_dir="${1}"
   local connector_image_name
   local connector_secrets_folder
+  local connector_type
+  local hostname
+  local connector_tag base_url
 
-  print "Generating secrets for connectors"
-  
-  for connector_image_dir in "${CONNECTOR_IMAGES_DIR}"/* ; do
-    [[ ! -d "${connector_image_dir}" ]] && continue
-    connector_image_name="${connector_image_dir##*/}"
-    connector_secrets_folder="${LOCAL_KEYS_DIR}/${connector_image_name}"
-    print "Generating secrets for ${connector_image_name}"
-    if [[ ! -d "${connector_secrets_folder}" ]]; then 
-      version=$(jq -r '.version' <"${connector_image_dir}/connector-version.json")
-      createCertificates "${connector_image_name}" "${connector_image_name}-${version}.${DOMAIN_NAME}" "connector"
-      simulateContainerSecretStoreAccess "${connector_image_name}"
-    else
-      echo "Secrets for ${connector_image_name} already exist."
-      echo "If you would like to regenerate the secrets, delete the ${connector_secrets_folder} folder."
-    fi
-  done
+  connector_image_name="${connector_image_dir##*/}"
+  connector_secrets_folder="${LOCAL_KEYS_DIR}/${connector_image_name}"
+  print "Generating secrets for ${connector_image_name}"
+
+  checkSecretAlreadyExists "${connector_image_name}" "${connector_secrets_folder}" || return 0
+  deleteFolderIfExistsAndCreate "${connector_secrets_folder}"
+
+  connector_type=$(jq -r '.type' <"${connector_image_dir}/connector-definition.json")
+
+  if [[ "${connector_type}" == "external" ]]; then
+    base_url=$(jq -r '.baseUrl' <"${connector_image_dir}/connector-definition.json")
+    hostname=$(echo "${base_url}" | awk -F[/:] '{print $4}')
+  else
+    connector_tag=$(jq -r '.tag' <"${connector_image_dir}/connector-version.json")
+    hostname="${connector_image_name}-${connector_tag}.${DOMAIN_NAME}"
+  fi
+  createCertificates "${connector_image_name}" "${hostname}" "connector"
+  simulateContainerSecretStoreAccess "${connector_image_name}"
+}
+
+function generateCoreSecrets()
+{
+  print "Generating secrets for core components"
+
+  createCA "CA"
+  createCA "externalCA"
+  createSSLCertificates
+  generateApplicationAdminPassword
+  generateSolrPasswords
+  generateSqlserverPasswords
+  generateDb2serverPasswords
+  generateSolrSecurityJson
+  simulateServerSecretStoreAccess
 }
 
 ###############################################################################
 # Function calls                                                              #
 ###############################################################################
 
-if [[ "${TASK}" == "generate" ]]; then 
+if [[ "${TASK}" == "generate" ]]; then
+  # Set a list of connectors to update
+  setListOfConnectorsToUpdate
 
   if [[ "${COMPONENTS}" == "all" ]]; then
-
-    print "Generating secrets for all components"
-
-    if [[ ! -d "${LOCAL_KEYS_DIR}" ]]; then
-      createCA "CA"
-      createCA "externalCA"
-      createSSLCertificates
-      generateSolrPasswords
-      generateSqlserverPasswords
-      generateSolrSecurityJson
-      simulateServerSecretStoreAccess
-    else
-      echo "Secrets already exist."
-      echo "If you would like to regenerate the secrets delete ${DEV_ENV_SECRETS_DIR} folder."
-    fi
-
+    generateCoreSecrets
     generateConnectorSecrets
-
   elif [[ "${COMPONENTS}" == "connectors" ]]; then
-
     generateConnectorSecrets
-
+  elif [[ "${COMPONENTS}" == "core" ]]; then
+    generateCoreSecrets
   fi
-
 elif [[ "${TASK}" == "clean" ]]; then
-
   print "Deleting existing secrets"
   deleteFolderIfExistsAndCreate "${DEV_ENV_SECRETS_DIR}"
   echo "${DEV_ENV_SECRETS_DIR} folder is clean"
-
 fi

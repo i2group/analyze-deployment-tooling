@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-FROM mcr.microsoft.com/mssql/rhel/server:2019-CU1-rhel-8
+FROM mcr.microsoft.com/mssql/rhel/server:2019-CU11-rhel-8.3
 
 USER root
 

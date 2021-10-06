@@ -26,7 +26,7 @@ set -e
 . /opt/environment.sh
 
 
-if [[ ${SERVER_SSL} == true ]]; then
+if [[ ${SSL_ENABLED} == true ]]; then
   file_env 'SSL_CA_CERTIFICATE'
   file_env 'SSL_CERTIFICATE'
   file_env 'SSL_PRIVATE_KEY'
@@ -69,9 +69,9 @@ if [[ ${SERVER_SSL} == true ]]; then
   export SERVER_SSL_KEY_STORE_PASSWORD
 fi
 
-export SERVER_PORT=3700
+export SERVER_PORT=3443
 
-unset SERVER_SSL
+unset SSL_ENABLED
 echo "$@"
 
 exec "$@"

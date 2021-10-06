@@ -58,7 +58,7 @@ cp "${LOCAL_CONFIG_CHANGES_DIR}/connectors.json" "${LOCAL_CONFIG_OPAL_SERVICES_D
 # Run example Connector to connectors.json                                    #
 ###############################################################################
 runExampleConnector "${CONNECTOR2_CONTAINER_NAME}" "${CONNECTOR2_FQDN}" "${CONNECTOR2_CONTAINER_NAME}"
-waitForConnectorToBeLive "${CONNECTOR2_FQDN}" "${CONNECTOR2_APP_PORT}"
+waitForConnectorToBeLive "${CONNECTOR2_FQDN}"
 
 ###############################################################################
 # Updating the configuration                                                  #

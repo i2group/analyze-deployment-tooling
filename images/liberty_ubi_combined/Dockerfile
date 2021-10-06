@@ -24,6 +24,9 @@ FROM ${BASE_IMAGE}
 
 # Copy classes configuration into liberty image
 COPY --chown=1001:0 classes/ /opt/ibm/wlp/usr/servers/defaultServer/apps/opal-services.war/WEB-INF/classes/
-COPY --chown=1001:0 server.extensions.xml /opt/ibm/wlp/usr/servers/defaultServer
+COPY --chown=1001:0 server.extensions*.xml /opt/ibm/wlp/usr/servers/defaultServer/
 COPY --chown=1001:0 user.registry.xml /opt/ibm/wlp/usr/shared/config/user.registry.xml
 COPY --chown=1001:0 application/web-app-files/ /opt/ibm/wlp/usr/servers/defaultServer/apps/opal-services.war/WEB-INF/
+
+# Copy libs into liberty image
+COPY --chown=1001:0 lib/ /opt/ibm/wlp/usr/servers/defaultServer/apps/opal-services.war/WEB-INF/lib/

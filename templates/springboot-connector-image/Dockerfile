@@ -29,7 +29,7 @@ ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
 
 # Expose the port the connector will use
-EXPOSE 3700
+EXPOSE 3000 3443
 
 ENTRYPOINT ["/opt/docker-entrypoint.sh"]
 CMD ["java","-jar","/app.jar"]

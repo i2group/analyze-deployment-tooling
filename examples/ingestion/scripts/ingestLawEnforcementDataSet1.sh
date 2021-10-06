@@ -69,11 +69,27 @@ print "Inserting data into the staging tables"
 # Any double quotes in the curl command are also escaped by a leading backslash.
 for table_name in $(map_keys "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}"); do
   csv_and_format_file_name=$(map_get "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}" "${table_name}")
-  sql_query="\
-    BULK INSERT ${STAGING_SCHEMA}.${table_name} \
-    FROM '/var/i2a-data/${BASE_DATA}/${csv_and_format_file_name}.csv' \
-    WITH (FORMATFILE = '/var/i2a-data/${BASE_DATA}/sqlserver/format-files/${csv_and_format_file_name}.fmt', FIRSTROW = 2)"
-  runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+  case "${DB_DIALECT}" in
+    db2)
+      IFS=',' read -r -a csv_header <"${DATA_DIR}/${BASE_DATA}/${csv_and_format_file_name}.csv"
+      columns=()
+      for header in "${csv_header[@]}"; do
+        columns+=("${header} varchar(1000) NULL")
+      done
+      sql_query="\
+        INSERT INTO ${STAGING_SCHEMA}.${table_name} ($(IFS=','; echo "${csv_header[*]}")) \
+        SELECT * FROM EXTERNAL '/var/i2a-data/${BASE_DATA}/${csv_and_format_file_name}.csv' ($(IFS=','; echo "${columns[*]}")) \
+        USING (DELIMITER ',' SKIP_ROWS 1 TIMESTAMP_FORMAT 'YYYY-MM-DD HH:MI:SS' DATE_FORMAT 'YYYY-MM-DD' NULLVALUE '')"
+      runDb2ServerCommandAsDb2inst1 runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+      ;;
+    sqlserver)
+      sql_query="\
+        BULK INSERT ${STAGING_SCHEMA}.${table_name} \
+        FROM '/var/i2a-data/${BASE_DATA}/${csv_and_format_file_name}.csv' \
+        WITH (FORMATFILE = '/var/i2a-data/${BASE_DATA}/sqlserver/format-files/${csv_and_format_file_name}.fmt', FIRSTROW = 2)"
+      runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+      ;;
+  esac
 done
 
 for import_id in "${BULK_IMPORT_MAPPING_IDS[@]}"; do
@@ -89,6 +105,14 @@ done
 print "Truncating the staging tables"
 for table_name in $(map_keys "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}"); do
   csv_and_format_file_name=$(map_get "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}" "${table_name}")
-  sql_query="TRUNCATE Table ${STAGING_SCHEMA}.${table_name}"
-  runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+  sql_query="TRUNCATE TABLE ${STAGING_SCHEMA}.${table_name}"
+  case "${DB_DIALECT}" in
+    db2)
+      sql_query+=" IMMEDIATE;"
+      runDb2ServerCommandAsDb2inst1 runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+      ;;
+    sqlserver)
+      runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+      ;;
+  esac
 done

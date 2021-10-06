@@ -121,8 +121,8 @@ LIBERTY1_DEBUG_PORT=7777
 LIBERTY2_PORT=9044
 LIBERTY2_DEBUG_PORT=7778
 SOLR_PORT=8983
-CONNECTOR1_APP_PORT=3700
-CONNECTOR2_APP_PORT=3700
+CONNECTOR1_APP_PORT=3443
+CONNECTOR2_APP_PORT=3443
 DB_PORT=1433
 
 if [[ "$SOLR_ZOO_SSL_CONNECTION" == true ]]; then
@@ -173,6 +173,11 @@ fi
 BASE_URI="https://${I2_ANALYZE_FQDN}:${I2_ANALYZE_PORT}"
 FRONT_END_URI="${BASE_URI}/opal"
 LOAD_BALANCER_STATS_URI="${BASE_URI}/haproxy_stats;csv"
+
+###############################################################################
+# User names                                                                  #
+###############################################################################
+I2_ANALYZE_ADMIN="Jenny"
 
 ###############################################################################
 # Root Paths                                                                  #
