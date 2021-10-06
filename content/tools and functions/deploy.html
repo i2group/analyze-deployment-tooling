@@ -86,16 +86,14 @@
 <h3 id="createsolrcluster"> Create Solr cluster</h3>
 <p>The <code>createSecureCluster</code> function creates the secure Solr cluster for the deployment. The function includes a number of calls that complete the following actions:</p>
 <ol>
-<li><p>The <code>runZK</code> server function runs the ZooKeeper containers that make up the ZooKeeper ensemble. For more information about running a ZooKeeper container, see <a href="../images%20and%20containers/zookeeper.html">ZooKeeper</a>. 
+<li><p>The <code>runZK</code> server function runs the ZooKeeper containers that make up the ZooKeeper ensemble. For more information about running a ZooKeeper container, see <a href="../images%20and%20containers/zookeeper.html">ZooKeeper</a>.
 In <code>deploy.sh</code>, 3 ZooKeeper containers are used.</p>
 </li>
 <li><p>The <code>runSolrClientCommand</code> client function is used a number of times to complete the following actions:</p>
 <ol>
-<li>Create the <code>znode</code> for the cluster.<br>i2 Analyze uses a ZooKeeper connection string with a chroot. To use a chroot connection string, a <em>znode</em> with that name must exist. For more information, see <a href="https://lucene.apache.org/solr/guide/8_6/solr-control-script-reference.html#solrcloud-mode">SolrCloud Mode</a>.<ol>
+<li>Create the <code>znode</code> for the cluster.<br>i2 Analyze uses a ZooKeeper connection string with a chroot. To use a chroot connection string, a <em>znode</em> with that name must exist. For more information, see <a href="https://lucene.apache.org/solr/guide/8_6/solr-control-script-reference.html#solrcloud-mode">SolrCloud Mode</a>.</li>
 <li>Set the <code>urlScheme</code> to be <code>https</code>.</li>
 <li>Configure the Solr authentication by uploading the <code>security.json</code> file to ZooKeeper.</li>
-</ol>
-</li>
 </ol>
 <p>For more information about the function, see <a href="client_functions.html#runsolrclientcommand">runSolrClientCommand</a>.</p>
 </li>
@@ -106,7 +104,7 @@ In <code>deploy.sh</code>, 3 ZooKeeper containers are used.</p>
 <h2 id="initializingtheinformationstoredatabase"> Initializing the Information Store database</h2>
 <p>The initializing the Information Store database section creates a persistent database backup volume, runs the database container and configures the database management system.</p>
 <p>The database backup volume is created first with the Docker command:</p>
-<pre><code class="lang-bash">docker volume create &quot;${SQL_SERVER_BACKUP_VOLUME_NAME}&quot;
+<pre><code class="lang-bash">docker volume create &quot;${DB_BACKUP_VOLUME_NAME}&quot;
 </code></pre><p>so that the volume will not be automatically deleted when the SQL Server container is remove. This helps maintain any backups created while running a SQL server container.
 For more information about docker storage, see <a href="https://docs.docker.com/storage/">Docker Storage</a>.</p>
 <h3 id="runningthedatabaseservercontainer"> Running the database server container</h3>
@@ -131,7 +129,7 @@ For more information about docker storage, see <a href="https://docs.docker.com/
 <ul>
 <li>The <code>runSQLServerCommandAsSA</code> client function is used to run the <code>runDatabaseCreationScripts.sh</code> tool.  <ul>
 <li><a href="client_functions.html#runsqlservercommandassa">runSQLServerCommandAsSA</a></li>
-<li><a href="">runDatabaseCreationScripts.sh</a></li>
+<li>runDatabaseCreationScripts.sh</li>
 </ul>
 </li>
 </ul>
@@ -167,7 +165,7 @@ For more information about docker storage, see <a href="https://docs.docker.com/
 <p>The configuring Solr and ZooKeeper sections creates Solr configuration and then configures the Solr cluster and creates the Solr collections.</p>
 <p>The <code>generateSolrSchemas.sh</code> i2-tool creates the <code>solr</code> directory in <code>examples/pre-prod/configuration/solr/generated_config</code>. This directory contains the managed-schema, Solr synonyms file and Solr config files for each index.</p>
 <ol>
-<li><p>The <code>configureSecureSolr</code> function uses the <code>runSolrClientCommand</code> client function to upload the <code>managed-schema</code>, <code>solr.xml</code>, and synonyms file for each collection to ZooKeeper.<br>For example: </p>
+<li><p>The <code>configureSecureSolr</code> function uses the <code>runSolrClientCommand</code> client function to upload the <code>managed-schema</code>, <code>solr.xml</code>, and synonyms file for each collection to ZooKeeper.<br>For example:</p>
 <pre><code class="lang-bash">runSolrClientCommand solr zk upconfig -v -z &quot;${ZK_HOST}&quot; -n daod_index -d /conf/solr_config/daod_index
 </code></pre></li>
 <li><p>The <code>setClusterPolicyForSecureSolr</code> function uses the <code>runSolrClientCommand</code> client function to set a cluster policy such that each host has 1 replica of each shard.<br>For example:</p>
@@ -220,10 +218,10 @@ For more information about docker storage, see <a href="https://docs.docker.com/
 <li><p>The <code>runLiberty</code> server function runs a Liberty container from the configured image.<br>For more information, see <a href="../images%20and%20containers/liberty.html#runningalibertycontainer">Running a Liberty container</a>
 In <code>deploy.sh</code>, 2 liberty containers are used.</p>
 </li>
-<li><p>Starting the load balancer.<br>The <code>runLoadBalancer</code> functions in <code>serverFunctions.sh</code> runs HAProxy as a load balancer in a Docker container.<br>The load balancer configuration is in the <code>haproxy.cfg</code> file. The load balancer routes requests to the application to both Liberty servers that are running.<br>The configuration that used is a simplified configuration for example purposes and is not to be used in production. </p>
+<li><p>Starting the load balancer.<br>The <code>runLoadBalancer</code> functions in <code>serverFunctions.sh</code> runs HAProxy as a load balancer in a Docker container.<br>The load balancer configuration is in the <code>haproxy.cfg</code> file. The load balancer routes requests to the application to both Liberty servers that are running.<br>The configuration that used is a simplified configuration for example purposes and is not to be used in production.</p>
 <p>For more information about configuring a load balancer with i2 Analyze, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=availability-deploying-load-balancer">Load balancer</a>.</p>
 </li>
-<li><p>Before continuing, <code>deploy.sh</code> uses the <code>waitFori2AnalyzeServiceToBeLive</code> common function to ensure that Liberty is running. </p>
+<li><p>Before continuing, <code>deploy.sh</code> uses the <code>waitFori2AnalyzeServiceToBeLive</code> common function to ensure that Liberty is running.</p>
 </li>
 <li><p>Deploy the system match rules.</p>
 <ul>

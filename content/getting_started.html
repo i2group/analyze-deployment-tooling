@@ -82,53 +82,77 @@
 <h2 id="prerequisites"> Prerequisites</h2>
 <p>You can run the code in the analyze-containers repository on Windows with Windows Subsystem for Linux and MacOS.</p>
 <h3 id="code"> Code</h3>
-<p>Download the <code>tar.gz</code> or clone the analyze-containers repository from <a href="https://github.com/IBM-i2/analyze-containers/releases">https://github.com/IBM-i2/analyze-containers/releases</a>.</p>
-<p>If you download the <code>tar.gz</code> file, extract it.</p>
+<ol>
+<li><p>Download the <code>tar.gz</code> or clone the analyze-containers repository from <a href="https://github.com/IBM-i2/analyze-containers">https://github.com/IBM-i2/analyze-containers</a>.</p>
+</li>
+<li><p>If you download the <code>tar.gz</code> file, extract it. The documentation assumes that the root directory where that you extract the contents is named <code>analyze-containers</code>.</p>
+</li>
+</ol>
 <h3 id="windowssubsystemforlinux"> Windows Subsystem for Linux (WSL)</h3>
-<p>If you are on Windows, you must use WSL 2 to run the shell scripts in this repository.</p>
-<p>For information about installing WSL, see <a href="https://docs.microsoft.com/en-us/windows/wsl/install-win10">Windows Subsystem for Linux Installation Guide</a>.</p>
+<ol>
+<li><p>If you are on Windows, you must use WSL 2 to run the shell scripts in this repository.</p>
+<p> For information about installing WSL, see <a href="https://docs.microsoft.com/windows/wsl/install-win10">Windows Subsystem for Linux Installation Guide</a>.</p>
+</li>
+</ol>
 <h3 id="docker"> Docker</h3>
-<p>You must install Docker CE for your operating system. For more information about installing Docker CE, see <a href="https://docs.docker.com/engine/installation/">https://docs.docker.com/engine/installation/</a>.</p>
+<ol>
+<li><p>Install Docker CE for your operating system. For more information about installing Docker CE, see <a href="https://docs.docker.com/engine/installation/">https://docs.docker.com/engine/installation/</a>.</p>
 <ul>
 <li><em>Mac OS</em> : <a href="https://docs.docker.com/docker-for-mac/install/">Install Docker CE</a></li>
-<li><em>Windows</em> : <ol>
+<li><em>Windows</em> :  <ol>
 <li><a href="https://docs.docker.com/docker-for-windows/install/">Install Docker CE</a></li>
-<li><a href="https://docs.docker.com/docker-for-windows/wsl/">Set up Docker on WSL 2</a> </li>
+<li><a href="https://docs.docker.com/docker-for-windows/wsl/">Set up Docker on WSL 2</a></li>
 </ol>
 </li>
 </ul>
-<p>When you configure Docker, give Docker permission to mount files from the <code>analyze-containers</code> directory on your local file system. In the <em>Docker Desktop</em> application, navigate to  <code>Settings &gt; Resources &gt; File Sharing</code>.</p>
-<p>After you install Docker, you must allocate enough memory to Docker to run the containers in the example deployment. For this deployment, allocate at least 5GB of memory.</p>
-<p>For more information about modifying the resources allocated to Docker, see:</p>
+</li>
+<li><p>When you configure Docker, give Docker permission to mount files from the <code>analyze-containers</code> directory on your local file system. In the <em>Docker Desktop</em> application, navigate to  <code>Settings &gt; Resources &gt; File Sharing</code>.</p>
+</li>
+<li><p>After you install Docker, you must allocate enough memory to Docker to run the containers in the example deployment. For this deployment, allocate at least 5GB of memory.</p>
+<p> For more information about modifying the resources allocated to Docker, see:</p>
 <ul>
 <li><a href="https://docs.docker.com/docker-for-windows/#resources">Docker Desktop for Windows</a></li>
 <li><a href="https://docs.docker.com/docker-for-mac/#resources">Docker Desktop for Mac</a></li>
 </ul>
+</li>
+</ol>
 <h3 id="commandlinetools"> Command line tools</h3>
-<p>You must install <code>jq</code> command line tools into your shell. For more information, see <a href="https://stedolan.github.io/jq/download/">Download jq</a>.</p>
-<p>For example, on <em>WSL</em> with Ubuntu kernel:</p>
+<ol>
+<li><p>If you are using WSL, install and configure the following command line tools:</p>
+<ul>
+<li><a href="https://stedolan.github.io/jq/download/">jq</a></li>
+<li><p><a href="http://xmlstar.sourceforge.net/">XMLStarlet</a></p>
+<p>For example:</p>
 <pre><code class="lang-sh">sudo apt-get update
 sudo apt-get install jq
-</code></pre><p>If you are using MacOS, you must also install and configure the following command line tools:</p>
+sudo apt-get install xmlstarlet
+</code></pre></li>
+</ul>
+</li>
+<li><p>If you are using MacOS, install and configure the following command line tools:  </p>
 <ul>
 <li><a href="https://www.gnu.org/software/sed/">GNU sed</a></li>
 <li><a href="https://www.gnu.org/software/bash/">GNU bash</a></li>
-<li><p><a href="https://www.gnu.org/software/coreutils/">Coreutils - GNU core utilities</a></p>
+<li><a href="https://www.gnu.org/software/coreutils/">Coreutils - GNU core utilities</a></li>
+<li><a href="https://stedolan.github.io/jq/download/">jq</a></li>
+<li><p><a href="http://xmlstar.sourceforge.net/">XMLStarlet</a></p>
 <p>You can install these command line tools by using <a href="https://brew.sh/">Homebrew</a>. Run the following commands to install Homebrew and then install the tools with it:</p>
 <pre><code class="lang-sh">/bin/bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)&quot;
-brew install gnu-sed bash coreutils
+brew install gnu-sed bash coreutils jq xmlstarlet
 </code></pre><p>After you install the tools, ensure they are added to your shell&#39;s path. If you installed the tools by using Homebrew, run the following commands:</p>
 <pre><code class="lang-sh">echo &#39;export PATH=&quot;$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$PATH&quot;&#39; &gt;&gt; ~/.bash_profile
 echo &#39;export PATH=&quot;$(brew --prefix)/opt/bash/bin:$PATH&quot;&#39; &gt;&gt; ~/.bash_profile
 echo &#39;export PATH=&quot;$(brew --prefix)/opt/coreutils/libexec/gnubin:$PATH&quot;&#39; &gt;&gt; ~/.bash_profile
 </code></pre></li>
 </ul>
+</li>
+</ol>
 <h3 id="visualstudiocode"> Visual Studio Code</h3>
 <p>The repository is designed to be used with VS Code to create the development environment.</p>
-<ul>
-<li>Download and install <a href="https://code.visualstudio.com/download">VS Code</a></li>
-</ul>
-<p>To make the environment easier to use, install the following extensions in VS Code:  </p>
+<ol>
+<li><p>Download and install <a href="https://code.visualstudio.com/download">VS Code</a></p>
+</li>
+<li><p>To make the environment easier to use, install the following extensions in VS Code:  </p>
 <ul>
 <li><a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl">Remote - WSL</a></li>
 <li><a href="https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker">Docker</a></li>
@@ -137,48 +161,61 @@ echo &#39;export PATH=&quot;$(brew --prefix)/opt/coreutils/libexec/gnubin:$PATH&
 <li><a href="https://marketplace.visualstudio.com/items?itemName=redhat.vscode-xml">Red Hat XML</a></li>
 <li><a href="https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml">Red Hat YAML</a></li>
 </ul>
-<p>Modify the VS Code <code>settings.json</code> file:</p>
+</li>
+<li><p>Modify the VS Code <code>settings.json</code> file:</p>
 <ol>
 <li>Open the <code>settings.json</code> file by pressing <strong>F1</strong> and typing <em>Preferences: Open Settings (JSON)</em>.</li>
-<li><p>Add the <code>/catalog.xml</code> to enable XSD validation.<br>In the <code>settings.json file</code>, add the following object and reference the <code>catalog.xml</code> file at the root of the <code>analyze-containers</code> directory:  </p>
+<li><p>Add the <code>catalog.xml</code> to enable XSD validation.<br>In the <code>settings.json file</code>, add the following JSON object and reference the <code>catalog.xml</code> file at the root of the <code>analyze-containers</code> directory:  </p>
 <pre><code class="lang-json">&quot;xml.catalogs&quot;: [
     &quot;catalog.xml&quot;
 ]
 </code></pre></li>
 </ol>
-<p>If you are using MacOS, ensure the VS Code uses GNU bash for the integrated terminal.</p>
+</li>
+<li><p>If you are using MacOS, ensure the VS Code uses GNU bash for the integrated terminal.</p>
 <ol>
-<li><p>In the <code>settings.json</code> file, add the following line:  </p>
+<li><p>In the <code>settings.json</code> file, add the following code:  </p>
 <pre><code class="lang-json">&quot;terminal.integrated.profiles.osx&quot;: {
-    &quot;bash&quot;: {
-        &quot;path&quot;: &quot;/usr/local/opt/bash/bin/bash&quot;,
-        &quot;icon&quot;: &quot;terminal-bash&quot;
-    }
+ &quot;bash&quot;: {
+     &quot;path&quot;: &quot;/usr/local/opt/bash/bin/bash&quot;,
+     &quot;icon&quot;: &quot;terminal-bash&quot;
+ }
 },
 &quot;terminal.integrated.defaultProfile.osx&quot;: &quot;bash&quot;,
 </code></pre></li>
 </ol>
-<p>To run the scripts in the analyze-containers repository, use the VS Code integrated terminal.</p>
+</li>
+<li><p>To run the scripts in the analyze-containers repository, use the VS Code integrated terminal.</p>
 <ol>
-<li>To open the integrated terminal, click <strong>Terminal</strong> &gt; <strong>New Terminal</strong><br> On Windows, ensure that you are in a WSL terminal.</li>
+<li><p>To open the integrated terminal, click <strong>Terminal</strong> &gt; <strong>New Terminal</strong>.<br>On Windows, ensure that you are in a WSL terminal.</p>
+<p>You do not need to run any scripts now, but whenever the documentation instructs you to run a script, do so from the integrated terminal.</p>
+</li>
+</ol>
+</li>
 </ol>
 <h3 id="i2analyzeminimaltoolkit"> i2 Analyze minimal toolkit</h3>
 <ol>
 <li>Download the i2 Analyze V4.3.4 Minimal for Linux package using the following part number: <em>G01HNML</em></li>
 <li>Rename the <code>IBM_I2A_V4.3.4_MIN_LIN.tar.gz</code> file to <code>i2analyzeMinimal.tar.gz</code>, then copy it to the <code>analyze-containers/pre-reqs</code> directory.</li>
 </ol>
-<blockquote><p>Note: If you used the <code>analyze-containers</code> repository with a previous version of i2 Analyze, overwrite the existing minimal toolkit.</p>
-</blockquote>
+<p><strong>Note:</strong> If you used the <code>analyze-containers</code> repository with a previous version of i2 Analyze, overwrite the existing minimal toolkit.</p>
 <h3 id="analysts-notebook-premium">Analyst&#39;s Notebook Premium</h3>
-<p>Download <em>i2 Analyst&#39;s Notebook Premium</em> version 9.2.4 using the following part number: <em>G01DHML</em>.</p>
-<p>Install Analyst&#39;s Notebook Premium on a Windows machine.</p>
+<ol>
+<li><p>Download <em>i2 Analyst&#39;s Notebook Premium</em> version 9.2.4 using the following part number: <em>G01DHML</em>.</p>
+</li>
+<li><p>Install Analyst&#39;s Notebook Premium on a Windows machine.</p>
 <blockquote><p>Note: If you are running Docker on MacOS, you can install Analyst&#39;s Notebook Premium on a Windows virtual machine.</p>
 </blockquote>
-<p>For more information, see <a href="https://www.ibm.com/docs/en/i2-anb/latest?topic=installing-i2-analysts-notebook-premium">Installing IBM i2 Analyst&#39;s Notebook Premium</a>.</p>
+<p> For more information, see <a href="https://www.ibm.com/docs/en/i2-anb/latest?topic=installing-i2-analysts-notebook-premium">Installing IBM i2 Analyst&#39;s Notebook Premium</a>.</p>
+</li>
+</ol>
 <h3 id="jdbcdrivers"> JDBC drivers</h3>
 <p>You must provide the JDBC driver to enable the application to communicate with the database.</p>
-<p>For SQL Server, copy the <code>mssql-jdbc-7.4.1.jre11.jar</code> file to the <code>Analyze-Containers/pre-reqs/jdbc-drivers</code> directory.</p>
-<p>You can download the Microsoft JDBC Driver 7.4 for SQL Server archive from <a href="https://www.microsoft.com/en-us/download/details.aspx?id=58505">https://www.microsoft.com/en-us/download/details.aspx?id=58505</a>. Extract the contents of the download, and locate the <code>sqljdbc_7.4\enu\mssql-jdbc-7.4.1.jre11.jar</code> file.</p>
+<ol>
+<li>Download the Microsoft JDBC Driver 7.4 for SQL Server archive from <a href="https://www.microsoft.com/en-us/download/details.aspx?id=58505">https://www.microsoft.com/en-us/download/details.aspx?id=58505</a>.</li>
+<li>Extract the contents of the download, and locate the <code>sqljdbc_7.4\enu\mssql-jdbc-7.4.1.jre11.jar</code> file.</li>
+<li>Copy the <code>mssql-jdbc-7.4.1.jre11.jar</code> file to the <code>analyze-containers/pre-reqs/jdbc-drivers</code> directory.</li>
+</ol>
 <hr>
 <h2 id="whattodonext"> What to do next</h2>
 <ul>

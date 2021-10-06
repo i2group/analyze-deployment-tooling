@@ -95,9 +95,9 @@
 <h2 id="containercertificates"> Container certificates</h2>
 <p>To communicate securely using SSL each container requires the following certificates:</p>
 <ul>
-<li>private key</li>
-<li>certificate key</li>
-<li>internal certificate authority</li>
+<li>Private key</li>
+<li>Certificate key</li>
+<li>Internal certificate authority</li>
 </ul>
 <p>The containers will generate truststores and keystores based on the keys provided to the container. For more information about how the keys are passed to the containers securely please see <a href="#secureenvironmentvariables">Secure Environment variables</a>.</p>
 <h2 id="securecommunicationbetweencontainers"> Secure communication between containers</h2>
@@ -113,35 +113,35 @@
 <ol>
 <li><p>The certificate authority&#39;s certificate is distributed to the client.</p>
 </li>
-<li><p>The private key is generated on the server.<br>In the <code>generateSecrets.sh</code> script, the key is created by: </p>
+<li><p>The private key is generated on the server.<br>In the <code>generateSecrets.sh</code> script, the key is created by:</p>
 <pre><code class="lang-bash">openssl genrsa -out server.key 4096
 </code></pre></li>
 <li><p>The public part of the private key is used in a Certificate Signing Request (CSR).<br>In the <code>generateSecrets.sh</code> script, this is completed by:</p>
 <pre><code class="lang-bash">openssl req -new -key server.key -subj &quot;/CN=solr1.eia&quot; -out key.csr
-</code></pre><p>The common name that is used for the certificate is the server&#39;s fully qualified domain name.<br>The CSR is sent to the certificate authority (CA). </p>
+</code></pre><p>The common name that is used for the certificate is the server&#39;s fully qualified domain name.<br>The CSR is sent to the certificate authority (CA).</p>
 </li>
 <li><p>The CA signs and returns a signed certificate for the server.<br>In the <code>generateSecrets.sh</code> script, the CA signing the certificate is completed by:</p>
 <pre><code class="lang-bash">openssl x509 -req -sha256 -CA CA.cer -CAkey CA.key -days 90 -CAcreateserial -CAserial CA.srl -extfile x509.ext -extensions &quot;solr&quot; -in key.csr -out server.cer
 </code></pre></li>
-<li><p>When communication is established, the <code>container certificate</code> is sent to the client. The client uses it&#39;s copy of the <code>CA certificate</code> to verify that the <code>container certificate</code> was signed by the same CA. </p>
+<li><p>When communication is established, the <code>container certificate</code> is sent to the client. The client uses it&#39;s copy of the <code>CA certificate</code> to verify that the <code>container certificate</code> was signed by the same CA.</p>
 </li>
 </ol>
 <h2 id="passwordgeneration"> Password generation</h2>
 <p>The example simulates secrets management performed by various secrets managers provided by cloud vendors. The <code>generateSecrets.sh</code> generates these secrets and populates the <code>dev-environment-secrets/simulated-secret-store</code> with secrets required for each container. The docker desktop does not support secrets, but the example environment example simulates this by mounting the secrets folder. For more information see <a href="https://docs.docker.com/engine/swarm/secrets/">Manage sensitive data with Docker secrets</a>.</p>
 <p>After these passwords have been generated, they can be uploaded to a secrets manager. Alternatively you can use a secrets manager to generate your passwords.</p>
 <h2 id="solrbasicauthentication"> Solr Basic Authentication</h2>
-<p>Solr authorisation can be enabled using the BasicAuthPlugin. The basic auth plugin defines users, user roles and passwords for users. For the BasicAuthPlugin to be enabled, solr requires a security.json file to be uploaded. In our example the security.json file is created by the <code>generateSecrets.sh</code> and located in <code>dev-environment-secrets/generated-secrets/secrets/solr/security.json</code>.</p>
+<p>Solr authorisation can be enabled using the BasicAuthPlugin. The basic auth plugin defines users, user roles and passwords for users. For the BasicAuthPlugin to be enabled, solr requires a <code>security.json</code> file to be uploaded. In our example the <code>security.json</code> file is created by the <code>generateSecrets.sh</code> and located in <code>dev-environment-secrets/generated-secrets/secrets/solr/security.json</code>.</p>
 <p>For more information about solr authentication see <a href="https://lucene.apache.org/solr/guide/8_3/basic-authentication-plugin.html">Basic Authentication Plugin</a></p>
 <h2 id="secureenvironmentvariables"> Secure Environment variables</h2>
 <p>In general secrets used by a particular container can be supplied via an environment variable containing the path to a file containing the secret, or an environment variable specifying the literal secret value, for example:
-Note: Secrets can be passwords, keys or certificates.</p>
+<strong>Note:</strong> Secrets can be passwords, keys or certificates.</p>
 <pre><code class="lang-bash">docker run --name solr1 -d --net eia
   --secret source=SOLR_SSL_KEY_STORE_PASSWORD,target=SOLR_SSL_KEY_STORE_PASSWORD \
   -e SOLR_SSL_KEY_STORE_PASSWORD_FILE=&quot;/run/secrets/SOLR_SSL_KEY_STORE_PASSWORD_FILE&quot;
 </code></pre><p>or</p>
 <pre><code class="lang-bash">docker run --name solr1 -d --net eia
   -e SOLR_SSL_KEY_STORE_PASSWORD=&quot;jhga98u43jndfj&quot;
-</code></pre><p>The docker files in the <code>Analyze-Containers</code> repository have been modified to accept either. The convention is that the environment variable must match the property being set with &quot;_file&quot; appended if the secret is in a file, and without if a literal value is being used instead.</p>
+</code></pre><p>The docker files in the <code>analyze-containers</code> repository have been modified to accept either. The convention is that the environment variable must match the property being set with &quot;_file&quot; appended if the secret is in a file, and without if a literal value is being used instead.</p>
 <p>In the example scripts, each container gets the relevant key stores mounted along with the correct secrets files in a secrets directory.</p>
 <p><strong>NOTE:</strong> By default this is set as <code>CONTAINER_SECRETS_DIR=&quot;/run/secrets&quot;</code> in the common variables file.</p>
 <p>All the containers use the same environment variables to define the location of certificates. These are then used to generate appropriate artifacts for the particular container. There is also a standard way of turning on and off server SSL.</p>
@@ -155,12 +155,12 @@ Note: Secrets can be passwords, keys or certificates.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>LIBERTY_SSL_CONNECTION</code></td>
-<td>Can be set to <code>true</code> or <code>false</code>. If set to <code>true</code>, connections to the Liberty container use an encrypted connection.</td>
+<td><code>SERVER_SSL</code></td>
+<td>Can be set to <code>true</code> or <code>false</code>. If set to <code>true</code>, the container is configured to use encrypted connections.</td>
 </tr>
 <tr>
-<td><code>GATEWAY_SSL_CONNECTION</code></td>
-<td>Can be set to <code>true</code> of <code>false</code>. If set to <code>true</code>, connections to i2 Connect connectors use an encrypted connection.</td>
+<td><code>LIBERTY_SSL_CONNECTION</code></td>
+<td>Can be set to <code>true</code> or <code>false</code>. If set to <code>true</code>, connections to the Liberty container use an encrypted connection.</td>
 </tr>
 <tr>
 <td><code>DB_SSL_CONNECTION</code></td>
@@ -169,6 +169,14 @@ Note: Secrets can be passwords, keys or certificates.</p>
 <tr>
 <td><code>SOLR_ZOO_SSL_CONNECTION</code></td>
 <td>Can be set to <code>true</code> or <code>false</code>. If set to <code>true</code>, connections to ZooKeeper and Solr use an encrypted connection.</td>
+</tr>
+<tr>
+<td><code>GATEWAY_SSL_CONNECTION</code></td>
+<td>Can be set to <code>true</code> of <code>false</code>. If set to <code>true</code>, connections to i2 Connect connectors use an encrypted connection.</td>
+</tr>
+<tr>
+<td><code>SSL_ENABLED</code></td>
+<td>Can be set to <code>true</code> or <code>false</code>. If set to <code>true</code>, the connector container communicates with the i2 Connect gateway using an encrypted connection.</td>
 </tr>
 </tbody>
 </table>

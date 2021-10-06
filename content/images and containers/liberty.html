@@ -79,20 +79,20 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="liberty">Liberty</h1>
 
-<p>In a containerized deployment, you configure the i2 Analyze application and Liberty in an image that is layered on top of the <em>liberty_ubi_base</em> image. The <em>liberty_ubi_base</em> contains static configuration and application jars that are required by i2 Analyze and should not be changed. </p>
+<p>In a containerized deployment, you configure the i2 Analyze application and Liberty in an image that is layered on top of the <em>liberty_ubi_base</em> image. The <em>liberty_ubi_base</em> contains static configuration and application jars that are required by i2 Analyze and should not be changed.</p>
 <h2 id="configuringthelibertyserver"> Configuring the Liberty server</h2>
 <p>Liberty is configured by exception. The runtime environment operates from a set of built-in configuration default settings, and you only need to specify configuration that overrides those default settings. You do this by editing either the <code>server.xml</code> file or another XML file that is included in <code>server.xml</code> at run time.</p>
 <p>In a containerized deployment of i2 Analyze, a <code>server.xml</code> file is provided for you. To provide or modify any values, you specify a number of <a href="#environmentvariables">environment variables</a> when you run a Liberty container.</p>
 <p>Additionally, you can extend the <code>server.xml</code> by using the provided <code>server.extensions.xml</code> in the i2 Analyze configuration. Any elements that you add to the extensions file are included in the <code>server.xml</code> when you run a Liberty container.</p>
 <h2 id="configuringthei2analyzeapplication"> Configuring the i2 Analyze application</h2>
 <p>The contents of the <code>configuration</code> directory must be copied into the <code>images/liberty_ubi_combined/classes</code> directory. The contents of the <code>classes</code> directory is added to the configured Liberty image when the image is built. If you make changes to the configuration, you must copy the changes to the <code>classes</code> directory and rebuild the configured image.</p>
-<blockquote><p>Note: The system match rules are configured differently. The application is updated to use the <code>system-match-rules.xml</code> from the Solr client command line. For more information about updating the system match rules, see ... .</p>
+<blockquote><p>Note: The system match rules are configured differently. The application is updated to use the <code>system-match-rules.xml</code> from the Solr client command line. For more information about updating the system match rules, see <a href="../walkthroughs/update_match_rules.html">Updating the system match rules</a>.</p>
 </blockquote>
 <h2 id="buildingaconfiguredlibertyimage"> Building a configured Liberty image</h2>
 <p>The <em>configured image</em> is built from the base image. The configured image contains the i2 Analyze application and Liberty configuration that is required to start the i2 Analyze application. When you change the configuration, the configured image must be rebuilt to reflect the changes.</p>
 <h3 id="dockerbuildcommand"> Docker build command</h3>
 <p>The configured image is built from the Dockerfile in <code>images/liberty_ubi_combined</code>. The following <code>docker build</code> command builds the configured image:</p>
-<pre><code class="lang-bash">docker build -t liberty_configured_redhat images/liberty_ubi_combined
+<pre><code class="lang-bash">docker build -t liberty_configured_redhat images/liberty_ubi_combined --build-arg BASE_IMAGE=&quot;liberty_redhat&quot;
 </code></pre><p>An example of providing the configuration to the classes directory and building the image is included in the <code>buildLibertyConfiguredImage</code> function in the <code>serverFunctions.sh</code> script.</p>
 <h2 id="runningalibertycontainer"> Running a Liberty container</h2>
 <p>A Liberty container uses the configured image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to Liberty on the container. The environment variables are described in <a href="#environmentvariables">environment variables</a></p>
@@ -142,7 +142,7 @@
 <p>An example of running Liberty container by using <code>runLiberty</code> function:</p>
 <pre><code class="lang-bash">runLiberty liberty1 liberty1.eia liberty1_data 9045 liberty1
 </code></pre><h3 id="volumes"> Volumes</h3>
-<p>A named volume is used to persist data, which is generated and used in the Liberty container, outside of the container. </p>
+<p>A named volume is used to persist data, which is generated and used in the Liberty container, outside of the container.</p>
 <p>To configure the Liberty container to use the volume, specify the <code>-v</code> option with the name of the volume and the path where the directory is mounted in the container. By setting <code>-v</code> option in the docker run command, a named volume is created. For Liberty, the directory that is mounted must be <code>/data</code>, this directory folder stores: jobs, record groups and charts.</p>
 <p>For example:</p>
 <pre><code class="lang-sh">-v liberty_data:/data

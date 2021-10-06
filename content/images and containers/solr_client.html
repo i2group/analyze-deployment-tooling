@@ -105,9 +105,9 @@
 </code></pre><p>For an example of the <code>docker run</code> command, see <code>runSolrClientCommand</code> function in <code>clientFunctions.sh</code> script.
 For an example of how to use <code>runSolrClientCommand</code> function, see <a href="../tools%20and%20functions/client_functions.html#runsolrclientcommand">runSolrClientCommand</a>.</p>
 <h2 id="bindmounts"> Bind mounts</h2>
-<p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access zookeeper and certificates used in SSL.<br>The directory is mounted to a location in the container defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>ZOO_DIGEST_USERNAME_FILE</code> to locate the secrets. 
+<p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access zookeeper and certificates used in SSL.<br>The directory is mounted to a location in the container defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>ZOO_DIGEST_USERNAME_FILE</code> to locate the secrets.
 In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files. This is achieved by using a bind mount. In production this would not be required.</p>
-<p><strong>Configuration</strong>:<br>The Solr client requires the i2 Analyze configuration to perform some Solr operations. To access the configuration, the <code>configuration</code> directory must be mounted into the container. </p>
+<p><strong>Configuration</strong>:<br>The Solr client requires the i2 Analyze configuration to perform some Solr operations. To access the configuration, the <code>configuration</code> directory must be mounted into the container.</p>
 <h2 id="environmentvariables"> Environment variables</h2>
 <p>To configure the Solr client, you can provide environment variables to the Docker container in the <code>docker run</code> command.</p>
 <table>
@@ -177,12 +177,9 @@ In a production environment, the orchestration environment can provide the secre
    -H Content-Type:text/xml --data-binary \&quot;&lt;delete&gt;&lt;query&gt;*:*&lt;/query&gt;&lt;/delete&gt;\&quot;&quot;
 </code></pre><p>Different parts of the command must be escaped in different ways:</p>
 <ul>
-<li><p><code>\&quot;\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\&quot;</code><br> Because the curl command uses the container&#39;s local environment variables to obtain the values of <code>SOLR_ADMIN_DIGEST_USERNAME</code> and <code>SOLR_ADMIN_DIGEST_PASSWORD</code>, the <code>$</code> is escaped by a <code>\</code>.<br> The <code>&quot;</code> around both of the variables are escaped with a <code>\</code> to prevent the splitting of the command, which means that the variables are evaluated in the container&#39;s environment.</p>
-</li>
-<li><p><code>\&quot;${SOLR1_BASE_URL}/solr/main_index/update?commit=true\&quot;</code><br> The URL is surrounded in <code>&quot;</code> because the string contains a variable. The <code>&quot;</code> are escaped with a <code>\</code>.<br> Because the <code>SOLR1_FQDN</code> variable is evaluated before it is passed to the container, the <code>$</code> is not escaped.  </p>
-</li>
-<li><p><code>\&quot;&lt;delete&gt;&lt;query&gt;*:*&lt;/query&gt;&lt;/delete&gt;\&quot;</code><br> The data portion of the curl command is escaped with <code>&quot;</code> because it contains special characters. The <code>&quot;</code> are escaped with a <code>\</code>.</p>
-</li>
+<li><code>\&quot;\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\&quot;</code><br> Because the curl command uses the container&#39;s local environment variables to obtain the values of <code>SOLR_ADMIN_DIGEST_USERNAME</code> and <code>SOLR_ADMIN_DIGEST_PASSWORD</code>, the <code>$</code> is escaped by a <code>\</code>.<br> The <code>&quot;</code> around both of the variables are escaped with a <code>\</code> to prevent the splitting of the command, which means that the variables are evaluated in the container&#39;s environment.</li>
+<li><code>\&quot;${SOLR1_BASE_URL}/solr/main_index/update?commit=true\&quot;</code><br> The URL is surrounded in <code>&quot;</code> because the string contains a variable. The <code>&quot;</code> are escaped with a <code>\</code>.<br> Because the <code>SOLR1_FQDN</code> variable is evaluated before it is passed to the container, the <code>$</code> is not escaped.  </li>
+<li><code>\&quot;&lt;delete&gt;&lt;query&gt;*:*&lt;/query&gt;&lt;/delete&gt;\&quot;</code><br> The data portion of the curl command is escaped with <code>&quot;</code> because it contains special characters. The <code>&quot;</code> are escaped with a <code>\</code>.</li>
 </ul>
 </article>
           </div>

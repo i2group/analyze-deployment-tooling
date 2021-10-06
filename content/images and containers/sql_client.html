@@ -112,10 +112,10 @@ For an example of how to use <code>runSQLServerCommandAsETL</code> function, see
 </blockquote>
 <h2 id="bindmounts"> Bind mounts</h2>
 <ul>
-<li><p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access ZooKeeper and certificates used in SSL.<br>The directory is mounted to a location in the container defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>SSL_CA_CERTIFICATE_FILE</code> to locate the secrets. 
+<li><p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access ZooKeeper and certificates used in SSL.<br>The directory is mounted to a location in the container defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>SSL_CA_CERTIFICATE_FILE</code> to locate the secrets.
 In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files. This is achieved by using a bind mount. In production this would not be required.</p>
 </li>
-<li><p><strong>Toolkit</strong>:<br>For the SQL Server Client to use the tools in <code>/opt/toolkit/i2-tools/scripts</code>, 
+<li><p><strong>Toolkit</strong>:<br>For the SQL Server Client to use the tools in <code>/opt/toolkit/i2-tools/scripts</code>,
 the toolkit must be mounted into the container.<br>In the example scripts, this is defaulted to <code>/opt/toolkit</code>.</p>
 </li>
 <li><p><strong>Generated scripts directory</strong>:<br>Some of the i2 Analyze tools generate scripts to be run against the Information Store database. For the SQL Server Client to run these scripts, the directory where they are generated must be mounted into the container.<br>In the example scripts, this is defaulted to <code>/database-scripts/generated</code>. The <code>GENERATED_DIR</code> environment variable must specify the location where the generated scripts are mounted.</p>
@@ -187,11 +187,9 @@ the toolkit must be mounted into the container.<br>In the example scripts, this 
     WITH (FORMATFILE = &#39;/var/i2a-data/${BASE_DATA}/sqlserver/format-files/${csv_and_format_file_name}.fmt&#39;, FIRSTROW = 2)\&quot;&quot;
 </code></pre><p>Different parts of the command must be escaped in different ways:</p>
 <ul>
-<li><p><code>\${DB_SERVER}</code>,<code>\${DB_USERNAME}</code>, <code>\${DB_PASSWORD}</code>, and <code>\${DB_NAME}</code><br> Because the command uses the container&#39;s local environment variables to obtain the values of these variables, the <code>$</code> is escaped by a <code>\</code>.<br> <code>${DB_PORT}</code> is not escaped because this is an environment variable available to the script calling the client function.</p>
-</li>
-<li><p><code>\&quot;BULK INSERT ${STAGING_SCHEMA}.${table_name} ... FIRSTROW = 2)\&quot;</code><br> The string value for the <code>-Q</code> argument must be surrounded by <code>&quot;</code> when it is run on the container. The surrounding <code>&quot;</code> are escaped with <code>\</code>.
- The variables that are not escaped in the string are evaluated outside of the container when the function is called.</p>
-</li>
+<li><code>\${DB_SERVER}</code>,<code>\${DB_USERNAME}</code>, <code>\${DB_PASSWORD}</code>, and <code>\${DB_NAME}</code><br> Because the command uses the container&#39;s local environment variables to obtain the values of these variables, the <code>$</code> is escaped by a <code>\</code>.<br> <code>${DB_PORT}</code> is not escaped because this is an environment variable available to the script calling the client function.</li>
+<li><code>\&quot;BULK INSERT ${STAGING_SCHEMA}.${table_name} ... FIRSTROW = 2)\&quot;</code><br> The string value for the <code>-Q</code> argument must be surrounded by <code>&quot;</code> when it is run on the container. The surrounding <code>&quot;</code> are escaped with <code>\</code>.
+ The variables that are not escaped in the string are evaluated outside of the container when the function is called.</li>
 </ul>
 </article>
           </div>

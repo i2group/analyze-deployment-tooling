@@ -117,7 +117,7 @@
 <h2 id="backing-up-the-information-store-database">Backing up the Information Store database</h2>
 <p>In the containerised environment, the mounted backup volume is used to store the backup file. Only the Information Store database is backed up. The SQL Server instance and system databases are not included in the backup.</p>
 <p>For more information about the backup volume, see <a href="../images%20and%20containers/sql_server.html#runningasqlservercontainer">Running a SQL Server</a>.</p>
-<p>The backup is performed by a user that has the built-in <code>db_backupoperator</code> SQL Server role. In this case, that is the <code>dbb</code> user. Use the <code>runSQLServerCommandAsDBB</code> client function to run the following SQL command to create the backup file. For example: </p>
+<p>The backup is performed by a user that has the built-in <code>db_backupoperator</code> SQL Server role. In this case, that is the <code>dbb</code> user. Use the <code>runSQLServerCommandAsDBB</code> client function to run the following SQL command to create the backup file. For example:</p>
 <pre><code class="lang-sh">runSQLServerCommandAsDBB bash -c &quot;/opt/mssql-tools/bin/sqlcmd -N -b -C -S sqlserver.eia,1433 -U \&quot;\${DB_USERNAME}\&quot; -P \&quot;\${DB_PASSWORD}\&quot; \
     -Q \&quot;USE ISTORE; 
         BACKUP DATABASE ISTORE

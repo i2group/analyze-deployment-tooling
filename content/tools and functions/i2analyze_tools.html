@@ -333,10 +333,10 @@ ADDED ITEM TYPES
 <li><code>../../toolkit</code></li>
 <li><code>../configuration</code></li>
 </ul>
-<p>If the schemas are valid no errors will be reported. However, if the schemas are the same as teh version of the database this information will be returned to the console.</p>
+<p>If the schemas are valid no errors will be reported. However, if the schemas are the same as the version of the database this information will be returned to the console.</p>
 <p>If the schemas contain validation errors will be reported to the console where the tool was run.</p>
 <p>For example:</p>
-<pre><code>VALIDATION ERROR: Schema contains duplicate type EntityType with ID &#39;ET5&#39;.
+<pre><code class="lang-log">VALIDATION ERROR: Schema contains duplicate type EntityType with ID &#39;ET5&#39;.
 </code></pre><h2 id="generatestaticdatabasescriptstool"> Generate static database scripts tool</h2>
 <p>The <code>generateStaticInfoStoreCreationScripts.sh</code> script injects values from your configuration into the static database scripts.</p>
 <p>The script requires connection property values to be loaded from environment variables or from the <code>Connection.properties</code> file in the configuration. For more information about the connection properties, see  <a href="#connectionproperties">Loading connection properties</a>.</p>
@@ -651,7 +651,7 @@ db.database.location.dir=/opt/mssql
 </ul>
 <h2 id="generateSolrConfig"> Generate Solr Config</h2>
 <p>The <code>generateSolrSchemas.sh</code>generates Solr Config by taking the template <code>schema-template-definition.xml</code> file from the <code>configuration/solr</code> and generating solr config per index.
-For each index, the tool will generate <code>solrconfig.xml</code>, <code>managed_schema</code> and <code>synonyms-&lt;LOCALE&gt;.txt</code> file. 
+For each index, the tool will generate <code>solrconfig.xml</code>, <code>managed_schema</code> and <code>synonyms-&lt;LOCALE&gt;.txt</code> file.
 <strong>NOTE:</strong> to change SOLR locale uncomment the relevant section from the <code>schema-template-definition.xml</code> file before deploying.</p>
 <p>The script requires the following environment variables to be present:</p>
 <table>

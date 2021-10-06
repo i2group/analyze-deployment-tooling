@@ -225,7 +225,7 @@ Note: The <code>configureDbaRolesAndPermissions.sh</code> script is run during d
 </tbody>
 </table>
 <p>In addition to these permissions, in an environment running SQL server in a Linux container, users with this role must also be a member of the <code>sysadmin</code> group in order to perform BULK INSERT into the external staging tables.</p>
-<p>The <code>addEtlUserToSysAdminRole.sh</code> script is used to make the <code>etl</code> user a member of the <code>sysadmin</code> fixed-server role. </p>
+<p>The <code>addEtlUserToSysAdminRole.sh</code> script is used to make the <code>etl</code> user a member of the <code>sysadmin</code> fixed-server role.</p>
 <h3 id="i2etlrole"> i2_ETL_Role</h3>
 <p>The <code>i2_ETL_Role</code> requires permissions to use the i2 Analyze ingestion tools to ingest data from the staging tables into the Information Store.</p>
 <p>The following table provides an overview of the permissions required on the schemas in the Information Store database:</p>
@@ -376,21 +376,21 @@ Note: The <code>configureDbaRolesAndPermissions.sh</code> script is run during d
 </table>
 <p>The <code>sa</code> user and login exists on the base SQL Server image. The <code>sa</code> user is used to create the following artefacts:  </p>
 <ul>
-<li>Database: <code>ISTORE</code> </li>
+<li>Database: <code>ISTORE</code></li>
 <li>Roles: <code>i2analyze_Role</code>, <code>External_ETL_Role,</code>, <code>i2_ETL_Role</code> and <code>DBA_Role</code></li>
 <li>Logins: <code>i2analyze</code>, <code>etl</code>, <code>i2etl</code>, <code>dba</code>, and <code>dbb</code></li>
 <li>Users: <code>i2analyze</code>, <code>etl</code>, <code>i2etl</code>, <code>dba</code>, and <code>dbb</code></li>
 </ul>
 <p>The roles and users must be created after the Information Store database is created.</p>
 <h2 id="creatingtheroles"> Creating the roles</h2>
-<p>The <code>sa</code> user is used to run the <code>createDbRoles.sh</code> client function that creates the <code>i2Analyze_Role</code>, <code>External_ETL_Role</code>, <code>i2_ETL_Role</code>, and <code>DBA_Role</code> roles. </p>
+<p>The <code>sa</code> user is used to run the <code>createDbRoles.sh</code> client function that creates the <code>i2Analyze_Role</code>, <code>External_ETL_Role</code>, <code>i2_ETL_Role</code>, and <code>DBA_Role</code> roles.</p>
 <p>To create the roles, the <code>createDbRoles.sh</code> script is run using the <code>runSQLServerCommandAsSA</code> client function. This function uses an ephemeral SQL Server client container to create the database roles. For more information about the client function, see:</p>
 <ul>
 <li><a href="../tools%20and%20functions/client_functions.html#runsqlservercommandassa">runSQLServerCommandAsSA</a></li>
 <li><a href="https://github.com/IBM-i2/analyze-containers/blob/main/images/sql_client/db-scripts/createDbRoles.sh">createDbRoles.sh</a></li>
 </ul>
 <p>All the secrets required at runtime by the client container are made available by providing a file path to the secret which is converted to an environment variable by the docker container.</p>
-<p>For example, to provide the <code>SA_USERNAME</code> environment variable to the client container, a file containing the secret is declared in the docker run command: </p>
+<p>For example, to provide the <code>SA_USERNAME</code> environment variable to the client container, a file containing the secret is declared in the docker run command:</p>
 <pre><code class="lang-sh">-e &quot;SA_USERNAME_FILE=${CONTAINER_SECRETS_DIR}/SA_USERNAME_FILE&quot;
 </code></pre><p>The file name can be anything, but the environment variable is fixed. For more information see, <a href="security.html">managing container security</a></p>
 <p>In the example, the <code>createDbRoles.sh</code> script is called in <code>deploy.sh</code>.</p>

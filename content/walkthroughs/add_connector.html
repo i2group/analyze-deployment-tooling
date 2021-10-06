@@ -80,16 +80,15 @@
 <h1 id="adding-a-new-connector">Adding a new Connector</h1>
 
 <p>This section describes an example of the process of adding a new Connector.</p>
-<p>You can use <code>addExampleConnector.sh</code> script to add a new Connector to the example deployment.</p>
+<p>You can use <code>addExampleConnector.sh</code> script to add a new second example connector to the example deployment.</p>
 <blockquote><p>Note: Before you complete this walkthrough, reset your environment to the base configuration. For more information, see <a href="reset_walkthroughs.html">Resetting your environment</a>.</p>
-<h2 id="updatingconnectorsjson"> Updating Connectors.json</h2>
 </blockquote>
+<h2 id="updatingconnectorsjson"> Updating Connectors.json</h2>
 <p>To make liberty aware of the new connector, you need to add a new connector definition to the connectors.json. The <code>addConnectorToConnectorsJson</code> can be used to do this. See <code>Add example Connector to connectors.json</code> section of the walkthrough script.</p>
 <h2 id="runninganewconnectorcontainer"> Running a new Connector container</h2>
 <p>To add a connector in the Docker environment, you need to run a new Connector container.
 See the <code>Add example Connector</code> section of the walkthrough script.</p>
 <p>The <code>runExampleConnector</code> server function in the <code>serverFunctions.sh</code> is used to run a new Example connector container.</p>
-<p>For more information about running a Connector container, see <a href="">Connector</a>.</p>
 <h2 id="updatingyourconfiguration"> Updating your configuration</h2>
 <p>After the connectors.json has been updated and the example connector has been run, build a new configured liberty image with the updated configuration.</p>
 <p>The <code>buildLibertyConfiguredImage</code> server function builds the configured Liberty image.  For more information, see <a href="../images%20and%20containers/liberty.html#buildingaconfiguredlibertyimage">Building a configured Liberty image</a>.</p>

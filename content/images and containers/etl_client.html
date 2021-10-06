@@ -88,7 +88,7 @@
     --build-arg USER_UID=&quot;$(id -u &quot;${USER}&quot;)&quot; \
     --build-arg BASE_IMAGE=&quot;i2a_tools_redhat&quot;
 </code></pre><p>The <code>--build-arg</code> flag is used to provide your local user ID to the Docker image when it is built. The value of <code>$USER</code> comes from your shell.</p>
-<p>For examples of the build commands, see the <a href="https://github.com/IBM-i2/analyze-containers/blob/main/utils/buildImages.sh">buildImages.sh</a> script. </p>
+<p>For examples of the build commands, see the <a href="https://github.com/IBM-i2/analyze-containers/blob/main/utils/buildImages.sh">buildImages.sh</a> script.</p>
 <h2 id="running-an-etl-client-container">Running an ETL Client container</h2>
 <p>A ETL Client container uses the ETL Client image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to the container. The environment variables are described in <a href="#environment-variables">environment variables</a></p>
 <p>For more information about the command, see <a href="https://docs.docker.com/engine/reference/run/">docker run reference</a>.</p>

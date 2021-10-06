@@ -89,7 +89,7 @@
 <h2 id="simulating-a-server-failure">Simulating a server failure</h2>
 <p>To simulate a server failure in the ensemble, one of the ZooKeeper servers is stopped. For example, to stop <code>zk1</code>, run:</p>
 <pre><code class="lang-sh">docker stop zk1
-</code></pre><p>See the <code>Simulating ZooKeeper server failure</code> section of the walkthrough script. </p>
+</code></pre><p>See the <code>Simulating ZooKeeper server failure</code> section of the walkthrough script.</p>
 <h2 id="detecting-failure">Detecting failure</h2>
 <p>When one ZooKeeper server goes offline, the other servers can still make a quorum and remain active. Because the ensemble can sustain only one more server failure, the state is defined as <code>DEGRADED</code>.</p>
 <p>In the walkthrough, the <code>getZkQuorumEnsembleStatus</code> function is used to monitor and determine the ensemble status by calling the <code>commands/srvr</code> resource on each ZooKeeper servers&#39;s

@@ -101,7 +101,7 @@
 <h2 id="detecting-failure">Detecting failure</h2>
 <p>The load balancer is used to monitor and determine the status of the i2 Analyze service. The load balancer is configured to report the status of the deployment. The status can be either <code>ACTIVE</code>, <code>DEGRADED</code>, or <code>DOWN</code>.</p>
 <p>When the leader is taken offline, the other Liberty server must restart to become the new leader. During this time, both servers are down and the i2 Analyze service is <code>DOWN</code>. When the new leader Liberty starts and only 1 of the servers is down, the status of the i2 Analyze services is <code>DEGRADED</code>.</p>
-<p>In the walkthrough, the <code>waitFori2AnalyzeServiceStatus</code> function is used to run a while loop around the <code>geti2AnalyzeServiceStatus</code> function to wait until the i2 Analyze service is in the <code>DEGRADED</code> state. The <code>geti2AnalyzeServiceStatus</code> function is an example of how to return the i2 Analyze service status from a load balancer. </p>
+<p>In the walkthrough, the <code>waitFori2AnalyzeServiceStatus</code> function is used to run a while loop around the <code>geti2AnalyzeServiceStatus</code> function to wait until the i2 Analyze service is in the <code>DEGRADED</code> state. The <code>geti2AnalyzeServiceStatus</code> function is an example of how to return the i2 Analyze service status from a load balancer.</p>
 <p>See the <code>Detecting failure</code> section of the walkthrough script.</p>
 <h2 id="fail-over">Fail over</h2>
 <p>When the Liberty leader fails, one of the remaining Liberty servers is elected as the leader. To identify the new Liberty leader, check the logs of the remaining Liberty servers for the message: <code>We are the Liberty leader</code>.</p>
@@ -110,7 +110,7 @@
 <p>To reinstate high availability to the deployment, restart the failed Liberty server. In this example, that restart the Liberty container by running the following command:</p>
 <pre><code class="lang-sh">docker start liberty1
 </code></pre><p>When both Liberty servers are up, the status of the i2 Analyze services is <code>ACTIVE</code>.</p>
-<p>In the walkthrough, the <code>waitFori2AnalyzeServiceStatus</code> function is used to run a while loop around the <code>geti2AnalyzeServiceStatus</code> function to wait until the i2 Analyze service is in the <code>ACTIVE</code> state. The <code>geti2AnalyzeServiceStatus</code> function is an example of how to return the i2 Analyze service status from a load balancer. </p>
+<p>In the walkthrough, the <code>waitFori2AnalyzeServiceStatus</code> function is used to run a while loop around the <code>geti2AnalyzeServiceStatus</code> function to wait until the i2 Analyze service is in the <code>ACTIVE</code> state. The <code>geti2AnalyzeServiceStatus</code> function is an example of how to return the i2 Analyze service status from a load balancer.</p>
 <p>The recovered Liberty server is in the non-leader mode when it starts because the new leader has already been elected while the server was unavailable. To determine it is in the non-leader mode, the following message is displayed in the logs: <code>We are not the Liberty leader</code>.</p>
 <p>See the <code>Reinstating high availability</code> section of the walkthrough script.</p>
 </article>

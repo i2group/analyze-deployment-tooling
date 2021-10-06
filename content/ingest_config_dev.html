@@ -113,7 +113,7 @@
 <li><code>&lt;data_set&gt;</code> is the name of a directory in <code>i2a-data</code></li>
 <li><code>&lt;script_name&gt;</code> is the name of a script in the directory specified for &lt;data_set&gt;</li>
 </ul>
-<h3 id="creating-ingestion-sources">Creating ingestion sources</h3>
+<h3 id="createingestionsources">Creating ingestion sources</h3>
 <p>The ingestion sources for a config are contained in the configuration. Ingestion sources are defined in <code>&lt;config_name&gt;/configuration/ingestion/scripts/createIngestionSources.sh</code>.</p>
 <ol>
 <li>Copy the <code>examples/ingestion/scripts/createIngestionSources.sh</code> file to the <code>&lt;config_name&gt;/configuration/ingestion/scripts/</code> directory.</li>
@@ -138,6 +138,8 @@
             - ingestLawEnforcementDataSet1.sh
             - createStagingTables.sh
 </code></pre></li>
+<li><p>Copy the <code>examples/ingestion/scripts/createIngestionSources.sh</code> file to the <code>&lt;config_name&gt;/configuration/ingestion/scripts/</code> directory.</p>
+</li>
 <li><p>Use the <code>manageData.sh</code> to create the ingestion sources defined in the example <code>createIngestionSources.sh</code>.<br> For example:</p>
 <pre><code class="lang-sh">./manageData.sh -c config-development -t sources
 </code></pre></li>

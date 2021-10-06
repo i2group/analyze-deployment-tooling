@@ -115,7 +115,7 @@
    &quot;zookeeper_redhat:latest&quot;
 </code></pre><p><em>Note:</em> <code>SERVER_SSL</code> variable is set based on the <code>SOLR_ZOO_SSL_CONNECTION</code> switch, see <a href="#environmentvariables">Environment variables</a>.</p>
 <h3 id="zk_ports"> ​ZooKeeper Service Ports</h3>
-<p>Default ports used by Zookeeper are: </p>
+<p>Default ports used by ZooKeeper are:</p>
 <ul>
 <li><code>8080</code> - By default, the server is started on port 8080, and commands are issued by going to the URL &quot;/commands/[command name]&quot;, e.g., <code>http://localhost:8080/commands/stat</code>.</li>
 <li><code>2181</code> - The port at which the clients will connect (non-secure). This is defined by setting <code>ZOO_CLIENT_PORT</code>.</li>
@@ -137,7 +137,7 @@
 <p>An example of running Zookeeper container using <code>runZK</code> function:</p>
 <pre><code class="lang-bash">runZK zk1 zk1.eia zk1_data zk1_datalog zk1_logs 8080 1
 </code></pre><h3 id="volumes"> Volumes</h3>
-<p>A named volume or a bind mount can be used to persist data and logs that are generated and used in the ZooKeeper container, outside of the container. </p>
+<p>A named volume or a bind mount can be used to persist data and logs that are generated and used in the ZooKeeper container, outside of the container.</p>
 <p>For more information, see <a href="https://hub.docker.com/_/zookeeper">Where to store data</a>.</p>
 <h3 id="named_volumes"> Named Volumes</h3>
 <p>To configure the ZooKeeper container to use the named volume, specify the <code>-v</code> option with the name of the volume and the path where the directory is mounted in the container. By setting <code>-v</code> option in the docker run command, a named volume is created. For ZooKeeper, the directories that must be mounted are <code>/data</code>, <code>/datalog</code>, <code>/logs</code>.
@@ -153,7 +153,7 @@ For example:</p>
 -v /var/zk/logs:/logs \
 </code></pre><p>A unique bind mount must be used for each ZooKeeper container.</p>
 <h3 id="bindmounts"> Bind mounts</h3>
-<p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access zookeeper and certificates used in SSL.<br>The directory is mounted to a location in the container defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>SSL_PRIVATE_KEY_FILE</code> to locate the secrets. 
+<p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access zookeeper and certificates used in SSL.<br>The directory is mounted to a location in the container defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>SSL_PRIVATE_KEY_FILE</code> to locate the secrets.
 In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files. This is achieved by using a bind mount. In production this would not be required.</p>
 <h3 id="environmentvariables"> Environment variables</h3>
 <p>To configure ZooKeeper, you can provide environment variables to the Docker container in the <code>docker run</code> command. The <code>zoo.cfg</code> configuration file for ZooKeeper is generated from the environment variables passed to the container.</p>

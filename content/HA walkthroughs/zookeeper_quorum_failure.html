@@ -90,7 +90,7 @@ servers fail. For more information, see <a href="https://www.ibm.com/support/kno
 <h2 id="simulating-loss-of-quorum">Simulating loss of quorum</h2>
 <p>To simulate a loss of quorum, more than 50% of the ZooKeeper servers must be stopped. For example, to stop <code>zk1</code> and <code>zk2</code>, run:</p>
 <pre><code class="lang-sh">docker stop zk1 zk2
-</code></pre><p>See the <code>Simulating Zookeeper Quorum failure</code> section of the walkthrough script. </p>
+</code></pre><p>See the <code>Simulating Zookeeper Quorum failure</code> section of the walkthrough script.</p>
 <h2 id="detecting-failure">Detecting failure</h2>
 <p>When the ZooKeeper quorum is lost, the Solr cluster also fails. The Solr status is reported as <code>DOWN</code>. For more information about losing Solr, see <a href="solr_cluster_failure.html">Failure of the Solr cluster</a>.</p>
 <p>The <code>detecting failure</code> section of the walkthrough script runs a loop around the <code>getSolrStatus</code> client function that reports the status of Solr. For more information about the function, see <a href="../tools%20and%20functions/client_functions.html#getsolrstatus"><code>getSolrStatus</code></a>.</p>

@@ -1,6 +1,6 @@
 {
   "homepages": [],
-  "source_base_path": "C:/Users/MATTHEWHadfield/Documents/dockerDevEnvironment/i2AnalyzeDockerDevEnvironment/docs",
+  "source_base_path": "/Users/arianahl/git/i2AnalyzeDockerDevEnvironment/docs",
   "xrefmap": "xrefmap.yml",
   "files": [
     {
@@ -18,7 +18,7 @@
       "output": {
         ".html": {
           "relative_path": "content/HA walkthroughs/ha.html",
-          "hash": "JSG3GHEIl8kswtbROOOhTQ=="
+          "hash": "Xh7m977gKJ8bIvl4T7XuVQ=="
         }
       },
       "is_incremental": false,
@@ -30,7 +30,7 @@
       "output": {
         ".html": {
           "relative_path": "content/HA walkthroughs/liberty_failure.html",
-          "hash": "2AnFUjtOHbsAVMHXr4WcjQ=="
+          "hash": "mBUn/ngLsZeMLQr38Kmzpg=="
         }
       },
       "is_incremental": false,
@@ -42,7 +42,7 @@
       "output": {
         ".html": {
           "relative_path": "content/HA walkthroughs/solr_cluster_failure.html",
-          "hash": "jH9lsESe6tLpQHWvCne78g=="
+          "hash": "0XcFouLZPS3u2OCfSVJodA=="
         }
       },
       "is_incremental": false,
@@ -54,7 +54,7 @@
       "output": {
         ".html": {
           "relative_path": "content/HA walkthroughs/solr_node_failure.html",
-          "hash": "41Tgtuv57TopAtbyRoHZSQ=="
+          "hash": "8Tx7iwT0UPt+V6ndigdJWA=="
         }
       },
       "is_incremental": false,
@@ -66,7 +66,7 @@
       "output": {
         ".html": {
           "relative_path": "content/HA walkthroughs/zookeeper_quorum_failure.html",
-          "hash": "hti0Gbqa/Pg9GcwaLo5kDw=="
+          "hash": "UAv/rHJ8m6IxpC90ZtZHZQ=="
         }
       },
       "is_incremental": false,
@@ -78,7 +78,7 @@
       "output": {
         ".html": {
           "relative_path": "content/HA walkthroughs/zookeeper_server_failure.html",
-          "hash": "vcKPwgGT0NhkbJRBESkrtA=="
+          "hash": "H8/nKMQTSvZw8tnyydzItw=="
         }
       },
       "is_incremental": false,
@@ -90,7 +90,7 @@
       "output": {
         ".html": {
           "relative_path": "content/add_data_config_dev.html",
-          "hash": "XjoW7V+9AozN9kSPVA5mwA=="
+          "hash": "MwAJaVCpAGqF98qVdoSkRQ=="
         }
       },
       "is_incremental": false,
@@ -102,7 +102,7 @@
       "output": {
         ".html": {
           "relative_path": "content/backup and restore/backup.html",
-          "hash": "6rCcZbJEyz8YX05JuaG33g=="
+          "hash": "Q7q+NIc0Vor+Qcvhx6q9pQ=="
         }
       },
       "is_incremental": false,
@@ -114,7 +114,7 @@
       "output": {
         ".html": {
           "relative_path": "content/backup and restore/br.html",
-          "hash": "OBiqMbRwtCbaN7bNT3wFwg=="
+          "hash": "eJ+Y/kXFlSzLaUmvxV9CBw=="
         }
       },
       "is_incremental": false,
@@ -126,7 +126,7 @@
       "output": {
         ".html": {
           "relative_path": "content/backup and restore/restore.html",
-          "hash": "htJ7sOCQwLpv0tXg4f38MA=="
+          "hash": "EoR9PFz7RwMaM4jl2TIZ1A=="
         }
       },
       "is_incremental": false,
@@ -138,19 +138,22 @@
       "output": {
         ".html": {
           "relative_path": "content/connector_config_dev.html",
-          "hash": "uyEAd4ZuAGGGnNiiQWGIkg=="
+          "hash": "FeyrZzmh5k80Uz7ldsGsQQ=="
         }
       },
       "is_incremental": false,
       "version": ""
     },
     {
+      "log_codes": [
+        "InvalidYamlHeader"
+      ],
       "type": "Conceptual",
       "source_relative_path": "content/deploy_config_dev.md",
       "output": {
         ".html": {
           "relative_path": "content/deploy_config_dev.html",
-          "hash": "AveDizmJMG62zwFlUE1/1Q=="
+          "hash": "funeT1YHWQQM0Nu+QL3Bbg=="
         }
       },
       "is_incremental": false,
@@ -162,22 +165,31 @@
       "output": {
         ".html": {
           "relative_path": "content/develop_config_dev.html",
-          "hash": "FIDk29kHkLz6hD9fCP5/ng=="
+          "hash": "odAvv/P7zbeTOgtTJ5s7eQ=="
         }
       },
       "is_incremental": false,
       "version": ""
     },
     {
-      "log_codes": [
-        "InvalidYamlHeader"
-      ],
+      "type": "Conceptual",
+      "source_relative_path": "content/develop_extensions.md",
+      "output": {
+        ".html": {
+          "relative_path": "content/develop_extensions.html",
+          "hash": "crsNtQxTI7oEiu31S/8LpQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
       "type": "Conceptual",
       "source_relative_path": "content/develop_schemas.md",
       "output": {
         ".html": {
           "relative_path": "content/develop_schemas.html",
-          "hash": "r/5gjXeP25cdJYFbzPaFwg=="
+          "hash": "SV39laArLnbfYkl3nL49Kw=="
         }
       },
       "is_incremental": false,
@@ -189,7 +201,7 @@
       "output": {
         ".html": {
           "relative_path": "content/develop_solr_config_dev.html",
-          "hash": "6Ca90EquIM96ICMk2rOUwA=="
+          "hash": "eJlRfK5X4zUVv+UvjigkSg=="
         }
       },
       "is_incremental": false,
@@ -201,7 +213,7 @@
       "output": {
         ".html": {
           "relative_path": "content/getting_started.html",
-          "hash": "crmo8M4y3FsVt5HTx2AFRw=="
+          "hash": "t0bu/cR4wIRzSdiiVa+RAA=="
         }
       },
       "is_incremental": false,
@@ -213,7 +225,7 @@
       "output": {
         ".html": {
           "relative_path": "content/images and containers/etl_client.html",
-          "hash": "NFC1CMf8Z8mAi4+BvXtKOQ=="
+          "hash": "0qBkm9IEGLXgaWJAmhSeYQ=="
         }
       },
       "is_incremental": false,
@@ -225,7 +237,7 @@
       "output": {
         ".html": {
           "relative_path": "content/images and containers/i2analyze_tool.html",
-          "hash": "3YagQax1ACkLWc1qKIxwNA=="
+          "hash": "3hOL4sbzAHTii8V+hAFfkA=="
         }
       },
       "is_incremental": false,
@@ -237,7 +249,7 @@
       "output": {
         ".html": {
           "relative_path": "content/images and containers/images.html",
-          "hash": "G+wQq7i2t79a5s5lWSsAzQ=="
+          "hash": "dc0te5xyEYPJQRrv1jx++A=="
         }
       },
       "is_incremental": false,
@@ -249,7 +261,7 @@
       "output": {
         ".html": {
           "relative_path": "content/images and containers/liberty.html",
-          "hash": "IIoBB6Wspp+S+9bvn2lfPQ=="
+          "hash": "v3oEBphykuyycWm3A60deg=="
         }
       },
       "is_incremental": false,
@@ -261,7 +273,7 @@
       "output": {
         ".html": {
           "relative_path": "content/images and containers/solr.html",
-          "hash": "RtLguRYw7bgFA24TNSwhHg=="
+          "hash": "urtmBCvRF1kt22Z2gwTDhQ=="
         }
       },
       "is_incremental": false,
@@ -273,7 +285,7 @@
       "output": {
         ".html": {
           "relative_path": "content/images and containers/solr_client.html",
-          "hash": "148J4qIpyoJB8K39DgqycQ=="
+          "hash": "WAVjnwj/JZFZdFY9tYbb9Q=="
         }
       },
       "is_incremental": false,
@@ -285,7 +297,7 @@
       "output": {
         ".html": {
           "relative_path": "content/images and containers/sql_client.html",
-          "hash": "yaw/wDB8K6wWVABlQqk0tg=="
+          "hash": "9njrQkeCAgS6sGSmqzVyvA=="
         }
       },
       "is_incremental": false,
@@ -297,7 +309,7 @@
       "output": {
         ".html": {
           "relative_path": "content/images and containers/sql_server.html",
-          "hash": "VcqjiV+4LLvuYGuWbOHtiw=="
+          "hash": "S9AP3NWGhM4VytowEdq5qA=="
         }
       },
       "is_incremental": false,
@@ -309,7 +321,7 @@
       "output": {
         ".html": {
           "relative_path": "content/images and containers/zookeeper.html",
-          "hash": "UEuJjUIqVB7Fa1a05QqJhA=="
+          "hash": "sCT10xH7kXHDf4mBDi+7LA=="
         }
       },
       "is_incremental": false,
@@ -321,7 +333,7 @@
       "output": {
         ".html": {
           "relative_path": "content/ingest_config_dev.html",
-          "hash": "5gZ9SmeR/6UHLa9bKoN92g=="
+          "hash": "9aEnEdIgi2E8I4gSj6keqQ=="
         }
       },
       "is_incremental": false,
@@ -333,7 +345,7 @@
       "output": {
         ".html": {
           "relative_path": "content/manage_backup_restore.html",
-          "hash": "KcA9H6Xl87Mu8lt2gBl6aw=="
+          "hash": "SKPHJFGTfuJE9vZfPDHBDw=="
         }
       },
       "is_incremental": false,
@@ -345,7 +357,43 @@
       "output": {
         ".html": {
           "relative_path": "content/managing_config_dev.html",
-          "hash": "gmMdMEHjIvVcf4Q9tztANg=="
+          "hash": "e1QkOS2YW37BB7sXOQbDew=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "content/managing_connectors.md",
+      "output": {
+        ".html": {
+          "relative_path": "content/managing_connectors.html",
+          "hash": "0cGaRoAaJmYru+uGHiO8pA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "content/managing_toolkit_configuration.md",
+      "output": {
+        ".html": {
+          "relative_path": "content/managing_toolkit_configuration.html",
+          "hash": "Tfr6gIdyP7cIJe2t/RWlNQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "content/managing_update_env.md",
+      "output": {
+        ".html": {
+          "relative_path": "content/managing_update_env.html",
+          "hash": "HwCEDkUuWKZRasW94CABDQ=="
         }
       },
       "is_incremental": false,
@@ -357,7 +405,7 @@
       "output": {
         ".html": {
           "relative_path": "content/reference architecture/deploy_pre_prod.html",
-          "hash": "ENVsDAdSbdHFK2LvODckcg=="
+          "hash": "beIErjHNz6OZpWIAYNMSUQ=="
         }
       },
       "is_incremental": false,
@@ -369,7 +417,7 @@
       "output": {
         ".html": {
           "relative_path": "content/reference architecture/understanding.html",
-          "hash": "KsuX3vO5O0DsJwWI8U/nog=="
+          "hash": "HmyKsMBf1+2QuWviLsJCmQ=="
         }
       },
       "is_incremental": false,
@@ -381,7 +429,7 @@
       "output": {
         ".html": {
           "relative_path": "content/security and users/db_users.html",
-          "hash": "5ccA6srYmUqEsE5oLGOxww=="
+          "hash": "a7Am8QZnswd5t0ifBKg9hQ=="
         }
       },
       "is_incremental": false,
@@ -393,7 +441,7 @@
       "output": {
         ".html": {
           "relative_path": "content/security and users/security.html",
-          "hash": "EzoBO8zHfIku3LPVaEGsmw=="
+          "hash": "I0SlGvhzIxQPGSZxkhQG/A=="
         }
       },
       "is_incremental": false,
@@ -405,7 +453,7 @@
       "output": {
         ".html": {
           "relative_path": "content/security and users/security_users.html",
-          "hash": "uy+GIOPG+H6/UwnFpi2Gew=="
+          "hash": "hcEf7qzTf/M1NC2Y8la8wg=="
         }
       },
       "is_incremental": false,
@@ -417,7 +465,7 @@
       "output": {
         ".html": {
           "relative_path": "content/tools and functions/client_functions.html",
-          "hash": "75j0EDNoP7+jTgFn2M/vNw=="
+          "hash": "Tsa5aTvSSt0dXrlNEKlFtQ=="
         }
       },
       "is_incremental": false,
@@ -429,7 +477,7 @@
       "output": {
         ".html": {
           "relative_path": "content/tools and functions/common_variables.html",
-          "hash": "CaE2xG2SeRyGQtDp0gxejQ=="
+          "hash": "Ql6jf/fUeeUcEZsd2Jfcrg=="
         }
       },
       "is_incremental": false,
@@ -441,7 +489,7 @@
       "output": {
         ".html": {
           "relative_path": "content/tools and functions/create_configuration.html",
-          "hash": "hEcRLHmUIGP+v8V27O/+1Q=="
+          "hash": "7WAV05tXQVswPNPYJ2JzCA=="
         }
       },
       "is_incremental": false,
@@ -453,7 +501,7 @@
       "output": {
         ".html": {
           "relative_path": "content/tools and functions/create_environment.html",
-          "hash": "YuWdbb0rEFRvbmTtaJZpXg=="
+          "hash": "D1qwgteW3wc9xaaecPWRuQ=="
         }
       },
       "is_incremental": false,
@@ -465,7 +513,7 @@
       "output": {
         ".html": {
           "relative_path": "content/tools and functions/deploy.html",
-          "hash": "zgUkEezzGfmgl9HbAVPI7g=="
+          "hash": "ATlnjJxtcV9DGNSgrovk3Q=="
         }
       },
       "is_incremental": false,
@@ -477,7 +525,7 @@
       "output": {
         ".html": {
           "relative_path": "content/tools and functions/etl_tools.html",
-          "hash": "1N3+inllcuQctr7K8/De7w=="
+          "hash": "aT6M6Zej/71Lqw+YjNhM2g=="
         }
       },
       "is_incremental": false,
@@ -489,7 +537,7 @@
       "output": {
         ".html": {
           "relative_path": "content/tools and functions/i2analyze_tools.html",
-          "hash": "5HULzRESCyvztcK5qCRDwA=="
+          "hash": "Ubcc+BRUFwjZWbUyezs3IA=="
         }
       },
       "is_incremental": false,
@@ -501,7 +549,7 @@
       "output": {
         ".html": {
           "relative_path": "content/tools and functions/reset_repository.html",
-          "hash": "/XPGD/cbAw1Xi/1Uo19eIg=="
+          "hash": "QowtvIVWCMd2h2FUTxf8dw=="
         }
       },
       "is_incremental": false,
@@ -513,7 +561,7 @@
       "output": {
         ".html": {
           "relative_path": "content/tools and functions/tools.html",
-          "hash": "qJrB3o5sITpfMjzNCrU6rw=="
+          "hash": "zpd8vhyt7qrUNDNQj4GA4w=="
         }
       },
       "is_incremental": false,
@@ -525,7 +573,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/add_connector.html",
-          "hash": "O393rfCvyH1sIkrWnsiUdQ=="
+          "hash": "2IHJSUONtrn4Oi/54VRKUA=="
         }
       },
       "is_incremental": false,
@@ -537,7 +585,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/add_solr_node.html",
-          "hash": "zA8jZcsilhSsCRboXzI49Q=="
+          "hash": "2oaIhI9ZlvQVO2QCmpHZUQ=="
         }
       },
       "is_incremental": false,
@@ -549,7 +597,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/clear_data.html",
-          "hash": "kDJmXoVjoO+sLVfFc/ml0A=="
+          "hash": "f0+/1Z/aqAml1VhHU3yRwQ=="
         }
       },
       "is_incremental": false,
@@ -561,7 +609,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/correlated_data.html",
-          "hash": "JIcRFbCpNBkFGq7tJjpsRw=="
+          "hash": "oy2o3DjYymDeQxBZkPSOsQ=="
         }
       },
       "is_incremental": false,
@@ -573,7 +621,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/ingestion.html",
-          "hash": "kpyisLEAbH/VSSly9ftj4w=="
+          "hash": "mtYKwGZSKg5EjHJutb3I5w=="
         }
       },
       "is_incremental": false,
@@ -585,7 +633,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/reset_walkthroughs.html",
-          "hash": "O5Cd7kRHqIg0rp86aA6Ckg=="
+          "hash": "gcHwgPUbyQoBIbIu/Ze1SA=="
         }
       },
       "is_incremental": false,
@@ -597,7 +645,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/update_configuration.html",
-          "hash": "RXSzie22JTkWI/hlfNVEOg=="
+          "hash": "OGvfBmwsxA/tl5SKdgVSgQ=="
         }
       },
       "is_incremental": false,
@@ -609,7 +657,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/update_match_rules.html",
-          "hash": "aY2sFiAm2afPOMofMwkMXA=="
+          "hash": "hHd1IMfpsglBXGPUG8gjiA=="
         }
       },
       "is_incremental": false,
@@ -621,7 +669,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/update_schema.html",
-          "hash": "1ZAZ+1lLrJy9pnCNdV5S4w=="
+          "hash": "imfYPVN/8GgP59tRJMslTA=="
         }
       },
       "is_incremental": false,
@@ -633,7 +681,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/update_security_schema.html",
-          "hash": "Ql2P9TQRul3WB8ROKebmfw=="
+          "hash": "RKY9/UKYPmqU8IGxsn1aUg=="
         }
       },
       "is_incremental": false,
@@ -645,7 +693,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/walkthroughs.html",
-          "hash": "6okM6Tu2IQd7JPEHqhU8mA=="
+          "hash": "+Q3WIGK0OF18YZyUFmI+xg=="
         }
       },
       "is_incremental": false,
@@ -657,7 +705,7 @@
       "output": {
         ".html": {
           "relative_path": "guidetoc/toc.html",
-          "hash": "BPyvNG3QfimhKECEEWjHiA=="
+          "hash": "6TON+xfGHOlyZbzlmGedyw=="
         }
       },
       "is_incremental": false,
@@ -724,7 +772,7 @@
       "output": {
         ".html": {
           "relative_path": "index.html",
-          "hash": "P7Gou9YAyOn83lRJw4Xdlw=="
+          "hash": "mwiHNUeHBTCimYFEziJqtQ=="
         }
       },
       "is_incremental": false,
@@ -755,8 +803,8 @@
         "ConceptualDocumentProcessor": {
           "can_incremental": true,
           "incrementalPhase": "build",
-          "total_file_count": 54,
-          "skipped_file_count": 54
+          "total_file_count": 58,
+          "skipped_file_count": 58
         },
         "ResourceDocumentProcessor": {
           "can_incremental": false,

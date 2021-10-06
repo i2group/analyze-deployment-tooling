@@ -84,7 +84,7 @@
 </blockquote>
 <p>The example provides a scripted mechanism to ingest data by using ETL toolkit. The script ingests data with and without correlation identifiers using both <code>STANDARD</code> and <code>BULK</code> import modes.<br>For more information about ingestion, see:</p>
 <ul>
-<li><a href="https://www.ibm.com/support/knowledgecenter/SSXVTH_4.3.2/com.ibm.i2.iap.admin.ingestion.doc/data_ingestion.html">Information Store data ingestion</a> </li>
+<li><a href="https://www.ibm.com/support/knowledgecenter/SSXVTH_4.3.2/com.ibm.i2.iap.admin.ingestion.doc/data_ingestion.html">Information Store data ingestion</a></li>
 <li><a href="https://www.ibm.com/support/knowledgecenter/SSXVTH_4.3.2/com.ibm.i2.iap.admin.correlation.doc/c_correlation_intro.html">Information Store data correlation</a></li>
 </ul>
 <p>To script the ingestion process, the following information is stored within the script:  </p>
@@ -94,8 +94,8 @@
 <li>A list of import mapping identifiers from the mapping file.</li>
 </ul>
 <p>The script uses the <code>runSqlServerCommandAsETL</code> client function to import the data into the staging tables, and <code>runEtlToolkitToolAsi2ETL</code> to run the ingestion commands.
-Note the external ETL user is performing the import into the staging tables, but the i2 Internal ETL user is executing ETL tasks such as creating the ingestion source or performing the import from the stagin tables.</p>
-<p>The data and ingestion artefacts that are used in the example are in the <code>examples/data</code> directory of the minimal toolkit. </p>
+Note the external ETL user is performing the import into the staging tables, but the i2 Internal ETL user is executing ETL tasks such as creating the ingestion source or performing the import from the staging tables.</p>
+<p>The data and ingestion artefacts that are used in the example are in the <code>examples/data</code> directory of the minimal toolkit.</p>
 <h2 id="creatingtheingestionsources"> Creating the ingestion sources</h2>
 <p>The <code>runEtlToolkitToolAsi2ETL</code> client function is used to run <code>addInformationStoreIngestionSource</code> ETL toolkit tool to create the ingestion sources.</p>
 <ul>
@@ -120,7 +120,7 @@ For each type of data the staging tables and populated, the data ingestion task 
 <h3 id="ingestingnoncorrelateddata"> Ingesting non correlated data</h3>
 <p>In this case, the SQL Server <code>BULK INSERT</code> command is used to insert the CSV data into the staging tables.</p>
 <h3 id="ingestingcorrelateddata"> Ingesting correlated data</h3>
-<p>See the <code>Ingesting correlated data</code> section of the walkthrough script. </p>
+<p>See the <code>Ingesting correlated data</code> section of the walkthrough script.</p>
 <h3 id="theingestionprocedure"> The ingestion procedure</h3>
 <p>The <code>runSqlServerCommandAsETL</code> client function is used to run the sql statement that inserts the data into the staging tables.</p>
 <ul>
@@ -138,7 +138,7 @@ For an example of how the mappings are used, see the <code>Insert the base data 
 <p>The <code>ingestInformationStoreRecords</code> tool is used with <code>BULK</code> and <code>STANDARD</code> import modes. Standard import mode is used to ingest the correlation data sets.
 Bulk import mode is used to ingest the base data set.</p>
 <p>The import mapping identifiers to use with the <code>ingestInformationStoreRecords</code> tool are defined in the <code>IMPORT_MAPPING_IDS</code> and <code>BULK_IMPORT_MAPPING_IDS</code> lists.</p>
-<p>A loop is used to ingest data for each mapping identifier in the lists. </p>
+<p>A loop is used to ingest data for each mapping identifier in the lists.</p>
 </article>
           </div>
           

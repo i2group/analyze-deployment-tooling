@@ -79,7 +79,7 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="defining-the-property-values-of-merged-records">Defining the property values of merged records</h1>
 
-<p>This section describes an example of the process to define how property values of merged records are calculated in a Docker environment. 
+<p>This section describes an example of the process to define how property values of merged records are calculated in a Docker environment.
 The process includes the following high-level steps:</p>
 <ul>
 <li>Enabling merged property values<ul>
@@ -96,7 +96,7 @@ The process includes the following high-level steps:</p>
 <ul>
 <li><p>To demonstrate the default behavior, use the <code>ingestDataWalkthrough.sh</code> script to ingest some data the correlates. For more information about ingesting the data, see <a href="ingestion.html">Ingesting data into the Information Store</a>.</p>
 </li>
-<li><p>During the ingestion walk-through, the default behavior is used to determine the property values of the correlated record. In the default behavior, the property values from the merge contributor with the most recent value for <code>source_last_updated</code> are used. </p>
+<li><p>During the ingestion walk-through, the default behavior is used to determine the property values of the correlated record. In the default behavior, the property values from the merge contributor with the most recent value for <code>source_last_updated</code> are used.</p>
 </li>
 </ul>
 <p>For more information about the how the property values for merged records are calculated, see <a href="https://www.ibm.com/support/knowledgecenter/SSXVTH_latest/com.ibm.i2.iap.admin.correlation.doc/c_merged_properties.html">Define how property values of merged records are calculated</a></p>
@@ -126,7 +126,7 @@ Note, this step is also performed by the database administrator.</p>
 <p>The property values of merged records do not update when the MPVDV views are modified. To update the values of existing records, you must reingest at least one of the merge contributors to the record.</p>
 <p>To do this, use the <code>ingestDataWalkthrough.sh</code> script to ingest some data the correlates. For more information about ingesting the data, see <a href="ingestion.html">Ingesting data into the Information Store</a>.</p>
 <p>See the <code>Reingesting the data</code> section of the walkthrough script.</p>
-<p>After the data is ingested, in the Analyst&#39;s Notebook Premium chart that you have open, select the <code>Julia Yochum</code> item and click <strong>Get changes</strong>. </p>
+<p>After the data is ingested, in the Analyst&#39;s Notebook Premium chart that you have open, select the <code>Julia Yochum</code> item and click <strong>Get changes</strong>.</p>
 <p>The name of the item changes to <code>Julie Yocham</code>, because the property values that make up the name are now from the merge contributor where the ingestion source name is <code>EXAMPLE_1</code>.</p>
 </article>
           </div>

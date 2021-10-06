@@ -80,22 +80,23 @@
 <h1 id="configuration-development-environment">Configuration development environment</h1>
 
 <p>To create a production deployment of i2 Analyze, you must develop the i2 Analyze configuration. The production deployment process describes a process of using different development environments to produce your i2 Analyze configuration. For more information about the environments, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=deployment-phases-environments">Deployment phases and environments</a>.</p>
-<p>The <code>Analyze-Containers</code> repository enables you to create a development environment that comprises a containerised deployment of i2 Analyze. The containerised deployment enables you to switch between deployment patterns easily and redeploy changes in a consistent manner.</p>
+<p>The analyze-containers repository enables you to create a development environment that comprises a containerised deployment of i2 Analyze. The containerised deployment enables you to switch between deployment patterns easily and redeploy changes in a consistent manner.</p>
 <p>Process overview:</p>
 <ul>
-<li>Install the prerequisites for the Analyze-Containers repository</li>
+<li>Install the prerequisites for the analyze-containers repository</li>
 <li>Create a config template</li>
 <li>Create a custom config that you can deploy into a development environment</li>
 <li>Use the environment to develop the i2 Analyze configuration</li>
 </ul>
 <p>If you have already run the <code>createDevEnvironment</code> script and you want to create a new custom config from the template, go to <a href="#creatingdevconfig">Creating a development config</a>.</p>
 <h2 id="prerequisites"> Prerequisites</h2>
-<p>Before you create the configuration development environment, you must configure the Analyze-Containers repository.<br>For more information, see <a href="getting_started.html">Getting started with the Analyze-Containers repository</a>.</p>
+<p>Before you create the configuration development environment, you must configure the analyze-containers repository.<br>For more information, see <a href="getting_started.html">Getting started with the Analyze-Containers repository</a>.</p>
 <hr>
 <h2 id="creating-the-configuration-development-environment">Creating the configuration development environment</h2>
-<p>To create the configuration development environment and template config, in the <code>/scripts</code> directory run:</p>
+<ol>
+<li><p>To create the configuration development environment and template config, in the <code>/scripts</code> directory run:</p>
 <pre><code class="lang-sh">./createDevEnvironment.sh
-</code></pre><p>The script performs the following actions:</p>
+</code></pre><p> The script performs the following actions:</p>
 <ul>
 <li>Extracts the required files from the i2 Analyze deployment toolkit</li>
 <li>Builds the required Docker images for the development environment</li>
@@ -105,34 +106,57 @@
 </ul>
 </li>
 </ul>
+</li>
+</ol>
+<p><strong>Note:</strong> At this release, the config development environment is supported with Microsoft SQL Server only. The <code>createDevEnvironment.sh</code> script creates a number of IBM Db2 artifacts, however they cannot be used with the config development environment.</p>
 <h3 id="acceptingthelicences"> Accepting the licences</h3>
-<ul>
-<li><p>Before you can use i2 Analyze and the tools, you must read and accept the licence agreement and copyright notices in the <code>pre-reqs/i2analyze/license</code> directory.<br>  To accept the licence agreement, change the value of the <code>LIC_AGREEMENT</code> environment variable to <code>ACCEPT</code>. The environment variable is in the <code>utils/simulatedExternalVariables.sh</code> script.</p>
+<ol>
+<li><p>Before you can use i2 Analyze and the tools, you must read the licence agreement and copyright notices. The licence file is in the <code>pre-reqs/i2analyze/license</code> directory.  </p>
+<ol>
+<li>To accept the licence agreement, change the value of the <code>LIC_AGREEMENT</code> environment variable to <code>ACCEPT</code>. The environment variable is in the <code>utils/simulatedExternalVariables.sh</code> script.</li>
+</ol>
 </li>
-<li><p>Before you can use Microsoft SQL Server, you must accept the licence agreement and the EULA. For more information about using the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables, see <a href="https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-configure-environment-variables?view=sql-server-ver15#environment-variables">Configure SQL Server settings with environment variables on Linux</a><br>  To accept the licence in this environment, change the value of the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables. The environment variable is in the <code>utils/simulatedExternalVariables.sh</code> script.</p>
+<li><p>Before you can use Microsoft SQL Server, you must accept the licence agreement and the EULA. For more information about using the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables, see <a href="https://docs.microsoft.com/sql/linux/sql-server-linux-configure-environment-variables?view=sql-server-ver15#environment-variables">Configure SQL Server settings with environment variables on Linux</a>  </p>
+<ol>
+<li>To accept the licence in this environment, change the value of the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables. The environment variables are in the <code>utils/simulatedExternalVariables.sh</code> script.</li>
+</ol>
 </li>
-</ul>
+</ol>
 <p>For example:</p>
 <pre><code class="lang-sh">LIC_AGREEMENT=ACCEPT
 MSSQL_PID=Developer
 ACCEPT_EULA=Y
 </code></pre><h3 id="modifyingthehostsfile"> Modifying the hosts file</h3>
-<p>To enable you to connect to a deployment, the Solr Web UI, and the database, update your hosts file to include entries for the containers:</p>
+<ol>
+<li><p>To enable you to connect to a deployment, the Solr Web UI, and the database, update your hosts file to include entries for the containers:</p>
 <pre><code class="lang-sh">127.0.0.1 solr1.eia
 127.0.0.1 sqlserver.eia
 127.0.0.1 i2analyze.eia
-</code></pre><p><strong>Note:</strong> On Windows, you must edit your hosts file in <code>C:\Windows\System32\drivers\etc</code> and the hosts file in <code>/etc/hosts</code> for WSL.</p>
-<blockquote><p>You must run Analyst&#39;s Notebook Premium on Windows. If you deploy on MacOS, you can use a Windows virtual machine to host Analyst&#39;s Notebook Premium. For your virtual machine to connect to i2 Analyze, complete the following:</p>
-<p>On your MacOS terminal, run <code>ifconfig</code> and identify the IP address for your virtual machine in a section such as <code>vmnet1</code>. For example, <code>172.16.100.1</code>.</p>
-<p>Then, on your Windows virtual machine add the following line to the <code>C:\Windows\System32\drivers\etc\hosts</code> file:</p>
-<pre><code class="lang-sh"> 172.16.100.1 i2analyze.eia
-</code></pre></blockquote>
+</code></pre><ul>
+<li>On Windows, edit the hosts file in <code>C:\Windows\System32\drivers\etc</code> and the WSL hosts file in <code>/etc/hosts</code>. You can use the integrated terminal in VS Code to edit the WSL hosts file.</li>
+<li>On MacOS, edit the hosts file in <code>/etc/hosts</code>.</li>
+</ul>
+</li>
+</ol>
+<p>You must run Analyst&#39;s Notebook Premium on Windows. If you deploy on MacOS, you can use a Windows virtual machine to host Analyst&#39;s Notebook Premium. For your virtual machine to connect to i2 Analyze, complete the following:</p>
+<ol>
+<li><p>On your MacOS terminal, run <code>ifconfig</code> and identify the IP address for your virtual machine in a section such as <code>vmnet1</code>. For example, <code>172.16.100.1</code>.</p>
+</li>
+<li><p>Then, on your Windows virtual machine add the following line to the <code>C:\Windows\System32\drivers\etc\hosts</code> file:</p>
+<pre><code class="lang-sh">172.16.100.1 i2analyze.eia
+</code></pre></li>
+</ol>
 <h3 id="installingcertificate"> Installing the certificate</h3>
-<p>To access the system, the server that you are connecting from must trust the certificate that it receives from the deployment. To enable trust, install the <code>/dev-environment-secrets/generated-secrets/certificates/externalCA/CA.cer</code> certificate as a trusted root certificate authority in your browser and operating system&#39;s certificate store.</p>
-<p>For information about installing the certificate, see:</p>
+<p>To access the system, the server that you are connecting from must trust the certificate that it receives from the deployment.</p>
+<ol>
+<li><p>To enable trust, install the <code>/dev-environment-secrets/generated-secrets/certificates/externalCA/CA.cer</code> certificate as a trusted root certificate authority in your browser and operating system&#39;s certificate store.</p>
+<p> For information about installing the certificate, see:</p>
 <ul>
 <li><a href="https://windowsreport.com/install-windows-10-root-certificates/#2">Install Certificates with the Microsoft Management Console</a></li>
+<li><a href="https://support.apple.com/guide/keychain-access/kyca2431/mac">Add certificates to a keychain using Keychain Access on Mac</a></li>
 </ul>
+</li>
+</ol>
 <hr>
 <h2 id="creatingdevconfig"> Creating a config</h2>
 <p>Before you can deploy the environment, create a config from the template:</p>
@@ -154,7 +178,7 @@ ACCEPT_EULA=Y
 <li><code>cstore</code> - Chart Store</li>
 <li><code>i2c_istore</code> - i2 Connect gateway and Information Store</li>
 <li><p><code>i2c_cstore</code> - i2 Connect gateway and Chart Store  </p>
-<p>For more information about the i2 Analyze deployment patterns, see: <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=understanding-components">Components</a>.</p>
+<p>For more information about the i2 Analyze deployment patterns, see: <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=analyze-components">Components</a>.</p>
 </li>
 </ul>
 </li>
@@ -175,12 +199,12 @@ HOST_PORT_I2ANALYZE_SERVICE=&quot;9443&quot;
 </ol>
 <hr>
 <h2 id="specifying-the-schema-and-charting-schemes-files">Specifying the schema and charting schemes files</h2>
-<p>To deploy i2 Analyze, you must provide a schema and charting scheme. 
+<p>To deploy i2 Analyze, you must provide a schema and charting scheme.
 The i2 Analyze toolkit includes example files that you can use as a starting point, or you can use existing files.</p>
 <p>For more information about the example schemas, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=toolkit-example-schemas">Example schemas</a>.</p>
 <ol>
 <li>Choose an example schema and associated charting scheme as your starting point from the <code>pre-reqs/i2analyze/toolkit/examples/schemas</code> directory.</li>
-<li>Copy the chosen schema and charting scheme to your <code>configs/&lt;config_name&gt;/configuration</code> directory. </li>
+<li>Copy the chosen schema and charting scheme to your <code>configs/&lt;config_name&gt;/configuration</code> directory.</li>
 <li>Remove the existing <code>schema.xml</code> and <code>schema-charting-schemes.xml</code> files. Then, rename your chosen schema file to <code>schema.xml</code> and your charting scheme to <code>schema-charting-schemes.xml</code>.</li>
 </ol>
 <h2 id="specifying-the-security-schema-user-registry-and-command-access-control-files">Specifying the security schema, user registry, and command access control files</h2>
@@ -191,18 +215,20 @@ The i2 Analyze toolkit includes example files that you can use as a starting poi
 <li>Copy and overwrite the example <code>security-schema.xml</code>, <code>user-registry.xml</code>, and <code>command-access-control.xml</code> files from the <code>pre-reqs/i2analyze/toolkit/examples/security</code> directory to your <code>configs/&lt;config_name&gt;/configuration</code> directory.</li>
 </ol>
 <hr>
-<h2 id="deploying-your-config-in-the-environment">Deploying your config in the environment</h2>
-<p>Run the <code>./deploy.sh</code> script from the <code>/scripts</code> directory to deploy and start your environment. Provide the name of the config to deploy with by using the <code>-c</code> parameter and specify the name of the config directory. For example:</p>
+<h2 id="deployconfig"> Deploying your config in the environment</h2>
+<ol>
+<li><p>Run the <code>./deploy.sh</code> script from the <code>/scripts</code> directory to deploy and start your environment. Provide the name of the config to deploy with by using the <code>-c</code> parameter and specify the name of the config directory. For example:</p>
 <pre><code class="lang-sh">./deploy.sh -c config-development
-</code></pre><p>You can run only one environment at a time. When you run the <code>deploy.sh</code> script, it stops any containers on the Docker network. If you are deploying with the same config, it update the images and recreates the containers to update the environment with any configuration changes. For more information, see <a href="managing_config_dev.html">Managing configs</a>.</p>
+</code></pre></li>
+</ol>
+<p>You can run only one environment at a time. When you run the <code>deploy.sh</code> script, it stops any containers on the Docker network. If you are deploying with the same config, it update the images and recreates the containers to update the environment with any configuration changes. For more information, see <a href="managing_config_dev.html">Managing configs</a>.</p>
 <h2 id="accessingthesystem"> Accessing the system</h2>
 <p>To connect to the deployment, the URL to use is: <code>https://i2analyze.eia:9443/opal</code></p>
-<blockquote><p><strong>Note:</strong> If you are using the i2 Connect gateway only deployment pattern, you must connect using Analyst&#39;s Notebook Premium.</p>
-</blockquote>
+<p><strong>Note:</strong> If you are using the <code>schema_dev</code> or <code>i2c</code> deployment patterns, you must connect using Analyst&#39;s Notebook Premium.</p>
 <p>Log in as a user that is specified in the user registry file. If you are using the example user registry, the example user has the following credentials:</p>
 <ul>
-<li>The user name is Jenny</li>
-<li>The password is Jenny</li>
+<li>The user name is <code>Jenny</code></li>
+<li>The password is <code>Jenny</code></li>
 </ul>
 <hr>
 <h2 id="what-to-do-next">What to do next?</h2>

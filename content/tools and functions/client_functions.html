@@ -119,8 +119,8 @@ The function creates a database login and user for the provided <code>user</code
 <p>The <code>runi2AnalyzeTool</code> function takes the i2 tool you want to run as an argument. For example:</p>
 <pre><code class="lang-bash">runi2AnalyzeTool &quot;/opt/i2-tools/scripts/updateSecuritySchema.sh&quot;
 </code></pre><h3 id="runi2analyzeservicerequest"> runi2AnalyzeToolAsExternalUser</h3>
-<p>The <code>runi2AnalyzeToolAsExternalUser</code> function uses an ephemeral i2 Analyze Tool container to run commands against the i2 Analyze service via the load balancer as an external user. </p>
-<p>The container contains the required secrets to communicate with the i2 Analyze service from an external container. </p>
+<p>The <code>runi2AnalyzeToolAsExternalUser</code> function uses an ephemeral i2 Analyze Tool container to run commands against the i2 Analyze service via the load balancer as an external user.</p>
+<p>The container contains the required secrets to communicate with the i2 Analyze service from an external container.</p>
 <p>For example, if you would like to send a Curl request to the load balancer stats endpoint, run:</p>
 <pre><code class="lang-sh">runi2AnalyzeToolAsExternalUser bash -c &quot;curl \
         --silent \
