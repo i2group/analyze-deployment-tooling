@@ -5,9 +5,9 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Resetting your environment </title>
+    <title>Solr runbooks </title>
     <meta name="viewport" content="width=device-width">
-    <meta name="title" content="Resetting your environment ">
+    <meta name="title" content="Solr runbooks ">
     <meta name="generator" content="docfx 2.56.2.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="../../styles/docfx.css">
     <link rel="stylesheet" href="../../styles/main.css">
     <meta property="docfx:navrel" content="../../toc.html">
-    <meta property="docfx:tocrel" content="../../guidetoc/toc.html">
+    <meta property="docfx:tocrel" content="../../toc.html">
     
     <meta property="docfx:rel" content="../../">
     
@@ -59,14 +59,7 @@
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
-        
-        <div class="sidenav hide-when-search">
-          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
-          <div class="sidetoggle collapse" id="sidetoggle">
-            <div id="sidetoc"></div>
-          </div>
-        </div>
-        <div class="article row grid-right">
+        <div class="article row grid">
           <div class="col-md-10">
           
           <div class="subnav navbar navbar-default">
@@ -77,17 +70,131 @@
             </div>
           </div>
             <article class="content wrap" id="_content" data-uid="">
-<h1 id="resetting-your-environment">Resetting your environment</h1>
+<h1 id="solr-runbooks">Solr runbooks</h1>
 
-<p>Resetting the deployment after you complete one of the walkthroughs is done in 2 steps:</p>
-<ul>
-<li>Resets the configuration directory to the base example configuration</li>
-<li>Runs the deploy script to redeploy the system with the base configuration</li>
-</ul>
-<h2 id="resettingtheconfiguration"> Resetting the configuration</h2>
-<p>The <code>configuration</code> directory is reset by calling the <code>pre-prod/createPreProdEnvironment.sh</code> script. This creates a clean configuration for your deployment.</p>
-<h2 id="redeployingthesystem"> Redeploying the system</h2>
-<p>The <code>pre-prod/deploy.sh</code> script is run to redeploy the system.</p>
+<p>The following runbooks are used to deploy, start, and stop Solr and ZooKeeper.</p>
+<h2 id="solrfirstrun"> i2a-SolrFirstRun</h2>
+<h3 id="description">Description</h3>
+<p> Initialize, configure, and start Solr and ZooKeeper</p>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DeploymentName</td>
+<td>The name of the deployment</td>
+</tr>
+</tbody>
+</table>
+<h3 id="steps">Steps</h3>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+<th>i2a-script</th>
+<th>CloudWatch log group</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>runZookeeper1</td>
+<td>Start ZooKeeper container on the <code>zk1</code> instance</td>
+<td><code>run-zk.sh</code></td>
+<td>solr-first-run/run-zk</td>
+</tr>
+<tr>
+<td>runZookeeper2</td>
+<td>Start ZooKeeper container on the <code>zk2</code> instance</td>
+<td><code>run-zk.sh</code></td>
+<td>solr-first-run/run-zk</td>
+</tr>
+<tr>
+<td>runZookeeper3</td>
+<td>Start ZooKeeper container on the <code>zk3</code> instance</td>
+<td><code>run-zk.sh</code></td>
+<td>solr-first-run/run-zk</td>
+</tr>
+<tr>
+<td>configureZkForSolr</td>
+<td>Create <code>is_cluster</code> and upload solr/security.json</td>
+<td><code>configure-zk-for-solr.sh</code></td>
+<td>solr-first-run/configure-zk-for-solr</td>
+</tr>
+<tr>
+<td>runSolr</td>
+<td>Start Solr containers on all available <code>solr</code> instances</td>
+<td><code>run-solr.sh</code></td>
+<td>solr-first-run/run-solr</td>
+</tr>
+<tr>
+<td>configureSolr</td>
+<td>Create and configure Solr collections</td>
+<td><code>configure-solr.sh</code></td>
+<td>solr-first-run/configure-solr</td>
+</tr>
+</tbody>
+</table>
+<h2 id="solrstart"> i2a-SolrStart</h2>
+<h3 id="description-1">Description</h3>
+<p>Start previously created ZooKeeper and Solr containers</p>
+<h3 id="parameters-1">Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DeploymentName</td>
+<td>The name of the deployment</td>
+</tr>
+</tbody>
+</table>
+<h3 id="steps-1">Steps</h3>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+<th>i2a-script</th>
+<th>CloudWatch log group</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>runZookeeper1</td>
+<td>Start ZooKeeper container on the <code>zk1</code> instance</td>
+<td><code>run-zk.sh</code></td>
+<td>solr-start/run-zk</td>
+</tr>
+<tr>
+<td>runZookeeper2</td>
+<td>Start ZooKeeper container on the <code>zk2</code> instance</td>
+<td><code>run-zk.sh</code></td>
+<td>solr-start/run-zk</td>
+</tr>
+<tr>
+<td>runZookeeper3</td>
+<td>Start ZooKeeper container on the <code>zk3</code> instance</td>
+<td><code>run-zk.sh</code></td>
+<td>solr-start/run-zk</td>
+</tr>
+<tr>
+<td>RUN_SOLR</td>
+<td>Start Solr containers on all available <code>solr</code> instances</td>
+<td><code>run-solr.sh</code></td>
+<td>solr-start/run-solr</td>
+</tr>
+</tbody>
+</table>
 </article>
           </div>
           

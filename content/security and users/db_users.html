@@ -387,7 +387,7 @@ Note: The <code>configureDbaRolesAndPermissions.sh</code> script is run during d
 <p>To create the roles, the <code>createDbRoles.sh</code> script is run using the <code>runSQLServerCommandAsSA</code> client function. This function uses an ephemeral SQL Server client container to create the database roles. For more information about the client function, see:</p>
 <ul>
 <li><a href="../tools%20and%20functions/client_functions.html#runsqlservercommandassa">runSQLServerCommandAsSA</a></li>
-<li><a href="https://github.com/IBM-i2/analyze-containers/blob/main/images/sql_client/db-scripts/createDbRoles.sh">createDbRoles.sh</a></li>
+<li><a href="https://github.com/i2group/analyze-containers/blob/main/images/sql_client/db-scripts/createDbRoles.sh">createDbRoles.sh</a></li>
 </ul>
 <p>All the secrets required at runtime by the client container are made available by providing a file path to the secret which is converted to an environment variable by the docker container.</p>
 <p>For example, to provide the <code>SA_USERNAME</code> environment variable to the client container, a file containing the secret is declared in the docker run command:</p>
@@ -397,7 +397,7 @@ Note: The <code>configureDbaRolesAndPermissions.sh</code> script is run during d
 <h2 id="createtheloginanduser"> Create the login and user</h2>
 <p>Use the <code>sa</code> user to create the login and the user on the <code>ISTORE</code>, and make the user a member of the role.</p>
 <p>You can use an ephemeral SQL Client container to create the login and the user.</p>
-<p>The <a href="https://github.com/IBM-i2/analyze-containers/blob/main/images/sql_client/db-scripts/createDbLoginAndUser.sh">createDbLoginAndUser.sh</a> script in <code>/images/sql_client/db-scripts</code> is used to create the login and user. The scripts are called from the <code>deploy.sh</code> scripts.</p>
+<p>The <a href="https://github.com/i2group/analyze-containers/blob/main/images/sql_client/db-scripts/createDbLoginAndUser.sh">createDbLoginAndUser.sh</a> script in <code>/images/sql_client/db-scripts</code> is used to create the login and user. The scripts are called from the <code>deploy.sh</code> scripts.</p>
 <h3 id="thecreatedbloginanduserfunction"> The <code>createDbLoginAndUser</code> function</h3>
 <p>The <code>createDbLoginAndUser</code> function uses an ephemeral SQL Client container to create the database administrator login and user. The login and user are created by the <code>sa</code> user.</p>
 <p>For more information about running a SQL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
@@ -518,7 +518,7 @@ Note: The <code>configureDbaRolesAndPermissions.sh</code> script is run during d
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; Copyright IBM Corporation 2021.
+            &copy; N. Harris Computer Corporation (2022)
             
           </div>
         </div>
