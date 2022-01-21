@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # MIT License
 #
-# Copyright (c) 2021, IBM Corporation
+# Copyright (c) 2022, N. Harris Computer Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -59,7 +59,7 @@ function help() {
 
 AWS_DEPLOY="false"
 
-while getopts ":i:e:l:ahdvy" flag; do
+while getopts "ahvyd:e:i:l:" flag; do
   case "${flag}" in
   a)
     AWS_ARTEFACTS="true"
@@ -329,7 +329,7 @@ function findAndCopyFileWithFolderStructure() {
   pushd "${from_folder}" > /dev/null
   result=$(find . -name "${file_name}" -type f -exec cp --parents {} "${to_folder}" \;)
   popd > /dev/null
-  [[ -z "${result}" ]] 
+  [[ -z "${result}" ]]
 }
 
 function extractConnectorDist() {
@@ -337,7 +337,7 @@ function extractConnectorDist() {
   local connector_dir="${CONNECTOR_IMAGES_DIR}/${connector_name}"
   local archive_files
 
-  readarray -d '' archive_files < <( find "${connector_dir}" -maxdepth 1 \( -name "*.tgz" -o -name "*.tar.gz" \) -type f -print0 )
+  readarray -d '' archive_files < <( find -L "${connector_dir}" -maxdepth 1 \( -name "*.tgz" -o -name "*.tar.gz" \) -type f -print0 )
 
   if [[ "${#archive_files[@]}" -gt 1 ]]; then
     printErrorAndExit "There is more than one .tgz archive in the ${connector_name} directory. Ensure that only one .tgz file is present."
@@ -364,7 +364,7 @@ function extractConnectorDist() {
 function cleanUpConnectorDist() {
   local connector_name="${1}"
   local connector_dir="${CONNECTOR_IMAGES_DIR}/${connector_name}"
-  
+
   deleteFolderIfExists "${connector_dir}/app"
   #Restore to before build stage
   cp -R "${connector_dir}/.app/." "${connector_dir}/app"
@@ -406,6 +406,7 @@ function buildImage() {
 
   if [[ "${AWS_ARTEFACTS}" == "true" ]]; then
     if [[ "${connector_type}" == "${I2CONNECT_SERVER_CONNECTOR_TYPE}" ]] && isSecret "secrets/${connector_name}"; then
+      mkdir -p "${CONNECTOR_IMAGES_DIR}/${connector_name}/app/dist/connectors/${connector_name}"
       getSecret "secrets/${connector_name}" > "${CONNECTOR_IMAGES_DIR}/${connector_name}/app/dist/connectors/${connector_name}/${CONNECTOR_CONFIG_FILE}"
     fi
   fi

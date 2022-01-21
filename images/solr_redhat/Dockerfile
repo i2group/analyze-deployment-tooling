@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2021, IBM Corporation
+# Copyright (c) 2022, N. Harris Computer Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -32,6 +32,12 @@ ARG SOLR_DOWNLOAD_URL
 # Override the solr download location with e.g.:
 #   docker build -t mine --build-arg SOLR_DOWNLOAD_SERVER=http://www-eu.apache.org/dist/lucene/solr .
 ARG SOLR_DOWNLOAD_SERVER
+
+ENV LOG4J_VER="2.17.1"
+ENV LOG4J_BIN="apache-log4j-$LOG4J_VER-bin.tar.gz"
+ENV LOG4J_BASE_URL="https://dlcdn.apache.org/logging"
+ENV LOG4J_ARCHIVE_URL="$LOG4J_BASE_URL/log4j/$LOG4J_VER/$LOG4J_BIN"
+ENV LOG4J_SHA512="b7e948df6c6f57d903d990de2cc0270c1537b711285e9b6b91280db6ace38418fced713785b2c20512dd9a4238c2d1d0ceb414d9936df2ca110ff14993ae04dc"
 
 RUN set -ex; \
   yum -y install acl dirmngr gpg lsof procps wget; \
@@ -130,6 +136,42 @@ RUN set -ex; \
   chown -R "0:0" /opt/solr-$SOLR_VERSION /docker-entrypoint-initdb.d /opt/docker-solr; \
   chown -R "$SOLR_USER:0" /var/solr; \
   chown "$SOLR_USER:0" /opt/solr/server/resources/log4j2-console.xml; \
+  # Remediate log4j vulnerability
+  # CVE-2021-44228
+  mkdir -p /opt/log4j; \
+  if [ -f "/opt/log4j/$LOG4J_BIN" ]; then break; fi; \
+  echo "downloading $LOG4J_ARCHIVE_URL"; \
+  if wget -t 10 --max-redirect $MAX_REDIRECTS --retry-connrefused -nv "$LOG4J_ARCHIVE_URL" -O "/opt/log4j/$LOG4J_BIN"; then break; else rm -f "/opt/log4j/$LOG4J_BIN"; fi; \
+  if [ ! -f "/opt/log4j/$LOG4J_BIN" ]; then echo "failed all download attempts for $LOG4J_BIN"; exit 1; fi; \
+  echo "downloading $LOG4J_BASE_URL/KEYS"; \
+  wget -nv "$LOG4J_BASE_URL/KEYS" -O "/opt/log4j/KEYS"; \
+  echo "downloading $LOG4J_ARCHIVE_URL.asc"; \
+  wget -nv "$LOG4J_ARCHIVE_URL.asc" -O "/opt/log4j/$LOG4J_BIN.asc"; \
+  echo "$LOG4J_SHA512 */opt/log4j/$LOG4J_BIN" | sha512sum -c -; \
+  (>&2 ls -l "/opt/log4j/$LOG4J_BIN" "/opt/log4j/KEYS" "/opt/log4j/$LOG4J_BIN.asc"); \
+  gpg --import /opt/log4j/KEYS; \
+  gpg --batch --verify "/opt/log4j/$LOG4J_BIN.asc" "/opt/log4j/$LOG4J_BIN"; \
+  tar -C /opt/log4j --extract --file "/opt/log4j/$LOG4J_BIN"; \
+  rm -f /opt/solr-$SOLR_VERSION/contrib/prometheus-exporter/lib/log4j-core-2.13.2.jar \
+    /opt/solr-$SOLR_VERSION/contrib/prometheus-exporter/lib/log4j-api-2.13.2.jar \
+    /opt/solr-$SOLR_VERSION/contrib/prometheus-exporter/lib/log4j-slf4j-impl-2.13.2.jar \
+    /opt/solr-$SOLR_VERSION/server/lib/ext/log4j-core-2.13.2.jar \
+    /opt/solr-$SOLR_VERSION/server/lib/ext/log4j-1.2-api-2.13.2.jar \
+    /opt/solr-$SOLR_VERSION/server/lib/ext/log4j-api-2.13.2.jar \
+    /opt/solr-$SOLR_VERSION/server/lib/ext/log4j-web-2.13.2.jar \
+    /opt/solr-$SOLR_VERSION/server/lib/ext/log4j-slf4j-impl-2.13.2.jar; \
+  cp /opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-core-${LOG4J_VER}.jar \
+    /opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-api-${LOG4J_VER}.jar \
+    /opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-slf4j-impl-${LOG4J_VER}.jar \
+    /opt/solr-$SOLR_VERSION/contrib/prometheus-exporter/lib/; \
+  cp /opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-core-${LOG4J_VER}.jar \
+    /opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-1.2-api-${LOG4J_VER}.jar \
+    /opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-api-${LOG4J_VER}.jar \
+    /opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-web-${LOG4J_VER}.jar \
+    /opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-slf4j-impl-${LOG4J_VER}.jar \
+    /opt/solr-$SOLR_VERSION/server/lib/ext/; \
+  rm -rf /opt/log4j; \
+  # end log4j remediation
   { command -v gpgconf; gpgconf --kill all || :; }; \
   rm -r "$GNUPGHOME"
 

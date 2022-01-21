@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # MIT License
 #
-# Copyright (c) 2021, IBM Corporation
+# Copyright (c) 2022, N. Harris Computer Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -37,7 +37,7 @@ function addTrustedCertifcates() {
   # awk command: step 1, if line is in the desired cert, print the line
   #              step 2, increment counter when last line of cert is found
   for N in $(seq 0 $(("${cert_count}" - 1))); do
-    alias="${pem_file%.*}-$N"
+    alias="${pem_file%.*}-$N" 
     awk "n==$N { print }; /END CERTIFICATE/ { n++ }" "${pem_file}" |
     keytool -noprompt -import -trustcacerts \
             -alias "${alias}" -keystore "${trust_store}" -storepass:env KEYSTORE_PASS -storetype PKCS12
@@ -110,6 +110,10 @@ if [[ ${GATEWAY_SSL_CONNECTION} == true ]]; then
   if [[ -n ${SSL_OUTBOUND_CA_CERTIFICATE} ]]; then
     echo "${SSL_OUTBOUND_CA_CERTIFICATE}" >"${OUT_CA_CER}"
     keytool -importcert -noprompt -alias ca -keystore "${OUT_TRUSTSTORE}" -file ${OUT_CA_CER} -storepass:env KEYSTORE_PASS -storetype PKCS12
+    if [[ -n ${SSL_ADDITIONAL_TRUST_CERTIFICATES} && "${SSL_ADDITIONAL_TRUST_CERTIFICATES}" != "None" ]]; then
+      echo "${SSL_ADDITIONAL_TRUST_CERTIFICATES}" >"${TRUST_EXTRA_CER}"
+      addTrustedCertifcates "${TRUST_EXTRA_CER}" "${OUT_TRUSTSTORE}"
+    fi
     LIBERTY_OUT_TRUSTSTORE_LOCATION=${OUT_TRUSTSTORE}
   else
     LIBERTY_OUT_TRUSTSTORE_LOCATION=${TRUSTSTORE}

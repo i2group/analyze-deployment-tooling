@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # MIT License
 #
-# Copyright (c) 2021, IBM Corporation
+# Copyright (c) 2022, N. Harris Computer Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -168,3 +168,10 @@ esac
 # Gateway variables                                                           #
 ###############################################################################
 declare -gA GATEWAY_SHORT_NAME_SET
+
+###############################################################################
+# User variables                                                              #
+###############################################################################
+if [[ -z "${USER}" ]]; then
+  USER="$(whoami)"
+fi

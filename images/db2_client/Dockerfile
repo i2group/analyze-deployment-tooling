@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2021, IBM Corporation
+# Copyright (c) 2022, N. Harris Computer Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -41,7 +41,7 @@ RUN useradd -m -g db2iadm1 db2inst1
 RUN useradd -g db2fadm1 db2fenc1
 RUN usermod -aG wheel db2inst1
 
-RUN retry = 0; while [[ "${retry}" -lt 3 ]]; do ( /opt/ibm/db2/V11.5/instance/db2icrt -s client db2inst1 && break ) || sleep 1s; retry+=1; done
+RUN retry=0; while [[ "${retry}" -lt 3 ]]; do ( /opt/ibm/db2/V11.5/instance/db2icrt -s client db2inst1 && break ) || sleep 1s; retry=${retry}+1; done
 
 # Set the global registry values
 RUN /opt/ibm/db2/V11.5/instance/db2iset -g DB2SYSTEM=db2client
@@ -49,6 +49,8 @@ RUN /opt/ibm/db2/V11.5/instance/db2iset -g DB2INSTDEF=db2inst1
 RUN /opt/ibm/db2/V11.5/instance/db2iset -g DB2COMM=TCPIP,SSL
 
 # Update DB2 registry and DBM cfg settings
-RUN su - db2inst1 -c "/opt/ibm/db2/V11.5/adm/db2set DB2SYSTEM=db2client"
+USER db2inst1
+RUN /opt/ibm/db2/V11.5/adm/db2set DB2SYSTEM=db2client
+USER root
 
 ENTRYPOINT ["/opt/docker-entrypoint.sh"]

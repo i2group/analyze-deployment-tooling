@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # MIT License
 #
-# Copyright (c) 2021, IBM Corporation
+# Copyright (c) 2022, N. Harris Computer Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -53,6 +53,12 @@ function deleteContainer() {
   done
   print "Deleting ${container_name} container"
   docker rm "${container_name_or_id}"
+}
+
+function forceDeleteContainer() {
+  local container_name_or_id="$1"
+  
+  docker rm -f "${container_name_or_id}" &>/dev/null
 }
 
 function checkDeploymentIsLive() {
@@ -901,51 +907,6 @@ function removeContainer() {
 }
 
 #######################################
-# Cleans up docker resources for pre-prod:
-#   - Stop config-dev containers
-#   - Remove pre-prod contaners
-#   - Remove pre-prod volumes
-# Arguments:
-#   None
-#######################################
-function cleanUpDockerResources() {
-  if docker network ls | grep -q -w "${DOMAIN_NAME}"; then
-    local container_names
-    IFS=' ' read -ra container_names <<< "$(docker ps -a --format "{{.Names}}" -f network="${DOMAIN_NAME}" | xargs)"
-    local pre_prod_containers=(
-      "${ZK1_CONTAINER_NAME}"
-      "${ZK2_CONTAINER_NAME}"
-      "${ZK3_CONTAINER_NAME}"
-      "${SOLR1_CONTAINER_NAME}"
-      "${SOLR2_CONTAINER_NAME}"
-      "${SOLR3_CONTAINER_NAME}"
-      "${SQL_SERVER_CONTAINER_NAME}"
-      "${LIBERTY1_CONTAINER_NAME}"
-      "${LIBERTY2_CONTAINER_NAME}"
-      "${LOAD_BALANCER_CONTAINER_NAME}"
-      "${CONNECTOR1_CONTAINER_NAME}"
-      "${CONNECTOR2_CONTAINER_NAME}"
-    )
-
-    if [[ "${#container_names[@]}" -gt "0" ]]; then
-      print "Stopping all containers"
-      for container_name in "${container_names[@]}"; do
-        # stop all containers
-        stopContainer "${container_name}"
-        for pre_prod_container in "${pre_prod_containers[@]}"; do
-          if [[ "${container_name}" == "${pre_prod_container}" ]]; then
-            # remove only pre-prod containers
-            removeContainer "${container_name}"
-          fi
-        done
-      done
-    fi
-  fi
-  # remove volumes
-  removeDockerVolumes
-}
-
-#######################################
 # Removes containers based on the CONFIG_NAME.
 # Arguments:
 #   None
@@ -964,50 +925,65 @@ function removeAllContainersForTheConfig() {
   fi
 }
 
-#######################################
-# Stops all containers that are NOT required for the current deployment.
-# Arguments:
-#   None
-#######################################
-function stopContainersInTheNetwork() {
-  local config_name="$1"
+function cleanUpDockerResources() {
+  deleteAllPreProdContainers
+  stopConfigDevContainers
+  stopConnectorContainers
+  if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
+    removeDockerVolumes
+  fi
+}
 
-  local connector_references_file=${LOCAL_USER_CONFIG_DIR}/connector-references.json
-  IFS=' ' read -ra all_connector_names <<< "$( jq -r '.connectors[].name' < "${connector_references_file}" | xargs)"
+function deleteAllPreProdContainers() {
+  local pre_prod_containers=(
+    "${ZK1_CONTAINER_NAME%.*}"
+    "${ZK2_CONTAINER_NAME%.*}"
+    "${ZK3_CONTAINER_NAME%.*}"
+    "${SOLR1_CONTAINER_NAME%.*}"
+    "${SOLR2_CONTAINER_NAME%.*}"
+    "${SOLR3_CONTAINER_NAME%.*}"
+    "${SQL_SERVER_CONTAINER_NAME%.*}"
+    "${LIBERTY1_CONTAINER_NAME%.*}"
+    "${LIBERTY2_CONTAINER_NAME%.*}"
+    "${LOAD_BALANCER_CONTAINER_NAME%.*}"
+    "${CONNECTOR1_CONTAINER_NAME%.*}"
+    "${CONNECTOR2_CONTAINER_NAME%.*}"
+  )
 
-  local all_connector_container_names
-  for connector_name in "${all_connector_names[@]}"; do
-    connector_container_name=$(docker ps -a -q -f name="${CONNECTOR_PREFIX}${connector_name}")
-    all_connector_container_names="${all_connector_container_names} ${connector_container_name}"
+  for pre_prod_container in "${pre_prod_containers[@]}"; do
+    forceDeleteContainer "${pre_prod_container}"
   done
+}
 
-  if docker network ls | grep -q -w "${DOMAIN_NAME}"; then
-    local all_container_names
-    local required_containers
-    container_names_string=$(docker ps -a -q -f network="${DOMAIN_NAME}" -f name="${config_name}" | xargs)
-    container_names_string="${container_names_string} ${all_connector_container_names}"
+function stopConfigDevContainers() {
+  local config
+  local container_ids
+  local container_id
 
-    IFS=' ' read -ra all_container_names <<< "$(docker ps -a -q -f network="${DOMAIN_NAME}" -f status=running | xargs)"
-    IFS=' ' read -ra required_containers <<< "${container_names_string}"
+  for config_dir in "${ROOT_DIR}"/configs/*/ ; do
+    # get config name from the path
+    config=$(sed -e 's/.*\/configs\///' -e 's/\///' <<< "${config_dir}")
 
-    # Delete required container names from the list of the containers to be stopped
-    for container_name in "${required_containers[@]}"; do
-      for i in "${!all_container_names[@]}"; do
-        if [[ "${all_container_names[i]}" == "${container_name}" ]]; then
-          unset "all_container_names[i]"
-        fi
-      done
-    done
-    if [[ "${#all_container_names[@]}" -gt "0" ]]; then
-      # Stop non-required containers for the current deployment
-      print "Stopping containers on the ${DOMAIN_NAME} network that aren't for the ${config_name} config"
-      for container_name in "${all_container_names[@]}"; do
-        if [[ "${container_name}" != "" ]]; then
-          docker stop "${container_name}"
-        fi
+    # if not current config name
+    if [[ "${config}" != "${CONFIG_NAME}" ]]; then
+      print "Stopping containers for configuration: ${config}"
+      IFS=' ' read -ra container_ids <<<  "$(docker ps -a -q -f name="${config}" -f status=running | xargs)"
+      for container_id in "${container_ids[@]}"; do
+        stopContainer "${container_id}"
       done
     fi
-  fi
+  done
+}
+
+function stopConnectorContainers() {
+  local container_ids
+
+  IFS=' ' read -ra container_ids <<<  "$(docker ps -a -q -f name="${CONNECTOR_PREFIX}" -f status=running | xargs)"
+
+  print "Stopping connector containers"
+  for container_id in "${container_ids[@]}"; do
+    stopContainer "${container_id}"
+  done
 }
 
 function restartDockerContainersForConfig() {

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # MIT License
 #
-# Copyright (c) 2021, IBM Corporation
+# Copyright (c) 2022, N. Harris Computer Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -78,6 +78,45 @@ function populateLibertyApplication() {
   updateDatasourcesFile
 }
 
+function remediateLog4jVulnerability() {
+  # Remediate log4j vulnerability
+  # CVE-2021-44228
+  # TODO Improve - minior version changes?
+  local LOG4J_VER="2.17.1"
+  local LOG4J_BIN="apache-log4j-${LOG4J_VER}-bin.tar.gz"
+  local LOG4J_BASE_URL="https://dlcdn.apache.org/logging"
+  local LOG4J_ARCHIVE_URL="${LOG4J_BASE_URL}/log4j/${LOG4J_VER}/${LOG4J_BIN}"
+  local LOG4J_SHA512="b7e948df6c6f57d903d990de2cc0270c1537b711285e9b6b91280db6ace38418fced713785b2c20512dd9a4238c2d1d0ceb414d9936df2ca110ff14993ae04dc"
+  local I2_COMMON_DIR="$THIRD_PARTY_DIR/resources/i2-common/lib"
+  local TMP_LOG4J_FOLDER="/tmp/log4j"
+
+  mkdir -p "${TMP_LOG4J_FOLDER}"
+  echo "Downloading ${LOG4J_ARCHIVE_URL}"
+  if curl --retry 10 --max-redirs 1 -o "${TMP_LOG4J_FOLDER}/${LOG4J_BIN}" "${LOG4J_ARCHIVE_URL}"; then echo "Download Succesfull"; else rm -f "${TMP_LOG4J_FOLDER}/${LOG4J_BIN}"; fi
+  if [ ! -f "${TMP_LOG4J_FOLDER}/${LOG4J_BIN}" ]; then
+    echo "Failed all download attempts for ${LOG4J_BIN}"
+    exit 1
+  fi
+  echo "Verifing SHA512 signature on the files"
+  echo "$LOG4J_SHA512 *${TMP_LOG4J_FOLDER}/${LOG4J_BIN}" | sha512sum -c -
+
+  tar -C "${TMP_LOG4J_FOLDER}" --extract --file "${TMP_LOG4J_FOLDER}/${LOG4J_BIN}"
+
+  rm -f "${I2_COMMON_DIR}/log4j-core-2.14.0.jar" \
+    "${I2_COMMON_DIR}/log4j-1.2-api-2.14.0.jar" \
+    "${I2_COMMON_DIR}/log4j-api-2.14.0.jar" \
+    "${I2_COMMON_DIR}/log4j-slf4j-impl-2.14.0.jar"
+
+  cp "${TMP_LOG4J_FOLDER}/apache-log4j-${LOG4J_VER}-bin/log4j-core-${LOG4J_VER}.jar" \
+    "${TMP_LOG4J_FOLDER}/apache-log4j-${LOG4J_VER}-bin/log4j-1.2-api-${LOG4J_VER}.jar" \
+    "${TMP_LOG4J_FOLDER}/apache-log4j-${LOG4J_VER}-bin/log4j-api-${LOG4J_VER}.jar" \
+    "${TMP_LOG4J_FOLDER}/apache-log4j-${LOG4J_VER}-bin/log4j-slf4j-impl-${LOG4J_VER}.jar" \
+    "${I2_COMMON_DIR}"
+
+  rm -rf "${TMP_LOG4J_FOLDER}"
+  # end log4j remediation
+}
+
 function createJvmOptions() {
   # This should be removed when we move to Groovy 3.x
   print "Creating jvm.options file"
@@ -116,6 +155,11 @@ mkdir -p "$THIRD_PARTY_DIR/resources/jdbc"
 # Populate liberty application                                                #
 ###############################################################################
 populateLibertyApplication
+
+###############################################################################
+# Remediate log4j Vulnerability                                               #
+###############################################################################
+remediateLog4jVulnerability
 
 ###############################################################################
 # Create jvm.options file                                                     #

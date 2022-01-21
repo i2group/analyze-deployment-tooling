@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # MIT License
 #
-# Copyright (c) 2021, IBM Corporation
+# Copyright (c) 2022, N. Harris Computer Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -89,10 +89,10 @@ CONNECTOR2_FQDN="${CONNECTOR2_HOST_NAME}.${DOMAIN_NAME}"
 AWS_SECRETS="false"
 AWS_DEPLOY="false"
 AWS_IMAGES="false"
-AWS_REGION="eu-west-2"
+AWS_REGION=None
 
-ECR_BASE_NAME="011520264122.dkr.ecr.eu-west-2.amazonaws.com"
-AWS_REGION="eu-west-2"
+ECR_BASE_NAME=None
+AWS_REGION=None
 I2A_DEPENDENCIES_IMAGES_TAG="latest"
 I2A_LIBERTY_CONFIGURED_IMAGE_TAG="latest"
 

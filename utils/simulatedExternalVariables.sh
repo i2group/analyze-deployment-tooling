@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # MIT License
 #
-# Copyright (c) 2021, IBM Corporation
+# Copyright (c) 2022, N. Harris Computer Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -92,8 +92,8 @@ CONNECTOR2_FQDN="${CONNECTOR2_HOST_NAME}.${DOMAIN_NAME}"
 # AWS Variables                                                               #
 ###############################################################################
 
-AWS_REGION="eu-west-2"
-ECR_BASE_NAME="011520264122.dkr.ecr.eu-west-2.amazonaws.com"
+AWS_REGION=None
+ECR_BASE_NAME=None
 
 EXTRA_ARGS=()
 if [[ "${AWS_DEPLOY}" == "false" ]]; then

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # MIT License
 #
-# Copyright (c) 2021, IBM Corporation
+# Copyright (c) 2022, N. Harris Computer Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -173,6 +173,50 @@ CONTAINER_CERTS_DIR="/tmp/i2acerts"
 ###############################################################################
 I2CONNECT_SERVER_CONNECTOR_TYPE="i2connect-server"
 EXTERNAL_CONNECTOR_TYPE="external"
+
+###############################################################################
+# AWS variables                                                               #
+###############################################################################
+CFN_STACKS=("vpc" "security" "storage" "launch-templates" "solr" "sqlserver" "admin-client" "main")
+
+declare -gA CFN_STACKS_PARAMS_MAP
+CFN_STACKS_PARAMS_MAP=(
+  [main]="DeploymentName ResourcesS3Bucket"
+  [vpc]="DeploymentName"
+  [security]="DeploymentName VpcId"
+  [storage]="DeploymentName PrivateSubnetAId"
+  [launch-templates]="DeploymentName ResourcesS3Bucket"
+  [solr]="DeploymentName PrivateSubnetAId ResourcesS3Bucket"
+  [sqlserver]="DeploymentName PrivateSubnetAId"
+  [admin-client]="DeploymentName PrivateSubnetAId ResourcesS3Bucket"
+  [liberty]="VpcId PrivateSubnetAId PublicSubnetAId PublicSubnetBId DBDialect SQLServerFQDN DB2ServerFQDN ZKHost ConnectorUrlMap CertificateArn EnvType DeploymentName"
+  [connectors]="DeploymentName VpcId"
+  [connector]="DeploymentName VpcId PrivateSubnetAId ConnectorName ConnectorTag"
+)
+
+declare -gA RUNBOOKS_MAP
+RUNBOOKS_MAP=(
+  [i2a-SolrFirstRun]="${AWS_DIR}/i2a-runbooks/solr/i2a-solr-first-run.yaml"
+  [i2a-SolrStart]="${AWS_DIR}/i2a-runbooks/solr/i2a-solr-start.yaml"
+  [i2a-SqlServerFirstRun]="${AWS_DIR}/i2a-runbooks/sqlserver/i2a-sqlserver-first-run.yaml"
+  [i2a-UpdateScripts]="${AWS_DIR}/i2a-runbooks/helpers/i2a-update-scripts.yaml"
+)
+
+PRIVATE_SUBNET_A_ID_EXPORT_NAME="${DEPLOYMENT_NAME}-PrivateSubnetAId"
+PUBLIC_SUBNET_A_ID_EXPORT_NAME="${DEPLOYMENT_NAME}-PublicSubnetAId"
+PUBLIC_SUBNET_B_ID_EXPORT_NAME="${DEPLOYMENT_NAME}-PublicSubnetBId"
+VPC_ID_EXPORT_NAME="${DEPLOYMENT_NAME}-VpcId"
+
+SSM_PARAM_NAME_PREFIX="/${DEPLOYMENT_NAME}"
+DB_DIALECT_SSM_PARAM_NAME="${SSM_PARAM_NAME_PREFIX}/DB_DIALECT"
+SQL_SERVER_FQDN_SSM_PARAM_NAME="${SSM_PARAM_NAME_PREFIX}/SQL_SERVER_FQDN"
+DB2_SERVER_FQDN_SSM_PARAM_NAME="${SSM_PARAM_NAME_PREFIX}/DB2_SERVER_FQDN"
+ZK_MEMBERS_SSM_PARAM_NAME="${SSM_PARAM_NAME_PREFIX}/ZK_MEMBERS"
+CONNECTOR_URL_MAP_PARAM_NAME="${SSM_PARAM_NAME_PREFIX}/CONNECTOR_URL_MAP"
+I2A_CERTIFICATE_ARN_PARAM_NAME="${SSM_PARAM_NAME_PREFIX}/I2A_CERTIFICATE_ARN"
+
+#TODO: Review in Liberty story if we still want this to be a param
+AWS_ENV_TYPE="test"
 
 ###############################################################################
 # Development variables                                                       #
