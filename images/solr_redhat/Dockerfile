@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 FROM adoptopenjdk/openjdk11:ubi
-LABEL maintainer="IBM"
+LABEL maintainer="i2 Group"
 
 ARG SOLR_VERSION="8.8.2"
 ARG SOLR_SHA512="2f0affa8ac1e913ec83c2c4b8dffd6b262140478d5aa33203ac01fd5efb695eb9b1661138ce0c549b050fa0aadeb0912b5838b94703e1cca74ecfacbb57bbaee"
@@ -33,11 +33,11 @@ ARG SOLR_DOWNLOAD_URL
 #   docker build -t mine --build-arg SOLR_DOWNLOAD_SERVER=http://www-eu.apache.org/dist/lucene/solr .
 ARG SOLR_DOWNLOAD_SERVER
 
-ENV LOG4J_VER="2.17.1"
+ENV LOG4J_VER="2.17.2"
 ENV LOG4J_BIN="apache-log4j-$LOG4J_VER-bin.tar.gz"
 ENV LOG4J_BASE_URL="https://dlcdn.apache.org/logging"
 ENV LOG4J_ARCHIVE_URL="$LOG4J_BASE_URL/log4j/$LOG4J_VER/$LOG4J_BIN"
-ENV LOG4J_SHA512="b7e948df6c6f57d903d990de2cc0270c1537b711285e9b6b91280db6ace38418fced713785b2c20512dd9a4238c2d1d0ceb414d9936df2ca110ff14993ae04dc"
+ENV LOG4J_SHA512="cb3c349ae03b94ee9f066c8a1eaf9810a5cd56b9357180e5ff9c13d66c2aceea8b9095650ac4304dbcccea6c1280f255e940fde23045b6598896b655594bd75f"
 
 RUN set -ex; \
   yum -y install acl dirmngr gpg lsof procps wget; \
@@ -152,14 +152,14 @@ RUN set -ex; \
   gpg --import /opt/log4j/KEYS; \
   gpg --batch --verify "/opt/log4j/$LOG4J_BIN.asc" "/opt/log4j/$LOG4J_BIN"; \
   tar -C /opt/log4j --extract --file "/opt/log4j/$LOG4J_BIN"; \
-  rm -f /opt/solr-$SOLR_VERSION/contrib/prometheus-exporter/lib/log4j-core-2.13.2.jar \
-    /opt/solr-$SOLR_VERSION/contrib/prometheus-exporter/lib/log4j-api-2.13.2.jar \
-    /opt/solr-$SOLR_VERSION/contrib/prometheus-exporter/lib/log4j-slf4j-impl-2.13.2.jar \
-    /opt/solr-$SOLR_VERSION/server/lib/ext/log4j-core-2.13.2.jar \
-    /opt/solr-$SOLR_VERSION/server/lib/ext/log4j-1.2-api-2.13.2.jar \
-    /opt/solr-$SOLR_VERSION/server/lib/ext/log4j-api-2.13.2.jar \
-    /opt/solr-$SOLR_VERSION/server/lib/ext/log4j-web-2.13.2.jar \
-    /opt/solr-$SOLR_VERSION/server/lib/ext/log4j-slf4j-impl-2.13.2.jar; \
+  rm -f /opt/solr-$SOLR_VERSION/contrib/prometheus-exporter/lib/log4j-core-*.jar \
+    /opt/solr-$SOLR_VERSION/contrib/prometheus-exporter/lib/log4j-api-*.jar \
+    /opt/solr-$SOLR_VERSION/contrib/prometheus-exporter/lib/log4j-slf4j-impl-*.jar \
+    /opt/solr-$SOLR_VERSION/server/lib/ext/log4j-core-*.jar \
+    /opt/solr-$SOLR_VERSION/server/lib/ext/log4j-1.2-api-*.jar \
+    /opt/solr-$SOLR_VERSION/server/lib/ext/log4j-api-*.jar \
+    /opt/solr-$SOLR_VERSION/server/lib/ext/log4j-web-*.jar \
+    /opt/solr-$SOLR_VERSION/server/lib/ext/log4j-slf4j-impl-*.jar; \
   cp /opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-core-${LOG4J_VER}.jar \
     /opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-api-${LOG4J_VER}.jar \
     /opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-slf4j-impl-${LOG4J_VER}.jar \

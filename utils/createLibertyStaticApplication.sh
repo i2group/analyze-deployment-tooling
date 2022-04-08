@@ -82,11 +82,11 @@ function remediateLog4jVulnerability() {
   # Remediate log4j vulnerability
   # CVE-2021-44228
   # TODO Improve - minior version changes?
-  local LOG4J_VER="2.17.1"
+  local LOG4J_VER="2.17.2"
   local LOG4J_BIN="apache-log4j-${LOG4J_VER}-bin.tar.gz"
   local LOG4J_BASE_URL="https://dlcdn.apache.org/logging"
   local LOG4J_ARCHIVE_URL="${LOG4J_BASE_URL}/log4j/${LOG4J_VER}/${LOG4J_BIN}"
-  local LOG4J_SHA512="b7e948df6c6f57d903d990de2cc0270c1537b711285e9b6b91280db6ace38418fced713785b2c20512dd9a4238c2d1d0ceb414d9936df2ca110ff14993ae04dc"
+  local LOG4J_SHA512="cb3c349ae03b94ee9f066c8a1eaf9810a5cd56b9357180e5ff9c13d66c2aceea8b9095650ac4304dbcccea6c1280f255e940fde23045b6598896b655594bd75f"
   local I2_COMMON_DIR="$THIRD_PARTY_DIR/resources/i2-common/lib"
   local TMP_LOG4J_FOLDER="/tmp/log4j"
 
@@ -102,10 +102,10 @@ function remediateLog4jVulnerability() {
 
   tar -C "${TMP_LOG4J_FOLDER}" --extract --file "${TMP_LOG4J_FOLDER}/${LOG4J_BIN}"
 
-  rm -f "${I2_COMMON_DIR}/log4j-core-2.14.0.jar" \
-    "${I2_COMMON_DIR}/log4j-1.2-api-2.14.0.jar" \
-    "${I2_COMMON_DIR}/log4j-api-2.14.0.jar" \
-    "${I2_COMMON_DIR}/log4j-slf4j-impl-2.14.0.jar"
+  rm -f "${I2_COMMON_DIR}"/log4j-core-*.jar \
+    "${I2_COMMON_DIR}"/log4j-1.2-api-*.jar \
+    "${I2_COMMON_DIR}"/log4j-api-*.jar \
+    "${I2_COMMON_DIR}"/log4j-slf4j-impl-*.jar
 
   cp "${TMP_LOG4J_FOLDER}/apache-log4j-${LOG4J_VER}-bin/log4j-core-${LOG4J_VER}.jar" \
     "${TMP_LOG4J_FOLDER}/apache-log4j-${LOG4J_VER}-bin/log4j-1.2-api-${LOG4J_VER}.jar" \

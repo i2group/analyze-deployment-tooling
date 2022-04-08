@@ -21,6 +21,7 @@
 # SOFTWARE.
 
 FROM mcr.microsoft.com/mssql/rhel/server:2019-CU11-rhel-8.3
+LABEL maintainer="i2 Group"
 
 USER root
 

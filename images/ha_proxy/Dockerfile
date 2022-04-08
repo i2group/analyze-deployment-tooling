@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 FROM haproxy:2.2
-
+LABEL maintainer="i2 Group"
 COPY docker-entrypoint.sh /opt/docker-entrypoint.sh
 COPY environment.sh /opt/environment.sh
 

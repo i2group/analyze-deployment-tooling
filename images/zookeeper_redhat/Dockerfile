@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 FROM adoptopenjdk/openjdk11:ubi-jre
-LABEL maintainer="IBM"
+LABEL maintainer="i2 Group"
 
 ENV ZOO_CONF_DIR=/conf \
     ZOO_DATA_DIR=/data \

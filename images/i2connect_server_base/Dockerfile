@@ -23,6 +23,7 @@
 FROM registry.access.redhat.com/ubi8/nodejs-14
 ARG I2CONNECT_SERVER_VERSION=^1.0.0
 
+LABEL maintainer="i2 Group"
 USER 0
 
 ENV NODE_ENV=production

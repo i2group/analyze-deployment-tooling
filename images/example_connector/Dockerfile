@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 FROM registry.access.redhat.com/ubi8/nodejs-14
-
+LABEL maintainer="i2 Group"
 USER 0
 
 COPY --chown=1001:0 docker-entrypoint.sh /opt/docker-entrypoint.sh

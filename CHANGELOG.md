@@ -12,16 +12,23 @@ The format is based on [Keep a Changelog], and this project adheres to
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
 
-## [2.1.1] - 12/01/2022
+## [2.1.2] - 31/03/2022
+
+### Security
+
+- Updated the Liberty and Solr images to use Log4j2 version 2.17.2 to remediate https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-44228
+  - To remediate the CVE, you must rebuild the Docker images in your environment. To rebuild the Docker images, complete the instructions [Updating to the latest version of the analyze-containers repository](https://i2group.github.io/analyze-containers/content/managing_update_env.html).
+
+[2.1.2]: https://github.com/i2group/analyze-containers/tree/v2.1.2
+
+## 2.1.1[Deprecated] - 12/01/2022
 
 ### Security
 
 - Updated the Liberty and Solr images to use Log4j2 version 2.17.1 to remediate https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-44228
   - To remediate the CVE, you must rebuild the Docker images in your environment. To rebuild the Docker images, complete the instructions [Updating to the latest version of the analyze-containers repository](https://i2group.github.io/analyze-containers/content/managing_update_env.html).
 
-[2.1.1]: https://github.com/i2group/analyze-containers/tree/v2.1.1
-
-## [2.1.0] - 06/10/2021
+## 2.1.0[Deprecated] - 06/10/2021
 
 ### Added
 
@@ -35,10 +42,8 @@ The format is based on [Keep a Changelog], and this project adheres to
 - Additional command line tools required.
   - See [Updating to the latest version of the analyze-containers repository](https://i2group.github.io/analyze-containers/content/managing_update_env.md).
 
-[2.1.0]: https://github.com/i2group/analyze-containers/tree/v2.1.0
 
-
-## [2.0.0] - 23/07/2021
+## 2.0.0[Deprecated] - 23/07/2021
 
 ### Added
 
@@ -50,18 +55,14 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 - Moved `environments/pre-prod` to `examples/pre-prod`
 
-[2.0.0]: https://github.com/i2group/analyze-containers/tree/v2.0.0
-
-## [1.1.0] - 18/02/2021
+## 1.1.0[Deprecated] - 18/02/2021
 
 ### Added
 
 - Walkthroughs to demonstrate backup and restore procedure
 - Updated for compatibility with i2 Analyze 4.3.3.1
 
-[1.1.0]: https://github.com/i2group/analyze-containers/tree/v1.1.0
-
-## [1.0.1] - 29/01/2021
+## 1.0.1[Deprecated] - 29/01/2021
 
 ### Added
 
@@ -74,9 +75,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 - environments/pre-prod/walkthroughs/change-management/ingestDataWalkthrough.sh fixed to ingest all of the data in the example data set
 - Broken links in markdown documentation
 
-[1.0.1]: https://github.com/i2group/analyze-containers/tree/v1.0.1
-
-## [1.0.0] - 17/12/2020
+## 1.0.0[Deprecated] - 17/12/2020
 
 ### Added
 
@@ -85,8 +84,6 @@ The format is based on [Keep a Changelog], and this project adheres to
 - Scripts to deploy all EIA components in Docker containers
 - Scripts to demonstrate secrets management and full end to end encryption
 - Scripts to demonstrate configuration change management across the deployment
-
-[1.0.0]: https://github.com/i2group/analyze-containers/tree/v1.0.0
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html

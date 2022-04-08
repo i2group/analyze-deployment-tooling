@@ -252,6 +252,9 @@ function updateLog4jFile() {
   # Create tmp log4j2 file
   cp "${log4j2_file_path}" "${tmp_log4j2_file_path}"
 
+  # Remove any new line breaking xml element
+  xmlstarlet edit -L -u '//text()' -x 'normalize-space()' "${tmp_log4j2_file_path}"
+
   # Creating heredocs
   cat > "${properties_heredoc_file_path}" <<'EOF'
     <Property name="i2_rootDir">${sys:apollo.log.dir}/opal-services</Property>

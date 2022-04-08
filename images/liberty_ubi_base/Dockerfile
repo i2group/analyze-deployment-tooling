@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 FROM ibmcom/websphere-liberty:full-java11-openj9-ubi
+LABEL maintainer="i2 Group"
 
 # Copy server.datasource-db2.xml & server.datasource-sqlserver.xml
 COPY --chown=1001:0 application/server.datasources.db2.xml /opt/ibm/wlp/usr/servers/defaultServer/db2.xml

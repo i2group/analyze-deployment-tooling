@@ -22,6 +22,7 @@
 
 FROM ibmcom/db2:11.5.6.0
 
+LABEL maintainer="i2 Group"
 USER root
 
 COPY docker-entrypoint.sh /opt/docker-entrypoint.sh
