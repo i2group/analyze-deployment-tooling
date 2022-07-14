@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="../../styles/docfx.css">
     <link rel="stylesheet" href="../../styles/main.css">
     <meta property="docfx:navrel" content="../../toc.html">
-    <meta property="docfx:tocrel" content="../../guidetoc/toc.html">
+    <meta property="docfx:tocrel" content="../toc.html">
     
     <meta property="docfx:rel" content="../../">
     
@@ -92,7 +92,7 @@
 <p>The <em>configured image</em> is built from the base image. The configured image contains the i2 Analyze application and Liberty configuration that is required to start the i2 Analyze application. When you change the configuration, the configured image must be rebuilt to reflect the changes.</p>
 <h3 id="dockerbuildcommand"> Docker build command</h3>
 <p>The configured image is built from the Dockerfile in <code>images/liberty_ubi_combined</code>. The following <code>docker build</code> command builds the configured image:</p>
-<pre><code class="lang-bash">docker build -t liberty_configured_redhat images/liberty_ubi_combined --build-arg BASE_IMAGE=&quot;liberty_redhat&quot;
+<pre><code class="lang-bash">docker build -t &quot;liberty_configured_redhat:4.3.4&quot; images/liberty_ubi_combined --build-arg BASE_IMAGE=&quot;liberty_redhat:4.3.4&quot;
 </code></pre><p>An example of providing the configuration to the classes directory and building the image is included in the <code>buildLibertyConfiguredImage</code> function in the <code>serverFunctions.sh</code> script.</p>
 <h2 id="runningalibertycontainer"> Running a Liberty container</h2>
 <p>A Liberty container uses the configured image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to Liberty on the container. The environment variables are described in <a href="#environmentvariables">environment variables</a></p>
@@ -104,7 +104,7 @@
   --network &quot;eia&quot; \
   --net-alias &quot;liberty1.eia&quot; \
   -p &quot;9045:9443&quot; \
-  -v &quot;/dev-environment-secrets/simulated-secret-store/liberty1:/run/secrets&quot; \
+  -v &quot;liberty1_secrets:/run/secrets&quot; \
   -v &quot;liberty1_data:/data&quot; \
   -e LICENSE=&quot;accept&quot; \
   -e FRONT_END_URI=&quot;https://liberty.eia:9045/opal&quot; \
@@ -145,9 +145,9 @@
 <p>A named volume is used to persist data, which is generated and used in the Liberty container, outside of the container.</p>
 <p>To configure the Liberty container to use the volume, specify the <code>-v</code> option with the name of the volume and the path where the directory is mounted in the container. By setting <code>-v</code> option in the docker run command, a named volume is created. For Liberty, the directory that is mounted must be <code>/data</code>, this directory folder stores: jobs, record groups and charts.</p>
 <p>For example:</p>
-<pre><code class="lang-sh">-v liberty_data:/data
-</code></pre><h3 id="bindmounts"> Bind mounts</h3>
-<p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access ZooKeeper, the database, and the certificates used in SSL.<br>The directory is mounted to a location in the container defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>ZOO_DIGEST_USERNAME_FILE</code> to locate the secrets.<br>In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files. This is achieved by using a bind mount. In production this would not be required.</p>
+<pre><code class="lang-sh">-v liberty_data:/data \
+-v liberty1_secrets:/run/secrets
+</code></pre><p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access ZooKeeper, the database, and the certificates used in SSL.<br>The directory is used to update the named volume location defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>ZOO_DIGEST_USERNAME_FILE</code> to locate the secrets.<br>In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files.</p>
 <h3 id="environmentvariables"> Environment variables</h3>
 <p>To configure the Liberty server, you provide environment variables to the Docker container in the <code>docker run</code> command.</p>
 <p>The following table describes the supported environment variables that you can use:</p>

@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="../../styles/docfx.css">
     <link rel="stylesheet" href="../../styles/main.css">
     <meta property="docfx:navrel" content="../../toc.html">
-    <meta property="docfx:tocrel" content="../../guidetoc/toc.html">
+    <meta property="docfx:tocrel" content="../toc.html">
     
     <meta property="docfx:rel" content="../../">
     
@@ -84,7 +84,7 @@
 <p>The ZooKeeper image is built from the Dockerfile located in <code>images/zookeeper_redhat</code>.</p>
 <h3 id="dockerbuildcommand"> Docker build command</h3>
 <p>The The following <code>docker build</code> command builds the ZooKeeper image:</p>
-<pre><code class="lang-bash">docker build -t zookeeper_redhat images/zookeeper_redhat
+<pre><code class="lang-bash">docker build -t &quot;zookeeper_redhat:4.3.4&quot; images/zookeeper_redhat
 </code></pre><h2 id="runningazookeepercontainer"> Running a ZooKeeper container</h2>
 <p>A ZooKeeper container uses the ZooKeeper image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to ZooKeeper on the container. The environment variables are described in <a href="#environmentvariables">environment variables</a>.</p>
 <p>For more information about the command, see <a href="https://docs.docker.com/engine/reference/run/">docker run reference</a>.</p>
@@ -102,7 +102,7 @@
    -v &quot;zk1_data:/data&quot; \
    -v &quot;zk1_datalog:/datalog&quot; \
    -v &quot;zk1_logs:/logs&quot; \
-   -v &quot;/dev-environment-secrets/simulated-secret-store/zk1:/run/secrets&quot; \
+   -v &quot;zk1_secrets:/run/secrets&quot; \
    -e &quot;ZOO_SERVERS=server.1=zk1.eia:2888:3888 server.2=zk2.eia:2888:3888 server.3=zk3.eia:2888:3888&quot; \
    -e &quot;ZOO_MY_ID=1&quot; \
    -e &quot;ZOO_SECURE_CLIENT_PORT=2281&quot; \
@@ -112,7 +112,7 @@
    -e &quot;SSL_PRIVATE_KEY_FILE=/run/secrets/server.key&quot; \
    -e &quot;SSL_CERTIFICATE_FILE=/run/secrets/server.cer&quot; \
    -e &quot;SSL_CA_CERTIFICATE_FILE=/run/secrets/CA.cer&quot; \
-   &quot;zookeeper_redhat:latest&quot;
+   &quot;zookeeper_redhat:4.3.4&quot;
 </code></pre><p><em>Note:</em> <code>SERVER_SSL</code> variable is set based on the <code>SOLR_ZOO_SSL_CONNECTION</code> switch, see <a href="#environmentvariables">Environment variables</a>.</p>
 <h3 id="zk_ports"> ​ZooKeeper Service Ports</h3>
 <p>Default ports used by ZooKeeper are:</p>
@@ -145,6 +145,7 @@ For example:</p>
 <pre><code class="lang-sh">-v zk1_data:/data \
 -v zk1_datalog:/datalog \
 -v zk1_log:/logs \
+-v zk1_secrets:/run/secrets
 </code></pre><p>A unique volume name must be used for each ZooKeeper container.</p>
 <p>A bind mount can be used instead of the named volume:
 For example:</p>
@@ -152,9 +153,8 @@ For example:</p>
 -v /var/zk/datalog:/datalog \
 -v /var/zk/logs:/logs \
 </code></pre><p>A unique bind mount must be used for each ZooKeeper container.</p>
-<h3 id="bindmounts"> Bind mounts</h3>
-<p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access zookeeper and certificates used in SSL.<br>The directory is mounted to a location in the container defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>SSL_PRIVATE_KEY_FILE</code> to locate the secrets.
-In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files. This is achieved by using a bind mount. In production this would not be required.</p>
+<p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access zookeeper and certificates used in SSL.<br>The directory is used to update the named volume location defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>SSL_PRIVATE_KEY_FILE</code> to locate the secrets.
+In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files.</p>
 <h3 id="environmentvariables"> Environment variables</h3>
 <p>To configure ZooKeeper, you can provide environment variables to the Docker container in the <code>docker run</code> command. The <code>zoo.cfg</code> configuration file for ZooKeeper is generated from the environment variables passed to the container.</p>
 <p>The following table describes the mandatory environment variables for running ZooKeeper in replicated mode:</p>

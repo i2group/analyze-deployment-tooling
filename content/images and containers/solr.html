@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="../../styles/docfx.css">
     <link rel="stylesheet" href="../../styles/main.css">
     <meta property="docfx:navrel" content="../../toc.html">
-    <meta property="docfx:tocrel" content="../../guidetoc/toc.html">
+    <meta property="docfx:tocrel" content="../toc.html">
     
     <meta property="docfx:rel" content="../../">
     
@@ -90,7 +90,7 @@
 <h3 id="a-namea-docker-build-command"><a name=""></a> Docker build command</h3>
 <p>The Solr image is built from the Dockerfile in <code>images/solr_redhat</code>.
 The following <code>docker build</code> command builds the Solr image:</p>
-<pre><code class="lang-bash">docker build -t solr_redhat images/solr_redhat
+<pre><code class="lang-bash">docker build -t &quot;solr_redhat:4.3.4&quot; images/solr_redhat
 </code></pre><p>For examples of the build commands, see <code>buildImages.sh</code> script. </p>
 <h2 id="runningasolrcontainer"> Running a Solr container</h2>
 <p>A Solr container uses the Solr image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to Solr on the container. The environment variables are described in <a href="#environmentvariables">environment variables</a></p>
@@ -104,7 +104,7 @@ The following <code>docker build</code> command builds the Solr image:</p>
    --init \
    -p 8983:8983 \
    -v &quot;solr1_data:/var/solr&quot; \
-   -v &quot;/dev-environment-secrets/simulated-secret-store/solr1:/run/secrets&quot; \
+   -v &quot;solr1_secrets:/run/secrets&quot; \
    -e ZK_HOST=&quot;zk1.eia:2281,zk2.eia:2281,zk3.eia:2281&quot; \
    -e SOLR_HOST=&quot;solr1.eia&quot; \
    -e ZOO_DIGEST_USERNAME=&quot;solr&quot; \
@@ -116,7 +116,7 @@ The following <code>docker build</code> command builds the Solr image:</p>
    -e SSL_PRIVATE_KEY_FILE=&quot;/run/secrets/server.key&quot; \
    -e SSL_CERTIFICATE_FILE=&quot;/run/secrets/server.cer&quot; \
    -e SSL_CA_CERTIFICATE_FILE=&quot;/run/secrets/CA.cer&quot; \
-   &quot;solr_redhat&quot;
+   &quot;solr_redhat:4.3.4&quot;
 </code></pre><p>For an example of the <code>docker run</code> command, see <a href="https://github.com/i2group/analyze-containers/blob/main/utils/serverFunctions.sh">serverFunctions.sh</a>. The <code>runSolr</code> function takes the following arguments to support running multiple Solr containers:</p>
 <ol>
 <li><code>CONTAINER</code> - The name for the container.</li>
@@ -131,12 +131,12 @@ The following <code>docker build</code> command builds the Solr image:</p>
 <p>To configure the Solr container to use the volume, specify the <code>-v</code> option with the name of the volume and the path where the directory is mounted in the container. By setting <code>-v</code> option in the docker run command, a named volume is created. For Solr, the directory that must be mounted is <code>/var/solr</code>.
 For example:</p>
 <pre><code class="lang-sh">-v solr1_data:/var/solr \
--v solr_backup:/backup 
+-v solr_backup:/backup \
+-v solr1_secrets:/run/secrets
 </code></pre><p>A unique volume name must be used for each Solr container.</p>
 <p>For more information, see <a href="https://github.com/docker-solr/docker-solr#how-the-image-works">How the image works</a>.</p>
-<h3 id="bindmounts"> Bind mounts</h3>
-<p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access zookeeper and certificates used in SSL.<br>The directory is mounted to a location in the container defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>ZOO_DIGEST_USERNAME_FILE</code> to locate the secrets.
-In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files. This is achieved by using a bind mount. In production this would not be required.</p>
+<p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access zookeeper and certificates used in SSL.<br>The directory is used to update the named volume location defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>ZOO_DIGEST_USERNAME_FILE</code> to locate the secrets.
+In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files.</p>
 <h3 id="environmentvariables"> Environment variables</h3>
 <p>To configure Solr, you can provide environment variables to the Docker container in the <code>docker run</code> command.</p>
 <h4 id="solr-1"> Solr</h4>

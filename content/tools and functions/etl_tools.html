@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="../../styles/docfx.css">
     <link rel="stylesheet" href="../../styles/main.css">
     <meta property="docfx:navrel" content="../../toc.html">
-    <meta property="docfx:tocrel" content="../../guidetoc/toc.html">
+    <meta property="docfx:tocrel" content="../toc.html">
     
     <meta property="docfx:rel" content="../../">
     
@@ -85,7 +85,7 @@
 <h2 id="buildinganetlclientimage"> Building an ETL Client image</h2>
 <p>The ETL client image is built from the Dockerfile in <code>images/etl_client</code>.</p>
 <p>The following <code>docker run</code> command builds the configured image:</p>
-<pre><code class="lang-bash">docker build -t &quot;etl_client&quot; &quot;images/etl_client&quot;
+<pre><code class="lang-bash">docker build -t &quot;etl_client:4.3.4&quot; &quot;images/etl_client&quot;
 </code></pre><h2 id="addinformationstoreingestionsource"> Add Information Store ingestion source</h2>
 <p>The <code>addInformationStoreIngestionSource</code> tool defines an ingestion source in the Information Store. For more information about ingestion sources in the Information Store, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=ingestion-defining-source">Defining an ingestion source</a>.</p>
 <p>You must provide the following arguments to the tool:</p>
