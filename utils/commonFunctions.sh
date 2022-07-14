@@ -32,7 +32,7 @@ function deleteContainer() {
   local max_retries=10
 
   # identify if name or id supplied as $1 exists
-  container_id="$(docker ps -aq -f network="${DOMAIN_NAME}" -f name="${container_name_or_id}")"
+  container_id="$(docker ps -aq -f network="${DOMAIN_NAME}" -f name="^${container_name_or_id}$")"
   if [[ -z "${container_id}" ]]; then
     container_id="$(docker ps -aq -f network="${DOMAIN_NAME}" -f id="${container_name_or_id}")"
     if [[ -z "${container_id}" ]]; then
@@ -43,11 +43,11 @@ function deleteContainer() {
   container_name="$(docker ps -aq --format "{{.Names}}" -f id="${container_id}")"
   print "Stopping ${container_name} container"
   while ! docker stop "${container_name_or_id}"; do
-    if (( "${max_retries}" == 0 )); then
+    if ((max_retries == 0)); then
       printErrorAndExit "Unable to stop container '${container_name}', exiting script"
     else
       echo "[WARN] Having issues stopping container '${container_name}', retrying..."
-      ((max_retries="${max_retries}"-1))
+      max_retries=$((max_retries - 1))
     fi
     sleep 1s
   done
@@ -57,7 +57,7 @@ function deleteContainer() {
 
 function forceDeleteContainer() {
   local container_name_or_id="$1"
-  
+
   docker rm -f "${container_name_or_id}" &>/dev/null
 }
 
@@ -68,12 +68,12 @@ function checkDeploymentIsLive() {
 
   if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
     case "${DB_DIALECT}" in
-      db2)
-        container_names+=("${DB2_SERVER_CONTAINER_NAME}")
-        ;;
-      sqlserver)
-        container_names+=("${SQL_SERVER_CONTAINER_NAME}")
-        ;;
+    db2)
+      container_names+=("${DB2_SERVER_CONTAINER_NAME}")
+      ;;
+    sqlserver)
+      container_names+=("${SQL_SERVER_CONTAINER_NAME}")
+      ;;
     esac
   fi
 
@@ -102,7 +102,7 @@ function replaceXmlElementWithHeredoc() {
   local xml_element="$1"
   local heredoc_file_path="$2"
   local log4j2_file_path="$3"
-  # replace string with contents of a heredoc file, sed explantation:
+  # replace string with contents of a heredoc file, sed explanation:
   # line 1: when you find ${xml_element}
   # line 2: remove ${xml_element}
   # line 3: replace with the content of a file
@@ -121,7 +121,7 @@ function appendLoggingXmlElementWithHeredoc() {
   local loggers_appender_ref="$4"
   local tmp_log4j2_file_path="/tmp/log4j2.xml"
 
-  if grep -q -E -o -m 1 "${loggers_name}" < "${tmp_log4j2_file_path}"; then
+  if grep -q -E -o -m 1 "${loggers_name}" <"${tmp_log4j2_file_path}"; then
     # Force set logging level
     sed -i -E "s~(${loggers_name} level=\")[^\"]+~\1${loggers_level}~g" "${tmp_log4j2_file_path}"
     # Append AppenderRef for logger
@@ -147,26 +147,26 @@ function addConfigAdminToSecuritySchema() {
   readarray -t security_dimension_ids < <(xmlstarlet sel -t -v "/tns:SecuritySchema/SecurityDimensions/AccessSecurityDimensions/Dimension/@Id" "${security_schema_file_path}")
   for dimension_id in "${security_dimension_ids[@]}"; do
     readarray -t security_dimension_values < <(xmlstarlet sel -t -v "/tns:SecuritySchema/SecurityDimensions/AccessSecurityDimensions/Dimension[@Id='${dimension_id}']/DimensionValue/@Id" "${security_schema_file_path}")
-    security_value_map[${dimension_id}]="${security_dimension_values[*]}"
+    security_value_map["${dimension_id}"]="${security_dimension_values[*]}"
   done
 
   xmlstarlet edit -L \
     --subnode "/tns:SecuritySchema/SecurityPermissions" --type elem -n "GroupPermissions" \
-    --insert  "/tns:SecuritySchema/SecurityPermissions/GroupPermissions[last()]" --type attr -n "UserGroup" --value "${I2_ANALYZE_ADMIN}"  \
+    --insert "/tns:SecuritySchema/SecurityPermissions/GroupPermissions[last()]" --type attr -n "UserGroup" --value "${I2_ANALYZE_ADMIN}" \
     "${security_schema_file_path}"
 
   for dimension_id in "${!security_value_map[@]}"; do
-    IFS=' ' read -r -a dimension_values <<<"${security_value_map[${dimension_id}]}"
+    IFS=' ' read -r -a dimension_values <<<"${security_value_map["${dimension_id}"]}"
     xmlstarlet edit -L \
       --subnode "/tns:SecuritySchema/SecurityPermissions/GroupPermissions[last()]" --type elem -n "Permissions" \
-      --insert  "/tns:SecuritySchema/SecurityPermissions/GroupPermissions[last()]/Permissions[last()]" --type attr -n "Dimension" --value "${dimension_id}" \
+      --insert "/tns:SecuritySchema/SecurityPermissions/GroupPermissions[last()]/Permissions[last()]" --type attr -n "Dimension" --value "${dimension_id}" \
       "${security_schema_file_path}"
 
     for dimension_value in "${dimension_values[@]}"; do
       xmlstarlet edit -L \
         --subnode "/tns:SecuritySchema/SecurityPermissions/GroupPermissions[last()]/Permissions[last()]" --type elem -n "Permission" \
-        --insert  "/tns:SecuritySchema/SecurityPermissions/GroupPermissions[last()]/Permissions[last()]/Permission[last()]" --type attr -n "DimensionValue" --value "${dimension_value}" \
-        --insert  "/tns:SecuritySchema/SecurityPermissions/GroupPermissions[last()]/Permissions[last()]/Permission[last()]" --type attr -n "Level" --value "UPDATE" \
+        --insert "/tns:SecuritySchema/SecurityPermissions/GroupPermissions[last()]/Permissions[last()]/Permission[last()]" --type attr -n "DimensionValue" --value "${dimension_value}" \
+        --insert "/tns:SecuritySchema/SecurityPermissions/GroupPermissions[last()]/Permissions[last()]/Permission[last()]" --type attr -n "Level" --value "UPDATE" \
         "${security_schema_file_path}"
     done
   done
@@ -256,7 +256,7 @@ function updateLog4jFile() {
   xmlstarlet edit -L -u '//text()' -x 'normalize-space()' "${tmp_log4j2_file_path}"
 
   # Creating heredocs
-  cat > "${properties_heredoc_file_path}" <<'EOF'
+  cat >"${properties_heredoc_file_path}" <<'EOF'
     <Property name="i2_rootDir">${sys:apollo.log.dir}/opal-services</Property>
     <Property name="i2_validationMessagesPatternLayout">%d - %m%n</Property>
     <Property name="i2_archiveDir">${i2_rootDir}/${archiveDirFormat}</Property>
@@ -265,7 +265,7 @@ function updateLog4jFile() {
     <Property name="i2_maxRollover">10</Property>
   </Properties>
 EOF
-  cat > "${appenders_heredoc_file_path}" <<'EOF'
+  cat >"${appenders_heredoc_file_path}" <<'EOF'
     <RollingFile name="i2_VALIDATIONLOG" append="true">
       <FileName>${i2_rootDir}/IBM_i2_Validation.log</FileName>
       <FilePattern>"${i2_archiveDir}/IBM_i2_Validation-${i2_archiveFileDateFormat}.log</FilePattern>
@@ -286,32 +286,32 @@ EOF
     </RollingFile>
   </Appenders>
 EOF
-  cat > "${loggers_heredoc_console_file_path}" <<'EOF'
+  cat >"${loggers_heredoc_console_file_path}" <<'EOF'
     <!-- i2Analyze Validation Logging -->
     <Logger name="com.i2group.apollo.common.toolkit.internal.ConsoleLogger" level="WARN" additivity="true">
       <AppenderRef ref="i2_VALIDATIONLOG" />
     </Logger>
   </Loggers>
 EOF
-  cat > "${loggers_heredoc_availability_file_path}" <<'EOF'
+  cat >"${loggers_heredoc_availability_file_path}" <<'EOF'
     <Logger name="com.i2group.disco.sync.ComponentAvailabilityCheck" level="WARN" additivity="true">
       <AppenderRef ref="i2_VALIDATIONLOG" />
     </Logger>
   </Loggers>
 EOF
-  cat > "${loggers_heredoc_mapping_file_path}" <<'EOF'
+  cat >"${loggers_heredoc_mapping_file_path}" <<'EOF'
     <Logger name="com.i2group.opal.daod.mapping.internal" level="WARN" additivity="true">
       <AppenderRef ref="i2_VALIDATIONLOG" />
     </Logger>
   </Loggers>
 EOF
-  cat > "${loggers_heredoc_lifecycle_file_path}" <<'EOF'
+  cat >"${loggers_heredoc_lifecycle_file_path}" <<'EOF'
     <Logger name="com.i2group.disco.servlet.ApplicationLifecycleManager" level="INFO" additivity="true">
       <AppenderRef ref="i2_STATUSLOG" />
     </Logger>
   </Loggers>
 EOF
-  cat > "${loggers_heredoc_statehandler_file_path}" <<'EOF'
+  cat >"${loggers_heredoc_statehandler_file_path}" <<'EOF'
     <Logger name="com.i2group.disco.sync.ApplicationStateHandler" level="INFO" additivity="true">
       <AppenderRef ref="i2_STATUSLOG" />
     </Logger>
@@ -335,31 +335,32 @@ EOF
 
   # Remove tmp heredoc files
   rm "${properties_heredoc_file_path}" \
-  "${appenders_heredoc_file_path}" \
-  "${loggers_heredoc_console_file_path}" \
-  "${loggers_heredoc_availability_file_path}" \
-  "${loggers_heredoc_mapping_file_path}" \
-  "${loggers_heredoc_lifecycle_file_path}" \
-  "${loggers_heredoc_statehandler_file_path}"
+    "${appenders_heredoc_file_path}" \
+    "${loggers_heredoc_console_file_path}" \
+    "${loggers_heredoc_availability_file_path}" \
+    "${loggers_heredoc_mapping_file_path}" \
+    "${loggers_heredoc_lifecycle_file_path}" \
+    "${loggers_heredoc_statehandler_file_path}"
 }
 
 function waitForLibertyToBeLive() {
   print "Waiting for i2Analyze service to be live"
-  local MAX_TRIES=10
+  local MAX_TRIES=15
 
   local ssl_ca_certificate
-  getSecret "certificates/externalCA/CA.cer" > /tmp/CA.cer
+  getSecret "certificates/externalCA/CA.cer" >/tmp/CA.cer
 
   for i in $(seq 1 "${MAX_TRIES}"); do
     if curl \
-        -s -S -o /tmp/response.txt \
-        --cookie /tmp/cookie.txt \
-        --write-out "%{http_code}" \
-        --silent \
-        --cacert /tmp/CA.cer \
-        "${FRONT_END_URI}/api/v1/health/live" > /tmp/http_code.txt; then
-      http_status_code=$(cat /tmp/http_code.txt)
-      if [[ "${http_status_code}" -eq 200 ]]; then
+      -L --max-redirs 5 \
+      -s -S -o /tmp/response.txt \
+      --cookie /tmp/cookie.txt \
+      --write-out "%{http_code}" \
+      --silent \
+      --cacert /tmp/CA.cer \
+      "${FRONT_END_URI}/api/v1/health/live" >/tmp/http_code.txt; then
+      http_code=$(cat /tmp/http_code.txt)
+      if [[ "${http_code}" == "200" ]]; then
         echo "i2Analyze service is live"
         return 0
       else
@@ -367,7 +368,7 @@ function waitForLibertyToBeLive() {
       fi
     fi
     echo "i2Analyze service is NOT live (attempt: $i). Waiting..."
-    sleep 10
+    sleep 15
   done
   echo "Response from the /health/live endpoint: $(cat /tmp/response.txt)"
   docker logs --tail 50 "${LIBERTY1_CONTAINER_NAME}"
@@ -390,19 +391,19 @@ function checkLibertyStatus() {
   #  0005 is exception on startup
   #  0068 is waiting for component availability
   if docker exec "${LIBERTY1_CONTAINER_NAME}" bash -c "timeout 3m grep -q '0002\|0005\|0068' <(tail -f ${status_log_path})"; then
-      validation_messages=$(docker exec "${LIBERTY1_CONTAINER_NAME}" cat "${validation_log_path}")
-      if docker exec "${LIBERTY1_CONTAINER_NAME}" bash -c "grep -q '0002' <(cat ${status_log_path})"; then
-        if [[ -n "${validation_messages}" ]]; then
-          echo "${validation_messages}"
-          printWarn "${warn_message}"
-        fi
-      else
-        if [[ -n "${validation_messages}" ]]; then
-          echo "${validation_messages}"
-          printErrorAndExit "${errors_message}"
-        fi
+    validation_messages=$(docker exec "${LIBERTY1_CONTAINER_NAME}" cat "${validation_log_path}")
+    if docker exec "${LIBERTY1_CONTAINER_NAME}" bash -c "grep -q '0002' <(cat ${status_log_path})"; then
+      if [[ -n "${validation_messages}" ]]; then
+        echo "${validation_messages}"
+        printWarn "${warn_message}"
       fi
-      echo "No Validation errors detected."
+    else
+      if [[ -n "${validation_messages}" ]]; then
+        echo "${validation_messages}"
+        printErrorAndExit "${errors_message}"
+      fi
+    fi
+    echo "No Validation errors detected."
   else
     validation_messages=$(docker exec "${LIBERTY1_CONTAINER_NAME}" cat "${validation_log_path}")
     if [[ -z "${validation_messages}" ]]; then
@@ -419,7 +420,7 @@ function checkLibertyStatus() {
 # Arguments:
 #   The Asynchronous ID used to monitor the asynchronous operation.
 #######################################
-function waitForAsyncrhonousRequestStatusToBeCompleted() {
+function waitForAsynchronousRequestStatusToBeCompleted() {
   local async_id="$1"
   local tries=1
   local max_tries=30
@@ -437,12 +438,9 @@ function waitForAsyncrhonousRequestStatusToBeCompleted() {
     if [[ "${tries}" -ge "${max_tries}" ]]; then
       printErrorAndExit "ERROR: ${async_id} could not be completed: '${response}'"
     fi
-    ((tries++))
+    tries=$((tries + 1))
   done
 }
-
-
-
 
 #######################################
 # Wait for Solr to be live
@@ -596,7 +594,7 @@ function getZkQuorumEnsembleStatus() {
       response=$(runSolrClientCommand bash -c "curl -s --fail --cacert ${CONTAINER_CERTS_DIR}/CA.cer ${srvr_endpoint}")
       error=$(echo "${response}" | jq -r '.error')
       if [[ "${error}" == "null" ]]; then
-        ((online_count++))
+        online_count=$((online_count + 1))
       elif [[ "${error}" == "${not_serving_error}" ]]; then
         echo "DOWN"
         return
@@ -604,7 +602,7 @@ function getZkQuorumEnsembleStatus() {
     fi
   done
 
-  if ((online_count == "${#zookeepers[@]}")); then
+  if [[ "${online_count}" == "${#zookeepers[@]}" ]]; then
     echo "ACTIVE"
   else
     echo "DEGRADED"
@@ -618,7 +616,7 @@ function getZkQuorumEnsembleStatus() {
 #######################################
 function waitFori2AnalyzeServiceToBeLive() {
   local max_tries=50
-  local exit_code=0
+  local exit_code=1 # Initialize with DOWN
   local i2analyze_service_status
 
   print "Waiting for i2 Analyze service to be live"
@@ -634,6 +632,8 @@ function waitFori2AnalyzeServiceToBeLive() {
     elif [[ "${i2analyze_service_status}" == "DEGRADED" ]]; then
       echo "i2 Analyze service state: 'DEGRADED' (attempt: ${i}). Waiting..."
       exit_code=2
+    else
+      echo "${i2analyze_service_status}"
     fi
     sleep 10
   done
@@ -780,6 +780,16 @@ function print() {
 }
 
 #######################################
+# Prints an error and exists.
+# Arguments:
+#   1: The message
+#######################################
+function printError() {
+  printf "\n\e[31mERROR: %s\n" "$1" >&2
+  printf "\e[0m" >&2
+}
+
+#######################################
 # Prints an error message to the console,
 # then exit 1.
 # Arguments:
@@ -867,7 +877,7 @@ function createDsidPropertiesFile() {
   if [[ ! -f "${dsid_properties_file_path}" ]]; then
     print "Creating ${dsid_file_name} file"
     createFolder "${dsid_folder_path}"
-    echo "DataSourceId=$(uuidgen)" > "${dsid_properties_file_path}"
+    echo "DataSourceId=$(uuidgen)" >"${dsid_properties_file_path}"
   fi
 }
 
@@ -880,11 +890,11 @@ function stopContainer() {
   local container_name_or_id="$1"
   local max_retries=10
   while ! docker stop "${container_name_or_id}"; do
-    if (( "${max_retries}" == 0 )); then
+    if ((max_retries == 0)); then
       printErrorAndExit "Unable to stop container '${container_name_or_id}', exiting script"
     else
       echo "[WARN] Having issues stopping container '${container_name_or_id}', retrying..."
-      ((max_retries="${max_retries}"-1))
+      max_retries=$((max_retries - 1))
     fi
     sleep 1s
   done
@@ -899,11 +909,11 @@ function removeContainer() {
   local container_name_or_id="$1"
   local max_retries=10
   while ! docker rm "${container_name_or_id}"; do
-    if (( "${max_retries}" == 0 )); then
+    if ((max_retries == 0)); then
       printErrorAndExit "Unable to remove container '${container_name_or_id}', exiting script"
     else
       echo "[WARN] Having issues removing container '${container_name_or_id}', retrying..."
-      ((max_retries="${max_retries}"-1))
+      max_retries=$((max_retries - 1))
     fi
     sleep 1s
   done
@@ -916,11 +926,11 @@ function removeContainer() {
 #######################################
 function removeAllContainersForTheConfig() {
   local config_name="$1"
-  if docker network ls | grep -q -w "${DOMAIN_NAME}"; then
+  if [[ -n $(docker network ls -q --filter name="^${DOMAIN_NAME}$") ]]; then
     local container_ids
-    container_ids=$(docker ps -a -q -f network="${DOMAIN_NAME}" -f name="${config_name}")
+    container_ids=$(docker ps -a -q -f network="${DOMAIN_NAME}" -f name=".${config_name}_${CONTAINER_VERSION_SUFFIX}$")
     if [[ -n "${container_ids}" ]]; then
-      print "Removing containers running in the network (${DOMAIN_NAME}) with the config name (${config_name})"
+      print "Removing containers running in the network (${DOMAIN_NAME}) with the config name (${config_name}) and version (${I2ANALYZE_VERSION})"
       while IFS= read -r container_id; do
         deleteContainer "${container_id}"
       done <<<"${container_ids}"
@@ -939,18 +949,18 @@ function cleanUpDockerResources() {
 
 function deleteAllPreProdContainers() {
   local pre_prod_containers=(
-    "${ZK1_CONTAINER_NAME%.*}"
-    "${ZK2_CONTAINER_NAME%.*}"
-    "${ZK3_CONTAINER_NAME%.*}"
-    "${SOLR1_CONTAINER_NAME%.*}"
-    "${SOLR2_CONTAINER_NAME%.*}"
-    "${SOLR3_CONTAINER_NAME%.*}"
-    "${SQL_SERVER_CONTAINER_NAME%.*}"
-    "${LIBERTY1_CONTAINER_NAME%.*}"
-    "${LIBERTY2_CONTAINER_NAME%.*}"
-    "${LOAD_BALANCER_CONTAINER_NAME%.*}"
-    "${CONNECTOR1_CONTAINER_NAME%.*}"
-    "${CONNECTOR2_CONTAINER_NAME%.*}"
+    "${ZK1_CONTAINER_NAME%%.*}"
+    "${ZK2_CONTAINER_NAME%%.*}"
+    "${ZK3_CONTAINER_NAME%%.*}"
+    "${SOLR1_CONTAINER_NAME%%.*}"
+    "${SOLR2_CONTAINER_NAME%%.*}"
+    "${SOLR3_CONTAINER_NAME%%.*}"
+    "${SQL_SERVER_CONTAINER_NAME%%.*}"
+    "${LIBERTY1_CONTAINER_NAME%%.*}"
+    "${LIBERTY2_CONTAINER_NAME%%.*}"
+    "${LOAD_BALANCER_CONTAINER_NAME%%.*}"
+    "${CONNECTOR1_CONTAINER_NAME%%.*}"
+    "${CONNECTOR2_CONTAINER_NAME%%.*}"
   )
 
   for pre_prod_container in "${pre_prod_containers[@]}"; do
@@ -958,30 +968,44 @@ function deleteAllPreProdContainers() {
   done
 }
 
+function deleteAllContainers() {
+  local container_names container_name prefix
+
+  CONTAINER_NAMES_PREFIX=("etlclient" "i2atool" "zk" "solr" "sql" "db2" "liberty" "load_balancer" "exampleconnector")
+
+  print "Removing all containers"
+
+  IFS=' ' read -ra container_names <<<"$(docker ps --format "{{.Names}}" -f network="${DOMAIN_NAME}" | xargs)"
+  for container_name in "${container_names[@]}"; do
+    for prefix in "${CONTAINER_NAMES_PREFIX[@]}"; do
+      if [[ "${container_name}" == "${prefix}"* ]]; then
+        forceDeleteContainer "${container_name}"
+      fi
+    done
+  done
+}
+
 function stopConfigDevContainers() {
-  local config
-  local container_ids
-  local container_id
+  local container_names container_name prefix
 
-  for config_dir in "${ROOT_DIR}"/configs/*/ ; do
-    # get config name from the path
-    config=$(sed -e 's/.*\/configs\///' -e 's/\///' <<< "${config_dir}")
+  CONTAINER_NAMES_PREFIX=("etlclient" "i2atool" "zk" "solr" "sql" "db2" "liberty" "load_balancer" "exampleconnector")
 
-    # if not current config name
-    if [[ "${config}" != "${CONFIG_NAME}" ]]; then
-      print "Stopping containers for configuration: ${config}"
-      IFS=' ' read -ra container_ids <<<  "$(docker ps -a -q -f name="${config}" -f status=running | xargs)"
-      for container_id in "${container_ids[@]}"; do
-        stopContainer "${container_id}"
-      done
-    fi
+  print "Stopping config-dev containers"
+
+  IFS=' ' read -ra container_names <<<"$(docker ps --format "{{.Names}}" -f network="${DOMAIN_NAME}" | xargs)"
+  for container_name in "${container_names[@]}"; do
+    for prefix in "${CONTAINER_NAMES_PREFIX[@]}"; do
+      if [[ "${container_name}" == "${prefix}"* ]]; then
+        stopContainer "${container_name}"
+      fi
+    done
   done
 }
 
 function stopConnectorContainers() {
   local container_ids
 
-  IFS=' ' read -ra container_ids <<<  "$(docker ps -a -q -f name="${CONNECTOR_PREFIX}" -f status=running | xargs)"
+  IFS=' ' read -ra container_ids <<<"$(docker ps -q -f name="^${CONNECTOR_PREFIX}" | xargs)"
 
   print "Stopping connector containers"
   for container_id in "${container_ids[@]}"; do
@@ -995,20 +1019,20 @@ function restartDockerContainersForConfig() {
   local solr_restarted="false"
   local all_exited_container_names
 
-  IFS=' ' read -ra all_exited_container_names <<< "$(docker ps -a --format "{{.Names}}" -f name="${config_name}" -f status=exited | xargs)"
+  IFS=' ' read -ra all_exited_container_names <<<"$(docker ps -a --format "{{.Names}}" -f name=".${config_name}_${CONTAINER_VERSION_SUFFIX}$" -f status=exited | xargs)"
 
   if [[ "${#all_exited_container_names[@]}" -gt "0" ]]; then
     print "Restarting containers for config: ${config_name}"
     # Restarting containers
     for container_name in "${all_exited_container_names[@]}"; do
-      # if previusly deployed without the isotre don't start it up, should be handled later in the code if needed
+      # if previously deployed without the istore don't start it up, should be handled later in the code if needed
       if [[ "${container_name}" == "${SQL_SERVER_CONTAINER_NAME}" || "${container_name}" == "${DB2_SERVER_CONTAINER_NAME}" ]] && [[ "${PREVIOUS_DEPLOYMENT_PATTERN}" != *"store"* ]]; then
         continue
       fi
       docker start "${container_name}"
       if [[ "${container_name}" == "${SQL_SERVER_CONTAINER_NAME}" ]]; then
         database_restarted="true"
-      elif [[ "${container_name}"  == "${SOLR1_CONTAINER_NAME}" ]] || [[ "${container_name}" == "${ZK1_CONTAINER_NAME}" ]]; then
+      elif [[ "${container_name}" == "${SOLR1_CONTAINER_NAME}" ]] || [[ "${container_name}" == "${ZK1_CONTAINER_NAME}" ]]; then
         solr_restarted="true"
       fi
     done
@@ -1042,9 +1066,9 @@ function waitForUserReply() {
   while true; do
     read -r -p "${question} (y/n) " yn
     case $yn in
-      [Yy]* ) echo "" && break;;
-      [Nn]* ) exit 1;;
-      * ) ;;
+    [Yy]*) echo "" && break ;;
+    [Nn]*) exit 1 ;;
+    *) ;;
     esac
   done
 }
@@ -1058,9 +1082,8 @@ function waitForUserReply() {
 #######################################
 function quietlyRemoveDockerVolume() {
   local volume_to_delete="$1"
-  local docker_volumes
-  docker_volumes="$(docker volume ls -q)"
-  if grep -q ^"$volume_to_delete"$ <<<"$docker_volumes"; then
+
+  if grep -q ^"$volume_to_delete"$ <<<"$(docker volume ls -q)"; then
     docker volume rm "$volume_to_delete"
   fi
 }
@@ -1085,8 +1108,9 @@ function runSolrContainerWithBackupVolume() {
 function removeDockerVolumes() {
   print "Removing all associated volumes"
   quietlyRemoveDockerVolume "${SQL_SERVER_VOLUME_NAME}"
+  quietlyRemoveDockerVolume "${SQL_SERVER_BACKUP_VOLUME_NAME}"
   quietlyRemoveDockerVolume "${DB2_SERVER_VOLUME_NAME}"
-  quietlyRemoveDockerVolume "${DB_BACKUP_VOLUME_NAME}"
+  quietlyRemoveDockerVolume "${DB2_SERVER_BACKUP_VOLUME_NAME}"
   quietlyRemoveDockerVolume "${SOLR1_VOLUME_NAME}"
   quietlyRemoveDockerVolume "${SOLR2_VOLUME_NAME}"
   quietlyRemoveDockerVolume "${SOLR3_VOLUME_NAME}"
@@ -1111,7 +1135,7 @@ function removeDockerVolumes() {
 #######################################
 function createDockerNetwork() {
   local name=$1
-  if ! docker network ls | grep -q -w "${name}"; then
+  if [[ -z $(docker network ls -q --filter name="^${name}$") ]]; then
     print "Creating docker network: ${name}"
     docker network create "${name}"
   fi
@@ -1191,7 +1215,7 @@ function checkDeploymentPatternIsValid() {
 #   None
 #######################################
 function isI2ConnectDeploymentPattern() {
- if [[ $DEPLOYMENT_PATTERN == *"i2c"* ]]; then
+  if [[ $DEPLOYMENT_PATTERN == *"i2c"* ]]; then
     return 0
   else
     return 1
@@ -1213,17 +1237,17 @@ function checkContainersExist() {
   print "Checking all containers required for the deployment exist"
   if [[ "${PREVIOUS_DEPLOYMENT_PATTERN}" == *"store"* ]]; then
     case "${DB_DIALECT}" in
-      db2)
-        containers+=("${DB2_SERVER_CONTAINER_NAME}")
-        ;;
-      sqlserver)
-        containers+=("${SQL_SERVER_CONTAINER_NAME}")
-        ;;
+    db2)
+      containers+=("${DB2_SERVER_CONTAINER_NAME}")
+      ;;
+    sqlserver)
+      containers+=("${SQL_SERVER_CONTAINER_NAME}")
+      ;;
     esac
   fi
 
   for container in "${containers[@]}"; do
-    if [[ -z "$( docker ps -aq -f name="${container}")" ]]; then
+    if [[ -z "$(docker ps -aq -f name="^${container}$")" ]]; then
       echo "${container} does NOT exist"
       all_present=1
     fi
@@ -1246,10 +1270,10 @@ function checkConnectorContainersExist() {
     local connector_references_file="${LOCAL_USER_CONFIG_DIR}/connector-references.json"
     local connector_name connector_type
     local all_connector_names
-    IFS=' ' read -ra all_connector_names <<< "$( jq -r '.connectors[].name' < "${connector_references_file}" | xargs)"
+    IFS=' ' read -ra all_connector_names <<<"$(jq -r '.connectors[].name' <"${connector_references_file}" | xargs)"
     for connector_name in "${all_connector_names[@]}"; do
       connector_type=$(jq -r '.type' <"${CONNECTOR_IMAGES_DIR}/${connector_name}/connector-definition.json")
-      if [[ "${connector_type}" != "${EXTERNAL_CONNECTOR_TYPE}" && -z "$( docker ps -aq -f name="${CONNECTOR_PREFIX}${connector_name}")" ]]; then
+      if [[ "${connector_type}" != "${EXTERNAL_CONNECTOR_TYPE}" && -z "$(docker ps -aq -f name="^${CONNECTOR_PREFIX}${connector_name}$")" ]]; then
         echo "${CONNECTOR_PREFIX}${connector_name} does NOT exist"
         all_present=1
       fi
@@ -1271,11 +1295,11 @@ function setListOfConnectorsToUpdate() {
 
   # Included connectors
   if [[ -n "${INCLUDED_CONNECTORS}" ]]; then
-    IFS=" " read -r -a CONNECTOR_NAMES <<< "${INCLUDED_CONNECTORS[@]}"
+    IFS=" " read -r -a CONNECTOR_NAMES <<<"${INCLUDED_CONNECTORS[@]}"
   else
 
     # All connectors
-    for connector_image_dir in "${CONNECTOR_IMAGES_DIR}"/* ; do
+    for connector_image_dir in "${CONNECTOR_IMAGES_DIR}"/*; do
       [[ ! -d "${connector_image_dir}" ]] && continue
       connector_name="${connector_image_dir##*/}"
       CONNECTOR_NAMES+=("${connector_name}")
@@ -1287,7 +1311,7 @@ function setListOfConnectorsToUpdate() {
         for i in "${!CONNECTOR_NAMES[@]}"; do
           if [[ ${CONNECTOR_NAMES[i]} = "$excluded_connector" ]]; then
             unset 'CONNECTOR_NAMES[i]'
-        fi
+          fi
         done
       done
     fi
@@ -1316,11 +1340,11 @@ function setListOfExtensionsToUpdate() {
 
   # Included extensions
   if [[ -n "${INCLUDED_EXTENSIONS}" ]]; then
-    IFS=" " read -r -a EXTENSION_NAMES <<< "${INCLUDED_EXTENSIONS[@]}"
+    IFS=" " read -r -a EXTENSION_NAMES <<<"${INCLUDED_EXTENSIONS[@]}"
   else
 
     # All extensions in config-dev
-    readarray -t EXTENSION_NAMES < <( jq -r '.extensions[].name' < "${extension_references_file}")
+    readarray -t EXTENSION_NAMES < <(jq -r '.extensions[].name' <"${extension_references_file}")
 
     # All extensions minus excluded extensions
     if [[ -n "${EXCLUDED_EXTENSIONS}" ]]; then
@@ -1348,7 +1372,7 @@ function addToPropertiesFile() {
   {
     echo
     echo "${property}"
-  } >> "${properties_file}"
+  } >>"${properties_file}"
 }
 
 function addDataSourcePropertiesIfNecessary() {
@@ -1364,10 +1388,10 @@ function addDataSourcePropertiesIfNecessary() {
     datasource_name="Opal DAOD"
   fi
 
-  if ! grep -xq "DataSourceName=.*" "${properties_file}" ; then
+  if ! grep -xq "DataSourceName=.*" "${properties_file}"; then
     addToPropertiesFile "DataSourceName=${datasource_name}" "${properties_file}"
   fi
-  if ! grep -xq "TopologyId=.*" "${properties_file}" ; then
+  if ! grep -xq "TopologyId=.*" "${properties_file}"; then
     addToPropertiesFile "TopologyId=${topology_id}" "${properties_file}"
   fi
 }
@@ -1463,11 +1487,11 @@ function createDataSourceId() {
 
 function generateBoilerPlateFiles() {
   local all_patterns_config_dir="${LOCAL_TOOLKIT_DIR}/examples/configurations/all-patterns/configuration"
-  local toolkit_common_clases_dir="${all_patterns_config_dir}/fragments/common/WEB-INF/classes"
+  local toolkit_common_classes_dir="${all_patterns_config_dir}/fragments/common/WEB-INF/classes"
   local toolkit_opal_services_classes_dir="${all_patterns_config_dir}/fragments/opal-services/WEB-INF/classes"
 
-  cp -p "${toolkit_common_clases_dir}/ApolloServerSettingsMandatory.properties" "${GENERATED_LOCAL_CONFIG_DIR}"
-  cp -p "${toolkit_common_clases_dir}/ApolloServerSettingsConfigurationSet.properties" "${GENERATED_LOCAL_CONFIG_DIR}"
+  cp -p "${toolkit_common_classes_dir}/ApolloServerSettingsMandatory.properties" "${GENERATED_LOCAL_CONFIG_DIR}"
+  cp -p "${toolkit_common_classes_dir}/ApolloServerSettingsConfigurationSet.properties" "${GENERATED_LOCAL_CONFIG_DIR}"
 
   echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?><server>
     <webAppSecurity overrideHttpAuthMethod=\"FORM\" allowAuthenticationFailOverToAuthMethod=\"FORM\"  loginFormURL=\"opal/login.html\" loginErrorURL=\"opal/login.html?failed\"/>
@@ -1482,16 +1506,16 @@ function generateBoilerPlateFiles() {
   </server>" >"${GENERATED_LOCAL_CONFIG_DIR}/server.extensions.dev.xml"
 }
 
-function generateConnectorsArtefacts() {
-  local connector_references_file=${LOCAL_USER_CONFIG_DIR}/connector-references.json
+function generateConnectorsArtifacts() {
+  local connector_references_file="${LOCAL_USER_CONFIG_DIR}/connector-references.json"
 
-  local connector_definitions_file=${GENERATED_LOCAL_CONFIG_DIR}/connectors-template.json
-  local gateway_properties_file=${GENERATED_LOCAL_CONFIG_DIR}/analyze-connect.properties
-  local temp_file=${LOCAL_USER_CONFIG_DIR}/temp.json
+  local connector_definitions_file="${GENERATED_LOCAL_CONFIG_DIR}/connectors-template.json"
+  local gateway_properties_file="${GENERATED_LOCAL_CONFIG_DIR}/analyze-connect.properties"
+  local temp_file="${LOCAL_USER_CONFIG_DIR}/temp.json"
 
   #Find all connector names from connector-references.json and combine connector-definition from each connector together
-  IFS=' ' read -ra all_connector_names <<< "$( jq -r '.connectors[].name' < "${connector_references_file}" | xargs)"
-  jq -n '. += {connectors: []}' > "${connector_definitions_file}"
+  IFS=' ' read -ra all_connector_names <<<"$(jq -r '.connectors[].name' <"${connector_references_file}" | xargs)"
+  jq -n '. += {connectors: []}' >"${connector_definitions_file}"
 
   for connector_name in "${all_connector_names[@]}"; do
     local connector_image_dir=${CONNECTOR_IMAGES_DIR}/${connector_name}
@@ -1501,10 +1525,10 @@ function generateConnectorsArtefacts() {
 
     connector_json=$(cat "${CONNECTOR_IMAGES_DIR}/${connector_name}/connector-definition.json")
     # Remove the "type" from the connectors-definition.json
-    connector_json=$(jq -r 'del(.type)' <<< "$connector_json")
-    jq -r --argjson connector_json "${connector_json}"\
+    connector_json=$(jq -r 'del(.type)' <<<"$connector_json")
+    jq -r --argjson connector_json "${connector_json}" \
       '.connectors += [$connector_json]' \
-      < "${connector_definitions_file}" > "${temp_file}"
+      <"${connector_definitions_file}" >"${temp_file}"
     mv "${temp_file}" "${connector_definitions_file}"
   done
 
@@ -1518,17 +1542,17 @@ function generateConnectorsArtefacts() {
   done
 
   #Find all gateway schemas declared for this configuration
-  readarray -t config_gateway_schemas < <( jq -r '.gatewaySchemas[].shortName' < "${connector_references_file}")
+  readarray -t config_gateway_schemas < <(jq -r '.gatewaySchemas[].shortName' <"${connector_references_file}")
 
   for gateway_short_name in "${config_gateway_schemas[@]}"; do
     GATEWAY_SHORT_NAME_SET["${gateway_short_name}"]=$gateway_short_name
   done
 
-  echo "# ------------------------ Gateway schemas and charting schemes -----------------------" > "${gateway_properties_file}"
+  echo "# ------------------------ Gateway schemas and charting schemes -----------------------" >"${gateway_properties_file}"
   #Create configuration file
   for gateway_short_name in "${!GATEWAY_SHORT_NAME_SET[@]}"; do
-    echo "Gateway.${gateway_short_name}.SchemaResource=${gateway_short_name}-schema.xml" >> "${gateway_properties_file}"
-    echo "Gateway.${gateway_short_name}.ChartingSchemesResource=${gateway_short_name}-schema-charting-schemes.xml" >> "${gateway_properties_file}"
+    echo "Gateway.${gateway_short_name}.SchemaResource=${gateway_short_name}-schema.xml" >>"${gateway_properties_file}"
+    echo "Gateway.${gateway_short_name}.ChartingSchemesResource=${gateway_short_name}-schema-charting-schemes.xml" >>"${gateway_properties_file}"
   done
 
   #Copy in gateway schemas
@@ -1543,22 +1567,22 @@ function generateConnectorsArtefacts() {
 # Arguments:
 #   None
 #######################################
-function generateArtefacts() {
+function generateArtifacts() {
   # Create hidden configuration folder
   rm -rf "${GENERATED_LOCAL_CONFIG_DIR}"
   mkdir -p "${GENERATED_LOCAL_CONFIG_DIR}"
   rsync -qpr \
-  --exclude "**.xsd" \
-  --exclude "**/connector-references.json" \
-  "${LOCAL_USER_CONFIG_DIR}/." "${GENERATED_LOCAL_CONFIG_DIR}"
+    --exclude "**.xsd" \
+    --exclude "**/connector-references.json" \
+    "${LOCAL_USER_CONFIG_DIR}/." "${GENERATED_LOCAL_CONFIG_DIR}"
 
-  generateConnectorsArtefacts
+  generateConnectorsArtifacts
   generateBoilerPlateFiles
 }
 
 function subtractArrayFromArray() {
-  local -n array1="${1}"
-  local -n array2="${2}"
+  local -n array1="$1"
+  local -n array2="$2"
   local new_array
 
   readarray -t new_array < <(comm -13 --check-order <(printf '%s\n' "${array1[@]}" | LC_ALL=C sort) <(printf '%s\n' "${array2[@]}" | LC_ALL=C sort))
@@ -1571,7 +1595,7 @@ function deployExtensions() {
   local extension_names
   local extension_args=()
 
-  readarray -t extension_names < <( jq -r '.extensions[].name' < "${extension_references_file}" )
+  readarray -t extension_names < <(jq -r '.extensions[].name' <"${extension_references_file}")
 
   if [[ -n "${INCLUDED_EXTENSIONS[*]}" ]]; then
     for included_extension in "${INCLUDED_EXTENSIONS[@]}"; do
@@ -1585,10 +1609,48 @@ function deployExtensions() {
 
   if [[ "${#extension_names[@]}" -gt 0 ]]; then
     print "Deploying i2Analyze extensions"
-    "${ROOT_DIR}/utils/deployExtensions.sh" -c "${CONFIG_NAME}" "${extension_args[@]}"
+    "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/deployExtensions.sh" -c "${CONFIG_NAME}" "${extension_args[@]}"
   fi
 }
 
+function setDependenciesTagIfNecessary() {
+  if [[ -z "${I2A_DEPENDENCIES_IMAGES_TAG}" ]]; then
+    source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
+    local version_tag="${I2ANALYZE_VERSION%.*}"
+    I2A_DEPENDENCIES_IMAGES_TAG="${version_tag}"
+  fi
+  if [[ -z "${CONFIG_NAME}" ]]; then
+    I2A_LIBERTY_CONFIGURED_IMAGE_TAG="${I2A_DEPENDENCIES_IMAGES_TAG}"
+  else
+    I2A_LIBERTY_CONFIGURED_IMAGE_TAG="${CONFIG_NAME}-${I2A_DEPENDENCIES_IMAGES_TAG}"
+  fi
+}
+
+function updateCoreSecretsVolumes() {
+  updateVolume "${LOCAL_KEYS_DIR}/${LIBERTY1_HOST_NAME}" "${LIBERTY1_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
+  updateVolume "${LOCAL_KEYS_DIR}/${LIBERTY2_HOST_NAME}" "${LIBERTY2_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
+  updateVolume "${LOCAL_KEYS_DIR}/${ZK1_HOST_NAME}" "${ZK1_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
+  updateVolume "${LOCAL_KEYS_DIR}/${ZK2_HOST_NAME}" "${ZK2_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
+  updateVolume "${LOCAL_KEYS_DIR}/${ZK3_HOST_NAME}" "${ZK3_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
+  updateVolume "${LOCAL_KEYS_DIR}/${CONNECTOR1_HOST_NAME}" "${CONNECTOR1_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
+  updateVolume "${LOCAL_KEYS_DIR}/${CONNECTOR2_HOST_NAME}" "${CONNECTOR2_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
+  updateVolume "${LOCAL_KEYS_DIR}/${SOLR1_HOST_NAME}" "${SOLR1_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
+  updateVolume "${LOCAL_KEYS_DIR}/${SOLR2_HOST_NAME}" "${SOLR2_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
+  updateVolume "${LOCAL_KEYS_DIR}/${SOLR3_HOST_NAME}" "${SOLR3_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
+  updateVolume "${LOCAL_KEYS_DIR}/${SQL_SERVER_HOST_NAME}" "${SQL_SERVER_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
+  updateVolume "${LOCAL_KEYS_DIR}/${DB2_SERVER_HOST_NAME}" "${DB2_SERVER_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
+  updateVolume "${LOCAL_KEYS_DIR}/${I2ANALYZE_HOST_NAME}" "${LOAD_BALANCER_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
+}
+
+function warnRootDirNotInPath() {
+  local current_path
+
+  current_path=$(pwd)
+  if [[ "${current_path}" != "${ANALYZE_CONTAINERS_ROOT_DIR}"* ]]; then
+    echo "ANALYZE_CONTAINERS_ROOT_DIR=${ANALYZE_CONTAINERS_ROOT_DIR}"
+    waitForUserReply "The current script path is not inside the set ANALYZE_CONTAINERS_ROOT_DIR. Are you sure you want to continue?"
+  fi
+}
 ###############################################################################
 # End of function definitions.                                                #
 ###############################################################################

@@ -23,13 +23,6 @@
 
 set -e
 
-# This is to ensure the script can be run from any directory
-SCRIPT_DIR="$(dirname "$0")"
-cd "$SCRIPT_DIR"
-
-# Determine project root directory
-ROOT_DIR=$(pushd . 1> /dev/null ; while [ "$(pwd)" != "/" ]; do test -e .root && grep -q 'Analyze-Containers-Root-Dir' < '.root' && { pwd; break; }; cd .. ; done ; popd 1> /dev/null)
-
 function printUsage() {
   echo "Usage:"
   echo "  generateSecrets.sh -t generate [-c {all|core|connectors[-i <connector1_name>] [-e <connector1_name>]}] [-v]" 1>&2
@@ -108,7 +101,7 @@ if [[ -z "${ENVIRONMENT}" ]]; then
   ENVIRONMENT="config-dev"
 fi
 
-if [[ "${AWS_ARTEFACTS}" && ( -z "${I2A_DEPENDENCIES_IMAGES_TAG}" ) ]]; then
+if [[ "${AWS_ARTEFACTS}" && (-z "${I2A_DEPENDENCIES_IMAGES_TAG}") ]]; then
   usage
 fi
 
@@ -120,10 +113,6 @@ if [[ -z "${COMPONENTS}" ]]; then
   COMPONENTS="all"
 fi
 
-if [[ -z "${I2A_DEPENDENCIES_IMAGES_TAG}" ]]; then
-  I2A_DEPENDENCIES_IMAGES_TAG="latest"
-fi
-
 if [[ "${INCLUDED_CONNECTORS[*]}" && "${EXCLUDED_CONNECTORS[*]}" ]]; then
   printf "\e[31mERROR: Incompatible options: Both (-i) and (-e) were specified.\n" >&2
   printf "\e[0m" >&2
@@ -131,7 +120,7 @@ if [[ "${INCLUDED_CONNECTORS[*]}" && "${EXCLUDED_CONNECTORS[*]}" ]]; then
   exit 1
 fi
 
-DEV_ENV_SECRETS_DIR="${ROOT_DIR}/dev-environment-secrets"
+DEV_ENV_SECRETS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/dev-environment-secrets"
 JAVA_CONTAINER_VOLUME_DIR="/simulatedKeyStore"
 AWS_DEPLOY="false"
 
@@ -140,13 +129,13 @@ AWS_DEPLOY="false"
 ###############################################################################
 
 # Load common functions
-source "${ROOT_DIR}/utils/commonFunctions.sh"
-source "${ROOT_DIR}/utils/clientFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
 
 # Load common variables
-source "${ROOT_DIR}/utils/simulatedExternalVariables.sh"
-source "${ROOT_DIR}/utils/commonVariables.sh"
-source "${ROOT_DIR}/utils/internalHelperVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulatedExternalVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
 
 checkEnvironmentIsValid
 
@@ -162,7 +151,7 @@ function runJava() {
     "${I2A_TOOLS_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "$@"
 }
 
-function checkSecretAlreadyExists() {
+function checkSecretDoesNotExist() {
   local secret_name="${1}"
   local file_path="${2}"
 
@@ -171,6 +160,8 @@ function checkSecretAlreadyExists() {
     echo "If you would like to regenerate the secrets, delete the ${file_path} folder."
     return 1
   fi
+
+  return 0
 }
 
 function createCA() {
@@ -182,7 +173,7 @@ function createCA() {
 
   print "Creating Certificate Authority"
 
-  checkSecretAlreadyExists "${CONTEXT}" "${GENERATED_SECRETS_DIR}/certificates/${CONTEXT}" || return 0
+  checkSecretDoesNotExist "${CONTEXT}" "${GENERATED_SECRETS_DIR}/certificates/${CONTEXT}" || return 0
 
   # Invalidate all other certificates
   if [[ "${CONTEXT}" == *"external"* ]]; then
@@ -195,7 +186,7 @@ function createCA() {
   fi
 
   deleteFolderIfExistsAndCreate "${GENERATED_SECRETS_DIR}/certificates/${CONTEXT}"
-  cp -p "${ROOT_DIR}/utils/templates/x509.ext.template" "${GENERATED_SECRETS_DIR}/certificates/${CONTEXT}/x509.ext.template"
+  cp -p "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/templates/x509.ext.template" "${GENERATED_SECRETS_DIR}/certificates/${CONTEXT}/x509.ext.template"
   cp "${GENERATED_SECRETS_DIR}/certificates/${CONTEXT}/x509.ext.template" "${GENERATED_SECRETS_DIR}/certificates/${CONTEXT}/x509.ext"
 
   # Generate CA.key
@@ -222,7 +213,7 @@ function createCertificates() {
 
   print "Create Raw Certificates"
 
-  checkSecretAlreadyExists "${HOST_NAME}" "${GENERATED_SECRETS_DIR}/certificates/${HOST_NAME}" || return 0
+  checkSecretDoesNotExist "${HOST_NAME}" "${GENERATED_SECRETS_DIR}/certificates/${HOST_NAME}" || return 0
   deleteFolderIfExistsAndCreate "${GENERATED_SECRETS_DIR}/certificates/${HOST_NAME}"
 
   if [[ "${CONTEXT}" == external ]]; then
@@ -270,14 +261,14 @@ function generateRandomPassword() {
   fi
 
   touch "${PASSWORD_FILE_LOCATION}"
-  echo -n "$(runJava openssl rand -base64 16)" > "${PASSWORD_FILE_LOCATION}"
+  echo -n "$(runJava openssl rand -base64 16)" >"${PASSWORD_FILE_LOCATION}"
 }
 
 function generateSolrPasswords() {
   local secrets_dir="${GENERATED_SECRETS_DIR}/solr"
   print "Generating Solr Passwords"
 
-  checkSecretAlreadyExists "Solr" "${secrets_dir}" || return 0
+  checkSecretDoesNotExist "Solr" "${secrets_dir}" || return 0
   deleteFolderIfExistsAndCreate "${secrets_dir}"
 
   generateRandomPassword "${secrets_dir}/SOLR_APPLICATION_DIGEST_PASSWORD"
@@ -290,7 +281,7 @@ function generateApplicationAdminPassword() {
   local secrets_dir="${GENERATED_SECRETS_DIR}/application"
 
   print "Generating Application Passwords"
-  checkSecretAlreadyExists "Application" "${secrets_dir}" || return 0
+  checkSecretDoesNotExist "Application" "${secrets_dir}" || return 0
   deleteFolderIfExistsAndCreate "${secrets_dir}"
 
   generateRandomPassword "${secrets_dir}/admin_PASSWORD"
@@ -300,7 +291,7 @@ function generateSqlserverPasswords() {
   local secrets_dir="${GENERATED_SECRETS_DIR}/sqlserver"
 
   print "Generating SQL Server Passwords"
-  checkSecretAlreadyExists "SQL Server" "${secrets_dir}" || return 0
+  checkSecretDoesNotExist "SQL Server" "${secrets_dir}" || return 0
   deleteFolderIfExistsAndCreate "${secrets_dir}"
 
   generateRandomPassword "${secrets_dir}/dbb_PASSWORD"
@@ -316,7 +307,7 @@ function generateDb2serverPasswords() {
   local secrets_dir="${GENERATED_SECRETS_DIR}/db2server"
 
   print "Generating Db2 Server Passwords"
-  checkSecretAlreadyExists "Db2" "${secrets_dir}" || return 0
+  checkSecretDoesNotExist "Db2" "${secrets_dir}" || return 0
   deleteFolderIfExistsAndCreate "${secrets_dir}"
 
   generateRandomPassword "${secrets_dir}/db2inst1_PASSWORD"
@@ -350,7 +341,7 @@ function generateSolrSecurityJson() {
   ) | openssl dgst -sha256 -binary | openssl dgst -sha256 -binary | base64)
 
   # Create the security.json file
-  cat <"${ROOT_DIR}/utils/templates/security-template.json" | jq '.authentication.credentials +=
+  cat <"${ANALYZE_CONTAINERS_ROOT_DIR}/utils/templates/security-template.json" | jq '.authentication.credentials +=
   {
     "liberty":"'"${SOLR_APPLICATION_DIGEST} ${SOLR_APPLICATION_SALT}"'",
     "solr": "'"${SOLR_ADMIN_DIGEST} ${SOLR_ADMIN_SALT}"'"
@@ -443,10 +434,10 @@ function simulateServerSecretStoreAccess() {
 }
 
 function generateConnectorSecrets() {
-  local connector_image_dir
+  local connector_name connector_image_dir
 
   for connector_name in "${CONNECTOR_NAMES[@]}"; do
-    connector_image_dir=${CONNECTOR_IMAGES_DIR}/${connector_name}
+    connector_image_dir="${CONNECTOR_IMAGES_DIR}/${connector_name}"
     [[ ! -d "${connector_image_dir}" ]] && continue
     generateConnectorSecret "${connector_image_dir}"
   done
@@ -460,28 +451,27 @@ function generateConnectorSecret() {
   local hostname
   local connector_tag base_url
 
-  connector_image_name="${connector_image_dir##*/}"
-  connector_secrets_folder="${LOCAL_KEYS_DIR}/${connector_image_name}"
-  print "Generating secrets for ${connector_image_name}"
+  connector_image_name="$(basename "${connector_image_dir}")"
+  connector_secrets_folder="${GENERATED_SECRETS_DIR}/certificates/${connector_image_name}"
 
-  checkSecretAlreadyExists "${connector_image_name}" "${connector_secrets_folder}" || return 0
-  deleteFolderIfExistsAndCreate "${connector_secrets_folder}"
+  if checkSecretDoesNotExist "${connector_image_name}" "${connector_secrets_folder}"; then
+    print "Generating secrets for ${connector_image_name}"
+    connector_type=$(jq -r '.type' <"${connector_image_dir}/connector-definition.json")
 
-  connector_type=$(jq -r '.type' <"${connector_image_dir}/connector-definition.json")
-
-  if [[ "${connector_type}" == "external" ]]; then
-    base_url=$(jq -r '.baseUrl' <"${connector_image_dir}/connector-definition.json")
-    hostname=$(echo "${base_url}" | awk -F[/:] '{print $4}')
-  else
-    connector_tag=$(jq -r '.tag' <"${connector_image_dir}/connector-version.json")
-    hostname="${connector_image_name}-${connector_tag}.${DOMAIN_NAME}"
+    if [[ "${connector_type}" == "external" ]]; then
+      base_url=$(jq -r '.baseUrl' <"${connector_image_dir}/connector-definition.json")
+      hostname=$(echo "${base_url}" | awk -F[/:] '{print $4}')
+    else
+      connector_tag=$(jq -r '.tag' <"${connector_image_dir}/connector-version.json")
+      hostname="${connector_image_name}-${connector_tag}.${DOMAIN_NAME}"
+    fi
+    createCertificates "${connector_image_name}" "${hostname}" "connector"
+    simulateContainerSecretStoreAccess "${connector_image_name}"
   fi
-  createCertificates "${connector_image_name}" "${hostname}" "connector"
-  simulateContainerSecretStoreAccess "${connector_image_name}"
+  updateVolume "${LOCAL_KEYS_DIR}/${connector_image_name}" "${connector_image_name}_secrets" "${CONTAINER_SECRETS_DIR}"
 }
 
-function generateCoreSecrets()
-{
+function generateCoreSecrets() {
   print "Generating secrets for core components"
 
   createCA "CA"
@@ -493,6 +483,7 @@ function generateCoreSecrets()
   generateDb2serverPasswords
   generateSolrSecurityJson
   simulateServerSecretStoreAccess
+  updateCoreSecretsVolumes
 }
 
 ###############################################################################

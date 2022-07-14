@@ -23,13 +23,6 @@
 
 set -e
 
-# This is to ensure the script can be run from any directory
-SCRIPT_DIR="$(dirname "$0")"
-cd "$SCRIPT_DIR"
-
-# Determine project root directory
-ROOT_DIR=$(pushd . 1> /dev/null ; while [ "$(pwd)" != "/" ]; do test -e .root && grep -q 'Analyze-Containers-Root-Dir' < '.root' && { pwd; break; }; cd .. ; done ; popd 1> /dev/null)
-
 function printUsage() {
   echo "Usage:"
   echo "  buildi2ConnectServerBaseImage.sh" 1>&2
@@ -46,19 +39,15 @@ function help() {
   printUsage
   echo "Options:" 1>&2
   echo "  -a                    Produce or use artefacts on AWS." 1>&2
-  echo "  -l <dependency_label> Name of dependency image label to use on AWS." 1>&2
   echo "  -h                    Display the help." 1>&2
   exit 1
 }
 
 AWS_DEPLOY="false"
-while getopts ":ahl:" flag; do
+while getopts ":ah" flag; do
   case "${flag}" in
   a)
     AWS_ARTEFACTS="true"
-    ;;
-  l)
-    I2A_DEPENDENCIES_IMAGES_TAG="${OPTARG}"
     ;;
   h)
     help
@@ -76,23 +65,15 @@ if [[ -z "${ENVIRONMENT}" ]]; then
   ENVIRONMENT="config-dev"
 fi
 
-if [[ "${AWS_ARTEFACTS}" && ( -z "${I2A_DEPENDENCIES_IMAGES_TAG}" ) ]]; then
-  usage
-fi
-
-if [[ -z "${I2A_DEPENDENCIES_IMAGES_TAG}" ]]; then
-  I2A_DEPENDENCIES_IMAGES_TAG="latest"
-fi
-
 # Load common functions
-source "${ROOT_DIR}/utils/commonFunctions.sh"
-source "${ROOT_DIR}/utils/serverFunctions.sh"
-source "${ROOT_DIR}/utils/clientFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
 
 # Load common variables
-source "${ROOT_DIR}/utils/simulatedExternalVariables.sh"
-source "${ROOT_DIR}/utils/commonVariables.sh"
-source "${ROOT_DIR}/utils/internalHelperVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulatedExternalVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
 
 I2CONNECT_CONNECTOR_IMAGES_DIR="${IMAGES_DIR}/i2connect_server_base"
 

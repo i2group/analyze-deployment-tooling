@@ -23,22 +23,22 @@
 
 set -e
 
-# This is to ensure the script can be run from any directory
-SCRIPT_DIR="$(dirname "$0")"
-cd "$SCRIPT_DIR"
-
-# Determine project root directory
-ROOT_DIR=$(pushd . 1> /dev/null ; while [ "$(pwd)" != "/" ]; do test -e .root && grep -q 'Analyze-Containers-Root-Dir' < '.root' && { pwd; break; }; cd .. ; done ; popd 1> /dev/null)
+if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
+  echo "ANALYZE_CONTAINERS_ROOT_DIR variable is not set"
+  echo "Please run '. initShell.sh' in your terminal first or set it with 'export ANALYZE_CONTAINERS_ROOT_DIR=<path_to_root>'"
+  exit 1
+fi
 
 # Load common functions
-source "${ROOT_DIR}/utils/commonFunctions.sh"
-source "${ROOT_DIR}/utils/serverFunctions.sh"
-source "${ROOT_DIR}/utils/clientFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
 
 # Load common variables
-source "${ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
-source "${ROOT_DIR}/utils/commonVariables.sh"
-source "${ROOT_DIR}/utils/internalHelperVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
+warnRootDirNotInPath
 
 ###############################################################################
 # Removing Liberty containers                                                 #
@@ -75,8 +75,8 @@ runSQLServerCommandAsDBA "/opt/databaseScripts/generated/runDatabaseScripts.sh" 
 ###############################################################################
 # Running the Liberty containers                                              #
 ###############################################################################
-runLiberty "${LIBERTY1_CONTAINER_NAME}" "${LIBERTY1_FQDN}" "${LIBERTY1_VOLUME_NAME}" "${LIBERTY1_PORT}" "${LIBERTY1_CONTAINER_NAME}"
-runLiberty "${LIBERTY2_CONTAINER_NAME}" "${LIBERTY2_FQDN}" "${LIBERTY2_VOLUME_NAME}" "${LIBERTY2_PORT}" "${LIBERTY2_CONTAINER_NAME}"
+runLiberty "${LIBERTY1_CONTAINER_NAME}" "${LIBERTY1_FQDN}" "${LIBERTY1_VOLUME_NAME}" "${LIBERTY1_SECRETS_VOLUME_NAME}" "${LIBERTY1_PORT}" "${LIBERTY1_CONTAINER_NAME}"
+runLiberty "${LIBERTY2_CONTAINER_NAME}" "${LIBERTY2_FQDN}" "${LIBERTY2_VOLUME_NAME}" "${LIBERTY2_SECRETS_VOLUME_NAME}" "${LIBERTY2_PORT}" "${LIBERTY2_CONTAINER_NAME}"
 waitFori2AnalyzeServiceToBeLive
 
 ###############################################################################

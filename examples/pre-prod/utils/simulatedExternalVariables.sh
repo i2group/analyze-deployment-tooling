@@ -93,8 +93,6 @@ AWS_REGION=None
 
 ECR_BASE_NAME=None
 AWS_REGION=None
-I2A_DEPENDENCIES_IMAGES_TAG="latest"
-I2A_LIBERTY_CONFIGURED_IMAGE_TAG="latest"
 
 EXTRA_ARGS=()
 if [[ "${AWS_DEPLOY}" == "false" ]]; then
@@ -182,11 +180,8 @@ I2_ANALYZE_ADMIN="Jenny"
 ###############################################################################
 # Root Paths                                                                  #
 ###############################################################################
-# Determine project root directory
-ROOT_DIR=$(pushd . 1> /dev/null ; while [ "$(pwd)" != "/" ]; do test -e .root && grep -q 'Analyze-Containers-Root-Dir' < '.root' && { pwd; break; }; cd .. ; done ; popd 1> /dev/null)
-
-PRE_REQS_DIR="${ROOT_DIR}/pre-reqs"
-PRE_PROD_DIR="${ROOT_DIR}/examples/pre-prod"
+PRE_REQS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/pre-reqs"
+PRE_PROD_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod"
 
 LOCAL_CONFIG_DIR="${PRE_PROD_DIR}/configuration"
 LOCAL_DATABASE_SCRIPTS_DIR="${PRE_PROD_DIR}/database-scripts"
@@ -194,7 +189,7 @@ LOCAL_GENERATED_DIR="${LOCAL_DATABASE_SCRIPTS_DIR}/generated"
 LOCAL_I2ANALYZE_DIR="${PRE_REQS_DIR}/i2analyze"
 LOCAL_TOOLKIT_DIR="${LOCAL_I2ANALYZE_DIR}/toolkit"
 
-PRE_REQS_DIR="${ROOT_DIR}/pre-reqs"
+PRE_REQS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/pre-reqs"
 LOCAL_I2ANALYZE_DIR="${PRE_REQS_DIR}/i2analyze"
 LOCAL_TOOLKIT_DIR="${LOCAL_I2ANALYZE_DIR}/toolkit"
 DATA_DIR="${LOCAL_TOOLKIT_DIR}/examples/data"

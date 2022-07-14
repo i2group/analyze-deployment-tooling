@@ -24,12 +24,11 @@
 echo "BASH_VERSION: $BASH_VERSION"
 set -e
 
-# This is to ensure the script can be run from any directory
-SCRIPT_DIR="$(dirname "$0")"
-cd "$SCRIPT_DIR"
-
-# Determine project root directory
-ROOT_DIR=$(pushd . 1> /dev/null ; while [ "$(pwd)" != "/" ]; do test -e .root && grep -q 'Analyze-Containers-Root-Dir' < '.root' && { pwd; break; }; cd .. ; done ; popd 1> /dev/null)
+if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
+  echo "ANALYZE_CONTAINERS_ROOT_DIR variable is not set"
+  echo "Please run '. initShell.sh' in your terminal first or set it with 'export ANALYZE_CONTAINERS_ROOT_DIR=<path_to_root>'"
+  exit 1
+fi
 
 function printUsage() {
   echo "Usage:"
@@ -101,19 +100,18 @@ if [[ "${TASK}" == "ingest" ]]; then
   fi
 fi
 
-I2A_DEPENDENCIES_IMAGES_TAG="latest"
-I2A_LIBERTY_CONFIGURED_IMAGE_TAG="${CONFIG_NAME}"
-
 # Load common functions
-source "${ROOT_DIR}/utils/commonFunctions.sh"
-source "${ROOT_DIR}/utils/serverFunctions.sh"
-source "${ROOT_DIR}/utils/clientFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
 
 # Load common variables
-source "${ROOT_DIR}/configs/${CONFIG_NAME}/utils/variables.sh"
-source "${ROOT_DIR}/utils/simulatedExternalVariables.sh"
-source "${ROOT_DIR}/utils/commonVariables.sh"
-source "${ROOT_DIR}/utils/internalHelperVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/utils/variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulatedExternalVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
+warnRootDirNotInPath
 
 function runScript() {
   local script_path="$1"
@@ -127,7 +125,7 @@ function runScript() {
 }
 
 function runIngestionScript() {
-  local script_path="${ROOT_DIR}/i2a-data/${DATA_SET}/scripts/${SCRIPT_NAME}"
+  local script_path="${ANALYZE_CONTAINERS_ROOT_DIR}/i2a-data/${DATA_SET}/scripts/${SCRIPT_NAME}"
   runScript "${script_path}"
 }
 
@@ -167,12 +165,12 @@ function clearSearchIndex() {
 function clearInfoStore() {
   print "Clearing the InfoStore database"
   case "${DB_DIALECT}" in
-    db2)
-      runDb2ServerCommandAsDb2inst1 "/opt/databaseScripts/generated/runClearInfoStoreData.sh"
-      ;;
-    sqlserver)
-      runSQLServerCommandAsDBA "/opt/databaseScripts/generated/runClearInfoStoreData.sh"
-      ;;
+  db2)
+    runDb2ServerCommandAsDb2inst1 "/opt/databaseScripts/generated/runClearInfoStoreData.sh"
+    ;;
+  sqlserver)
+    runSQLServerCommandAsDBA "/opt/databaseScripts/generated/runClearInfoStoreData.sh"
+    ;;
   esac
 }
 
@@ -189,7 +187,7 @@ function removeLibertyContainer() {
 
 function startLibertyContainer() {
   printInfo "Starting up new Liberty container"
-  runLiberty "${LIBERTY1_CONTAINER_NAME}" "${I2_ANALYZE_FQDN}" "${LIBERTY1_VOLUME_NAME}" "${HOST_PORT_I2ANALYZE_SERVICE}" "${I2_ANALYZE_CERT_FOLDER_NAME}" "${LIBERTY1_DEBUG_PORT}"
+  runLiberty "${LIBERTY1_CONTAINER_NAME}" "${I2_ANALYZE_FQDN}" "${LIBERTY1_VOLUME_NAME}" "${LIBERTY1_SECRETS_VOLUME_NAME}" "${HOST_PORT_I2ANALYZE_SERVICE}" "${I2_ANALYZE_CERT_FOLDER_NAME}" "${LIBERTY1_DEBUG_PORT}"
   updateLog4jFile
   addConfigAdmin
   checkLibertyStatus
@@ -197,7 +195,7 @@ function startLibertyContainer() {
 
 function checkDataSetExists() {
   printInfo "Checking the data set ${DATA_SET} exists"
-  local data_set_folder_path="${ROOT_DIR}/i2a-data/${DATA_SET}"
+  local data_set_folder_path="${ANALYZE_CONTAINERS_ROOT_DIR}/i2a-data/${DATA_SET}"
   if [[ ! -d "${data_set_folder_path}" ]]; then
     printErrorAndExit "${data_set_folder_path} does NOT exist"
   else

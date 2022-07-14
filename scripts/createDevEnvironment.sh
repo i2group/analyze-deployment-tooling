@@ -24,28 +24,32 @@
 echo "BASH_VERSION: $BASH_VERSION"
 set -e
 
-# This is to ensure the script can be run from any directory
-SCRIPT_DIR="$(dirname "$0")"
-cd "$SCRIPT_DIR"
-
-# Determine project root directory
-ROOT_DIR=$(pushd . 1> /dev/null ; while [ "$(pwd)" != "/" ]; do test -e .root && grep -q 'Analyze-Containers-Root-Dir' < '.root' && { pwd; break; }; cd .. ; done ; popd 1> /dev/null)
+if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
+  echo "ANALYZE_CONTAINERS_ROOT_DIR variable is not set"
+  echo "Please run '. initShell.sh' in your terminal first or set it with 'export ANALYZE_CONTAINERS_ROOT_DIR=<path_to_root>'"
+  exit 1
+fi
 
 # Load common functions
-source "${ROOT_DIR}/utils/commonFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
+warnRootDirNotInPath
 
 # Load common variables
-source "${ROOT_DIR}/utils/simulatedExternalVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulatedExternalVariables.sh"
+
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
+warnRootDirNotInPath
 
 print "Running createEnvironment.sh script"
 
-"${ROOT_DIR}/utils/createEnvironment.sh" -e "${ENVIRONMENT}"
+"${ANALYZE_CONTAINERS_ROOT_DIR}/utils/createEnvironment.sh" -e "${ENVIRONMENT}"
 
 print "Running createConfiguration.sh"
-"${ROOT_DIR}/utils/createConfiguration.sh" -e "${ENVIRONMENT}"
+"${ANALYZE_CONTAINERS_ROOT_DIR}/utils/createConfiguration.sh" -e "${ENVIRONMENT}"
 
 print "Running buildImages.sh"
-"${ROOT_DIR}/utils/buildImages.sh"
+"${ANALYZE_CONTAINERS_ROOT_DIR}/utils/buildImages.sh"
 
 print "Running generateSecrets.sh"
-"${ROOT_DIR}/utils/generateSecrets.sh" -l "latest"
+"${ANALYZE_CONTAINERS_ROOT_DIR}/utils/generateSecrets.sh"

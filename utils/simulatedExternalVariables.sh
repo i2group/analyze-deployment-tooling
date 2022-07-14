@@ -130,16 +130,16 @@ if [[ -z "${DB_DIALECT}" ]]; then
 fi
 
 case "${DB_DIALECT}" in
-  db2)
-    DB_PORT="50000"
-    ;;
-  sqlserver)
-    DB_PORT="1433"
-    ;;
-  \?)
-    echo "Invalid option: ${DB_DIALECT}"
-    exit 1
-    ;;
+db2)
+  DB_PORT="50000"
+  ;;
+sqlserver)
+  DB_PORT="1433"
+  ;;
+\?)
+  echo "Invalid option: ${DB_DIALECT}"
+  exit 1
+  ;;
 esac
 
 if [[ "$SOLR_ZOO_SSL_CONNECTION" == true ]]; then
@@ -164,29 +164,29 @@ ZK_HOST="${ZK_MEMBERS}/${SOLR_CLUSTER_ID}"
 ###############################################################################
 
 case "${DB_DIALECT}" in
-  db2)
-    DB_INSTALL_DIR="/opt/ibm/db2/V11.5"
-    DB_LOCATION_DIR="/database/config/db2inst1"
-    DB_BACKUP_FILE_NAME="ISTORE"
-    SQLCMD="${DB_INSTALL_DIR}/bin/db2"
-    SQLCMD_FLAGS="-tsvmf"
-    DB_NODE="dbnode"
-    ;;
-  sqlserver)
-    DB_INSTALL_DIR="/opt/mssql-tools"
-    DB_LOCATION_DIR="/var/opt/mssql/data"
-    DB_BACKUP_FILE_NAME="ISTORE.bak"
-    SQLCMD="${DB_INSTALL_DIR}/bin/sqlcmd"
-    if [[ "$DB_SSL_CONNECTION" == true ]]; then
-      SQLCMD_FLAGS="-N -b"
-    else
-      SQLCMD_FLAGS="-b"
-    fi
-    ;;
-  \?)
-    echo "Invalid option: ${DB_DIALECT}"
-    exit 1
-    ;;
+db2)
+  DB_INSTALL_DIR="/opt/ibm/db2/V11.5"
+  DB_LOCATION_DIR="/database/config/db2inst1"
+  DB_BACKUP_FILE_NAME="ISTORE"
+  SQLCMD="${DB_INSTALL_DIR}/bin/db2"
+  SQLCMD_FLAGS="-tsvmf"
+  DB_NODE="dbnode"
+  ;;
+sqlserver)
+  DB_INSTALL_DIR="/opt/mssql-tools"
+  DB_LOCATION_DIR="/var/opt/mssql/data"
+  DB_BACKUP_FILE_NAME="ISTORE.bak"
+  SQLCMD="${DB_INSTALL_DIR}/bin/sqlcmd"
+  if [[ "$DB_SSL_CONNECTION" == true ]]; then
+    SQLCMD_FLAGS="-N -b"
+  else
+    SQLCMD_FLAGS="-b"
+  fi
+  ;;
+\?)
+  echo "Invalid option: ${DB_DIALECT}"
+  exit 1
+  ;;
 esac
 
 DB_NAME="ISTORE"
@@ -207,19 +207,17 @@ I2_ANALYZE_ADMIN="I2AnalyzeConfigDevAdmin"
 ###############################################################################
 # Root Paths                                                                  #
 ###############################################################################
-# Determine project root directory
-ROOT_DIR=$(pushd . 1> /dev/null ; while [ "$(pwd)" != "/" ]; do test -e .root && grep -q 'Analyze-Containers-Root-Dir' < '.root' && { pwd; break; }; cd .. ; done ; popd 1> /dev/null)
+LOCAL_USER_CONFIG_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/configuration"
+LOCAL_CONFIG_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/.configuration"
+GENERATED_LOCAL_CONFIG_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/.configuration-generated"
+LOCAL_LIB_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/.i2a-extensions"
+LOCAL_GENERATED_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/database-scripts/generated"
 
-LOCAL_USER_CONFIG_DIR="${ROOT_DIR}/configs/${CONFIG_NAME}/configuration"
-LOCAL_CONFIG_DIR="${ROOT_DIR}/.configuration"
-GENERATED_LOCAL_CONFIG_DIR="${ROOT_DIR}/.configuration-generated"
-LOCAL_LIB_DIR="${ROOT_DIR}/.i2a-extensions"
-LOCAL_GENERATED_DIR="${ROOT_DIR}/configs/${CONFIG_NAME}/database-scripts/generated"
-
-PRE_REQS_DIR="${ROOT_DIR}/pre-reqs"
+PRE_REQS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/pre-reqs"
 LOCAL_I2ANALYZE_DIR="${PRE_REQS_DIR}/i2analyze"
 LOCAL_TOOLKIT_DIR="${LOCAL_I2ANALYZE_DIR}/toolkit"
-DATA_DIR="${ROOT_DIR}/i2a-data"
+DATA_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/i2a-data"
+BACKUP_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/backups/${CONFIG_NAME}"
 
 TOOLKIT_APPLICATION_DIR="${LOCAL_TOOLKIT_DIR}/application"
 

@@ -22,29 +22,23 @@
 # SOFTWARE.
 set -e
 
-SCRIPT_DIR="$(dirname "$0")"
-cd "$SCRIPT_DIR"
-
-# Determine project root directory
-ROOT_DIR=$(pushd . 1> /dev/null ; while [ "$(pwd)" != "/" ]; do test -e .root && grep -q 'Analyze-Containers-Root-Dir' < '.root' && { pwd; break; }; cd .. ; done ; popd 1> /dev/null)
-
 ENVIRONMENT="$1"
 TARGET_DIR="$2"
 
 # Load common functions
-source "${ROOT_DIR}/utils/commonFunctions.sh"
-source "${ROOT_DIR}/utils/serverFunctions.sh"
-source "${ROOT_DIR}/utils/clientFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
 
 # Load common variables
 checkEnvironmentIsValid
 if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
-  source "${ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
 elif [[ "${ENVIRONMENT}" == "config-dev" ]]; then
-  source "${ROOT_DIR}/utils/simulatedExternalVariables.sh"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulatedExternalVariables.sh"
 fi
-source "${ROOT_DIR}/utils/commonVariables.sh"
-source "${ROOT_DIR}/utils/internalHelperVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
 
 TOOLKIT_APPLICATION_DIR="$LOCAL_TOOLKIT_DIR/application"
 THIRD_PARTY_DIR="$TARGET_DIR/third-party-dependencies"
@@ -84,7 +78,7 @@ function remediateLog4jVulnerability() {
   # TODO Improve - minior version changes?
   local LOG4J_VER="2.17.2"
   local LOG4J_BIN="apache-log4j-${LOG4J_VER}-bin.tar.gz"
-  local LOG4J_BASE_URL="https://dlcdn.apache.org/logging"
+  local LOG4J_BASE_URL="https://archive.apache.org/dist/logging"
   local LOG4J_ARCHIVE_URL="${LOG4J_BASE_URL}/log4j/${LOG4J_VER}/${LOG4J_BIN}"
   local LOG4J_SHA512="cb3c349ae03b94ee9f066c8a1eaf9810a5cd56b9357180e5ff9c13d66c2aceea8b9095650ac4304dbcccea6c1280f255e940fde23045b6598896b655594bd75f"
   local I2_COMMON_DIR="$THIRD_PARTY_DIR/resources/i2-common/lib"

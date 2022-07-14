@@ -48,14 +48,29 @@ LIBERTY1_VOLUME_NAME="${LIBERTY1_CONTAINER_NAME}_data"
 LIBERTY2_VOLUME_NAME="${LIBERTY2_CONTAINER_NAME}_data"
 SQL_SERVER_VOLUME_NAME="${SQL_SERVER_CONTAINER_NAME}_sqlvolume"
 DB2_SERVER_VOLUME_NAME="${DB2_SERVER_CONTAINER_NAME}_sqlvolume"
+SQL_SERVER_BACKUP_VOLUME_NAME="${SQL_SERVER_CONTAINER_NAME}_sqlbackup"
+DB2_SERVER_BACKUP_VOLUME_NAME="${DB2_SERVER_CONTAINER_NAME}_sqlbackup"
+SOLR_BACKUP_VOLUME_NAME="${SOLR1_CONTAINER_NAME}_solr_backup"
+LOAD_BALANCER_VOLUME_NAME="${LOAD_BALANCER_CONTAINER_NAME}_config"
 if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
-  # Use named volume in pre-prod
-  DB_BACKUP_VOLUME_NAME="${SQL_SERVER_CONTAINER_NAME}_sqlbackup"
-elif [[ "${ENVIRONMENT}" == "config-dev" ]]; then
-  # Use bind mount in config-dev
-  DB_BACKUP_VOLUME_NAME="${ROOT_DIR}/backups/${CONFIG_NAME}"
+  I2A_DATA_VOLUME_NAME="i2a_data"
+else
+  I2A_DATA_VOLUME_NAME="i2a_data_${I2ANALYZE_VERSION%.*}"
 fi
 SOLR_BACKUP_VOLUME_NAME="${SOLR1_CONTAINER_NAME}_solr_backup"
+LIBERTY1_SECRETS_VOLUME_NAME="${LIBERTY1_HOST_NAME}_secrets"
+LIBERTY2_SECRETS_VOLUME_NAME="${LIBERTY2_HOST_NAME}_secrets"
+ZK1_SECRETS_VOLUME_NAME="${ZK1_HOST_NAME}_secrets"
+ZK2_SECRETS_VOLUME_NAME="${ZK2_HOST_NAME}_secrets"
+ZK3_SECRETS_VOLUME_NAME="${ZK3_HOST_NAME}_secrets"
+SOLR1_SECRETS_VOLUME_NAME="${SOLR1_HOST_NAME}_secrets"
+SOLR2_SECRETS_VOLUME_NAME="${SOLR2_HOST_NAME}_secrets"
+SOLR3_SECRETS_VOLUME_NAME="${SOLR3_HOST_NAME}_secrets"
+CONNECTOR1_SECRETS_VOLUME_NAME="${CONNECTOR1_HOST_NAME}_secrets"
+CONNECTOR2_SECRETS_VOLUME_NAME="${CONNECTOR2_HOST_NAME}_secrets"
+SQL_SERVER_SECRETS_VOLUME_NAME="${SQL_SERVER_HOST_NAME}_secrets"
+DB2_SERVER_SECRETS_VOLUME_NAME="${DB2_SERVER_HOST_NAME}_secrets"
+LOAD_BALANCER_SECRETS_VOLUME_NAME="${LOAD_BALANCER_HOST_NAME}_secrets"
 
 ###############################################################################
 # Security configuration                                                      #
@@ -66,7 +81,7 @@ CERTIFICATE_KEY_SIZE=4096
 CA_KEY_SIZE=4096
 I2_ANALYZE_CERT_FOLDER_NAME="i2analyze"
 GATEWAY_CERT_FOLDER_NAME="gateway_user"
-ADMIN_ACCESS_PERMISSIONS=("i2:Administrator" "i2:Notes" "i2:RecordsUpload" "i2:RecordsDelete" "i2:ChartsUpload" "i2:ChartsDelete" \
+ADMIN_ACCESS_PERMISSIONS=("i2:Administrator" "i2:Notes" "i2:RecordsUpload" "i2:RecordsDelete" "i2:ChartsUpload" "i2:ChartsDelete"
   "i2:ChartsRead" "i2:RecordsExport" "i2:Connectors" "i2:Connectors:connector-id" "i2:Notebook")
 
 ###############################################################################
@@ -80,22 +95,19 @@ CHART_INDEX_BACKUP_NAME="chart_index_backup"
 ###############################################################################
 # Root Paths                                                                  #
 ###############################################################################
-# Determine project root directory
-ROOT_DIR=$(pushd . 1> /dev/null ; while [ "$(pwd)" != "/" ]; do test -e .root && grep -q 'Analyze-Containers-Root-Dir' < '.root' && { pwd; break; }; cd .. ; done ; popd 1> /dev/null)
-
-IMAGES_DIR="${ROOT_DIR}/images"
-TEMPLATES_DIR="${ROOT_DIR}/templates"
+IMAGES_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/images"
+TEMPLATES_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/templates"
 CONNECTOR_PREFIX="connector-"
-CONNECTOR_IMAGES_DIR="${ROOT_DIR}/connector-images"
-EXTENSIONS_DIR="${ROOT_DIR}/i2a-extensions"
-GATEWAY_SCHEMA_DIR="${ROOT_DIR}/gateway-schemas"
+CONNECTOR_IMAGES_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/connector-images"
+EXTENSIONS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/i2a-extensions"
+GATEWAY_SCHEMA_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/gateway-schemas"
 LOCAL_ETL_TOOLKIT_DIR="${IMAGES_DIR}/etl_client/etltoolkit"
 LOCAL_EXAMPLE_CONNECTOR_APP_DIR="${IMAGES_DIR}/example_connector/app"
 
-LOCAL_CONFIG_DEV_DIR="${ROOT_DIR}/templates/config-development"
-LOCAL_CONFIG_TOOLKIT_MOD_DIR="${ROOT_DIR}/templates/toolkit-config-mod"
-PRE_PROD_DIR="${ROOT_DIR}/examples/pre-prod"
-AWS_DIR="${ROOT_DIR}/examples/aws"
+LOCAL_CONFIG_DEV_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/templates/config-development"
+LOCAL_CONFIG_TOOLKIT_MOD_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/templates/toolkit-config-mod"
+PRE_PROD_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod"
+AWS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/examples/aws"
 
 if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
   LOCAL_PRE_PROD_CONFIG_DIR="${PRE_PROD_DIR}/configuration"
@@ -115,12 +127,12 @@ elif [[ "${ENVIRONMENT}" == "config-dev" ]]; then
   LOCAL_ISTORE_NAMES_SQL_SERVER_PROPERTIES_FILE="${LOCAL_CONFIGURATION_DIR}/InfoStoreNamesSQLServer.properties"
   LOCAL_ISTORE_NAMES_DB2_PROPERTIES_FILE="${LOCAL_CONFIGURATION_DIR}/InfoStoreNamesDb2.properties"
   LOCAL_DATABASE_SCRIPTS_DIR="${LOCAL_CONFIG_DEV_DIR}/database-scripts"
-  PREVIOUS_CONFIGURATION_DIR="${ROOT_DIR}/configs/${CONFIG_NAME}/.${CONFIG_NAME}"
+  PREVIOUS_CONFIGURATION_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/.${CONFIG_NAME}"
   PREVIOUS_CONFIGURATION_PATH="${PREVIOUS_CONFIGURATION_DIR}/configuration"
   PREVIOUS_CONFIGURATION_LIB_PATH="${PREVIOUS_CONFIGURATION_DIR}/lib"
   CURRENT_CONFIGURATION_PATH="${GENERATED_LOCAL_CONFIG_DIR}"
   PREVIOUS_CONFIGURATION_UTILS_PATH="${PREVIOUS_CONFIGURATION_DIR}/utils"
-  CURRENT_CONFIGURATION_UTILS_PATH="${ROOT_DIR}/configs/${CONFIG_NAME}/utils"
+  CURRENT_CONFIGURATION_UTILS_PATH="${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/utils"
   if [[ -f "${PREVIOUS_CONFIGURATION_UTILS_PATH}/variables.sh" ]]; then
     source "${PREVIOUS_CONFIGURATION_UTILS_PATH}/variables.sh"
   fi
@@ -144,8 +156,8 @@ LOCAL_CONFIG_LIVE_DIR="${LOCAL_CONFIGURATION_DIR}/live"
 ###############################################################################
 # Security paths                                                              #
 ###############################################################################
-LOCAL_KEYS_DIR="${ROOT_DIR}/dev-environment-secrets/simulated-secret-store"
-GENERATED_SECRETS_DIR="${ROOT_DIR}/dev-environment-secrets/generated-secrets"
+LOCAL_KEYS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/dev-environment-secrets/simulated-secret-store"
+GENERATED_SECRETS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/dev-environment-secrets/generated-secrets"
 LOCAL_CA_CERT_DIR="${GENERATED_SECRETS_DIR}/certificates/CA"
 LOCAL_EXTERNAL_CA_CERT_DIR="${GENERATED_SECRETS_DIR}/certificates/externalCA"
 CONNECTOR_CONFIG_FILE="connector.conf.json"
@@ -154,7 +166,7 @@ CONNECTOR_SECRETS_FILE="connector.secrets.json"
 ###############################################################################
 # Walkthrough paths                                                           #
 ###############################################################################
-PRE_PROD_DIR="${ROOT_DIR}/examples/pre-prod"
+PRE_PROD_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod"
 LOCAL_CONFIG_CHANGES_DIR="${PRE_PROD_DIR}/walkthroughs/change-management/configuration-changes"
 
 ###############################################################################
@@ -185,10 +197,10 @@ CFN_STACKS_PARAMS_MAP=(
   [vpc]="DeploymentName"
   [security]="DeploymentName VpcId"
   [storage]="DeploymentName PrivateSubnetAId"
-  [launch-templates]="DeploymentName ResourcesS3Bucket"
+  [launch - templates]="DeploymentName ResourcesS3Bucket"
   [solr]="DeploymentName PrivateSubnetAId ResourcesS3Bucket"
   [sqlserver]="DeploymentName PrivateSubnetAId"
-  [admin-client]="DeploymentName PrivateSubnetAId ResourcesS3Bucket"
+  [admin - client]="DeploymentName PrivateSubnetAId ResourcesS3Bucket"
   [liberty]="VpcId PrivateSubnetAId PublicSubnetAId PublicSubnetBId DBDialect SQLServerFQDN DB2ServerFQDN ZKHost ConnectorUrlMap CertificateArn EnvType DeploymentName"
   [connectors]="DeploymentName VpcId"
   [connector]="DeploymentName VpcId PrivateSubnetAId ConnectorName ConnectorTag"
@@ -196,10 +208,10 @@ CFN_STACKS_PARAMS_MAP=(
 
 declare -gA RUNBOOKS_MAP
 RUNBOOKS_MAP=(
-  [i2a-SolrFirstRun]="${AWS_DIR}/i2a-runbooks/solr/i2a-solr-first-run.yaml"
-  [i2a-SolrStart]="${AWS_DIR}/i2a-runbooks/solr/i2a-solr-start.yaml"
-  [i2a-SqlServerFirstRun]="${AWS_DIR}/i2a-runbooks/sqlserver/i2a-sqlserver-first-run.yaml"
-  [i2a-UpdateScripts]="${AWS_DIR}/i2a-runbooks/helpers/i2a-update-scripts.yaml"
+  [i2a - SolrFirstRun]="${AWS_DIR}/i2a-runbooks/solr/i2a-solr-first-run.yaml"
+  [i2a - SolrStart]="${AWS_DIR}/i2a-runbooks/solr/i2a-solr-start.yaml"
+  [i2a - SqlServerFirstRun]="${AWS_DIR}/i2a-runbooks/sqlserver/i2a-sqlserver-first-run.yaml"
+  [i2a - UpdateScripts]="${AWS_DIR}/i2a-runbooks/helpers/i2a-update-scripts.yaml"
 )
 
 PRIVATE_SUBNET_A_ID_EXPORT_NAME="${DEPLOYMENT_NAME}-PrivateSubnetAId"
@@ -237,5 +249,3 @@ DEBUG_LIBERTY_SERVERS=()
 DEVELOPMENT_JARS_DIR="/c/IBM/iap-discovery/Liberty/wlp/usr/servers/is-daod/apps/opal-services-is-daod.war/WEB-INF/lib"
 # Mac OS
 # DEVELOPMENT_JARS_DIR="/users/[NAME]/deploy/wlp/usr/servers/is-daod/apps/opal-services-is-daod.war/WEB-INF/lib"
-
-

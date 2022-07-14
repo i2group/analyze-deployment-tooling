@@ -23,17 +23,10 @@
 
 set -e
 
-# This is to ensure the script can be run from any directory
-SCRIPT_DIR="$(dirname "$0")"
-cd "$SCRIPT_DIR"
-
-# Determine project root directory
-ROOT_DIR=$(pushd . 1> /dev/null ; while [ "$(pwd)" != "/" ]; do test -e .root && grep -q 'Analyze-Containers-Root-Dir' < '.root' && { pwd; break; }; cd .. ; done ; popd 1> /dev/null)
-
 function printUsage() {
   echo "Usage:"
   echo "  buildConnectorImages.sh"
-  echo "  buildConnectorImages.sh -a -d <deployment_name> -l <dependency_label>" 1>&2
+  echo "  buildConnectorImages.sh -a -d <deployment_name>" 1>&2
   echo "  buildConnectorImages.sh [-i <connector1_name>] [-e <connector1_name>]" 1>&2
   echo "  buildConnectorImages.sh -h" 1>&2
 }
@@ -46,11 +39,10 @@ function usage() {
 function help() {
   printUsage
   echo "Options:" 1>&2
-  echo "  -a Produce or use artefacts on AWS." 1>&2
+  echo "  -a Produce or use artifacts on AWS." 1>&2
   echo "  -d <deployment_name>  Name of deployment to use on AWS." 1>&2
-  echo "  -l <dependency_label> Name of dependency image label to use on AWS." 1>&2
   echo "  -i <connector_name>   Names of the connectors to deploy and update. To specify multiple connectors, add additional -i options." 1>&2
-  echo "  -e <connector_name>   Names of the connectors to deploy and udapte. To specify multiple connectors, add additional -e options." 1>&2
+  echo "  -e <connector_name>   Names of the connectors to deploy and update. To specify multiple connectors, add additional -e options." 1>&2
   echo "  -v                    Verbose output." 1>&2
   echo "  -y                    Answer 'yes' to all prompts." 1>&2
   echo "  -h Display the help." 1>&2
@@ -59,10 +51,11 @@ function help() {
 
 AWS_DEPLOY="false"
 
-while getopts "ahvyd:e:i:l:" flag; do
+# cspell:ignore ahvyd
+while getopts "ahvyd:e:i:" flag; do
   case "${flag}" in
   a)
-    AWS_ARTEFACTS="true"
+    AWS_ARTIFACTS="true"
     ;;
   d)
     DEPLOYMENT_NAME="${OPTARG}"
@@ -72,9 +65,6 @@ while getopts "ahvyd:e:i:l:" flag; do
     ;;
   e)
     EXCLUDED_CONNECTORS+=("${OPTARG}")
-    ;;
-  l)
-    I2A_DEPENDENCIES_IMAGES_TAG="${OPTARG}"
     ;;
   y)
     YES_FLAG="true"
@@ -98,12 +88,8 @@ if [[ -z "${ENVIRONMENT}" ]]; then
   ENVIRONMENT="config-dev"
 fi
 
-if [[ "${AWS_ARTEFACTS}" && ( -z "${DEPLOYMENT_NAME}" || -z "${I2A_DEPENDENCIES_IMAGES_TAG}" ) ]]; then
+if [[ "${AWS_ARTIFACTS}" && -z "${DEPLOYMENT_NAME}" ]]; then
   usage
-fi
-
-if [[ -z "${I2A_DEPENDENCIES_IMAGES_TAG}" ]]; then
-  I2A_DEPENDENCIES_IMAGES_TAG="latest"
 fi
 
 if [[ -z "${YES_FLAG}" ]]; then
@@ -118,19 +104,19 @@ if [[ "${INCLUDED_CONNECTORS[*]}" && "${EXCLUDED_CONNECTORS[*]}" ]]; then
 fi
 
 # Load common functions
-source "${ROOT_DIR}/utils/commonFunctions.sh"
-source "${ROOT_DIR}/utils/serverFunctions.sh"
-source "${ROOT_DIR}/utils/clientFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
 
 # Load common variables
-source "${ROOT_DIR}/utils/simulatedExternalVariables.sh"
-source "${ROOT_DIR}/utils/commonVariables.sh"
-source "${ROOT_DIR}/utils/internalHelperVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulatedExternalVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
 
 function removeConnectors() {
   print "Removing running connector containers"
   local all_connector_names
-  IFS=' ' read -ra all_connector_names <<< "$(docker ps -a --format "{{.Names}}" -f network="${DOMAIN_NAME}" -f name="${CONNECTOR_PREFIX}" | xargs)"
+  IFS=' ' read -ra all_connector_names <<<"$(docker ps -a --format "{{.Names}}" -f network="${DOMAIN_NAME}" -f name="^${CONNECTOR_PREFIX}" | xargs)"
   for container_name in "${all_connector_names[@]}"; do
     connector_image_name=${container_name#"${CONNECTOR_PREFIX}"}
     if [[ " ${CONNECTOR_NAMES[*]} " == *" ${connector_image_name} "* ]]; then
@@ -295,7 +281,7 @@ function validateConnectorVersion() {
     -e "CONFIG_CONNECTOR_VERSION=${config_connector_version}" \
     -e "DECLARED_CONNECTOR_VERSION=${declared_connector_version}" \
     -e "YES_FLAG=${YES_FLAG}" \
-    -v "${ROOT_DIR}/utils:/opt/utils" \
+    -v "${ANALYZE_CONTAINERS_ROOT_DIR}/utils:/opt/utils" \
     "${I2CONNECT_SERVER_BASE_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" \
     "/opt/utils/containers/validatei2ConnectVersions.sh"
 }
@@ -310,12 +296,12 @@ function buildi2ConnectServerBaseImageIfNecessary() {
   prev_i2connect_version=$(jq -r '.version' <"${prev_i2connect_version_file_path}")
 
   if [[ "${i2connect_version}" != "${prev_i2connect_version}" ]]; then
-    if [[ "${AWS_ARTEFACTS}" == "true" ]]; then
+    if [[ "${AWS_ARTIFACTS}" == "true" ]]; then
       print "Running buildi2ConnectServerBaseImage.sh"
-      "${ROOT_DIR}/utils/buildi2ConnectServerBaseImage.sh" -a -l "${I2A_DEPENDENCIES_IMAGES_TAG}"
+      "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/buildi2ConnectServerBaseImage.sh" -a -l "${I2A_DEPENDENCIES_IMAGES_TAG}"
     else
       print "Running buildi2ConnectServerBaseImage.sh"
-      "${ROOT_DIR}/utils/buildi2ConnectServerBaseImage.sh"
+      "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/buildi2ConnectServerBaseImage.sh"
     fi
   fi
 }
@@ -326,9 +312,9 @@ function findAndCopyFileWithFolderStructure() {
   local to_folder="${3}"
   local result
 
-  pushd "${from_folder}" > /dev/null
+  pushd "${from_folder}" >/dev/null
   result=$(find . -name "${file_name}" -type f -exec cp --parents {} "${to_folder}" \;)
-  popd > /dev/null
+  popd >/dev/null
   [[ -z "${result}" ]]
 }
 
@@ -337,7 +323,7 @@ function extractConnectorDist() {
   local connector_dir="${CONNECTOR_IMAGES_DIR}/${connector_name}"
   local archive_files
 
-  readarray -d '' archive_files < <( find -L "${connector_dir}" -maxdepth 1 \( -name "*.tgz" -o -name "*.tar.gz" \) -type f -print0 )
+  readarray -d '' archive_files < <(find -L "${connector_dir}" -maxdepth 1 \( -name "*.tgz" -o -name "*.tar.gz" \) -type f -print0)
 
   if [[ "${#archive_files[@]}" -gt 1 ]]; then
     printErrorAndExit "There is more than one .tgz archive in the ${connector_name} directory. Ensure that only one .tgz file is present."
@@ -351,12 +337,12 @@ function extractConnectorDist() {
   tar -zxf "${archive_files[0]}" --strip-components=1 -C "${connector_dir}/app"
 
   # Override connector.conf.json, if there is none then get the default from the archive
-  if findAndCopyFileWithFolderStructure "${CONNECTOR_CONFIG_FILE}" "${connector_dir}/.app" "${connector_dir}/app" ; then
+  if findAndCopyFileWithFolderStructure "${CONNECTOR_CONFIG_FILE}" "${connector_dir}/.app" "${connector_dir}/app"; then
     findAndCopyFileWithFolderStructure "${CONNECTOR_CONFIG_FILE}" "${connector_dir}/app" "${connector_dir}/.app"
   fi
 
   # Override connector.secrets.json, if there is none then get the default from the archive
-  if findAndCopyFileWithFolderStructure "${CONNECTOR_SECRETS_FILE}" "${connector_dir}/.app" "${connector_dir}/app" ; then
+  if findAndCopyFileWithFolderStructure "${CONNECTOR_SECRETS_FILE}" "${connector_dir}/.app" "${connector_dir}/app"; then
     findAndCopyFileWithFolderStructure "${CONNECTOR_SECRETS_FILE}" "${connector_dir}/app" "${connector_dir}/.app"
   fi
 }
@@ -393,8 +379,7 @@ function buildImage() {
   # Validate connector and sdk versions
   if [[ "${connector_type}" == "${I2CONNECT_SERVER_CONNECTOR_TYPE}" ]]; then
     extractConnectorDist "${connector_name}"
-    validateConnectorVersion "${connector_name}" "${connector_type}" || ( cleanUpConnectorDist "${connector_name}" && exit 1 )
-    buildi2ConnectServerBaseImageIfNecessary
+    validateConnectorVersion "${connector_name}" "${connector_type}" || (cleanUpConnectorDist "${connector_name}" && exit 1)
   elif [[ "${connector_type}" == "${EXTERNAL_CONNECTOR_TYPE}" ]]; then
     return
   fi
@@ -404,10 +389,10 @@ function buildImage() {
   # Set connector image name
   connector_image_name="${CONNECTOR_IMAGE_BASE_NAME}${connector_name}:${connector_tag}"
 
-  if [[ "${AWS_ARTEFACTS}" == "true" ]]; then
+  if [[ "${AWS_ARTIFACTS}" == "true" ]]; then
     if [[ "${connector_type}" == "${I2CONNECT_SERVER_CONNECTOR_TYPE}" ]] && isSecret "secrets/${connector_name}"; then
       mkdir -p "${CONNECTOR_IMAGES_DIR}/${connector_name}/app/dist/connectors/${connector_name}"
-      getSecret "secrets/${connector_name}" > "${CONNECTOR_IMAGES_DIR}/${connector_name}/app/dist/connectors/${connector_name}/${CONNECTOR_CONFIG_FILE}"
+      getSecret "secrets/${connector_name}" >"${CONNECTOR_IMAGES_DIR}/${connector_name}/app/dist/connectors/${connector_name}/${CONNECTOR_CONFIG_FILE}"
     fi
   fi
 
@@ -421,7 +406,7 @@ function buildImage() {
   fi
 }
 
-if [[ "${AWS_ARTEFACTS}" == "true" ]]; then
+if [[ "${AWS_ARTIFACTS}" == "true" ]]; then
   aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ECR_BASE_NAME}"
 fi
 
@@ -430,7 +415,7 @@ createDockerNetwork "${DOMAIN_NAME}"
 ###############################################################################
 # Set a list of all running containers                                        #
 ###############################################################################
-IFS=' ' read -ra ALL_RUNNING_CONTAINER_NAMES <<< "$(docker ps -a --format "{{.Names}}" -f network="${DOMAIN_NAME}" -f name="${CONNECTOR_PREFIX}" -f "status=running" | xargs)"
+IFS=' ' read -ra ALL_RUNNING_CONTAINER_NAMES <<<"$(docker ps --format "{{.Names}}" -f network="${DOMAIN_NAME}" -f name="^${CONNECTOR_PREFIX}" | xargs)"
 
 ###############################################################################
 # Set a list of connectors to update                                          #

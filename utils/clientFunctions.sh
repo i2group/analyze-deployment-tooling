@@ -39,12 +39,12 @@
 function checkClientFunctionsEnvironmentVariablesAreSet() {
   while read -r var_name; do
     checkVariableIsSet "${!var_name}" "${var_name} environment variable is not set"
-  done <"${ROOT_DIR}/utils/requiredEnvironmentVariables.txt"
+  done <"${ANALYZE_CONTAINERS_ROOT_DIR}/utils/requiredEnvironmentVariables.txt"
 }
 
 function isSecret() {
   local secret="$1"
-  aws secretsmanager describe-secret --secret-id "${DEPLOYMENT_NAME}/${secret}" --region "${AWS_REGION}" > /dev/null
+  aws secretsmanager describe-secret --secret-id "${DEPLOYMENT_NAME}/${secret}" --region "${AWS_REGION}" >/dev/null
 }
 
 #######################################
@@ -124,6 +124,7 @@ function waitForIndexesToBeBuilt() {
   local ready_index
   local index_status_response
   local app_admin_password
+  local i
 
   app_admin_password=$(getApplicationAdminPassword)
   print "Waiting for indexes to be built"
@@ -167,7 +168,7 @@ function waitForConnectorToBeLive() {
   local configuration_path="${2:-/config}"
   local max_tries=10
   local connector_config_url
-  
+
   if [[ "${GATEWAY_SSL_CONNECTION}" == true ]]; then
     connector_config_url="https://${connector_fqdn}:3443${configuration_path}"
   else
@@ -194,7 +195,7 @@ function waitForConnectorToBeLive() {
     sleep 5
   done
 
-  # If you get here, waitForConnectorToBeLive has not been successfull. Run curl with -v
+  # If you get here, waitForConnectorToBeLive has not been successful. Run curl with -v
   runi2AnalyzeToolAsGatewayUser bash -c "curl -v --cert /tmp/i2acerts/i2Analyze.pem --cacert /tmp/i2acerts/CA.cer \"${connector_config_url}\""
   printErrorAndExit "Connector is NOT live"
 }
@@ -219,6 +220,7 @@ function changeSAPassword() {
     SSL_CA_CERTIFICATE=$(getSecret certificates/CA/CA.cer)
   fi
 
+  # shellcheck disable=SC2153
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
@@ -250,6 +252,7 @@ function changeDb2inst1Password() {
     SSL_CA_CERTIFICATE=$(getSecret certificates/CA/CA.cer)
   fi
 
+  # shellcheck disable=SC2153
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
@@ -377,16 +380,17 @@ function runi2AnalyzeTool() {
   SOLR_ADMIN_DIGEST_PASSWORD=$(getSecret solr/SOLR_ADMIN_DIGEST_PASSWORD)
 
   case "${DB_DIALECT}" in
-    db2)
-      DB_USERNAME="${DB2INST1_USERNAME}"
-      DB_PASSWORD=$(getSecret db2server/db2inst1_PASSWORD)
-      DB_SERVER_FQDN="${DB2_SERVER_FQDN}"
-      ;;
-    sqlserver)
-      DB_USERNAME="${DBA_USERNAME}"
-      DB_PASSWORD=$(getSecret sqlserver/dba_PASSWORD)
-      DB_SERVER_FQDN="${SQL_SERVER_FQDN}"
-      ;;
+  db2)
+    DB_USERNAME="${DB2INST1_USERNAME}"
+    DB_PASSWORD=$(getSecret db2server/db2inst1_PASSWORD)
+    DB_SERVER_FQDN="${DB2_SERVER_FQDN}"
+    ;;
+  sqlserver)
+    # shellcheck disable=SC2153
+    DB_USERNAME="${DBA_USERNAME}"
+    DB_PASSWORD=$(getSecret sqlserver/dba_PASSWORD)
+    DB_SERVER_FQDN="${SQL_SERVER_FQDN}"
+    ;;
   esac
 
   if [[ "${SOLR_ZOO_SSL_CONNECTION}" == "true" ]]; then
@@ -611,6 +615,7 @@ function runSQLServerCommandAsDBB() {
     SSL_CA_CERTIFICATE=$(getSecret certificates/CA/CA.cer)
   fi
 
+  # shellcheck disable=SC2153
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
@@ -642,22 +647,24 @@ function runEtlToolkitToolAsi2ETL() {
   local SSL_CA_CERTIFICATE
 
   case "${DB_DIALECT}" in
-    db2)
-      DB_USERNAME="${DB2INST1_USERNAME}"
-      DB_PASSWORD=$(getSecret db2server/db2inst1_PASSWORD)
-      DB_SERVER_FQDN="${DB2_SERVER_FQDN}"
-      ;;
-    sqlserver)
-      DB_USERNAME="${I2_ETL_USERNAME}"
-      DB_PASSWORD=$(getSecret sqlserver/i2etl_PASSWORD)
-      DB_SERVER_FQDN="${SQL_SERVER_FQDN}"
-      ;;
+  db2)
+    DB_USERNAME="${DB2INST1_USERNAME}"
+    DB_PASSWORD=$(getSecret db2server/db2inst1_PASSWORD)
+    DB_SERVER_FQDN="${DB2_SERVER_FQDN}"
+    ;;
+  sqlserver)
+    DB_USERNAME="${I2_ETL_USERNAME}"
+    DB_PASSWORD=$(getSecret sqlserver/i2etl_PASSWORD)
+    DB_SERVER_FQDN="${SQL_SERVER_FQDN}"
+    ;;
   esac
-  
 
   if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
     SSL_CA_CERTIFICATE=$(getSecret certificates/CA/CA.cer)
   fi
+
+  local container_data_dir="/var/i2a-data"
+  updateVolume "${DATA_DIR}" "${I2A_DATA_VOLUME_NAME}" "${container_data_dir}"
 
   docker run \
     --rm \
@@ -665,7 +672,7 @@ function runEtlToolkitToolAsi2ETL() {
     --name "${ETL_CLIENT_CONTAINER_NAME}" \
     --user "$(id -u "${USER}"):$(id -u "${USER}")" \
     -v "${LOCAL_CONFIG_DIR}/logs:/opt/configuration/logs" \
-    -v "${DATA_DIR}:/var/i2a-data" \
+    -v "${I2A_DATA_VOLUME_NAME}:${container_data_dir}" \
     -e "DB_SERVER=${DB_SERVER_FQDN}" \
     -e "DB_PORT=${DB_PORT}" \
     -e "DB_NAME=${DB_NAME}" \
@@ -693,19 +700,22 @@ function runEtlToolkitToolAsDBA() {
   local SSL_CA_CERTIFICATE
 
   case "${DB_DIALECT}" in
-    db2)
-      DB_USERNAME="${DB2INST1_USERNAME}"
-      DB_PASSWORD=$(getSecret db2server/db2inst1_PASSWORD)
-      ;;
-    sqlserver)
-      DB_USERNAME="${DBA_USERNAME}"
-      DB_PASSWORD=$(getSecret sqlserver/dba_PASSWORD)
-      ;;
+  db2)
+    DB_USERNAME="${DB2INST1_USERNAME}"
+    DB_PASSWORD=$(getSecret db2server/db2inst1_PASSWORD)
+    ;;
+  sqlserver)
+    DB_USERNAME="${DBA_USERNAME}"
+    DB_PASSWORD=$(getSecret sqlserver/dba_PASSWORD)
+    ;;
   esac
-  
+
   if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
     SSL_CA_CERTIFICATE=$(getSecret certificates/CA/CA.cer)
   fi
+
+  local container_data_dir="/var/i2a-data"
+  updateVolume "${DATA_DIR}" "${I2A_DATA_VOLUME_NAME}" "${container_data_dir}"
 
   docker run \
     --rm \
@@ -713,7 +723,7 @@ function runEtlToolkitToolAsDBA() {
     --name "${ETL_CLIENT_CONTAINER_NAME}" \
     --user "$(id -u "${USER}"):$(id -u "${USER}")" \
     -v "${LOCAL_CONFIG_DIR}/logs:/opt/configuration/logs" \
-    -v "${DATA_DIR}:/var/i2a-data" \
+    -v "${I2A_DATA_VOLUME_NAME}:${container_data_dir}" \
     -e "DB_SERVER=${SQL_SERVER_FQDN}" \
     -e "DB_PORT=${DB_PORT}" \
     -e "DB_NAME=${DB_NAME}" \
@@ -819,6 +829,53 @@ function runi2AnalyzeToolAsExternalUser() {
     -e "SERVER_SSL=true" \
     -e "SSL_CA_CERTIFICATE=${SSL_CA_CERTIFICATE}" \
     "${I2A_TOOLS_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "$@"
+}
+
+#######################################
+# Use this function to update the named volume
+# with the content of your local directory.
+# e.g. updateVolume "${LOCAL_KEYS_DIR}" "${SECRETS_VOLUME_NAME}" "/run/secrets"
+# Arguments:
+#   1. Directory local on your machine.
+#   2. Volume name.
+#   3. Directory inside the volume.
+#######################################
+function updateVolume() {
+  local local_dir="$1"
+  local volume_name="$2"
+  local volume_dir="$3"
+
+  docker run \
+    --rm \
+    -v "${local_dir}:/run/bind-mount" \
+    -v "${volume_name}:${volume_dir}" \
+    "${REDHAT_UBI_IMAGE_NAME}" \
+    bash -c "rm -rf ${volume_dir}/* && cp -pr '/run/bind-mount/.' '${volume_dir}'"
+}
+
+#######################################
+# Use this function to get the content of the named volume
+# in your local directory.
+# e.g. getVolume "${LOCAL_KEYS_DIR}" "${SECRETS_VOLUME_NAME}" "/run/secrets"
+# Arguments:
+#   1. Directory local on your machine.
+#   2. Volume name.
+#   3. Directory inside the volume.
+#######################################
+function getVolume() {
+  local local_dir="$1"
+  local volume_name="$2"
+  local volume_dir="$3"
+
+  deleteFolderIfExistsAndCreate "${local_dir}"
+
+  docker run \
+    --rm \
+    "${EXTRA_ARGS[@]}" \
+    -v "${local_dir}:/run/bind-mount" \
+    -v "${volume_name}:${volume_dir}" \
+    "${REDHAT_UBI_IMAGE_NAME}" \
+    cp -pr "${volume_dir}/." /run/bind-mount
 }
 
 ###############################################################################

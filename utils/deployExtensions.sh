@@ -23,13 +23,6 @@
 
 set -e
 
-# This is to ensure the script can be run from any directory
-SCRIPT_DIR="$(dirname "$0")"
-cd "$SCRIPT_DIR"
-
-# Determine project root directory
-ROOT_DIR=$(pushd . 1> /dev/null ; while [ "$(pwd)" != "/" ]; do test -e .root && grep -q 'Analyze-Containers-Root-Dir' < '.root' && { pwd; break; }; cd .. ; done ; popd 1> /dev/null)
-
 function printUsage() {
   echo "Usage:"
   echo "  deployExtensions.sh -c <config_name> " 1>&2
@@ -83,15 +76,15 @@ if [[ "${INCLUDED_EXTENSIONS[*]}" && "${EXCLUDED_EXTENSIONS[*]}" ]]; then
 fi
 
 # Load common functions
-source "${ROOT_DIR}/utils/commonFunctions.sh"
-source "${ROOT_DIR}/utils/serverFunctions.sh"
-source "${ROOT_DIR}/utils/clientFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
 
 # Load common variables
-source "${ROOT_DIR}/utils/simulatedExternalVariables.sh"
-source "${ROOT_DIR}/utils/commonVariables.sh"
-source "${ROOT_DIR}/utils/internalHelperVariables.sh"
-source "${ROOT_DIR}/version"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulatedExternalVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
 
 function installJarToMavenLocalIfNecessary() {
   local group_id="${1}"
@@ -116,27 +109,27 @@ function setupI2AnalyzeMavenLocal() {
   local sharedPath="${TOOLKIT_APPLICATION_DIR}/shared/lib"
 
   print "Ensure i2Analyze dependencies are installed..."
-  
+
   installJarToMavenLocalIfNecessary "com.i2group" "apollo-legacy" "${I2ANALYZE_VERSION}" "${libPath}/ApolloLegacy.jar"
   installJarToMavenLocalIfNecessary "com.i2group" "disco-api" "${I2ANALYZE_VERSION}" "${libPath}/disco-api-9.2.jar"
   installJarToMavenLocalIfNecessary "com.i2group" "daod" "${I2ANALYZE_VERSION}" "${libPath}/Daod.jar"
   installJarToMavenLocalIfNecessary "com.i2group" "disco-utils" "${I2ANALYZE_VERSION}" "${sharedPath}/DiscoUtils.jar"
 
-  pushd "${EXTENSIONS_DIR}" > /dev/null
+  pushd "${EXTENSIONS_DIR}" >/dev/null
   mvn install
-  popd > /dev/null
+  popd >/dev/null
 }
 
 function installArtifact() {
   local artifact_id="${1}"
-  local artifact_dir="${ROOT_DIR}/i2a-extensions/${artifact_id}"
+  local artifact_dir="${ANALYZE_CONTAINERS_ROOT_DIR}/i2a-extensions/${artifact_id}"
 
   if [[ ! -d "${artifact_dir}" ]]; then
     printErrorAndExit "Artifact ${artifact_id} does NOT exist"
   fi
   print "Deploying artifact: ${artifact_id}"
   cd "${artifact_dir}"
-  mvn clean install -Doutput.dir="${LOCAL_LIB_DIR}" -Di2analyze.root.dir="${ROOT_DIR}"
+  mvn clean install -Doutput.dir="${LOCAL_LIB_DIR}" -Di2analyze.root.dir="${ANALYZE_CONTAINERS_ROOT_DIR}"
 }
 
 function cleanArtifacts() {

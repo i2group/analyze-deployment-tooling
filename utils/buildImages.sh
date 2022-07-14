@@ -23,13 +23,6 @@
 
 set -e
 
-# This is to ensure the script can be run from any directory
-SCRIPT_DIR="$(dirname "$0")"
-cd "$SCRIPT_DIR"
-
-# Determine project root directory
-ROOT_DIR=$(pushd . 1> /dev/null ; while [ "$(pwd)" != "/" ]; do test -e .root && grep -q 'Analyze-Containers-Root-Dir' < '.root' && { pwd; break; }; cd .. ; done ; popd 1> /dev/null)
-
 function printUsage() {
   echo "Usage:"
   echo "    buildImages.sh" 1>&2
@@ -81,31 +74,28 @@ if [[ "${AWS_ARTEFACTS}" && -z "${I2A_DEPENDENCIES_IMAGES_TAG}" ]]; then
   usage
 fi
 
-if [[ -z "${I2A_DEPENDENCIES_IMAGES_TAG}" ]]; then
-  I2A_DEPENDENCIES_IMAGES_TAG="latest"
-fi
-
 if [[ -z "${ENVIRONMENT}" ]]; then
   ENVIRONMENT="config-dev"
 fi
 
 # Load common functions
-source "${ROOT_DIR}/utils/commonFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
 
 # Load common variables
 if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
-  source "${ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
 elif [[ "${ENVIRONMENT}" == "config-dev" ]]; then
-  source "${ROOT_DIR}/utils/simulatedExternalVariables.sh"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulatedExternalVariables.sh"
 fi
-source "${ROOT_DIR}/utils/commonVariables.sh"
-source "${ROOT_DIR}/utils/internalHelperVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
 
 ###############################################################################
 # Building load balancer image                                                #
 ###############################################################################
 print "Building load balancer image"
-docker build -t "${LOAD_BALANCER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/ha_proxy"
+docker build -t "${LOAD_BALANCER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/ha_proxy" \
+  --build-arg USER_UID="$(id -u "${USER}")"
 
 ###############################################################################
 # Building Liberty base image                                                 #
@@ -183,8 +173,8 @@ docker build -t "${CONNECTOR_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAG
 ###############################################################################
 if [[ "${AWS_ARTEFACTS}" == "true" ]]; then
   print "Running buildi2ConnectServerBaseImage.sh"
-  "${ROOT_DIR}/utils/buildi2ConnectServerBaseImage.sh" -a -l "${I2A_DEPENDENCIES_IMAGES_TAG}"
+  "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/buildi2ConnectServerBaseImage.sh" -a -l "${I2A_DEPENDENCIES_IMAGES_TAG}"
 else
   print "Running buildi2ConnectServerBaseImage.sh"
-  "${ROOT_DIR}/utils/buildi2ConnectServerBaseImage.sh"
+  "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/buildi2ConnectServerBaseImage.sh"
 fi

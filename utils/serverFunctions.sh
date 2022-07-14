@@ -33,8 +33,9 @@
 #   3  ZK data volume name
 #   4. ZK datalog volume name
 #   5. ZK log volume name
-#   6. ZK port (on the host machine)
-#   7. Zoo ID (an identifier for the ZooKeeper server)
+#   6. Zoo ID (an identifier for the ZooKeeper server)
+#   7. ZK secret location
+#   8. ZK secret volume
 #######################################
 function runZK() {
   local CONTAINER="$1"
@@ -44,14 +45,15 @@ function runZK() {
   local LOG_VOLUME="$5"
   local ZOO_ID="$6"
   local SECRET_LOCATION="$7"
-  
+  local SECRETS_VOLUME="$8"
+
   local ssl_private_key
   ssl_private_key=$(getSecret "certificates/${SECRET_LOCATION}/server.key")
   local ssl_certificate
   ssl_certificate=$(getSecret "certificates/${SECRET_LOCATION}/server.cer")
   local ssl_ca_certificate
   ssl_ca_certificate=$(getSecret "certificates/CA/CA.cer")
-  
+
   print "ZooKeeper container ${CONTAINER} is starting"
   docker run -d \
     --name "${CONTAINER}" \
@@ -60,7 +62,7 @@ function runZK() {
     -v "${DATA_VOLUME}:/data" \
     -v "${DATALOG_VOLUME}:/datalog" \
     -v "${LOG_VOLUME}:/logs" \
-    -v "${LOCAL_KEYS_DIR}/${SECRET_LOCATION}:${CONTAINER_SECRETS_DIR}" \
+    -v "${SECRETS_VOLUME}:${CONTAINER_SECRETS_DIR}" \
     -e "ZOO_SERVERS=${ZOO_SERVERS}" \
     -e "ZOO_MY_ID=${ZOO_ID}" \
     -e "ZOO_SECURE_CLIENT_PORT=${ZK_SECURE_CLIENT_PORT}" \
@@ -81,6 +83,8 @@ function runZK() {
 #   2. Solr container FQDN
 #   3. Solr volume name
 #   4. Solr port (on the host machine)
+#   5. Solr secret location
+#   6. Solr secret volume
 #######################################
 function runSolr() {
   local CONTAINER="$1"
@@ -88,6 +92,7 @@ function runSolr() {
   local VOLUME="$3"
   local HOST_PORT="$4"
   local SECRET_LOCATION="$5"
+  local SECRETS_VOLUME="$6"
 
   local ssl_private_key
   ssl_private_key=$(getSecret "certificates/${SECRET_LOCATION}/server.key")
@@ -110,7 +115,7 @@ function runSolr() {
     -p "${HOST_PORT}":8983 \
     -v "${VOLUME}:/var/solr" \
     -v "${SOLR_BACKUP_VOLUME_NAME}:${SOLR_BACKUP_VOLUME_LOCATION}" \
-    -v "${LOCAL_KEYS_DIR}/${SECRET_LOCATION}:${CONTAINER_SECRETS_DIR}" \
+    -v "${SECRETS_VOLUME}:${CONTAINER_SECRETS_DIR}" \
     -e SOLR_OPTS="-Dsolr.allowPaths=${SOLR_BACKUP_VOLUME_LOCATION}" \
     -e "ZK_HOST=${ZK_HOST}" \
     -e "SOLR_HOST=${FQDN}" \
@@ -149,9 +154,9 @@ function runSQLServer() {
     --net-alias "${SQL_SERVER_FQDN}" \
     -p "${HOST_PORT_DB}:1433" \
     -v "${SQL_SERVER_VOLUME_NAME}:/var/opt/mssql" \
-    -v "${DB_BACKUP_VOLUME_NAME}:${DB_CONTAINER_BACKUP_DIR}" \
-    -v "${LOCAL_KEYS_DIR}/sqlserver:${CONTAINER_SECRETS_DIR}" \
-    -v "${DATA_DIR}:/var/i2a-data" \
+    -v "${SQL_SERVER_BACKUP_VOLUME_NAME}:${DB_CONTAINER_BACKUP_DIR}" \
+    -v "${SQL_SERVER_SECRETS_VOLUME_NAME}:${CONTAINER_SECRETS_DIR}" \
+    -v "${I2A_DATA_VOLUME_NAME}:/var/i2a-data" \
     -e "ACCEPT_EULA=${ACCEPT_EULA}" \
     -e "MSSQL_AGENT_ENABLED=true" \
     -e "MSSQL_PID=${MSSQL_PID}" \
@@ -185,10 +190,10 @@ function runDb2Server() {
     --network "${DOMAIN_NAME}" \
     --net-alias "${DB2_SERVER_FQDN}" \
     -p "${HOST_PORT_DB}:50000" \
-    -v "${DB_BACKUP_VOLUME_NAME}:${DB_CONTAINER_BACKUP_DIR}" \
-    -v "${LOCAL_KEYS_DIR}/db2server:${CONTAINER_SECRETS_DIR}" \
+    -v "${DB2_SERVER_BACKUP_VOLUME_NAME}:${DB_CONTAINER_BACKUP_DIR}" \
+    -v "${DB2_SERVER_SECRETS_VOLUME_NAME}:${CONTAINER_SECRETS_DIR}" \
     -v "${DB2_SERVER_VOLUME_NAME}:/database/data" \
-    -v "${DATA_DIR}:/var/i2a-data" \
+    -v "${I2A_DATA_VOLUME_NAME}:/var/i2a-data" \
     -e "LICENSE=${DB2_LICENSE}" \
     -e "DB_INSTALL_DIR=${DB_INSTALL_DIR}" \
     -e "DB2INST1_PASSWORD=${db2inst1_initial_password}" \
@@ -212,18 +217,19 @@ function runLiberty() {
   local CONTAINER="$1"
   local FQDN="$2"
   local VOLUME="$3"
-  local HOST_PORT="$4"
-  local KEY_FOLDER="$5"
-  local DEBUG_PORT="$6"
+  local SECRET_VOLUME="$4"
+  local HOST_PORT="$5"
+  local KEY_FOLDER="$6"
+  local DEBUG_PORT="$7"
 
   local libertyStartCommand=()
   local dbEnvironment=("-e" "DB_DIALECT=${DB_DIALECT}" "-e" "DB_PORT=${DB_PORT}")
   local runInDebug
 
   if [[ ${DEBUG_LIBERTY_SERVERS[*]} =~ (^|[[:space:]])"${CONTAINER}"($|[[:space:]]) ]]; then
-      runInDebug=true
+    runInDebug=true
   else
-      runInDebug=false
+    runInDebug=false
   fi
 
   local ssl_outbound_private_key
@@ -238,13 +244,13 @@ function runLiberty() {
 
   local solr_application_digest_password
   solr_application_digest_password=$(getSecret "solr/SOLR_APPLICATION_DIGEST_PASSWORD")
-  
+
   local ssl_private_key
   ssl_private_key=$(getSecret "certificates/${KEY_FOLDER}/server.key")
   local ssl_certificate
   ssl_certificate=$(getSecret "certificates/${KEY_FOLDER}/server.cer")
   local ssl_ca_certificate
-  
+
   if [[ "${ENVIRONMENT}" == "config-dev" ]]; then
     if [[ "${AWS_ARTEFACTS}" == "true" ]]; then
       if isSecret "i2a/app-secrets"; then
@@ -255,7 +261,7 @@ function runLiberty() {
     else
       app_secrets="None"
     fi
-    
+
     if [[ "${AWS_ARTEFACTS}" == "true" ]]; then
       if isSecret "i2a/additional-trust-certificates"; then
         ssl_additional_trust_certificates=$(getSecret "i2a/additional-trust-certificates")
@@ -263,7 +269,7 @@ function runLiberty() {
     elif [[ -f "${LOCAL_USER_CONFIG_DIR}"/secrets/additional-trust-certificates.cer ]]; then
       ssl_additional_trust_certificates=$(cat "${LOCAL_USER_CONFIG_DIR}"/secrets/additional-trust-certificates.cer)
     fi
-    
+
     ssl_ca_certificate=$(getSecret "certificates/externalCA/CA.cer")
   else
     ssl_ca_certificate=$(getSecret "certificates/CA/CA.cer")
@@ -271,18 +277,18 @@ function runLiberty() {
 
   local db_password
   case "${DB_DIALECT}" in
-    db2)
-      db_password=$(getSecret "db2server/db2inst1_PASSWORD")
-      dbEnvironment+=("-e" "DB_SERVER=${DB2_SERVER_FQDN}")
-      dbEnvironment+=("-e" "DB_NODE=${DB_NODE}")
-      dbEnvironment+=("-e" "DB_USERNAME=${DB2INST1_USERNAME}")
-      ;;
-    sqlserver)
-      db_password=$(getSecret "sqlserver/i2analyze_PASSWORD")
-      dbEnvironment+=("-e" "DB_SERVER=${SQL_SERVER_FQDN}")
-      dbEnvironment+=("-e" "DB_NODE=${DB_NODE}")
-      dbEnvironment+=("-e" "DB_USERNAME=${I2_ANALYZE_USERNAME}")
-      ;;
+  db2)
+    db_password=$(getSecret "db2server/db2inst1_PASSWORD")
+    dbEnvironment+=("-e" "DB_SERVER=${DB2_SERVER_FQDN}")
+    dbEnvironment+=("-e" "DB_NODE=${DB_NODE}")
+    dbEnvironment+=("-e" "DB_USERNAME=${DB2INST1_USERNAME}")
+    ;;
+  sqlserver)
+    db_password=$(getSecret "sqlserver/i2analyze_PASSWORD")
+    dbEnvironment+=("-e" "DB_SERVER=${SQL_SERVER_FQDN}")
+    dbEnvironment+=("-e" "DB_NODE=${DB_NODE}")
+    dbEnvironment+=("-e" "DB_USERNAME=${I2_ANALYZE_USERNAME}")
+    ;;
   esac
   dbEnvironment+=("-e" "DB_PASSWORD=${db_password}")
 
@@ -318,7 +324,7 @@ function runLiberty() {
     --network "${DOMAIN_NAME}" \
     --net-alias "${FQDN}" \
     -p "${HOST_PORT}:9443" \
-    -v "${LOCAL_KEYS_DIR}/${KEY_FOLDER}:${CONTAINER_SECRETS_DIR}" \
+    -v "${SECRET_VOLUME}:${CONTAINER_SECRETS_DIR}" \
     -v "${VOLUME}:/data" \
     -e "LICENSE=${LIC_AGREEMENT}" \
     "${dbEnvironment[@]}" \
@@ -351,7 +357,7 @@ function createDataSourceProperties() {
   local dsid_properties_file_path
   local topology_id
   local datasource_name
-  
+
   if [[ "${DEPLOYMENT_PATTERN}" != "i2c" ]]; then
     topology_id="infostore"
   else
@@ -361,11 +367,11 @@ function createDataSourceProperties() {
   cp "${dsid_properties_file_path}" "${datasource_properties_file_path}"
 
   addDataSourcePropertiesIfNecessary "${datasource_properties_file_path}"
-  
+
   if [[ "${DEPLOYMENT_PATTERN}" != "i2c" ]] && [[ "${DEPLOYMENT_PATTERN}" != "schema_dev" ]]; then
     sed -i.bak -e '/DataSourceId.*/d' "${datasource_properties_file_path}"
   fi
-  if ! grep -xq "IsMonitored=.*" "${datasource_properties_file_path}" ; then
+  if ! grep -xq "IsMonitored=.*" "${datasource_properties_file_path}"; then
     addToPropertiesFile "IsMonitored=true" "${datasource_properties_file_path}"
   fi
 
@@ -403,18 +409,18 @@ function buildLibertyConfiguredImage() {
   if [[ -f "${LOCAL_CONFIG_DIR}/server.extensions.xml" ]]; then
     cp -r "${LOCAL_CONFIG_DIR}/server.extensions.xml" "${IMAGES_DIR}/liberty_ubi_combined/"
   else
-    echo '<?xml version="1.0" encoding="UTF-8"?><server/>' > "${IMAGES_DIR}/liberty_ubi_combined/server.extensions.xml"
+    echo '<?xml version="1.0" encoding="UTF-8"?><server/>' >"${IMAGES_DIR}/liberty_ubi_combined/server.extensions.xml"
   fi
   if [[ "${EXTENSIONS_DEV}" == true ]]; then
     cp -r "${LOCAL_CONFIG_DIR}/server.extensions.dev.xml" "${IMAGES_DIR}/liberty_ubi_combined/"
   else
-    echo '<?xml version="1.0" encoding="UTF-8"?><server/>' > "${IMAGES_DIR}/liberty_ubi_combined/server.extensions.dev.xml"
+    echo '<?xml version="1.0" encoding="UTF-8"?><server/>' >"${IMAGES_DIR}/liberty_ubi_combined/server.extensions.dev.xml"
   fi
 
   # Copy catalog.json & web.xml specific to the DEPLOYMENT_PATTERN
   cp -r "${TOOLKIT_APPLICATION_DIR}/target-mods/${CATALOGUE_TYPE}/catalog.json" "${liberty_configured_classes_folder_path}"
   cp -r "${TOOLKIT_APPLICATION_DIR}/fragment-mods/${APPLICATION_BASE_TYPE}/WEB-INF/web.xml" "${liberty_configured_web_app_files_fodler_path}/web.xml"
-  
+
   sed -i.bak -e '1s/^/<?xml version="1.0" encoding="UTF-8"?><web-app xmlns="http:\/\/java.sun.com\/xml\/ns\/javaee" xmlns:xsi="http:\/\/www.w3.org\/2001\/XMLSchema-instance" xsi:schemaLocation="http:\/\/java.sun.com\/xml\/ns\/javaee http:\/\/java.sun.com\/xml\/ns\/javaee\/web-app_3_0.xsd" id="WebApp_ID" version="3.0"> <display-name>opal<\/display-name>/' \
     "${liberty_configured_web_app_files_fodler_path}/web.xml"
   echo '</web-app>' >>"${liberty_configured_web_app_files_fodler_path}/web.xml"
@@ -442,13 +448,13 @@ function buildLibertyConfiguredImageForPreProd() {
   local liberty_configured_web_app_files_fodler_path="${IMAGES_DIR}/liberty_ubi_combined/application/web-app-files"
 
   print "Building Liberty image"
-  
+
   deleteFolderIfExistsAndCreate "${liberty_configured_classes_folder_path}"
   deleteFolderIfExistsAndCreate "${liberty_configured_lib_folder_path}"
   deleteFolderIfExistsAndCreate "${liberty_configured_web_app_files_fodler_path}"
 
   createDataSourceProperties "${liberty_configured_classes_folder_path}"
-  
+
   cp -r "${LOCAL_CONFIG_DIR}/fragments/common/WEB-INF/classes/." "${liberty_configured_classes_folder_path}"
   cp -r "${LOCAL_CONFIG_DIR}/fragments/opal-services/WEB-INF/classes/." "${liberty_configured_classes_folder_path}"
   cp -r "${LOCAL_CONFIG_DIR}/fragments/opal-services-is/WEB-INF/classes/." "${liberty_configured_classes_folder_path}"
@@ -467,7 +473,7 @@ function buildLibertyConfiguredImageForPreProd() {
   docker build \
     -t "${LIBERTY_CONFIGURED_IMAGE_NAME}:${I2A_LIBERTY_CONFIGURED_IMAGE_TAG}" \
     "${IMAGES_DIR}/liberty_ubi_combined" \
-    --build-arg "BASE_IMAGE=${LIBERTY_BASE_IMAGE_NAME}"
+    --build-arg "BASE_IMAGE=${LIBERTY_BASE_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}"
 }
 
 #######################################
@@ -483,14 +489,17 @@ function runLoadBalancer() {
   local ssl_ca_certificate
   ssl_ca_certificate=$(getSecret "certificates/CA/CA.cer")
 
+  local load_balancer_config_dir="/usr/local/etc/haproxy"
+  updateVolume "${PRE_PROD_DIR}/load-balancer" "${LOAD_BALANCER_VOLUME_NAME}" "${load_balancer_config_dir}"
+
   print "Load balancer container ${LOAD_BALANCER_CONTAINER_NAME} is starting"
   docker run -d \
     --name "${LOAD_BALANCER_CONTAINER_NAME}" \
     --net "${DOMAIN_NAME}" \
     --net-alias "${I2_ANALYZE_FQDN}" \
     -p "9046:9046" \
-    -v "${PRE_PROD_DIR}/load-balancer:/usr/local/etc/haproxy" \
-    -v "${LOCAL_KEYS_DIR}/i2analyze:${CONTAINER_SECRETS_DIR}" \
+    -v "${LOAD_BALANCER_VOLUME_NAME}:${load_balancer_config_dir}" \
+    -v "${LOAD_BALANCER_SECRETS_VOLUME_NAME}:${CONTAINER_SECRETS_DIR}" \
     -e "LIBERTY1_LB_STANZA=${LIBERTY1_LB_STANZA}" \
     -e "LIBERTY2_LB_STANZA=${LIBERTY2_LB_STANZA}" \
     -e "LIBERTY_SSL_CONNECTION=${LIBERTY_SSL_CONNECTION}" \
@@ -501,11 +510,11 @@ function runLoadBalancer() {
     "${LOAD_BALANCER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}"
 }
 
-
 function runExampleConnector() {
   local CONTAINER="$1"
   local FQDN="$2"
   local KEY_FOLDER="$3"
+  local SECRET_VOLUME="$4"
 
   local ssl_private_key
   ssl_private_key=$(getSecret "certificates/${KEY_FOLDER}/server.key")
@@ -519,7 +528,7 @@ function runExampleConnector() {
     --name "${CONTAINER}" \
     --network "${DOMAIN_NAME}" \
     --net-alias "${FQDN}" \
-    -v "${LOCAL_KEYS_DIR}/${KEY_FOLDER}:${CONTAINER_SECRETS_DIR}" \
+    -v "${SECRET_VOLUME}:${CONTAINER_SECRETS_DIR}" \
     -e "SSL_ENABLED=${GATEWAY_SSL_CONNECTION}" \
     -e "SSL_PRIVATE_KEY=${ssl_private_key}" \
     -e "SSL_CERTIFICATE=${ssl_certificate}" \
@@ -550,7 +559,7 @@ function runConnector() {
     --name "${CONTAINER}" \
     --network "${DOMAIN_NAME}" \
     --net-alias "${FQDN}" \
-    -v "${LOCAL_KEYS_DIR}/${connector_name}:${CONTAINER_SECRETS_DIR}" \
+    -v "${connector_name}_secrets:${CONTAINER_SECRETS_DIR}" \
     -e "SSL_ENABLED=${GATEWAY_SSL_CONNECTION}" \
     -e "SSL_PRIVATE_KEY=${ssl_private_key}" \
     -e "SSL_CERTIFICATE=${ssl_certificate}" \

@@ -24,23 +24,22 @@
 echo "BASH_VERSION: $BASH_VERSION"
 set -e
 
+if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
+  echo "ANALYZE_CONTAINERS_ROOT_DIR variable is not set"
+  echo "Please run '. initShell.sh' in your terminal first or set it with 'export ANALYZE_CONTAINERS_ROOT_DIR=<path_to_root>'"
+  exit 1
+fi
+
 ###############################################################################
 # Function Definitions                                                        #
 ###############################################################################
 
 function setDefaults() {
-  # This is to ensure the script can be run from any directory
-  SCRIPT_DIR="$(dirname "$0")"
-  cd "$SCRIPT_DIR"
-
-  # Determine project root directory
-  ROOT_DIR=$(pushd . 1> /dev/null ; while [ "$(pwd)" != "/" ]; do test -e .root && grep -q 'Analyze-Containers-Root-Dir' < '.root' && { pwd; break; }; cd .. ; done ; popd 1> /dev/null)
-
   # AWS variable
   AWS_DEPLOY="false"
-  
+
   # Local variables
-  ON_PREM_CONFIG_DIR="${ON_PREM_TOOLKIT_DIR}/configuration" 
+  ON_PREM_CONFIG_DIR="${ON_PREM_TOOLKIT_DIR}/configuration"
   ENVIRONMENT_DIR="${ON_PREM_CONFIG_DIR}/environment"
   EXAMPLES_CONFIGS_DIR="${ON_PREM_TOOLKIT_DIR}/examples/configurations"
   FRAGMENTS_DIR="${ON_PREM_CONFIG_DIR}/fragments"
@@ -49,36 +48,36 @@ function setDefaults() {
   OPAL_SERVICES_IS_CLASSES_DIR="${FRAGMENTS_DIR}/opal-services-is/WEB-INF/classes"
   LIVE_DIR="${ON_PREM_CONFIG_DIR}/live"
 
-  REQUIRED_COMMON_FIXED_FILE_NAMES=("${COMMON_CLASSES_DIR}/schema.xml" \
-    "${COMMON_CLASSES_DIR}/schema-charting-schemes.xml" \
+  REQUIRED_COMMON_FIXED_FILE_NAMES=("${COMMON_CLASSES_DIR}/schema.xml"
+    "${COMMON_CLASSES_DIR}/schema-charting-schemes.xml"
     "${COMMON_CLASSES_DIR}/security-schema.xml"
-    "${COMMON_CLASSES_DIR}/mapping-configuration.json" \
-    "${OPAL_SERVICES_CLASSES_DIR}/command-access-control.xml" \
-    "${OPAL_SERVICES_CLASSES_DIR}/schema-vq-configuration.xml" \
+    "${COMMON_CLASSES_DIR}/mapping-configuration.json"
+    "${OPAL_SERVICES_CLASSES_DIR}/command-access-control.xml"
+    "${OPAL_SERVICES_CLASSES_DIR}/schema-vq-configuration.xml"
     "${OPAL_SERVICES_CLASSES_DIR}/schema-results-configuration.xml"
-    "${OPAL_SERVICES_CLASSES_DIR}/schema-source-reference-schema.xml" \
-    "${LIVE_DIR}/fmr-match-rules.xml" \
-    "${LIVE_DIR}/geospatial-configuration.json" \
-    "${LIVE_DIR}/type-access-configuration.xml" \
+    "${OPAL_SERVICES_CLASSES_DIR}/schema-source-reference-schema.xml"
+    "${LIVE_DIR}/fmr-match-rules.xml"
+    "${LIVE_DIR}/geospatial-configuration.json"
+    "${LIVE_DIR}/type-access-configuration.xml"
   )
 
-  REQUIRED_FRAGMENTS_FOR_ANALYZE_SETTINGS_FILE_NAMES=("${COMMON_CLASSES_DIR}/analyze-settings.properties" \
-    "${COMMON_CLASSES_DIR}/analyze-connect.properties" \
-    "${COMMON_CLASSES_DIR}/ApolloServerSettingsConfigurationSet.properties" \
-    "${COMMON_CLASSES_DIR}/ApolloServerSettingsMandatory.properties" \
+  REQUIRED_FRAGMENTS_FOR_ANALYZE_SETTINGS_FILE_NAMES=("${COMMON_CLASSES_DIR}/analyze-settings.properties"
+    "${COMMON_CLASSES_DIR}/analyze-connect.properties"
+    "${COMMON_CLASSES_DIR}/ApolloServerSettingsConfigurationSet.properties"
+    "${COMMON_CLASSES_DIR}/ApolloServerSettingsMandatory.properties"
   )
 
-  REQUIRED_FRAGMENTS_FOR_ISTORE_DEPLOYMENT_FILE_NAMES=("${OPAL_SERVICES_IS_CLASSES_DIR}/InfoStoreNamesDb2.properties" \
-    "${OPAL_SERVICES_IS_CLASSES_DIR}/InfoStoreNamesSQLServer.properties" \
-    "${LIVE_DIR}/highlight-queries-configuration.xml" \
-    "${ENVIRONMENT_DIR}/system-match-rules.xml" \
+  REQUIRED_FRAGMENTS_FOR_ISTORE_DEPLOYMENT_FILE_NAMES=("${OPAL_SERVICES_IS_CLASSES_DIR}/InfoStoreNamesDb2.properties"
+    "${OPAL_SERVICES_IS_CLASSES_DIR}/InfoStoreNamesSQLServer.properties"
+    "${LIVE_DIR}/highlight-queries-configuration.xml"
+    "${ENVIRONMENT_DIR}/system-match-rules.xml"
   )
 
   REQUIRED_FRAGMENTS_FOR_I2C_DEPLOYMENT_FILE_NAMES=("${LIVE_DIR}/system-match-rules.xml")
 
   IGNORED_FIXED_FILE_NAMES=(
-    "${COMMON_CLASSES_DIR}/log4j2.xml" \
-    "${OPAL_SERVICES_IS_CLASSES_DIR}/catalog.json" \
+    "${COMMON_CLASSES_DIR}/log4j2.xml"
+    "${OPAL_SERVICES_IS_CLASSES_DIR}/catalog.json"
   )
 
   declare -gA FIXED_PROPERTIES
@@ -94,13 +93,13 @@ function setDefaults() {
   )
 
   REQUIRED_ON_PREM_TOOLKIT_DIRS=(
-    "application" \
-    "bin" \
-    "examples" \
-    "scripts" \
-    "scripts-bin" \
-    "tools" \
-    )
+    "application"
+    "bin"
+    "examples"
+    "scripts"
+    "scripts-bin"
+    "tools"
+  )
 }
 
 function printUsage() {
@@ -177,15 +176,17 @@ function validateArguments() {
 
 function sourceCommonVariablesAndScripts() {
   # Load common functions
-  source "${ROOT_DIR}/utils/commonFunctions.sh"
-  source "${ROOT_DIR}/utils/serverFunctions.sh"
-  source "${ROOT_DIR}/utils/clientFunctions.sh"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
 
   # Load common variables
-  source "${ROOT_DIR}/utils/simulatedExternalVariables.sh"
-  source "${ROOT_DIR}/utils/commonVariables.sh"
-  source "${ROOT_DIR}/utils/internalHelperVariables.sh"
-  source "${ROOT_DIR}/configs/${CONFIG_NAME}/utils/variables.sh"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/utils/variables.sh"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulatedExternalVariables.sh"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
+  warnRootDirNotInPath
 }
 
 function checkFileExistsOrError() {
@@ -218,7 +219,7 @@ function checkIsValidToolkit() {
 }
 
 function runTopLevelChecks() {
-  checkDirectoryExistsOrError "${ROOT_DIR}/configs/${CONFIG_NAME}/configuration"
+  checkDirectoryExistsOrError "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/configuration"
   checkDirectoryExistsOrError "${ON_PREM_TOOLKIT_DIR}"
 }
 
@@ -235,7 +236,7 @@ function validateAndListConnectors() {
   local missing_connectors_ids
   local connector_id
 
-  readarray -t config_connectors_ids < <( jq -r '.connectors[].id' < "${connector_definitions_file}")
+  readarray -t config_connectors_ids < <(jq -r '.connectors[].id' <"${connector_definitions_file}")
   readarray -t on_prem_connectors_ids < <(xmlstarlet sel -t -v "/ns1:topology/applications/application/wars/war/connector-ids/connector-id/@value" "${topology_file}")
 
   # Compute missing connectors in config-dev
@@ -343,10 +344,10 @@ function validateFixedFiles() {
 function warnIfExtraFiles() {
   if [[ "${TASK}" == "import" ]]; then
     # Ensure there is no other properties file that aren't required
-    files_to_validate=( "$(find "${ON_PREM_CONFIG_DIR}/"* -type f \( -path "*/fragments/common/WEB-INF/classes/*" \
-    -o -path "*/fragments/opal-services/WEB-INF/classes/*" \
-    -o -path "*/fragments/opal-services-is/WEB-INF/classes/*" \
-    -o -path "*/live/*" \))" );
+    files_to_validate=("$(find "${ON_PREM_CONFIG_DIR}/"* -type f \( -path "*/fragments/common/WEB-INF/classes/*" \
+      -o -path "*/fragments/opal-services/WEB-INF/classes/*" \
+      -o -path "*/fragments/opal-services-is/WEB-INF/classes/*" \
+      -o -path "*/live/*" \))")
 
     IFS=' ' read -r -a extra_files <<<"$(subtractArrayFromArray allowed_files files_to_validate)"
     IFS=' ' read -r -a extra_files <<<"$(subtractArrayFromArray IGNORED_FIXED_FILE_NAMES extra_files)"
@@ -409,7 +410,7 @@ function createConfig() {
   cp -pr "${example_configuration_path}/"* "${ON_PREM_CONFIG_DIR}"
 
   print "Copying config development environment configuration mods to ${COMMON_CLASSES_DIR}"
-  toolkit_config_mod_dir="${ROOT_DIR}/templates/toolkit-config-mod"
+  toolkit_config_mod_dir="${ANALYZE_CONTAINERS_ROOT_DIR}/templates/toolkit-config-mod"
   cp -p "${toolkit_config_mod_dir}/analyze-connect.properties" \
     "${toolkit_config_mod_dir}/analyze-settings.properties" \
     "${toolkit_config_mod_dir}/ApolloServerSettingsConfigurationSet.properties" \
@@ -419,7 +420,7 @@ function createConfig() {
   print "Success: configuration created"
 }
 
-function renameConfigFiles () {
+function renameConfigFiles() {
   local actual_property
   local actual_filename
   local expected_filename
@@ -430,19 +431,19 @@ function renameConfigFiles () {
     expected_filename="${FIXED_PROPERTIES[${fixed_property}]}"
 
     if [[ -n "${actual_filename}" ]]; then
-        if [[ "${actual_filename}" != "${expected_filename}" ]]; then
-          if [[ -n "${actual_filename}" ]]; then
-            echo "${actual_filename} > ${expected_filename}"
-          fi
-          find "${FRAGMENTS_DIR}/"* -type f -name "${actual_filename}" -execdir mv {} "${expected_filename}" \;
+      if [[ "${actual_filename}" != "${expected_filename}" ]]; then
+        if [[ -n "${actual_filename}" ]]; then
+          echo "${actual_filename} > ${expected_filename}"
         fi
+        find "${FRAGMENTS_DIR}/"* -type f -name "${actual_filename}" -execdir mv {} "${expected_filename}" \;
+      fi
     else
       unset_properties+=("${fixed_property}=${expected_filename}")
     fi
   done
 }
 
-function addTemplateConfigFiles () {
+function addTemplateConfigFiles() {
   local property_key
   local property_value
   local toolkit_config_mod_dir
@@ -453,7 +454,7 @@ function addTemplateConfigFiles () {
     property_value="$(echo "${unset_property}" | cut -d'=' -f2)"
 
     if [[ "${property_key}" == "SchemaResource" ]] || [[ "${property_key}" == "ChartingSchemesResource" ]] ||
-      [[ "${property_key}" == "DynamicSecuritySchemaResource" ]] || [[ "${property_key}" == "TypeMappingResource" ]] ; then
+      [[ "${property_key}" == "DynamicSecuritySchemaResource" ]] || [[ "${property_key}" == "TypeMappingResource" ]]; then
       fragments_classes_dir="${COMMON_CLASSES_DIR}"
     else
       fragments_classes_dir="${OPAL_SERVICES_CLASSES_DIR}"
@@ -470,7 +471,7 @@ function addTemplateConfigFiles () {
 
 # https://i2-jira.hursley.ibm.com/browse/BUG-2134
 # This should be temporary, it should be removed or moved to a different location in the prod-toolkit
-function removeExampleVisualQueryExampleFile () {
+function removeExampleVisualQueryExampleFile() {
   local property_key
   local property_value
 
@@ -478,7 +479,7 @@ function removeExampleVisualQueryExampleFile () {
     property_key="$(echo "${unset_property}" | cut -d'=' -f1)"
     property_value="$(echo "${unset_property}" | cut -d'=' -f2)"
 
-    if [[ "${property_key}" == "VisualQueryConfigurationResource" ]] ; then
+    if [[ "${property_key}" == "VisualQueryConfigurationResource" ]]; then
       deleteFileIfExists "${OPAL_SERVICES_CLASSES_DIR}/visual-query-configuration.xml"
     fi
   done
@@ -505,8 +506,8 @@ function updateConfigProperties() {
       expected_property="${fixed_property}=${FIXED_PROPERTIES[${fixed_property}]}"
 
       if [[ "${actual_property}" != "${expected_property}" ]]; then
-          echo "Updating ${expected_property}"
-          sed -i "s/^${actual_property}/${expected_property}/" "${properties_file}"
+        echo "Updating ${expected_property}"
+        sed -i "s/^${actual_property}/${expected_property}/" "${properties_file}"
       fi
     fi
   done
@@ -583,7 +584,7 @@ function importConfig() {
 
   print "Success: configuration updated"
 
-  generateArtefacts
+  generateArtifacts
 
   validateAndListConnectors
 
@@ -595,7 +596,7 @@ function exportConfig() {
   print "Running export task"
 
   # Creating transient .configuration and .configuration-generated directories
-  generateArtefacts
+  generateArtifacts
   createMountedConfigStructure
 
   print "Generating configuration for the export"
@@ -625,7 +626,7 @@ function exportConfig() {
     rm "${LOCAL_CONFIG_DIR}/fragments/common/WEB-INF/classes/ApolloServerSettingsConfigurationSet.properties"
     # Temporarily add required setting to ApolloServerSettingsMandatory
     apollo_server_settings_file_path="${LOCAL_CONFIG_DIR}/fragments/common/WEB-INF/classes/ApolloServerSettingsMandatory.properties"
-    if ! grep -xq "UserGroupsProvider=.*" "${apollo_server_settings_file_path}" ; then
+    if ! grep -xq "UserGroupsProvider=.*" "${apollo_server_settings_file_path}"; then
       addToPropertiesFile "UserGroupsProvider=com.i2group.disco.user.WebSphereUserGroupsProvider" "${apollo_server_settings_file_path}"
     fi
   fi

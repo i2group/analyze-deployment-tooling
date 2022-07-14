@@ -12,14 +12,20 @@ The format is based on [Keep a Changelog], and this project adheres to
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
 
-## [2.1.2] - 31/03/2022
+## [2.1.3] - 13/05/2022
+
+### Added
+
+* Functionality to support upgrading to future releases of i2 Analyze
+
+[2.1.3]: https://github.com/i2group/analyze-containers/tree/v2.1.3
+
+## 2.1.2[Deprecated] - 31/03/2022
 
 ### Security
 
-- Updated the Liberty and Solr images to use Log4j2 version 2.17.2 to remediate https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-44228
+- Updated the Liberty and Solr images to use Log4j2 version 2.17.2 to remediate <https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-44228>
   - To remediate the CVE, you must rebuild the Docker images in your environment. To rebuild the Docker images, complete the instructions [Updating to the latest version of the analyze-containers repository](https://i2group.github.io/analyze-containers/content/managing_update_env.html).
-
-[2.1.2]: https://github.com/i2group/analyze-containers/tree/v2.1.2
 
 ## 2.1.1[Deprecated] - 12/01/2022
 

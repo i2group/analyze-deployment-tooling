@@ -48,6 +48,7 @@ if [[ ${SERVER_SSL} == true ]]; then
   echo "${SSL_PRIVATE_KEY}" >>"${CERTIFICATES_FILE}"
 fi
 
+sudo chown -R haproxy /usr/local/etc/haproxy
 if [[ -f /usr/local/etc/haproxy/haproxy.cfg ]]; then
   rm /usr/local/etc/haproxy/haproxy.cfg
 fi

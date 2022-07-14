@@ -23,13 +23,6 @@
 
 set -e
 
-# This is to ensure the script can be run from any directory
-SCRIPT_DIR="$(dirname "$0")"
-cd "$SCRIPT_DIR"
-
-# Determine project root directory
-ROOT_DIR=$(pushd . 1> /dev/null ; while [ "$(pwd)" != "/" ]; do test -e .root && grep -q 'Analyze-Containers-Root-Dir' < '.root' && { pwd; break; }; cd .. ; done ; popd 1> /dev/null)
-
 function usage() {
   echo "usage createEnvironment.sh -e {pre-prod|config-dev}" 1>&2
   exit 1
@@ -50,18 +43,19 @@ while getopts ":e:" flag; do
   esac
 done
 
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
 # Load common functions
-source "${ROOT_DIR}/utils/commonFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
 
 # Load common variables
 checkEnvironmentIsValid
 if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
-  source "${ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
 elif [[ "${ENVIRONMENT}" == "config-dev" ]]; then
-  source "${ROOT_DIR}/utils/simulatedExternalVariables.sh"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulatedExternalVariables.sh"
 fi
-source "${ROOT_DIR}/utils/commonVariables.sh"
-source "${ROOT_DIR}/utils/internalHelperVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
 
 ###############################################################################
 # Variables                                                                   #
@@ -86,6 +80,10 @@ function extractToolkit() {
   mkdir -p "${LOCAL_I2ANALYZE_DIR}"
 
   tar -zxf "${PRE_REQS_DIR}/i2analyzeMinimal.tar.gz" -C "${LOCAL_I2ANALYZE_DIR}"
+  toolkit_minimal_version=$(cat "${LOCAL_I2ANALYZE_DIR}/toolkit/scripts/version.txt")
+  if [[ "${toolkit_minimal_version%%-*}" != "${I2ANALYZE_VERSION}" ]]; then
+    printErrorAndExit "i2 Analyze Minimal Toolkit version ${toolkit_minimal_version%%-*} is not compatible with analyze-containers version ${VERSION}"
+  fi
 }
 
 function populateImagesFoldersWithEnvironmentTool() {
@@ -101,7 +99,7 @@ function populateImagesFoldersWithEnvironmentTool() {
   cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${IMAGES_DIR}/etl_client"
   cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${IMAGES_DIR}/i2a_tools"
   cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${IMAGES_DIR}/ha_proxy"
-  
+
   cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${TEMPLATES_DIR}/node-connector-image"
   cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${TEMPLATES_DIR}/springboot-connector-image"
 }
@@ -151,7 +149,7 @@ function createLibertyStaticApplication() {
   deleteFolderIfExists "${LIBERTY_CONFIG_APP}"
   mkdir -p "${LIBERTY_CONFIG_APP}"
 
-  "${ROOT_DIR}/utils/createLibertyStaticApplication.sh" "${ENVIRONMENT}" "${LIBERTY_CONFIG_APP}"
+  "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/createLibertyStaticApplication.sh" "${ENVIRONMENT}" "${LIBERTY_CONFIG_APP}"
 
   # Copy jdbc-drivers and verify they exist in the liberty image folder
   cp -pr "${PRE_REQS_DIR}/jdbc-drivers/." "${LIBERTY_CONFIG_APP}/third-party-dependencies/resources/jdbc/"
@@ -176,7 +174,7 @@ function populateConnectorImagesFolder() {
   mkdir -p "${CONNECTOR_IMAGES_DIR}/.connector-images"
 
   if [[ ! -f "${i2connect_server_version_file}" ]]; then
-    jq -n "{\"version\": \"latest\"}" > "${i2connect_server_version_file}"
+    jq -n "{\"version\": \"latest\"}" >"${i2connect_server_version_file}"
   fi
 }
 
@@ -186,7 +184,7 @@ function populateConnectorImagesFolder() {
 extractToolkit
 
 # Add new scripts for db2 until new toolkit is released
-cp -pr "${ROOT_DIR}/utils/templates/i2-tools/scripts/." "${TOOLKIT_SCRIPTS_DIR}"
+cp -pr "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/templates/i2-tools/scripts/." "${TOOLKIT_SCRIPTS_DIR}"
 
 ###############################################################################
 # Adding environment variable resolution support                              #

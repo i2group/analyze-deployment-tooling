@@ -24,11 +24,11 @@
 echo "BASH_VERSION: $BASH_VERSION"
 set -e
 
-SCRIPT_DIR="$(dirname "$0")"
-cd "$SCRIPT_DIR"
-
-# Determine project root directory
-ROOT_DIR=$(pushd . 1> /dev/null ; while [ "$(pwd)" != "/" ]; do test -e .root && grep -q 'Analyze-Containers-Root-Dir' < '.root' && { pwd; break; }; cd .. ; done ; popd 1> /dev/null)
+if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
+  echo "ANALYZE_CONTAINERS_ROOT_DIR variable is not set"
+  echo "Please run '. initShell.sh' in your terminal first or set it with 'export ANALYZE_CONTAINERS_ROOT_DIR=<path_to_root>'"
+  exit 1
+fi
 
 function printUsage() {
   echo "Usage:"
@@ -117,11 +117,17 @@ while getopts ":c:t:i:e:b:d:l:vayh" flag; do
   esac
 done
 
-if [[ -z "$CONFIG_NAME" ]]; then
+if [[ -z "${CONFIG_NAME}" ]]; then
   usage
 fi
 
-if [[ "${AWS_ARTEFACTS}" && ( -z "${DEPLOYMENT_NAME}" || -z "${I2A_DEPENDENCIES_IMAGES_TAG}" ) ]]; then
+if [[ ! "${CONFIG_NAME}" =~ ^[0-9a-zA-Z_+\-]+$ ]]; then
+  printf "\e[31mERROR: Config '%s' name cannot contain special characters or spaces. Allowed characters are 0-9a-zA-Z_+-\n" "${CONFIG_NAME}" >&2
+  printf "\e[0m" >&2
+  usage
+fi
+
+if [[ "${AWS_ARTEFACTS}" && (-z "${DEPLOYMENT_NAME}" || -z "${I2A_DEPENDENCIES_IMAGES_TAG}") ]]; then
   usage
 fi
 
@@ -144,33 +150,25 @@ if [[ -z "$DEPLOYMENT_NAME" ]]; then
   DEPLOYMENT_NAME=DEPLOYMENT_NAME_NOT_SET
 fi
 
-if [[ -z "$CONFIG_NAME" ]]; then
-  I2A_LIBERTY_CONFIGURED_IMAGE_TAG="latest"
-else
-  I2A_LIBERTY_CONFIGURED_IMAGE_TAG="${CONFIG_NAME}"
-fi
-
-if [[ -z "${I2A_DEPENDENCIES_IMAGES_TAG}" ]]; then
-  I2A_DEPENDENCIES_IMAGES_TAG="latest"
-fi
-
 if [[ "${INCLUDED_CONNECTORS[*]}" && "${EXCLUDED_CONNECTORS[*]}" ]]; then
   printf "\e[31mERROR: Incompatible options: Both (-i) and (-e) were specified.\n" >&2
   printf "\e[0m" >&2
   usage
-  exit 1
 fi
 
 # Load common functions
-source "${ROOT_DIR}/utils/commonFunctions.sh"
-source "${ROOT_DIR}/utils/serverFunctions.sh"
-source "${ROOT_DIR}/utils/clientFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
 
 # Load common variables
-source "${ROOT_DIR}/configs/${CONFIG_NAME}/utils/variables.sh"
-source "${ROOT_DIR}/utils/simulatedExternalVariables.sh"
-source "${ROOT_DIR}/utils/commonVariables.sh"
-source "${ROOT_DIR}/utils/internalHelperVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/utils/variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/version"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulatedExternalVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
+warnRootDirNotInPath
 
 ###############################################################################
 # Create Helper Functions                                                     #
@@ -189,33 +187,33 @@ source "${ROOT_DIR}/utils/internalHelperVariables.sh"
 #######################################
 function compareCurrentConfiguration() {
   declare -A checkFilesArray
-  checkFilesArray=( [fmr-match-rules.xml]=1
-        [system-match-rules.xml]=1
-        [geospatial-configuration.json]=1
-        [highlight-queries-configuration.xml]=1
-        [type-access-configuration.xml]=1
-        [user.registry.xml]=1
-        [server.extensions.xml]=1
-        [server.extensions.dev.xml]=1
-        [mapping-configuration.json]=2
-        [analyze-settings.properties]=2
-        [analyze-connect.properties]=2
-        [connectors-template.json]=2
-        [extension-references.json]=2
-        [log4j2.xml]=2
-        [schema-charting-schemes.xml]=2
-        [schema-results-configuration.xml]=2
-        [schema-source-reference-schema.xml]=2
-        [schema-vq-configuration.xml]=2
-        [command-access-control.xml]=2
-        [DiscoSolrConfiguration.properties]=2
-        [schema.xml]=3
-        [security-schema.xml]=3
-        [environment/dsid/dsid.properties]=3)
+  checkFilesArray=(["fmr-match-rules.xml"]=1
+    ["system-match-rules.xml"]=1
+    ["geospatial-configuration.json"]=1
+    ["highlight-queries-configuration.xml"]=1
+    ["type-access-configuration.xml"]=1
+    ["user.registry.xml"]=1
+    ["server.extensions.xml"]=1
+    ["server.extensions.dev.xml"]=1
+    ["mapping-configuration.json"]=2
+    ["analyze-settings.properties"]=2
+    ["analyze-connect.properties"]=2
+    ["connectors-template.json"]=2
+    ["extension-references.json"]=2
+    ["log4j2.xml"]=2
+    ["schema-charting-schemes.xml"]=2
+    ["schema-results-configuration.xml"]=2
+    ["schema-source-reference-schema.xml"]=2
+    ["schema-vq-configuration.xml"]=2
+    ["command-access-control.xml"]=2
+    ["DiscoSolrConfiguration.properties"]=2
+    ["schema.xml"]=3
+    ["security-schema.xml"]=3
+    ["environment/dsid/dsid.properties"]=3)
   #Add gateway schemas
   for gateway_short_name in "${!GATEWAY_SHORT_NAME_SET[@]}"; do
-    checkFilesArray+=([${gateway_short_name}-schema.xml]=1)
-    checkFilesArray+=([${gateway_short_name}-schema-charting-schemes.xml]=1)
+    checkFilesArray+=(["${gateway_short_name}-schema.xml"]=1)
+    checkFilesArray+=(["${gateway_short_name}-schema-charting-schemes.xml"]=1)
   done
 
   # array used to store file changes (if any)
@@ -232,24 +230,24 @@ function compareCurrentConfiguration() {
 
   for filename in "${!checkFilesArray[@]}"; do
     # get action code
-    configActionCode="${checkFilesArray[${filename}]}"
+    configActionCode="${checkFilesArray["${filename}"]}"
 
     # check if filename exists in previous, if so then calc checksum
     if [ -f "${PREVIOUS_CONFIGURATION_PATH}/${filename}" ]; then
-      checksumPrevious=$(shasum -a 256 "${PREVIOUS_CONFIGURATION_PATH}/${filename}" | cut -d ' ' -f 1 )
+      checksumPrevious=$(shasum -a 256 "${PREVIOUS_CONFIGURATION_PATH}/${filename}" | cut -d ' ' -f 1)
     else
       continue
     fi
     # check if filename exists in current, if so then calc checksum
     if [ -f "${CURRENT_CONFIGURATION_PATH}/${filename}" ]; then
-      checksumCurrent=$(shasum -a 256 "${CURRENT_CONFIGURATION_PATH}/${filename}" | cut -d ' ' -f 1 )
+      checksumCurrent=$(shasum -a 256 "${CURRENT_CONFIGURATION_PATH}/${filename}" | cut -d ' ' -f 1)
     else
       continue
     fi
     # if checksums different then store filename changed and action
     if [[ "$checksumPrevious" != "$checksumCurrent" ]]; then
       printInfo "Previous checksum '${checksumPrevious}' and current checksum '${checksumCurrent}' do not match for filename '${filename}'"
-      filesChangedArray+=( "${filename}" )
+      filesChangedArray+=("${filename}")
       # set action if higher severity code
       if [[ "${configActionCode}" -gt "${configFinalActionCode}" ]]; then
         configFinalActionCode="${configActionCode}"
@@ -274,24 +272,24 @@ function compareCurrentExtensions() {
 
   printInfo "Checking extensions for '${CONFIG_NAME}' ..."
   #Add extensions
-  readarray -t extension_files < <( jq -r '.extensions[] | .name + "-" + .version' < "${extension_references_file}")
+  readarray -t extension_files < <(jq -r '.extensions[] | .name + "-" + .version' <"${extension_references_file}")
   for filename in "${extension_files[@]}"; do
     # check if filename exists in previous, if so then calc checksum
     if [ -f "${PREVIOUS_CONFIGURATION_LIB_PATH}/${filename}.jar" ]; then
-      checksumPrevious=$(shasum -a 256 "${PREVIOUS_CONFIGURATION_LIB_PATH}/${filename}.jar" | cut -d ' ' -f 1 )
+      checksumPrevious=$(shasum -a 256 "${PREVIOUS_CONFIGURATION_LIB_PATH}/${filename}.jar" | cut -d ' ' -f 1)
     else
       continue
     fi
     # check if filename exists in current, if so then calc checksum
     if [ -f "${LOCAL_LIB_DIR}/${filename}.jar" ]; then
-      checksumCurrent=$(shasum -a 256 "${LOCAL_LIB_DIR}/${filename}.jar" | cut -d ' ' -f 1 )
+      checksumCurrent=$(shasum -a 256 "${LOCAL_LIB_DIR}/${filename}.jar" | cut -d ' ' -f 1)
     else
       continue
     fi
     # if checksums different then store filename changed and action
     if [[ "$checksumPrevious" != "$checksumCurrent" ]]; then
       printInfo "Previous checksum '${checksumPrevious}' and current checksum '${checksumCurrent}' do not match for filename '${filename}.jar'"
-      filesChangedArray+=( "lib/${filename}.jar" )
+      filesChangedArray+=("lib/${filename}.jar")
       # set action if higher severity code
       if [[ "${configActionCode}" -gt "${configFinalActionCode}" ]]; then
         configFinalActionCode="${configActionCode}"
@@ -310,12 +308,12 @@ function compareCurrentExtensions() {
 
 function deployZKCluster() {
   print "Running ZooKeeper container"
-  runZK "${ZK1_CONTAINER_NAME}" "${ZK1_FQDN}" "${ZK1_DATA_VOLUME_NAME}" "${ZK1_DATALOG_VOLUME_NAME}" "${ZK1_LOG_VOLUME_NAME}" "1" "zk1"
+  runZK "${ZK1_CONTAINER_NAME}" "${ZK1_FQDN}" "${ZK1_DATA_VOLUME_NAME}" "${ZK1_DATALOG_VOLUME_NAME}" "${ZK1_LOG_VOLUME_NAME}" "1" "zk1" "${ZK1_SECRETS_VOLUME_NAME}"
 }
 
 function deploySolrCluster() {
   print "Running Solr container"
-  runSolr "${SOLR1_CONTAINER_NAME}" "${SOLR1_FQDN}" "${SOLR1_VOLUME_NAME}" "${HOST_PORT_SOLR}" "solr1"
+  runSolr "${SOLR1_CONTAINER_NAME}" "${SOLR1_FQDN}" "${SOLR1_VOLUME_NAME}" "${HOST_PORT_SOLR}" "solr1" "${SOLR1_SECRETS_VOLUME_NAME}"
 }
 
 function configureZKForSolrCluster() {
@@ -376,14 +374,14 @@ function createDatabase() {
   case "${DB_DIALECT}" in
   db2)
     deleteContainer "${DB2_SERVER_CONTAINER_NAME}"
-    docker volume rm -f "${DB2_SERVER_VOLUME_NAME}" "${DB_BACKUP_VOLUME_NAME}"
-    createFolder "${DB_BACKUP_VOLUME_NAME}"
+    docker volume rm -f "${DB2_SERVER_VOLUME_NAME}" "${DB2_SERVER_BACKUP_VOLUME_NAME}"
+    createFolder "${BACKUP_DIR}"
     initializeDb2Server
     ;;
   sqlserver)
     deleteContainer "${SQL_SERVER_CONTAINER_NAME}"
-    docker volume rm -f "${SQL_SERVER_VOLUME_NAME}" "${DB_BACKUP_VOLUME_NAME}"
-    createFolder "${DB_BACKUP_VOLUME_NAME}"
+    docker volume rm -f "${SQL_SERVER_VOLUME_NAME}" "${SQL_SERVER_BACKUP_VOLUME_NAME}"
+    createFolder "${BACKUP_DIR}"
     initializeSQLServer
     ;;
   esac
@@ -411,6 +409,8 @@ function restoreIstoreDatabase() {
     print "No backup_name provided, using the 'default' name"
     BACKUP_NAME="default"
   fi
+
+  updateVolume "${BACKUP_DIR}" "${SQL_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
   print "Restoring the ISTORE database"
   sql_query="\
     RESTORE DATABASE ISTORE FROM DISK = '${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}/${DB_BACKUP_FILE_NAME}';"
@@ -494,15 +494,15 @@ function initializeIStoreDatabase() {
   printInfo "Generating ISTORE scripts"
   runi2AnalyzeTool "/opt/i2-tools/scripts/generateInfoStoreToolScripts.sh"
   runi2AnalyzeTool "/opt/i2-tools/scripts/generateStaticInfoStoreCreationScripts.sh"
-  
+
   printInfo "Running ISTORE static scripts"
   case "${DB_DIALECT}" in
-    db2)
-      initializeIStoreDatabaseForDb2Server
-      ;;
-    sqlserver)
-      initializeIStoreDatabaseForSQLServer
-      ;;
+  db2)
+    initializeIStoreDatabaseForDb2Server
+    ;;
+  sqlserver)
+    initializeIStoreDatabaseForSQLServer
+    ;;
   esac
 }
 
@@ -510,12 +510,12 @@ function configureIStoreDatabase() {
   print "Configuring ISTORE database"
   runi2AnalyzeTool "/opt/i2-tools/scripts/generateDynamicInfoStoreCreationScripts.sh"
   case "${DB_DIALECT}" in
-    db2)
-      runDb2ServerCommandAsDb2inst1 "/opt/databaseScripts/generated/runDynamicScripts.sh"
-      ;;
-    sqlserver)
-      runSQLServerCommandAsDBA "/opt/databaseScripts/generated/runDynamicScripts.sh"
-      ;;
+  db2)
+    runDb2ServerCommandAsDb2inst1 "/opt/databaseScripts/generated/runDynamicScripts.sh"
+    ;;
+  sqlserver)
+    runSQLServerCommandAsDBA "/opt/databaseScripts/generated/runDynamicScripts.sh"
+    ;;
   esac
 }
 
@@ -523,7 +523,7 @@ function deployLiberty() {
   print "Building Liberty Configured image"
   buildLibertyConfiguredImage
   print "Running Liberty container"
-  runLiberty "${LIBERTY1_CONTAINER_NAME}" "${I2_ANALYZE_FQDN}" "${LIBERTY1_VOLUME_NAME}" "${HOST_PORT_I2ANALYZE_SERVICE}" "${I2_ANALYZE_CERT_FOLDER_NAME}" "${LIBERTY1_DEBUG_PORT}"
+  runLiberty "${LIBERTY1_CONTAINER_NAME}" "${I2_ANALYZE_FQDN}" "${LIBERTY1_VOLUME_NAME}" "${LIBERTY1_SECRETS_VOLUME_NAME}" "${HOST_PORT_I2ANALYZE_SERVICE}" "${I2_ANALYZE_CERT_FOLDER_NAME}" "${LIBERTY1_DEBUG_PORT}"
 }
 
 function restartConnectorsForConfig() {
@@ -531,10 +531,10 @@ function restartConnectorsForConfig() {
   # local connector_fqdn
   # local configuration_path
 
-  readarray -t all_connector_ids < <( jq -r '.connectors[].name' < "${connector_references_file}")
+  readarray -t all_connector_ids < <(jq -r '.connectors[].name' <"${connector_references_file}")
 
   for gateway_short_name in "${all_connector_ids[@]}"; do
-    container_id=$(docker ps -a -q -f name="${CONNECTOR_PREFIX}${gateway_short_name}" -f status=exited)
+    container_id=$(docker ps -a -q -f name="^${CONNECTOR_PREFIX}${gateway_short_name}$" -f status=exited)
     if [[ -n ${container_id} ]]; then
       print "Restarting connector container"
       docker start "${CONNECTOR_PREFIX}${gateway_short_name}"
@@ -545,22 +545,22 @@ function restartConnectorsForConfig() {
 function createDeployment() {
   # Validate Configuration
   validateMandatoryFilesPresent
-  
+
   if [[ "${STATE}" == "0" ]]; then
     # Cleaning up Docker resources
     removeAllContainersForTheConfig "${CONFIG_NAME}"
     removeDockerVolumes
 
-     # Running Solr and ZooKeeper
-     deployZKCluster
-     configureZKForSolrCluster
-     deploySolrCluster
+    # Running Solr and ZooKeeper
+    deployZKCluster
+    configureZKForSolrCluster
+    deploySolrCluster
 
-     # Configuring Solr and ZooKeeper
-     waitForSolrToBeLive "${SOLR1_FQDN}"
-     configureSolrCollections
-     createSolrCollections
-     updateStateFile "1"
+    # Configuring Solr and ZooKeeper
+    waitForSolrToBeLive "${SOLR1_FQDN}"
+    configureSolrCollections
+    createSolrCollections
+    updateStateFile "1"
   fi
 
   if [[ "${STATE}" == "0" || "${STATE}" == "1" ]]; then
@@ -619,7 +619,7 @@ function notifyUpdateUserRegistry() {
     --header 'Content-Type: application/json' \
     --data-raw "{\"params\":[{\"value\" : [\"\"],\"type\" : {\"className\":\"java.util.ArrayList\",\"items\":[\"java.lang.String\"]}},{\"value\" : [\"/opt/ibm/wlp/usr/shared/config/user.registry.xml\"],\"type\" : {\"className\":\"java.util.ArrayList\",\"items\":[\"java.lang.String\"]}},{\"value\" : [\"\"],\"type\" : {\"className\":\"java.util.ArrayList\",\"items\":[\"java.lang.String\"]}}],\"signature\":[\"java.util.Collection\",\"java.util.Collection\",\"java.util.Collection\"]}" \
     --request POST "${BASE_URI}/IBMJMXConnectorREST/mbeans/WebSphere%3Aservice%3Dcom.ibm.ws.kernel.filemonitor.FileNotificationMBean/operations/notifyFileChanges" \
-    > /tmp/http_code.txt; then
+    >/tmp/http_code.txt; then
     # Invoking FileNotificationMBean doc: https://www.ibm.com/docs/en/zosconnect/3.0?topic=demand-invoking-filenotificationmbean-from-rest-api
     http_status_code=$(cat /tmp/http_code.txt)
     if [[ "${http_status_code}" != 200 ]]; then
@@ -640,7 +640,7 @@ function updateLiveConfiguration() {
       notifyUpdateUserRegistry
       break
     fi
-  done 
+  done
 
   print "Calling reload endpoint"
   if curl \
@@ -649,7 +649,7 @@ function updateLiveConfiguration() {
     --cacert "${LOCAL_EXTERNAL_CA_CERT_DIR}/CA.cer" \
     --header "Origin: ${FRONT_END_URI}" \
     --header 'Content-Type: application/json' \
-    --request POST "${FRONT_END_URI}/api/v1/admin/config/reload" > /tmp/http_code.txt; then
+    --request POST "${FRONT_END_URI}/api/v1/admin/config/reload" >/tmp/http_code.txt; then
     http_code=$(cat /tmp/http_code.txt)
     if [[ "${http_code}" != "200" ]]; then
       jq '.errorMessage' /tmp/response.txt
@@ -664,7 +664,7 @@ function updateLiveConfiguration() {
 
 function callGatewayReload() {
   local errors_message="Validation errors detected, please review the above message(s)."
-  
+
   loginToLiberty
   print "Calling gateway reload endpoint"
   if curl \
@@ -673,7 +673,7 @@ function callGatewayReload() {
     --cacert "${LOCAL_EXTERNAL_CA_CERT_DIR}/CA.cer" \
     --header "Origin: ${FRONT_END_URI}" \
     --header 'Content-Type: application/json' \
-    --request POST "${FRONT_END_URI}/api/v1/gateway/reload" > /tmp/http_code.txt; then
+    --request POST "${FRONT_END_URI}/api/v1/gateway/reload" >/tmp/http_code.txt; then
     http_code=$(cat /tmp/http_code.txt)
     if [[ "${http_code}" != "200" ]]; then
       jq '.errorMessage' /tmp/response.txt
@@ -703,7 +703,7 @@ function loginToLiberty() {
       --header "Origin: ${BASE_URI}" \
       --header 'Content-Type: application/x-www-form-urlencoded' \
       --data-urlencode "j_username=${I2_ANALYZE_ADMIN}" \
-      --data-urlencode "j_password=${app_admin_password}" > /tmp/http_code.txt; then
+      --data-urlencode "j_password=${app_admin_password}" >/tmp/http_code.txt; then
       http_status_code=$(cat /tmp/http_code.txt)
       if [[ "${http_status_code}" -eq 302 ]]; then
         echo "Logged in to Liberty server" && return 0
@@ -730,7 +730,7 @@ function controlApplication() {
     --header 'Content-Type: application/json' \
     --data-raw '{}' \
     --request POST "${BASE_URI}/IBMJMXConnectorREST/mbeans/WebSphere%3Aname%3Dopal-services%2Cservice%3Dcom.ibm.websphere.application.ApplicationMBean/operations/${operation}" \
-    > /tmp/http_code.txt; then
+    >/tmp/http_code.txt; then
     http_status_code=$(cat /tmp/http_code.txt)
     if [[ "${http_status_code}" != 200 ]]; then
       printErrorAndExit "Problem restarting application. Returned:${http_status_code}"
@@ -743,15 +743,15 @@ function controlApplication() {
 }
 
 function restartApplication() {
-   controlApplication restart
+  controlApplication restart
 }
 
 function stopApplication() {
-   controlApplication stop
+  controlApplication stop
 }
 
 function startApplication() {
-   controlApplication start
+  controlApplication start
 }
 
 function copyLocalConfigToTheLibertyContainer() {
@@ -759,7 +759,7 @@ function copyLocalConfigToTheLibertyContainer() {
   printInfo "Copying configuration to the Liberty container (${LIBERTY1_CONTAINER_NAME})"
 
   # All other configuration is copied to the application WEB-INF/classes directory.
-  local tmp_classes_dir="${ROOT_DIR}/tmp_classes"
+  local tmp_classes_dir="${ANALYZE_CONTAINERS_ROOT_DIR}/tmp_classes"
   createFolder "${tmp_classes_dir}"
   find "${GENERATED_LOCAL_CONFIG_DIR}" -maxdepth 1 -type f ! -name user.registry.xml ! -name extension-references.json ! -name connector-references.json ! -name '*.xsd' ! -name server.extensions.xml ! -name server.extensions.dev.xml -exec cp -t "${tmp_classes_dir}" {} \;
 
@@ -819,18 +819,18 @@ function updateMatchRules() {
 function rebuildDatabase() {
   waitForUserReply "Do you wish to rebuild the ISTORE database? This will permanently remove data from the deployment."
   case "${DB_DIALECT}" in
-    db2)
-      printInfo "Removing existing Db2 Server container"
-      deleteContainer "${DB2_SERVER_CONTAINER_NAME}"
-      docker volume rm -f "${DB2_SERVER_VOLUME_NAME}" "${DB_BACKUP_VOLUME_NAME}"
-      initializeDb2Server
-      ;;
-    sqlserver)
-      printInfo "Removing existing SQL Server container"
-      deleteContainer "${SQL_SERVER_CONTAINER_NAME}"
-      docker volume rm -f "${SQL_SERVER_VOLUME_NAME}" "${DB_BACKUP_VOLUME_NAME}"
-      initializeSQLServer
-      ;;
+  db2)
+    printInfo "Removing existing Db2 Server container"
+    deleteContainer "${DB2_SERVER_CONTAINER_NAME}"
+    docker volume rm -f "${DB2_SERVER_VOLUME_NAME}" "${DB2_SERVER_BACKUP_VOLUME_NAME}"
+    initializeDb2Server
+    ;;
+  sqlserver)
+    printInfo "Removing existing SQL Server container"
+    deleteContainer "${SQL_SERVER_CONTAINER_NAME}"
+    docker volume rm -f "${SQL_SERVER_VOLUME_NAME}" "${SQL_SERVER_BACKUP_VOLUME_NAME}"
+    initializeSQLServer
+    ;;
   esac
 }
 
@@ -844,7 +844,7 @@ function updateSchema() {
     stopApplication
 
     printInfo "Validating the schema"
-    if ! runi2AnalyzeTool "/opt/i2-tools/scripts/validateSchemaAndSecuritySchema.sh" > '/tmp/result_validate_security_schema'; then
+    if ! runi2AnalyzeTool "/opt/i2-tools/scripts/validateSchemaAndSecuritySchema.sh" >'/tmp/result_validate_security_schema'; then
       startApplication
       echo "[INFO] Response from i2 Analyze Tool: $(cat '/tmp/result_validate_security_schema')"
       # check i2 Analyze Tool for output indicating a Schema change has occured, if so then prompt user for destructive
@@ -869,12 +869,12 @@ function updateSchema() {
         if [ "$(ls -A "${LOCAL_GENERATED_DIR}/update")" ]; then
           printInfo "Running the generated scripts"
           case "${DB_DIALECT}" in
-            db2)
-              runDb2ServerCommandAsDb2inst1 "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
-              ;;
-            sqlserver)
-              runSQLServerCommandAsDBA "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
-              ;;
+          db2)
+            runDb2ServerCommandAsDb2inst1 "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
+            ;;
+          sqlserver)
+            runSQLServerCommandAsDBA "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
+            ;;
           esac
         else
           printInfo "No files present in update schema scripts folder"
@@ -898,7 +898,7 @@ function updateSecuritySchema() {
     stopApplication
 
     printInfo "Updating security schema"
-    if ! runi2AnalyzeTool "/opt/i2-tools/scripts/updateSecuritySchema.sh" > '/tmp/result_update_security_schema'; then
+    if ! runi2AnalyzeTool "/opt/i2-tools/scripts/updateSecuritySchema.sh" >'/tmp/result_update_security_schema'; then
       startApplication
       echo "[INFO] Response from i2 Analyze Tool: $(cat '/tmp/result_update_security_schema')"
       # check i2 Analyze Tool for output indicating a Security Schema change has occured, if so then prompt user for destructive
@@ -1004,7 +1004,7 @@ function handleDeploymentPatternChange() {
     fi
 
     if [[ "${CURRENT_DEPLOYMENT_PATTERN}" == *"store"* ]] && [[ "${PREVIOUS_DEPLOYMENT_PATTERN}" != *"store"* ]]; then
-      sql_server_container_status="$(docker ps -a --format "{{.Status}}" -f network="${DOMAIN_NAME}" -f name="${SQL_SERVER_CONTAINER_NAME}")"
+      sql_server_container_status="$(docker ps -a --format "{{.Status}}" -f network="${DOMAIN_NAME}" -f name="^${SQL_SERVER_CONTAINER_NAME}$")"
       if [[ "${sql_server_container_status%% *}" == "Up" ]]; then
         print "SQl Server container is already running"
         updateSchema
@@ -1015,7 +1015,7 @@ function handleDeploymentPatternChange() {
         updateSchema
       else
         print "Removing SQL Server volumes"
-        docker volume rm -f "${SQL_SERVER_VOLUME_NAME}" "${DB_BACKUP_VOLUME_NAME}"
+        docker volume rm -f "${SQL_SERVER_VOLUME_NAME}" "${SQL_SERVER_BACKUP_VOLUME_NAME}"
 
         updateStateFile "1"
         initializeSQLServer
@@ -1037,14 +1037,14 @@ function handleExtensionChange() {
   local jars_liberty_path="liberty/wlp/usr/servers/defaultServer/apps/opal-services.war/WEB-INF/lib"
   local extension_references_file="${LOCAL_USER_CONFIG_DIR}/extension-references.json"
   local extension_files
-  local filename 
+  local filename
 
   print "Updating i2Analyze extensions"
 
   # Remove jars that aren't there anymore
   if [[ -d "${PREVIOUS_CONFIGURATION_LIB_PATH}" ]]; then
     for path in "${PREVIOUS_CONFIGURATION_LIB_PATH}"/*; do
-      if [[ ! -e "${path}" ]]; then 
+      if [[ ! -e "${path}" ]]; then
         continue
       fi
       filename=$(basename "${path}")
@@ -1054,9 +1054,9 @@ function handleExtensionChange() {
       fi
     done
   fi
-  
+
   deleteFolderIfExistsAndCreate "${PREVIOUS_CONFIGURATION_LIB_PATH}"
-  readarray -t extension_files < <( jq -r '.extensions[] | .name + "-" + .version' < "${extension_references_file}")
+  readarray -t extension_files < <(jq -r '.extensions[] | .name + "-" + .version' <"${extension_references_file}")
 
   for filename in "${extension_files[@]}"; do
     cp -pr "${LOCAL_LIB_DIR}/${filename}.jar" "${PREVIOUS_CONFIGURATION_LIB_PATH}"
@@ -1068,7 +1068,7 @@ function handleExtensionChange() {
 }
 
 function updateDeployment() {
-  
+
   # Validate Configuration
   validateMandatoryFilesPresent
 
@@ -1095,7 +1095,7 @@ function updateDeployment() {
 
 function moveBackupIfExist() {
   print "Checking backup does NOT exist"
-  local backup_file_path="${ROOT_DIR}/backups/${CONFIG_NAME}/${BACKUP_NAME}/${DB_BACKUP_FILE_NAME}"
+  local backup_file_path="${BACKUP_DIR}/${BACKUP_NAME}/${DB_BACKUP_FILE_NAME}"
   if [[ -f "${backup_file_path}" ]]; then
     local old_backup_file_path="${backup_file_path}.bak"
     if [[ "${BACKUP_NAME}" != "default" ]]; then
@@ -1122,7 +1122,7 @@ function createBackup() {
 
   moveBackupIfExist
 
-  createFolder "${ROOT_DIR}/backups/${CONFIG_NAME}/${BACKUP_NAME}"
+  createFolder "${BACKUP_DIR}/${BACKUP_NAME}"
 
   # Create the back up
   print "Backing up the ISTORE database"
@@ -1135,7 +1135,9 @@ function createBackup() {
   runSQLServerCommandAsDBB runSQLQuery "${sql_query}"
 
   # Update backup file permission to your local user
-  docker exec "${SQL_SERVER_CONTAINER_NAME}" bash -c "chown $(id -u "$USER"):$(id -g "$USER") ${backup_file_path}"
+  docker exec "${SQL_SERVER_CONTAINER_NAME}" bash -c "chown -R $(id -u "${USER}"):$(id -g "${USER}") ${DB_CONTAINER_BACKUP_DIR}"
+
+  getVolume "${BACKUP_DIR}" "${SQL_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
 }
 
 function restoreFromBackup() {
@@ -1145,11 +1147,11 @@ function restoreFromBackup() {
   fi
 
   # Validate the backup exists and is not zero bytes before continuing.
-  if [[ ! -d "${ROOT_DIR}/backups/${CONFIG_NAME}/${BACKUP_NAME}" ]]; then
-    printErrorAndExit "Backup directory ${ROOT_DIR}/backups/${CONFIG_NAME}/${BACKUP_NAME} does NOT exist"
+  if [[ ! -d "${BACKUP_DIR}/${BACKUP_NAME}" ]]; then
+    printErrorAndExit "Backup directory ${BACKUP_DIR}/${BACKUP_NAME} does NOT exist"
   fi
-  if [[ ! -f "${ROOT_DIR}/backups/${CONFIG_NAME}/${BACKUP_NAME}/ISTORE.bak" || ! -s "${ROOT_DIR}/backups/${CONFIG_NAME}/${BACKUP_NAME}/ISTORE.bak" ]]; then
-    printErrorAndExit "Backup file ${ROOT_DIR}/backups/${CONFIG_NAME}/${BACKUP_NAME}/ISTORE.bak does NOT exist or is empty."
+  if [[ ! -f "${BACKUP_DIR}/${BACKUP_NAME}/ISTORE.bak" || ! -s "${BACKUP_DIR}/${BACKUP_NAME}/ISTORE.bak" ]]; then
+    printErrorAndExit "Backup file ${BACKUP_DIR}/${BACKUP_NAME}/ISTORE.bak does NOT exist or is empty."
   fi
 
   waitForUserReply "Are you sure you want to run the 'restore' task? This will permanently remove data from the deployment and restore to the specified backup."
@@ -1165,11 +1167,12 @@ function restoreFromBackup() {
 function cleanDeployment() {
   waitForUserReply "Are you sure you want to run the 'clean' task? This will permanently remove data from the deployment."
 
-  local all_container_names
-  IFS=' ' read -ra all_container_names <<< "$(docker ps -a -q -f network="${DOMAIN_NAME}" -f name="${CONFIG_NAME}" | xargs)"
+  local all_container_ids
+  IFS=' ' read -ra all_container_ids <<<"$(docker ps -aq -f network="${DOMAIN_NAME}" -f name=".${CONFIG_NAME}_${CONTAINER_VERSION_SUFFIX}$" | xargs)"
   print "Deleting all containers for ${CONFIG_NAME} deployment"
-  for container_name in "${all_container_names[@]}"; do
-    deleteContainer "${container_name}"
+  for container_id in "${all_container_ids[@]}"; do
+    printInfo "Deleting container ${container_id}"
+    deleteContainer "${container_id}"
   done
 
   removeDockerVolumes
@@ -1211,14 +1214,14 @@ function updateConnectors() {
 
   if [[ "${AWS_ARTEFACTS}" == "true" ]]; then
     print "Running generateSecrets.sh"
-    "${ROOT_DIR}/utils/generateSecrets.sh" -a -l "${I2A_DEPENDENCIES_IMAGES_TAG}" -c connectors "${connector_args[@]}"
+    "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/generateSecrets.sh" -a -l "${I2A_DEPENDENCIES_IMAGES_TAG}" -c connectors "${connector_args[@]}"
     print "Running buildConnectorImages.sh"
-    "${ROOT_DIR}/utils/buildConnectorImages.sh" -a -d "${DEPLOYMENT_NAME}" -l "${I2A_DEPENDENCIES_IMAGES_TAG}" "${connector_args[@]}"
+    "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/buildConnectorImages.sh" -a -d "${DEPLOYMENT_NAME}" -l "${I2A_DEPENDENCIES_IMAGES_TAG}" "${connector_args[@]}"
   else
     print "Running generateSecrets.sh"
-    "${ROOT_DIR}/utils/generateSecrets.sh" -c connectors "${connector_args[@]}"
+    "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/generateSecrets.sh" -c connectors "${connector_args[@]}"
     print "Running buildConnectorImages.sh"
-    "${ROOT_DIR}/utils/buildConnectorImages.sh" "${connector_args[@]}"
+    "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/buildConnectorImages.sh" "${connector_args[@]}"
   fi
 }
 
@@ -1234,8 +1237,8 @@ function initializeDeployment() {
 
   # Auto generate dsid into config folder before we create the generated one
   createDataSourceId
-  
-  generateArtefacts
+
+  generateArtifacts
 
   # Add files that could be missing
   if [[ ! -f "${LOCAL_USER_CONFIG_DIR}/extension-references.json" ]]; then
@@ -1266,18 +1269,18 @@ function validateMandatoryFilesPresent() {
     if [[ ! -f "${LOCAL_USER_CONFIG_DIR}/${mandatory_file}" ]]; then
       printErrorAndExit "Mandatory file ${mandatory_file} missing from ${LOCAL_USER_CONFIG_DIR}, correct this problem then run deploy.sh again."
     fi
-  done;
+  done
 
   for xml_file in "${LOCAL_USER_CONFIG_DIR}"/*.xml; do
     if [[ $(head "${xml_file}") == *"<!-- Replace this"* ]]; then
       file_name=$(basename "$xml_file")
       printErrorAndExit "Placeholder text found in ${LOCAL_USER_CONFIG_DIR}/${file_name}, check file contents then run deploy.sh again."
     fi
-  done;
+  done
 }
 
 function createInitialStateFile() {
-  local template_state_file_path="${ROOT_DIR}/utils/templates/.state.sh"
+  local template_state_file_path="${ANALYZE_CONTAINERS_ROOT_DIR}/utils/templates/.state.sh"
   printInfo "Creating initial ${PREVIOUS_STATE_FILE_PATH} file"
   createFolder "${PREVIOUS_CONFIGURATION_DIR}"
   cp -p "${template_state_file_path}" "${PREVIOUS_STATE_FILE_PATH}"
@@ -1320,7 +1323,7 @@ function workOutTaskToRun() {
       # Reset state
       STATE=0
       TASK="create"
-      printErrorAndExit "Some connector containers are missing, the deployment is NOT healthy."    
+      printErrorAndExit "Some connector containers are missing, the deployment is NOT healthy."
     fi
   fi
 }
@@ -1334,13 +1337,13 @@ function runTopLevelChecks() {
   checkVariableIsSet "${HOST_PORT_DB}" "HOST_PORT_DB environment variable is not set"
 }
 
-function printDeploymentInformation () {
+function printDeploymentInformation() {
   print "Deployment Information:"
   echo "CONFIG_NAME: ${CONFIG_NAME}"
   echo "DEPLOYMENT_PATTERN: ${DEPLOYMENT_PATTERN}"
 }
 
-function runTask () {
+function runTask() {
   case "${TASK}" in
   "create")
     createDeployment
