@@ -84,9 +84,9 @@
 <p>The ETL Client image is built from the Dockerfile in <code>images/etl_client</code>. It uses the i2 Analyze Tools image as the base image.</p>
 <h3 id="docker-build-command">Docker build command</h3>
 <p>The following <code>docker build</code> command builds the ETL Client image:</p>
-<pre><code class="lang-sh">docker build -t &quot;etlclient_redhat:4.3.4&quot; &quot;/images/etl_client&quot; \
+<pre><code class="lang-sh">docker build -t &quot;etlclient_redhat:4.3.5&quot; &quot;/images/etl_client&quot; \
     --build-arg USER_UID=&quot;$(id -u &quot;${USER}&quot;)&quot; \
-    --build-arg BASE_IMAGE=&quot;i2a_tools_redhat:4.3.4&quot;
+    --build-arg BASE_IMAGE=&quot;i2a_tools_redhat:4.3.5&quot;
 </code></pre><p>The <code>--build-arg</code> flag is used to provide your local user ID to the Docker image when it is built. The value of <code>$USER</code> comes from your shell.</p>
 <p>For examples of the build commands, see the <a href="https://github.com/i2group/analyze-containers/blob/main/utils/buildImages.sh">buildImages.sh</a> script.</p>
 <h2 id="running-an-etl-client-container">Running an ETL Client container</h2>
@@ -112,11 +112,11 @@
     -e DB_PASSWORD=&quot;DB_PASSWORD&quot; \
     -e DB_SSL_CONNECTION=true \
     -e SSL_CA_CERTIFICATE=&quot;SSL_CA_CERTIFICATE&quot; \
-    &quot;etlclient_image:4.3.4&quot; &quot;$@&quot;
+    &quot;etlclient_image:4.3.5&quot; &quot;$@&quot;
 </code></pre><p>For an example of the <code>docker run</code> command, see <code>runEtlToolkitToolAsi2ETL</code> function in the <a href="https://github.com/i2group/analyze-containers/blob/main/utils/clientFunctions.sh">clientFunctions.sh</a> script.
-For an example of how to use <code>runEtlToolkitToolAsi2ETL</code> function, see <a href="../tools%20and%20functions/client_functions.html#runetltoolkittoolasi2etl">runEtlToolkitToolAsi2ETL</a>.</p>
+For an example of how to use <code>runEtlToolkitToolAsi2ETL</code> function, see <a href="../tools%20and%20functions/client_functions.html#runEtlToolkitToolAsi2ETL">runEtlToolkitToolAsi2ETL</a>.</p>
 <h2 id="environment-variables">Environment variables</h2>
-<p>The ETl Client is built on top of the SQL Client. Any environment variables referenced in the <a href="sql_client.html#environmentvariables">SQL Client</a> can be used in the ETL Client.</p>
+<p>The ETl Client is built on top of the SQL Client. Any environment variables referenced in the <a href="sql_client.html#environment-variables">SQL Client</a> can be used in the ETL Client.</p>
 <h3 id="additional-environment-variables">Additional Environment variables</h3>
 <table>
 <thead>

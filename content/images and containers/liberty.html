@@ -80,24 +80,24 @@
 <h1 id="liberty">Liberty</h1>
 
 <p>In a containerized deployment, you configure the i2 Analyze application and Liberty in an image that is layered on top of the <em>liberty_ubi_base</em> image. The <em>liberty_ubi_base</em> contains static configuration and application jars that are required by i2 Analyze and should not be changed.</p>
-<h2 id="configuringthelibertyserver"> Configuring the Liberty server</h2>
+<h2 id="configuring-the-liberty-server">Configuring the Liberty server</h2>
 <p>Liberty is configured by exception. The runtime environment operates from a set of built-in configuration default settings, and you only need to specify configuration that overrides those default settings. You do this by editing either the <code>server.xml</code> file or another XML file that is included in <code>server.xml</code> at run time.</p>
-<p>In a containerized deployment of i2 Analyze, a <code>server.xml</code> file is provided for you. To provide or modify any values, you specify a number of <a href="#environmentvariables">environment variables</a> when you run a Liberty container.</p>
+<p>In a containerized deployment of i2 Analyze, a <code>server.xml</code> file is provided for you. To provide or modify any values, you specify a number of <a href="#environment-variables">environment variables</a> when you run a Liberty container.</p>
 <p>Additionally, you can extend the <code>server.xml</code> by using the provided <code>server.extensions.xml</code> in the i2 Analyze configuration. Any elements that you add to the extensions file are included in the <code>server.xml</code> when you run a Liberty container.</p>
-<h2 id="configuringthei2analyzeapplication"> Configuring the i2 Analyze application</h2>
+<h2 id="configuring-the-i2-analyze-application">Configuring the i2 Analyze application</h2>
 <p>The contents of the <code>configuration</code> directory must be copied into the <code>images/liberty_ubi_combined/classes</code> directory. The contents of the <code>classes</code> directory is added to the configured Liberty image when the image is built. If you make changes to the configuration, you must copy the changes to the <code>classes</code> directory and rebuild the configured image.</p>
 <blockquote><p>Note: The system match rules are configured differently. The application is updated to use the <code>system-match-rules.xml</code> from the Solr client command line. For more information about updating the system match rules, see <a href="../walkthroughs/update_match_rules.html">Updating the system match rules</a>.</p>
 </blockquote>
-<h2 id="buildingaconfiguredlibertyimage"> Building a configured Liberty image</h2>
+<h2 id="building-a-configured-liberty-image">Building a configured Liberty image</h2>
 <p>The <em>configured image</em> is built from the base image. The configured image contains the i2 Analyze application and Liberty configuration that is required to start the i2 Analyze application. When you change the configuration, the configured image must be rebuilt to reflect the changes.</p>
-<h3 id="dockerbuildcommand"> Docker build command</h3>
+<h3 id="docker-build-command">Docker build command</h3>
 <p>The configured image is built from the Dockerfile in <code>images/liberty_ubi_combined</code>. The following <code>docker build</code> command builds the configured image:</p>
-<pre><code class="lang-bash">docker build -t &quot;liberty_configured_redhat:4.3.4&quot; images/liberty_ubi_combined --build-arg BASE_IMAGE=&quot;liberty_redhat:4.3.4&quot;
+<pre><code class="lang-bash">docker build -t &quot;liberty_configured_redhat:4.3.5&quot; images/liberty_ubi_combined --build-arg BASE_IMAGE=&quot;liberty_redhat:4.3.5&quot;
 </code></pre><p>An example of providing the configuration to the classes directory and building the image is included in the <code>buildLibertyConfiguredImage</code> function in the <code>serverFunctions.sh</code> script.</p>
-<h2 id="runningalibertycontainer"> Running a Liberty container</h2>
-<p>A Liberty container uses the configured image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to Liberty on the container. The environment variables are described in <a href="#environmentvariables">environment variables</a></p>
+<h2 id="running-a-liberty-container">Running a Liberty container</h2>
+<p>A Liberty container uses the configured image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to Liberty on the container. The environment variables are described in <a href="#environment-variables">environment variables</a></p>
 <p>For more information about the command, see <a href="https://docs.docker.com/engine/reference/run/">docker run reference</a>.</p>
-<h3 id="dockerruncommand"> Docker run command</h3>
+<h3 id="docker-run-command">Docker run command</h3>
 <p>The following <code>docker run</code> command runs a Liberty container:</p>
 <pre><code class="lang-bash">docker run -m 1g -d \
   --name &quot;liberty1&quot; \
@@ -141,14 +141,14 @@
 </ol>
 <p>An example of running Liberty container by using <code>runLiberty</code> function:</p>
 <pre><code class="lang-bash">runLiberty liberty1 liberty1.eia liberty1_data 9045 liberty1
-</code></pre><h3 id="volumes"> Volumes</h3>
-<p>A named volume is used to persist data, which is generated and used in the Liberty container, outside of the container.</p>
+</code></pre><h3 id="volumes">Volumes</h3>
+<p>A named volume or a bind mount can be used to persist data, which is generated and used in the Liberty container, outside of the container.</p>
 <p>To configure the Liberty container to use the volume, specify the <code>-v</code> option with the name of the volume and the path where the directory is mounted in the container. By setting <code>-v</code> option in the docker run command, a named volume is created. For Liberty, the directory that is mounted must be <code>/data</code>, this directory folder stores: jobs, record groups and charts.</p>
 <p>For example:</p>
 <pre><code class="lang-sh">-v liberty_data:/data \
 -v liberty1_secrets:/run/secrets
 </code></pre><p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access ZooKeeper, the database, and the certificates used in SSL.<br>The directory is used to update the named volume location defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>ZOO_DIGEST_USERNAME_FILE</code> to locate the secrets.<br>In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files.</p>
-<h3 id="environmentvariables"> Environment variables</h3>
+<h3 id="environment-variables">Environment variables</h3>
 <p>To configure the Liberty server, you provide environment variables to the Docker container in the <code>docker run</code> command.</p>
 <p>The following table describes the supported environment variables that you can use:</p>
 <table>
@@ -161,7 +161,7 @@
 <tbody>
 <tr>
 <td><code>FRONT_END_URI</code></td>
-<td>The URI that clients use to connect to i2 Analyze. For more information, see <a href="https://www.ibm.com/support/knowledgecenter/SSXVTH_latest/com.ibm.i2.eia.go.live.doc/t_edge_url.html">Specifying the connection URI</a>.</td>
+<td>The URI that clients use to connect to i2 Analyze. For more information, see <a href="https://www.ibm.com/docs/en/i2-analyze/4.3.5?topic=settings-deploying-proxy-server-use-i2-analyze">Specifying the connection URI</a>.</td>
 </tr>
 <tr>
 <td><code>DB_DIALECT</code></td>
@@ -216,47 +216,47 @@
 <tbody>
 <tr>
 <td><code>DB_SSL_CONNECTION</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>SOLR_ZOO_SSL_CONNECTION</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>SERVER_SSL</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>SSL_PRIVATE_KEY_FILE</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>SSL_CERTIFICATE_FILE</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>SSL_CA_CERTIFICATE_FILE</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>GATEWAY_SSL_CONNECTION</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>SSL_OUTBOUND_PRIVATE_KEY_FILE</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>SSL_OUTBOUND_CERTIFICATE_FILE</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>SSL_OUTBOUND_CA_CERTIFICATE_FILE</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 </tbody>
 </table>
-<h3 id="libertyhadr"> Liberty HADR</h3>
+<h3 id="liberty-hadr">Liberty HADR</h3>
 <p>You can run Liberty in an active/active configuration with multiple Liberty containers. In an active/active configuration, multiple instance of the i2 Analyze application run concurrently on multiple Liberty containers. One instance of the i2 Analyze application is determined to be the leader at any given time.</p>
 <p>The following tables describes the environment variables that you can use to configure HADR:</p>
 <table>
@@ -285,6 +285,7 @@
 </tr>
 </tbody>
 </table>
+<!-- markdownlint-configure-file { "MD013": false } -->
 </article>
           </div>
           

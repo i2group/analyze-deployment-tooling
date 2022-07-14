@@ -86,7 +86,7 @@
 <li>When you run the <code>deploy.sh</code> script and specify the name of a config that is not deployed, the containers in the current environment are stopped and a new environment is deployed with the specified config.</li>
 </ul>
 <hr>
-<h2 id="deployscript"> The deploy.sh script</h2>
+<h2 id="the-deploysh-script">The deploy.sh script</h2>
 <p>The <code>scripts/deploy.sh</code> script is used to deploy configs and manage your environment.</p>
 <p>The following usage and help is provided for the <code>deploy.sh</code> script:</p>
 <pre><code class="lang-bash">Usage:
@@ -103,7 +103,7 @@ Options:
   -t {backup}           Backup the database.
   -t {restore}          Restore the database.
   -b &lt;backup_name&gt;      Name of the backup to create or restore. If not specified, the default backup is used.
-  -a                    Produce or use artefacts on AWS.
+  -a                    Produce or use artifacts on AWS.
   -d &lt;deployment_name&gt;  Name of deployment to use on AWS.
   -l &lt;dependency_label&gt; Name of dependency image label to use on AWS.
   -n &lt;connector_name&gt;   Name of a connector. This option is used with the connectors task to specify which connectors to act on.

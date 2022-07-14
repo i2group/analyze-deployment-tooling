@@ -81,9 +81,9 @@
 
 <p>This topic describes how to deploy and start i2 Analyze in a containerized environment.</p>
 <p>For an example of the activities described, see the <a href="https://github.com/i2group/analyze-containers/blob/main/examples/pre-prod/deploy.sh">deploy.sh</a></p>
-<h2 id="runningsolrandzookeeper"> Running Solr and ZooKeeper</h2>
+<h2 id="running-solr-and-zookeeper">Running Solr and ZooKeeper</h2>
 <p>The running Solr and ZooKeeper section runs the required containers and creates the Solr cluster and ZooKeeper ensemble.</p>
-<h3 id="createsolrcluster"> Create Solr cluster</h3>
+<h3 id="create-solr-cluster">Create Solr cluster</h3>
 <p>The <code>createSecureCluster</code> function creates the secure Solr cluster for the deployment. The function includes a number of calls that complete the following actions:</p>
 <ol>
 <li><p>The <code>runZK</code> server function runs the ZooKeeper containers that make up the ZooKeeper ensemble. For more information about running a ZooKeeper container, see <a href="../images%20and%20containers/zookeeper.html">ZooKeeper</a>.
@@ -95,32 +95,32 @@ In <code>deploy.sh</code>, 3 ZooKeeper containers are used.</p>
 <li>Set the <code>urlScheme</code> to be <code>https</code>.</li>
 <li>Configure the Solr authentication by uploading the <code>security.json</code> file to ZooKeeper.</li>
 </ol>
-<p>For more information about the function, see <a href="client_functions.html#runsolrclientcommand">runSolrClientCommand</a>.</p>
+<p>For more information about the function, see <a href="client_functions.html#runSolrClientCommand">runSolrClientCommand</a>.</p>
 </li>
 <li><p>The <code>runSolr</code> server function runs the Solr containers for the Solr cluster. For more information about running a Solr container, see <a href="../images%20and%20containers/solr.html">Solr</a>.<br>In <code>deploy.sh</code>, 2 Solr containers are used.</p>
 </li>
 </ol>
 <p>At this point, your ZooKeepers are running in an ensemble, and your Solr containers are running in SolrCloud Mode managed by ZooKeeper.</p>
-<h2 id="initializingtheinformationstoredatabase"> Initializing the Information Store database</h2>
+<h2 id="initializing-the-information-store-database">Initializing the Information Store database</h2>
 <p>The initializing the Information Store database section creates a persistent database backup volume, runs the database container and configures the database management system.</p>
 <p>The database backup volume is created first with the Docker command:</p>
 <pre><code class="lang-bash">docker volume create &quot;${SQL_SERVER_BACKUP_VOLUME_NAME}&quot;
 </code></pre><p>so that the volume will not be automatically deleted when the SQL Server container is remove. This helps maintain any backups created while running a SQL server container.
 For more information about docker storage, see <a href="https://docs.docker.com/storage/">Docker Storage</a>.</p>
-<h3 id="runningthedatabaseservercontainer"> Running the database server container</h3>
+<h3 id="running-the-database-server-container">Running the database server container</h3>
 <p>The <code>runSQLServer</code> server function creates the secure SQL Server container for the deployment.</p>
 <p>For more information about building the SQL Server image and running a container, see <a href="../images%20and%20containers/sql_server.html">Microsoft SQL Server</a>.</p>
-<p>Before continuing, <code>deploy.sh</code> uses the <code>waitForSolrToBeLive</code> client function and <code>waitForSQLServerToBeLive</code> common function to ensure that Solr and SQL Server are running. For more information, see <a href="client_functions.html#statusutilities">Status utilities</a></p>
-<h3 id="configuringsqlserver"> Configuring SQL Server</h3>
+<p>Before continuing, <code>deploy.sh</code> uses the <code>waitForSolrToBeLive</code> client function and <code>waitForSQLServerToBeLive</code> common function to ensure that Solr and SQL Server are running. For more information, see <a href="client_functions.html#status-utilities">Status utilities</a></p>
+<h3 id="configuring-sql-server">Configuring SQL Server</h3>
 <p>The <code>configureSecureSqlServer</code> function uses a number of client and server functions to complete the following actions:</p>
 <ol>
-<li><p>The <code>changeSAPassword</code> client function is used to change the <code>sa</code> user&#39;s password.<br>For more information, see <a href="../security%20and%20users/db_users.html#changingsapassword">changeSAPassword</a></p>
+<li><p>The <code>changeSAPassword</code> client function is used to change the <code>sa</code> user&#39;s password.<br>For more information, see <a href="../security%20and%20users/db_users.html#changing-sa-password">changeSAPassword</a></p>
 </li>
 <li><p>Generate the static Information Store database scripts.</p>
 <ul>
 <li>The <code>runi2AnalyzeTool</code> client function is used to run the <code>generateStaticInfoStoreCreationScripts.sh</code> tool.  <ul>
-<li><a href="client_functions.html#runi2analyzetool">runi2AnalyzeTool</a></li>
-<li><a href="i2analyze_tools.html#generatestaticdatabasescriptstool">Generate static database scripts tool</a></li>
+<li><a href="client_functions.html#runi2AnalyzeTool">runi2AnalyzeTool</a></li>
+<li><a href="i2analyze_tools.html#generate-static-database-scripts-tool">Generate static database scripts tool</a></li>
 </ul>
 </li>
 </ul>
@@ -128,7 +128,7 @@ For more information about docker storage, see <a href="https://docs.docker.com/
 <li><p>Create the Information Store database and schemas.</p>
 <ul>
 <li>The <code>runSQLServerCommandAsSA</code> client function is used to run the <code>runDatabaseCreationScripts.sh</code> tool.  <ul>
-<li><a href="client_functions.html#runsqlservercommandassa">runSQLServerCommandAsSA</a></li>
+<li><a href="client_functions.html#runSQLServerCommandAsSA">runSQLServerCommandAsSA</a></li>
 <li>runDatabaseCreationScripts.sh</li>
 </ul>
 </li>
@@ -154,14 +154,14 @@ For more information about docker storage, see <a href="https://docs.docker.com/
 <li><p>Run the static scripts that create the Information Store database objects.</p>
 <ul>
 <li>The <code>runSQLServerCommandAsSA</code> client function is used to run the <code>runStaticScripts.sh</code> tool.  <ul>
-<li><a href="client_functions.html#runsqlservercommandassa">runSQLServerCommandAsSA</a></li>
-<li><a href="i2analyze_tools.html#runstaticdatabasescriptstool">Run static database scripts tool</a></li>
+<li><a href="client_functions.html#runSQLServerCommandAsSA">runSQLServerCommandAsSA</a></li>
+<li><a href="i2analyze_tools.html#run-static-database-scripts-tool">Run static database scripts tool</a></li>
 </ul>
 </li>
 </ul>
 </li>
 </ol>
-<h2 id="configuringsolrandzookeeper"> Configuring Solr and ZooKeeper</h2>
+<h2 id="configuring-solr-and-zookeeper">Configuring Solr and ZooKeeper</h2>
 <p>The configuring Solr and ZooKeeper sections creates Solr configuration and then configures the Solr cluster and creates the Solr collections.</p>
 <p>The <code>generateSolrSchemas.sh</code> i2-tool creates the <code>solr</code> directory in <code>examples/pre-prod/configuration/solr/generated_config</code>. This directory contains the managed-schema, Solr synonyms file and Solr config files for each index.</p>
 <ol>
@@ -182,27 +182,27 @@ For more information about docker storage, see <a href="https://docs.docker.com/
 </code></pre><p>For more information about the Solr collection API call, see <a href="https://lucene.apache.org/solr/guide/8_6/collection-management.html#create">CREATE: Create a Collection</a>.</p>
 </li>
 </ol>
-<h2 id="configuringtheinformationstoredatabase"> Configuring the Information Store database</h2>
+<h2 id="configuring-the-information-store-database">Configuring the Information Store database</h2>
 <p>The configuring the Information Store database section creates objects within in the database.</p>
 <ol>
 <li>Generate the dynamic database scripts that create the schema specific database objects.<ul>
 <li>The <code>runi2AnalyzeTool</code> client function is used to run the <code>generateDynamicInfoStoreCreationScripts.sh</code> tool.<ul>
-<li><a href="client_functions.html#runi2analyzetool">runi2AnalyzeTool</a></li>
-<li><a href="i2analyze_tools.html#generatedynamicinformationstorecreationscriptstool">Generate dynamic Information Store creation scripts tool</a></li>
+<li><a href="client_functions.html#runi2AnalyzeTool">runi2AnalyzeTool</a></li>
+<li><a href="i2analyze_tools.html#generate-dynamic-information-store-creation-scripts-tool">Generate dynamic Information Store creation scripts tool</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li>Run the generated dynamic database scripts.<ul>
 <li>The <code>runSQLServerCommandAsSA</code> client function is used to run the <code>runDynamicScripts.sh</code> tool.<ul>
-<li><a href="client_functions.html#runsqlservercommandassa">runSQLServerCommandAsSA</a></li>
-<li><a href="i2analyze_tools.html#rundynamicinformationstorecreationscriptstool">Run dynamic Information Store creation scripts tool</a></li>
+<li><a href="client_functions.html#runSQLServerCommandAsSA">runSQLServerCommandAsSA</a></li>
+<li><a href="i2analyze_tools.html#run-dynamic-information-store-creation-scripts-tool">Run dynamic Information Store creation scripts tool</a></li>
 </ul>
 </li>
 </ul>
 </li>
 </ol>
-<h2 id="configuringtheexampleconnector"> Configuring the Example Connector</h2>
+<h2 id="configuring-the-example-connector">Configuring the Example Connector</h2>
 <p>The configuring example connector section runs the example connector used by the i2 Analyze application.</p>
 <ol>
 <li><p>The <code>runExampleConnector</code> server function runs the example connector application.</p>
@@ -210,12 +210,12 @@ For more information about docker storage, see <a href="https://docs.docker.com/
 <li><p>The <code>waitForConnectorToBeLive</code> client function checks the connector is live before allowing the script to proceed.</p>
 </li>
 </ol>
-<h2 id="configuringi2analyze"> Configuring i2 Analyze</h2>
+<h2 id="configuring-i2-analyze">Configuring i2 Analyze</h2>
 <p>The configuring i2 Analyze section runs the Liberty containers that run the i2 Analyze application.</p>
 <ol>
-<li><p>The <code>buildLibertyConfiguredImage</code> server function builds the configured Liberty image.  For more information, see <a href="../images%20and%20containers/liberty.html#buildingaconfiguredlibertyimage">Building a configured Liberty image</a>.</p>
+<li><p>The <code>buildLibertyConfiguredImage</code> server function builds the configured Liberty image.  For more information, see <a href="../images%20and%20containers/liberty.html#building-a-configured-liberty-image">Building a configured Liberty image</a>.</p>
 </li>
-<li><p>The <code>runLiberty</code> server function runs a Liberty container from the configured image.<br>For more information, see <a href="../images%20and%20containers/liberty.html#runningalibertycontainer">Running a Liberty container</a>
+<li><p>The <code>runLiberty</code> server function runs a Liberty container from the configured image.<br>For more information, see <a href="../images%20and%20containers/liberty.html#running-a-liberty-container">Running a Liberty container</a>
 In <code>deploy.sh</code>, 2 liberty containers are used.</p>
 </li>
 <li><p>Starting the load balancer.<br>The <code>runLoadBalancer</code> functions in <code>serverFunctions.sh</code> runs HAProxy as a load balancer in a Docker container.<br>The load balancer configuration we use is generated from the <code>haproxy-template.cfg</code> template file. The load balancer routes requests to the application to both Liberty servers that are running.<br>The configuration that used is a simplified configuration for example purposes and is not to be used in production.</p>
@@ -225,7 +225,7 @@ In <code>deploy.sh</code>, 2 liberty containers are used.</p>
 </li>
 <li><p>Deploy the system match rules.</p>
 <ul>
-<li>The <code>runSolrClientCommand</code> client function is used to run the <code>runIndexCommand.sh</code> tool. The tool is run twice, once to update the match rules file and once to switch the match indexes.<br>For more information, see <a href="i2analyze_tools.html#managesolrindexestool">Manage Solr indexes tool</a>.</li>
+<li>The <code>runSolrClientCommand</code> client function is used to run the <code>runIndexCommand.sh</code> tool. The tool is run twice, once to update the match rules file and once to switch the match indexes.<br>For more information, see <a href="i2analyze_tools.html#manage-solr-indexes-tool">Manage Solr indexes tool</a>.</li>
 </ul>
 </li>
 </ol>

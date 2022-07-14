@@ -79,12 +79,12 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="managing-container-security">Managing container security</h1>
 
-<h2 id="sslcertificatesinthedeployment"> SSL certificates in the deployment</h2>
+<h2 id="ssl-certificates-in-the-deployment">SSL certificates in the deployment</h2>
 <p>The example deployment is configured to use SSL connections for communication between clients and i2 Analyze, and between the components of i2 Analyze.</p>
 <p>To achieve this, the appropriate certificate authorities and certificates are used. The <code>generateSecrets.sh</code> script is used to simulate the process of creating the required keys and acquiring certificate authority-signed certificates.</p>
 <blockquote><p>Note: The keys and certificates used are set to expire after 90 days. To use the certificates for longer than this, you must run the <code>generateSecrets.sh</code> script again.</p>
 </blockquote>
-<h2 id="certificateauthorities"> Certificate Authorities (CA)</h2>
+<h2 id="certificate-authorities-ca">Certificate Authorities (CA)</h2>
 <p>In the example, two CAs are used to provide trust:</p>
 <ul>
 <li><strong>Internal CA</strong>
@@ -92,15 +92,15 @@
 <li><strong>External CA</strong>
  The external CA is to provide trust for external requests to the i2 Analyze service via the load balancer. In our example, the external certificate authority is generated for you. However, in production a real certificate should be used.</li>
 </ul>
-<h2 id="containercertificates"> Container certificates</h2>
+<h2 id="container-certificates">Container certificates</h2>
 <p>To communicate securely using TLS each container requires the following certificates:</p>
 <ul>
 <li>Private key</li>
 <li>Certificate key</li>
 <li>Internal certificate authority</li>
 </ul>
-<p>The containers will generate truststores and keystores based on the keys provided to the container. For more information about how the keys are passed to the containers securely please see <a href="#secureenvironmentvariables">Secure Environment variables</a>.</p>
-<h2 id="securecommunicationbetweencontainers"> Secure communication between containers</h2>
+<p>The containers will generate truststores and keystores based on the keys provided to the container. For more information about how the keys are passed to the containers securely please see <a href="#secure-environment-variables">Secure Environment variables</a>.</p>
+<h2 id="secure-communication-between-containers">Secure communication between containers</h2>
 <p>When the components communicate, the <code>CA certificate</code> is used to establish trust of the <code>container certificate</code> that is received.  </p>
 <ul>
 <li><p>Each container has its own private key</p>
@@ -108,7 +108,7 @@
 <li><p>ZooKeeper requires client authentication to initiate communication. The i2 Analyze, i2 Analyze Tool, and Solr client containers require container certificates to authenticate with ZooKeeper.</p>
 </li>
 </ul>
-<h2 id="creatingkeysandcertificates"> Creating keys and certificates</h2>
+<h2 id="creating-keys-and-certificates">Creating keys and certificates</h2>
 <p>The following diagram shows a simplified sequence of creating a container certificate from the certificate authority and using it to establish trust:</p>
 <ol>
 <li><p>The certificate authority&#39;s certificate is distributed to the client.</p>
@@ -126,13 +126,14 @@
 <li><p>When communication is established, the <code>container certificate</code> is sent to the client. The client uses it&#39;s copy of the <code>CA certificate</code> to verify that the <code>container certificate</code> was signed by the same CA.</p>
 </li>
 </ol>
-<h2 id="passwordgeneration"> Password generation</h2>
-<p>The example simulates secrets management performed by various secrets managers provided by cloud vendors. The <code>generateSecrets.sh</code> generates these secrets and populates the <code>dev-environment-secrets/simulated-secret-store</code> with secrets required for each container. The docker desktop does not support secrets, but the example environment example simulates this by mounting the secrets folder. For more information see <a href="https://docs.docker.com/engine/swarm/secrets/">Manage sensitive data with Docker secrets</a>.</p>
+<h2 id="password-generation">Password generation</h2>
+<p>The example simulates secrets management performed by various secrets managers provided by cloud vendors. The <code>generateSecrets.sh</code> generates these secrets and populates the <code>dev-environment-secrets/simulated-secret-store</code> with secrets required for each container.
+The docker desktop does not support secrets, but the example environment example simulates this by mounting the secrets folder. For more information see <a href="https://docs.docker.com/engine/swarm/secrets/">Manage sensitive data with Docker secrets</a>.</p>
 <p>After these passwords have been generated, they can be uploaded to a secrets manager. Alternatively you can use a secrets manager to generate your passwords.</p>
-<h2 id="solrbasicauthentication"> Solr Basic Authentication</h2>
-<p>Solr authorisation can be enabled using the BasicAuthPlugin. The basic auth plugin defines users, user roles and passwords for users. For the BasicAuthPlugin to be enabled, solr requires a <code>security.json</code> file to be uploaded. In our example the <code>security.json</code> file is created by the <code>generateSecrets.sh</code> and located in <code>dev-environment-secrets/generated-secrets/secrets/solr/security.json</code>.</p>
+<h2 id="solr-basic-authentication">Solr Basic Authentication</h2>
+<p>Solr authorization can be enabled using the BasicAuthPlugin. The basic auth plugin defines users, user roles and passwords for users. For the BasicAuthPlugin to be enabled, solr requires a <code>security.json</code> file to be uploaded. In our example the <code>security.json</code> file is created by the <code>generateSecrets.sh</code> and located in <code>dev-environment-secrets/generated-secrets/secrets/solr/security.json</code>.</p>
 <p>For more information about solr authentication see <a href="https://lucene.apache.org/solr/guide/8_3/basic-authentication-plugin.html">Basic Authentication Plugin</a></p>
-<h2 id="secureenvironmentvariables"> Secure Environment variables</h2>
+<h2 id="secure-environment-variables">Secure Environment variables</h2>
 <p>In general secrets used by a particular container can be supplied via an environment variable containing the path to a file containing the secret, or an environment variable specifying the literal secret value, for example:
 <strong>Note:</strong> Secrets can be passwords, keys or certificates.</p>
 <pre><code class="lang-bash">docker run --name solr1 -d --net eia
@@ -215,6 +216,7 @@
 </tr>
 </tbody>
 </table>
+<p>&lt;!-- cspell:ignore jhga98u43jndfj &gt;</p>
 </article>
           </div>
           

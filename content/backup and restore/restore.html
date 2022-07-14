@@ -79,7 +79,7 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="restore">Restore</h1>
 
-<p>This section describes the process to restore the Solr collections and Information Store database in SQL Server of an i2 Analyze deployment in a containerised environment.</p>
+<p>This section describes the process to restore the Solr collections and Information Store database in SQL Server of an i2 Analyze deployment in a containerized environment.</p>
 <h2 id="understanding-the-restore-process">Understanding the restore process</h2>
 <p>To restore the data and indexes for a deployment of i2 Analyze, restore the pair of Solr collection and Information Store database backups.</p>
 <p>To ensure that the data is restored correctly, restore the pair of backups in the following order:</p>
@@ -115,7 +115,7 @@
 Because the backup is completed for the <code>ISTORE</code> database only, the logins from the previous SQL Server instance cannot be restored. Additionally, the database users are restored but there are no logins mapped to them.</p>
 <p>For more information about SQL Server logins, see <a href="https://docs.microsoft.com/en-us/sql/relational-databases/security/authentication-access/create-a-login?view=sql-server-ver15">SQL Server Login documentation</a></p>
 <p>In this environment, create the required logins and users by dropping the users from the database and recreating the logins and the users by using the <code>createDbLoginAndUser</code> client function. The logins and users are created in the same way as when original SQL Server instance was configured.</p>
-<p>For more information about creating the required logins, users, and permissions, see <a href="../tools%20and%20functions/deploy.html#configuringsqlserver">Configuring SQL Server</a> in the deployment documentation.</p>
+<p>For more information about creating the required logins, users, and permissions, see <a href="../tools%20and%20functions/deploy.html#configuring-sql-server">Configuring SQL Server</a> in the deployment documentation.</p>
 <p>See the <code>Dropping existing database users</code> and <code>Recreating database logins, users, and permissions</code> sections of the walkthrough script.</p>
 <h2 id="restoring-the-solr-collections">Restoring the Solr collections</h2>
 <p>Restoring the solr indexes includes the following high-level steps:</p>
@@ -131,8 +131,8 @@ Because the backup is completed for the <code>ISTORE</code> database only, the l
 <h3 id="deploy-a-new-solr-cluster-and-zookeeper-ensemble">Deploy a new Solr cluster and ZooKeeper ensemble</h3>
 <p>To restore the Solr indexes, deploy a new Solr cluster &amp; ZooKeeper ensemble. For more information about running a clean ZooKeeper &amp; Solr environment, see</p>
 <ul>
-<li><a href="../tools%20and%20functions/deploy.html#runningsolrandzookeeper">Running Solr and ZooKeeper</a>.</li>
-<li><a href="../tools%20and%20functions/deploy.html#createsolrcluster">Create Solr cluster</a>.</li>
+<li><a href="../tools%20and%20functions/deploy.html#running-solr-and-zookeeper">Running Solr and ZooKeeper</a>.</li>
+<li><a href="../tools%20and%20functions/deploy.html#create-solr-cluster">Create Solr cluster</a>.</li>
 </ul>
 <p>See the <code>Deploying Clean Solr &amp; Zookeeper</code> section of the walkthrough script.</p>
 <h3 id="restoring-the-non-transient-solr-collections">Restoring the non-transient Solr collections</h3>
@@ -144,21 +144,21 @@ Because the backup is completed for the <code>ISTORE</code> database only, the l
 </blockquote>
 <p>See the <code>Restoring non-transient Solr collection</code> section of the walkthrough script.</p>
 <h2 id="determining-completion-of-solr-restore-procedure">Determining completion of Solr restore procedure</h2>
-<p>The <code>Monitoring Solr restore process</code> section of the walkthrough script runs a loop around the <code>getAsycRequestStatus</code> client function that reports the status of the Asynchronous request. For more information about the client function, see <a href="../tools%20and%20functions/client_functions.html#getasycrequeststatus"><code>getAsycRequestStatus</code></a>.</p>
+<p>The <code>Monitoring Solr restore process</code> section of the walkthrough script runs a loop around the <code>getAsyncRequestStatus</code> client function that reports the status of the Asynchronous request. For more information about the client function, see <a href="../tools%20and%20functions/client_functions.html#getAsyncRequestStatus"><code>getAsyncRequestStatus</code></a>.</p>
 <p>See the <code>Monitoring Solr restore progress</code> section of the walkthrough script.</p>
 <h3 id="recreate-transient-solr-collections">Recreate transient Solr collections</h3>
-<p>Recreate the transient <code>daod_index</code> and <code>highlightquery_index</code> Solr collections.</p>
-<p>For more information about the creating Solr collections, see <a href="../tools%20and%20functions/deploy.html#configuringsolrandzookeeper">Configuring Solr and ZooKeeper</a>.</p>
+<p>Recreate the transient <code>daod_index</code>, <code>vq_index</code>, and <code>highlightquery_index</code> Solr collections.</p>
+<p>For more information about the creating Solr collections, see <a href="../tools%20and%20functions/deploy.html#configuring-solr-and-zookeeper">Configuring Solr and ZooKeeper</a>.</p>
 <p>See the <code>Recreating transient Solr collections</code> section of the walkthrough script.</p>
 <h3 id="restore-system-match-rules">Restore system match rules</h3>
 <p>After the indexes are restored, upload the system match rules file. Use the Solr ZooKeeper Command Line Interface (zkcli) to create the directory in ZooKeeper for the system match rules file and to upload it.</p>
 <p>The <code>runSolrClientCommand</code> client function is used to run the zkcli request.</p>
 <p>The following command creates the directory in ZooKeeper where the system match rules file must be stored:</p>
-<pre><code class="lang-bash">runSolrClientCommand &quot;/opt/solr-8.8.2/server/scripts/cloud-scripts/zkcli.sh&quot; -zkhost &quot;${ZK_HOST}&quot; -cmd makepath /configs/match_index1/match_index1/app
+<pre><code class="lang-bash">runSolrClientCommand &quot;/opt/solr/server/scripts/cloud-scripts/zkcli.sh&quot; -zkhost &quot;${ZK_HOST}&quot; -cmd makepath /configs/match_index1/match_index1/app
 </code></pre><blockquote><p>Note: The path to where the system match rules file must be located is in the following format <code>configs/&lt;index name&gt;/&lt;index name&gt;/app</code></p>
 </blockquote>
 <p>The following command uploads the system match rules file to the directory in ZooKeeper created earlier:</p>
-<pre><code class="lang-bash">runSolrClientCommand &quot;/opt/solr-8.8.2/server/scripts/cloud-scripts/zkcli.sh&quot; -zkhost &quot;${ZK_HOST}&quot; -cmd putfile /configs/match_index1/match_index1/app/match-rules.xml /backup/1/system-match-rules.xml
+<pre><code class="lang-bash">runSolrClientCommand &quot;/opt/solr/server/scripts/cloud-scripts/zkcli.sh&quot; -zkhost &quot;${ZK_HOST}&quot; -cmd putfile /configs/match_index1/match_index1/app/match-rules.xml /backup/1/system-match-rules.xml
 </code></pre><p>For more information about the ZooKeeper command line utilities, see <a href="https://lucene.apache.org/solr/guide/8_7/command-line-utilities.html#using-solrs-zookeeper-cli">Using Solr’s ZooKeeper CLI</a>.</p>
 <p>See the <code>Restoring system match rules</code> section of the walkthrough script.</p>
 <h2 id="start-the-liberty-containers">Start the Liberty containers</h2>

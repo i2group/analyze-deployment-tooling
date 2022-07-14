@@ -79,22 +79,22 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="getting-started-with-the-analyze-containers-repository">Getting started with the analyze-containers repository</h1>
 
-<h2 id="prerequisites"> Prerequisites</h2>
+<h2 id="prerequisites">Prerequisites</h2>
 <p>You can run the code in the analyze-containers repository on Windows with Windows Subsystem for Linux and MacOS.</p>
-<h3 id="windowssubsystemforlinux"> Windows Subsystem for Linux (WSL)</h3>
+<h3 id="windows-subsystem-for-linux-wsl">Windows Subsystem for Linux (WSL)</h3>
 <ol>
 <li><p>If you are on Windows, you must use WSL 2 to run the shell scripts in this repository.</p>
 <p> For information about installing WSL, see <a href="https://docs.microsoft.com/windows/wsl/install-win10">Windows Subsystem for Linux Installation Guide</a>.</p>
 </li>
 </ol>
-<h3 id="code"> Code</h3>
+<h3 id="code">Code</h3>
 <ol>
 <li><p>Download the <code>tar.gz</code> or clone the analyze-containers repository from <a href="https://github.com/i2group/analyze-containers">https://github.com/i2group/analyze-containers</a>.</p>
 </li>
 <li><p>If you download the <code>tar.gz</code> file, extract it. On Windows, extract it to a location that is in your WSL file system. For example: <code>\\wsl$\Ubuntu-20.04\home\&lt;user-name&gt;</code>.</p>
 </li>
 </ol>
-<h3 id="docker"> Docker</h3>
+<h3 id="docker">Docker</h3>
 <ol>
 <li><p>Install Docker CE for your operating system. For more information about installing Docker CE, see <a href="https://docs.docker.com/engine/installation/">https://docs.docker.com/engine/installation/</a>.</p>
 <ul>
@@ -106,8 +106,6 @@
 </li>
 </ul>
 </li>
-<li><p>When you configure Docker, give Docker permission to mount files from the <code>analyze-containers</code> directory on your local file system. In the <em>Docker Desktop</em> application, navigate to  <code>Settings &gt; Resources &gt; File Sharing</code>.</p>
-</li>
 <li><p>After you install Docker, you must allocate enough memory to Docker to run the containers in the example deployment. For this deployment, allocate at least 5GB of memory.</p>
 <p> For more information about modifying the resources allocated to Docker, see:</p>
 <ul>
@@ -116,7 +114,7 @@
 </ul>
 </li>
 </ol>
-<h3 id="commandlinetools"> Command line tools</h3>
+<h3 id="command-line-tools">Command line tools</h3>
 <ol>
 <li><p>If you are using WSL, install and configure the following command line tools:</p>
 <ul>
@@ -147,7 +145,7 @@ echo &#39;export PATH=&quot;$(brew --prefix)/opt/coreutils/libexec/gnubin:$PATH&
 </ul>
 </li>
 </ol>
-<h3 id="visualstudiocode"> Visual Studio Code</h3>
+<h3 id="visual-studio-code">Visual Studio Code</h3>
 <p>The repository is designed to be used with VS Code to create the development environment.</p>
 <ol>
 <li><p>Download and install <a href="https://code.visualstudio.com/download">VS Code</a></p>
@@ -156,7 +154,7 @@ echo &#39;export PATH=&quot;$(brew --prefix)/opt/coreutils/libexec/gnubin:$PATH&
 <ul>
 <li><a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl">Remote - WSL</a></li>
 <li><a href="https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker">Docker</a></li>
-<li><a href="https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck">Shellcheck</a></li>
+<li><a href="https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck">ShellCheck</a></li>
 <li><a href="https://marketplace.visualstudio.com/items?itemName=mads-hartmann.bash-ide-vscode">Bash IDE</a></li>
 <li><a href="https://marketplace.visualstudio.com/items?itemName=redhat.vscode-xml">Red Hat XML</a></li>
 <li><a href="https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml">Red Hat YAML</a></li>
@@ -187,42 +185,62 @@ echo &#39;export PATH=&quot;$(brew --prefix)/opt/coreutils/libexec/gnubin:$PATH&
 </li>
 <li><p>To run the scripts in the analyze-containers repository, use the VS Code integrated terminal.</p>
 <ol>
-<li><p>To open the integrated terminal, click <strong>Terminal</strong> &gt; <strong>New Terminal</strong>.<br>On Windows, ensure that you are in a WSL terminal.</p>
+<li>Set the default terminal to WSL.<ol>
+<li>Press <strong>F1</strong> and type <code>Terminal: Select Default Profile</code>.</li>
+<li>Select <code>WSL</code>.</li>
+</ol>
+</li>
+<li><p>To open the integrated terminal, click <strong>Terminal</strong> &gt; <strong>New Terminal</strong>.  </p>
 <p>You do not need to run any scripts now, but whenever the documentation instructs you to run a script, do so from the integrated terminal.</p>
 </li>
 </ol>
 </li>
+<li><p>To set the <code>ANALYZE_CONTAINERS_ROOT_DIR</code> variable, run the following command:</p>
+<pre><code class="lang-sh">. initShell.sh
+</code></pre></li>
 </ol>
-<h3 id="i2analyzeminimaltoolkit"> i2 Analyze minimal toolkit</h3>
+<h3 id="i2-analyze-minimal-toolkit">i2 Analyze minimal toolkit</h3>
 <ol>
-<li>Download the i2 Analyze V4.3.4 Minimal for Linux package using the following part number: <em>G01HNML</em></li>
-<li>Rename the <code>IBM_I2A_V4.3.4_MIN_LIN.tar.gz</code> file to <code>i2analyzeMinimal.tar.gz</code>, then copy it to the <code>analyze-containers/pre-reqs</code> directory.</li>
+<li>Download the i2 Analyze V4.3.5 Minimal for Linux.<ul>
+<li>To download i2 Analyze, follow the procedure described in <a href="https://support.i2group.com/s/article/2290">Where can I download the latest i2 Products?</a></li>
+<li>Populate the subject of the form with <code>Request for i2 Analyze 4.3.5 minimal toolkit for Linux</code>.</li>
+</ul>
+</li>
+<li>Rename the <code>i2analyzeMinimal_4350.tar.gz</code> file to <code>i2analyzeMinimal.tar.gz</code>, then copy it to the <code>analyze-containers/pre-reqs</code> directory.</li>
 </ol>
 <p><strong>Note:</strong> If you used the <code>analyze-containers</code> repository with a previous version of i2 Analyze, overwrite the existing minimal toolkit.</p>
+<h3 id="i2-analyze-fix-packs-optional">i2 Analyze Fix Packs (optional)</h3>
+<ol>
+<li>If there is a Fix Pack available for the version of i2Analyze, download it and rename the file to <code>i2analyzeFixPack.tar.gz</code>, then copy it to the <code>analyze-containers/pre-reqs</code> directory.</li>
+</ol>
+<p><strong>Note:</strong> If you used the <code>analyze-containers</code> repository with a previous fix pack version of i2 Analyze, overwrite the existing fix pack file.</p>
 <h3 id="analysts-notebook-premium">Analyst&#39;s Notebook Premium</h3>
 <ol>
-<li><p>Download <em>i2 Analyst&#39;s Notebook Premium</em> version 9.2.4 using the following part number: <em>G01DHML</em>.</p>
+<li><p>Download <em>i2 Analyst&#39;s Notebook Premium</em> version 9.3.2.</p>
+<ul>
+<li>To download i2 Analyst&#39;s Notebook Premium, follow the procedure described in <a href="https://support.i2group.com/s/article/2290">Where can I download the latest i2 Products?</a></li>
+<li>Populate the subject of the form with <code>Request for i2 Analyst&#39;s Notebook Premium 9.3.2</code>.</li>
+</ul>
 </li>
-<li><p>Install Analyst&#39;s Notebook Premium on a Windows machine.</p>
+<li><p>Install i2 Analyst&#39;s Notebook Premium on a Windows machine.</p>
 <blockquote><p>Note: If you are running Docker on MacOS, you can install Analyst&#39;s Notebook Premium on a Windows virtual machine.</p>
 </blockquote>
-<p> For more information, see <a href="https://www.ibm.com/docs/en/i2-anb/latest?topic=installing-i2-analysts-notebook-premium">Installing IBM i2 Analyst&#39;s Notebook Premium</a>.</p>
+<p> For more information, see <a href="https://www.ibm.com/docs/en/i2-anb/latest?topic=installing-i2-analysts-notebook-premium">Installing i2 Analyst&#39;s Notebook Premium</a>.</p>
 </li>
 </ol>
-<h3 id="jdbcdrivers"> JDBC drivers</h3>
+<h3 id="jdbc-drivers">JDBC drivers</h3>
 <p>You must provide the JDBC driver to enable the application to communicate with the database.</p>
 <ol>
-<li>Download the Microsoft JDBC Driver 7.4 for SQL Server archive from <a href="https://www.microsoft.com/en-us/download/details.aspx?id=58505">https://www.microsoft.com/en-us/download/details.aspx?id=58505</a>.</li>
-<li>Extract the contents of the download, and locate the <code>sqljdbc_7.4\enu\mssql-jdbc-7.4.1.jre11.jar</code> file.</li>
-<li>Copy the <code>mssql-jdbc-7.4.1.jre11.jar</code> file to the <code>analyze-containers/pre-reqs/jdbc-drivers</code> directory.</li>
+<li>Download the Microsoft JDBC Driver 9.4.1 for SQL Server from <a href="https://github.com/microsoft/mssql-jdbc/releases/tag/v9.4.1">https://github.com/microsoft/mssql-jdbc/releases/tag/v9.4.1</a> by clicking the <code>mssql-jdbc-9.4.1.jre11.jar</code> asset.</li>
+<li>Copy the <code>mssql-jdbc-9.4.1.jre11.jar</code> file to the <code>analyze-containers/pre-reqs/jdbc-drivers</code> directory.</li>
 </ol>
 <hr>
-<h2 id="whattodonext"> What to do next</h2>
+<h2 id="what-to-do-next">What to do next</h2>
 <ul>
 <li>Create and use a development environment to develop an i2 Analyze configuration. For more information, see <a href="deploy_config_dev.html">Configuration development environment</a>.</li>
 <li>Create an example pre-production deployment that is used to demonstrate how i2 Analyze can be deployed in a distributed cloud environment. For more information, see <a href="reference%20architecture/deploy_pre_prod.html">Pre-production example environment</a>.</li>
 </ul>
-<p>To understand how the containerised environment is created, you can review the documentation that explains the images, containers, tools, and functions:</p>
+<p>To understand how the containerized environment is created, you can review the documentation that explains the images, containers, tools, and functions:</p>
 <ul>
 <li><a href="images%20and%20containers/images.html">Images and containers</a></li>
 <li><a href="tools%20and%20functions/tools.html">Tools and functions</a></li>

@@ -91,13 +91,13 @@
 <h2 id="creating-a-connector-image">Creating a connector image</h2>
 <p>Create a connector image from one of the image templates. You can deploy connectors using the following templates:</p>
 <ul>
-<li><a href="#springboottemplate">Spring Boot</a> for Java based connectors</li>
-<li><a href="#nodesdktemplate">i2 Connect server</a> for Node based connectors developed using the i2 Connect server SDK</li>
-<li><a href="#nodejstemplate">NodeJS</a> for Node based connectors</li>
-<li><a href="#externaltemplate">External</a> for connectors hosted outside of the config development environment</li>
+<li><a href="#spring-boot-based-connector-image">Spring Boot</a> for Java based connectors</li>
+<li><a href="#i2-connect-server-based-connector-image">i2 Connect server</a> for Node v14 based connectors developed using the i2 Connect server SDK</li>
+<li><a href="#nodejs-based-connector-image">NodeJS</a> for Node v14 based connectors</li>
+<li><a href="#external-connector">External</a> for connectors hosted outside of the config development environment</li>
 </ul>
 <p>The connector should be secured and run on port <code>3443</code>. For more information about securing your system, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=application-securing-i2-analyze">Securing i2 Analyze</a>.</p>
-<h3 id="springboottemplate"> Spring Boot based connector image</h3>
+<h3 id="spring-boot-based-connector-image">Spring Boot based connector image</h3>
 <ol>
 <li><p>Copy the <code>/templates/springboot-connector-image</code> directory (including the sub-directories) to the <code>/connector-images</code> directory.<br> Rename the <code>springboot-connector-image</code> folder to a custom connector name. The name of the directory is used to determine which connectors to deploy. Do not use spaces or special characters in the name.<br> The directory structure is:  </p>
 <pre><code class="lang-sh">- connector-images
@@ -108,10 +108,10 @@
         - ...
 </code></pre></li>
 <li><p>Copy your connector code into the <code>target</code> directory of the connector directory. For example, copy your <code>.jar</code> file into the <code>&lt;connector_name&gt;/target</code> directory.</p>
-<p> Next, <a href="#configuringconnector">configure your connector</a>.</p>
+<p> Next, <a href="#configuring-a-connector">configure your connector</a>.</p>
 </li>
 </ol>
-<h3 id="nodesdktemplate">i2 Connect server based connector image</h3>
+<h3 id="i2-connect-server-based-connector-image">i2 Connect server based connector image</h3>
 <ol>
 <li><p>Copy the <code>/templates/i2connect-server-connector-image</code> directory (including the sub-directories) to the <code>/connector-images</code> directory.<br> Rename the <code>i2connect-server-connector-image</code> folder to a custom connector name. The name of the directory is used to determine which connectors to deploy. Do not use spaces or special characters in the name.<br> The directory structure is:  </p>
 <pre><code class="lang-sh">- connector-images
@@ -122,10 +122,10 @@
         - ...
 </code></pre></li>
 <li><p>Copy the i2 Connect server connector distributable ( the <code>.tar.gz</code> or <code>.tgz</code> file) into the connector directory.</p>
-<p> Next, <a href="#configuringconnector">configure your connector</a>.</p>
+<p> Next, <a href="#configuring-a-connector">configure your connector</a>.</p>
 </li>
 </ol>
-<h3 id="nodejstemplate">NodeJS based connector image</h3>
+<h3 id="nodejs-based-connector-image">NodeJS based connector image</h3>
 <ol>
 <li><p>Copy the <code>/templates/node-connector-image</code> directory (including the sub-directories) to the <code>/connector-images</code> directory.<br> Rename the <code>node-connector-image</code> folder to a custom connector name. The name of the directory is used to determine which connectors to deploy. Do not use spaces or special characters in the name.<br> The directory structure is:  </p>
 <pre><code class="lang-sh">- connector-images
@@ -136,19 +136,19 @@
         - ...
 </code></pre></li>
 <li><p>Copy your connector code into the <code>app</code> directory of the connector directory. For example, copy the files into the <code>&lt;connector_name&gt;/app</code> directory. By default, the image will start node with the file <code>app.js</code>.</p>
-<p> Next, <a href="#configuringconnector">configure your connector</a>.</p>
+<p> Next, <a href="#configuring-a-connector">configure your connector</a>.</p>
 </li>
 </ol>
-<h3 id="externaltemplate"> External connector</h3>
+<h3 id="external-connector">External connector</h3>
 <ol>
 <li><p>Copy the <code>/templates/external-connector</code> directory to the <code>/connector-images</code> directory.<br> Rename the <code>external-connector</code> folder to a custom connector name. The name of the directory is used to determine which connectors to deploy. Do not use spaces or special characters in the name.<br> The directory structure is:  </p>
 <pre><code class="lang-sh">- connector-images
     - &lt;connector_name&gt;
         - connector-definition.json
-</code></pre><p> Next, <a href="#configuringconnector">configure your connector</a>.</p>
+</code></pre><p> Next, <a href="#configuring-a-connector">configure your connector</a>.</p>
 </li>
 </ol>
-<h2 id="configuringconnector"> Configuring a connector</h2>
+<h2 id="configuring-a-connector">Configuring a connector</h2>
 <ol>
 <li><p>Populate the values in the <code>&lt;connector_name&gt;/connector-definition.json</code> file with information about your connector.  </p>
 <table>
@@ -180,6 +180,10 @@
 <td>Used to identify the type of connector. For i2 Connect server connectors, set to <code>i2connect-server</code>. For external connectors, set to <code>external</code>. For any other connectors, the <code>type</code> key is not required.</td>
 </tr>
 <tr>
+<td><code>sendSensitiveHeaders</code></td>
+<td>This setting effectively disables connectors that employ user-specific configuration.</td>
+</tr>
+<tr>
 <td><code>baseUrl</code></td>
 <td>Used only for connectors of type <code>external</code>. The <code>baseUrl</code> value is the URL address of the connector. For any other connectors, the <code>baseUrl</code> key is not required.</td>
 </tr>
@@ -192,6 +196,7 @@
     &quot;description&quot;: &quot;First connector&quot;,
     &quot;configurationPath&quot;: &quot;/config&quot;,
     &quot;gatewaySchema&quot;: &quot;template-schema&quot;,
+    &quot;sendSensitiveHeaders&quot;: &quot;false&quot;,
     &quot;type&quot;: &quot;i2connect-server&quot;
 }
 </code></pre><p> or</p>
@@ -201,6 +206,7 @@
     &quot;description&quot;: &quot;Second connector&quot;,
     &quot;configurationPath&quot;: &quot;/config&quot;,
     &quot;gatewaySchema&quot;: &quot;template-schema&quot;,
+    &quot;sendSensitiveHeaders&quot;: &quot;false&quot;,
     &quot;type&quot;: &quot;external&quot;,
     &quot;baseUrl&quot;: &quot;https://example-connector:3443&quot; 
 }
@@ -248,11 +254,12 @@ After you develop the schemes, complete the following steps to add deploy them w
         }
     ]
 }
-</code></pre></li>
+</code></pre><p> <strong>Note:</strong> If you are not using any gateway schemas, do not remove the <code>gatewaySchemas</code> key from the file.</p>
+</li>
 <li><p>Set the short name of your schema in the <code>&lt;connector_name&gt;/connector-definition.json</code> as the value for the <code>gatewaySchema</code> key of the connector that will use the gateway schema.</p>
 </li>
 </ol>
-<h2 id="buildingConnector"> Building the connector images and redeploying</h2>
+<h2 id="building-the-connector-images-and-redeploying">Building the connector images and redeploying</h2>
 <ol>
 <li><p>Run the <code>./deploy.sh</code> script with your config name and the <code>connectors</code> task from the <code>/scripts</code> directory to generate the secrets for your connectors, build the connector images, and deploy your environment.  </p>
 <pre><code class="lang-sh">./deploy.sh -c &lt;config_name&gt; -t connectors

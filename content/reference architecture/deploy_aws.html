@@ -82,7 +82,7 @@
 <p>When you follow the instructions to deploy the AWS reference architecture, the scripts launch, configure, and run the AWS compute, network, storage, and other services for the i2 Analyze on AWS. The reference architecture includes AWS CloudFormation templates that automate the deployment and a deployment guide that describes the architecture.</p>
 <p>The deployment is running on AWS and you are charged by AWS for the infrastructure that is used. Consult the AWS pricing information before you run the scripts: ...</p>
 <p>By default, the AWS reference architecture is deployed on the following instances. For information about modifying these values before you deploy the reference architecture, see XXX. (TODO: populate resources and identify steps to modify the reference architecture).</p>
-<h2 id="prerequisites"> Prerequisites</h2>
+<h2 id="prerequisites">Prerequisites</h2>
 <p>Before you can deploy the AWS reference architecture, you need to have installed and configured the following pre-requisites:</p>
 <ul>
 <li>Have an AWS account</li>
@@ -96,19 +96,19 @@
 </li>
 <li>In your terminal, navigate to the <code>examples/aws</code> directory.</li>
 </ul>
-<h3 id="acceptingthelicences"> Accepting the licences</h3>
+<h3 id="accepting-the-licenses">Accepting the licenses</h3>
 <ol>
-<li><p>Before you can use i2 Analyze and the tools, you must read the licence agreement and copyright notices. The licence file is in the <code>pre-reqs/i2analyze/license</code> directory.  </p>
+<li><p>Before you can use i2 Analyze and the tools, you must read the license agreement and copyright notices. The license file is in the <code>pre-reqs/i2analyze/license</code> directory.  </p>
 <ol>
-<li><p>To accept the licence agreement, change the value of the <code>LIC_AGREEMENT</code> environment variable to <code>ACCEPT</code>. The environment variable is in the <code>examples/aws/utils/simulated-external-variables.sh</code> script.
+<li><p>To accept the license agreement, change the value of the <code>LIC_AGREEMENT</code> environment variable to <code>ACCEPT</code>. The environment variable is in the <code>examples/aws/utils/simulated-external-variables.sh</code> script.
  For example:</p>
 <pre><code class="lang-sh">LIC_AGREEMENT=ACCEPT
 </code></pre></li>
 </ol>
 </li>
-<li><p>Before you can use Microsoft SQL Server, you must accept the licence agreement and the EULA. For more information about using the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables, see <a href="https://docs.microsoft.com/sql/linux/sql-server-linux-configure-environment-variables?view=sql-server-ver15#environment-variables">Configure SQL Server settings with environment variables on Linux</a>  </p>
+<li><p>Before you can use Microsoft SQL Server, you must accept the license agreement and the EULA. For more information about using the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables, see <a href="https://docs.microsoft.com/sql/linux/sql-server-linux-configure-environment-variables?view=sql-server-ver15#environment-variables">Configure SQL Server settings with environment variables on Linux</a>  </p>
 <ol>
-<li><p>To accept the licence in this environment, change the value of the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables. The environment variables are in the <code>utils/simulatedExternalVariables.sh</code> script.</p>
+<li><p>To accept the license in this environment, change the value of the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables. The environment variables are in the <code>utils/simulatedExternalVariables.sh</code> script.</p>
 <p> For example:</p>
 <pre><code class="lang-sh">MSSQL_PID=Developer
 ACCEPT_EULA=Y
@@ -116,7 +116,7 @@ ACCEPT_EULA=Y
 </ol>
 </li>
 </ol>
-<h3 id="settingupawsvariables"> Setting up AWS Variables</h3>
+<h3 id="setting-up-aws-variables">Setting up AWS Variables</h3>
 <ol>
 <li><p>Before you can deploy the AWS reference architecture, you must provide your AWS account information in the <code>examples/aws/utils/simulated-external-variables.sh</code> script.</p>
 <ol>
@@ -130,11 +130,11 @@ AWS_REGION=&quot;eu-west-2&quot;
 </li>
 </ol>
 <h2 id="creating-and-uploading-resources-to-aws">Creating and uploading resources to AWS</h2>
-<p>The <code>create-and-upload-aws-resources.sh</code> script creates the configuration, database scripts, secrets, images, and runbooks then uploads them to AWS. For more information about what is created, see <a href="../tools%20and%20functions/aws_tools.html#createandupload">create-and-upload-aws-resources.sh</a>.</p>
+<p>The <code>create-and-upload-aws-resources.sh</code> script creates the configuration, database scripts, secrets, images, and runbooks then uploads them to AWS. For more information about what is created, see <a href="../tools%20and%20functions/aws_tools.html#create-and-upload-aws-resourcessh-script">create-and-upload-aws-resources.sh</a>.</p>
 <p>Run <code>create-and-upload-aws-resources.sh</code>:</p>
 <pre><code class="lang-bash">./create-and-upload-aws-resources.sh
 </code></pre><h2 id="deploying-the-i2-analyze-on-aws">Deploying the i2 Analyze on AWS</h2>
-<p>The <code>deploy-aws.sh</code> script deploys i2 Analyze on AWS. For more information about what is deployed, see <a href="../tools%20and%20functions/aws_tools.html#deployaws">deploy-aws.sh</a>.</p>
+<p>The <code>deploy-aws.sh</code> script deploys i2 Analyze on AWS. For more information about what is deployed, see <a href="../tools%20and%20functions/aws_tools.html#deploy-awssh-script">deploy-aws.sh</a>.</p>
 <p>Run <code>deploy-aws.sh</code>:</p>
 <pre><code class="lang-bash">./deploy-aws.sh
 </code></pre></article>

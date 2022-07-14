@@ -80,15 +80,15 @@
 <h1 id="understanding-the-aws-reference-architecture">Understanding the AWS reference architecture</h1>
 
 <p>The analyze-containers repository includes yaml files and example scripts that provide a reference architecture for creating an AWS deployment of i2 Analyze. The scripts demonstrate how to upload resources, create CloudFormation Stacks and enable you to deploy, configure, and run i2 Analyze on AWS.</p>
-<h2 id="howtouse"> How to use the reference architecture?</h2>
-<p>You should already have an understanding of the <a href="understanding.html">Containerised deployment reference</a> before starting with the AWS reference architecture. This architecture uses the same Dockerfiles and images used in the containerised deployment reference which the exception of the database management system (server) and the load balancer.</p>
+<h2 id="how-to-use-the-reference-architecture">How to use the reference architecture?</h2>
+<p>You should already have an understanding of the <a href="understanding.html">Containerized deployment reference</a> before starting with the AWS reference architecture. This architecture uses the same Dockerfiles and images used in the containerized deployment reference which the exception of the database management system (server) and the load balancer.</p>
 <p>To create the example AWS deployment, complete the actions described in <a href="deploy_aws.html">AWS example environment</a>.</p>
-<h3 id="scripts"> Scripts</h3>
+<h3 id="scripts">Scripts</h3>
 <p>The analyze-containers repository provides example scripts that you can use and leverage for your own deployment use cases. The analyze-containers repository contains a number of scripts that are designed to be used at various stages when working towards creating an AWS deployment.</p>
 <p>The repository also includes example artifacts that are used with the scripts. These artifacts include an example certificate authority and certificates, secrets and keys to be used with i2 Analyze, CloudFormation templates, runbooks, and utilities.</p>
-<h3 id="walkthroughs"> Walkthroughs</h3>
+<h3 id="walkthroughs">Walkthroughs</h3>
 <p>A number of walkthroughs are provided that demonstrate how to complete configuration and administration tasks in an AWS deployment. The walkthroughs consist of a reference script that demonstrates how to complete the action, and a document that explain the process in more detail.</p>
-<h2 id="whatisdeployed"> What is deployed?</h2>
+<h2 id="what-is-deployed">What is deployed?</h2>
 <p>When you run the provided scripts to create the example deployment, i2 Analyze is deployed in the following topology:
 TODO!</p>
 <p>The deployment includes:</p>
@@ -103,8 +103,7 @@ TODO!</p>
 <p>The following client containers are used:</p>
 <ul>
 <li>SQL Server client</li>
-<li>Solr client
-#TODO: What about i2a-tools? we don&#39;t mention it in the understanding.md either</li>
+<li>Solr client</li>
 </ul>
 <p>For more information about the artifacts that are used, see:</p>
 <ul>

@@ -84,7 +84,7 @@
 <ul>
 <li>How Solr is deployed for high availability. For more information, see <a href="https://www.ibm.com/support/knowledgecenter/SSXVTH_latest/com.ibm.i2.eia.go.live.doc/solr_co.html">Solr</a>.</li>
 <li>How the Solr status is reported in the component availability log in Liberty. For more information, see <a href="https://www.ibm.com/support/knowledgecenter/SSXVTH_latest/com.ibm.i2.eia.go.live.doc/ha_monitoring.html">Monitor the system availability</a>.</li>
-<li>In a containerised deployment, all log messages are also displayed in the console. You can use the <code>docker logs</code> command to view the console log.</li>
+<li>In a containerized deployment, all log messages are also displayed in the console. You can use the <code>docker logs</code> command to view the console log.</li>
 </ul>
 <p>The <code>solrNodeFailureWalkthrough.sh</code> script demonstrates how to monitor the Liberty logs to identify Solr node failure and recovery. In the example, each shard has 2 replicas and 1 replica is located on each Solr node. This means that the Solr cluster can continue to process requests when one Solr node is taken offline.</p>
 <h2 id="simulating-solr-node-failure">Simulating Solr node failure</h2>

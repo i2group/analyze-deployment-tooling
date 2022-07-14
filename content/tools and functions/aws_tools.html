@@ -80,14 +80,14 @@
 <h1 id="aws-tools">AWS tools</h1>
 
 <ul>
-<li><a href="#createandupload">create-and-upload-aws-resources.sh</a></li>
-<li><a href="#deployaws">deploy-aws.sh</a></li>
+<li><a href="#create-and-upload-aws-resourcessh-script">create-and-upload-aws-resources.sh</a></li>
+<li><a href="#deploy-awssh-script">deploy-aws.sh</a></li>
 </ul>
-<h2 id="createandupload"> create-and-upload-aws-resources.sh script</h2>
+<h2 id="create-and-upload-aws-resourcessh-script">create-and-upload-aws-resources.sh script</h2>
 <p>The <code>create-and-upload-aws-resources.sh</code> script creates the configuration, secrets, images, and runbooks then uploads them to AWS.</p>
 <p>The following functions are used when you run the script:</p>
 <h3 id="set-the-dependency-tag">Set the dependency tag</h3>
-<p>The <code>setDependenciesTag</code> function sets the value of the dependency tag to the <code>I2ANALYZE_VERSION</code> defined in the <code>version</code> file. 
+<p>The <code>setDependenciesTag</code> function sets the value of the dependency tag to the <code>I2ANALYZE_VERSION</code> defined in the <code>version</code> file.
 This ensures all the core images are labeled in AWS ECR for that version of the product and any other deployment can reuse them.
 (TODO: populate with more info for CIR-781)</p>
 <h3 id="creates-the-configuration">Creates the configuration</h3>
@@ -109,7 +109,7 @@ This ensures all the core images are labeled in AWS ECR for that version of the 
 <p>The <code>uploadArtifacts</code> function is used to upload the configuration to the <code>analyze-containers-aws-ref-arch-config</code> S3 bucket. The function also uploads the CloudFormation templates and i2a-scripts to the <code>analyze-containers-aws-ref-arch-resources</code> bucket.</p>
 <h3 id="create-runbooks">Create runbooks</h3>
 <p>The <code>createRunbooks</code> function creates the runbooks that are required to start and stop the system and uploads them to AWS <a href="https://eu-west-2.console.aws.amazon.com/systems-manager/documents">System Manager</a>.<br>For more information about the runbooks, see <a href="../runbooks">Runbooks</a>.</p>
-<h2 id="deployaws"> deploy-aws.sh script</h2>
+<h2 id="deploy-awssh-script">deploy-aws.sh script</h2>
 <p>The script creates all the stacks that are required for the i2 Analyze deployment.</p>
 <p>The stacks are created in the following order:</p>
 <ul>
@@ -124,9 +124,9 @@ This ensures all the core images are labeled in AWS ECR for that version of the 
 <p>For more information about the stacks, see <a href="../stacks">Stacks</a>.</p>
 <p>After the stacks are created, the following runbooks are used to start the system:</p>
 <ul>
-<li><a href="../runbooks/helper_runbooks.html#updatescripts"><code>i2a-UpdateScripts</code></a></li>
-<li><a href="../runbooks/solr_runbooks.html#solrfirstrun"><code>i2a-SolrFirstRun</code></a></li>
-<li><a href="../runbooks/sqlserver_runbooks.html#sqlserverfirstrun"><code>i2a-SqlServerFirstRun</code></a></li>
+<li><a href="../runbooks/helper_runbooks.html#i2a-UpdateScripts"><code>i2a-UpdateScripts</code></a></li>
+<li><a href="../runbooks/solr_runbooks.html#i2a-SolrFirstRun"><code>i2a-SolrFirstRun</code></a></li>
+<li><a href="../runbooks/sqlserver_runbooks.html#i2a-SqlServerFirstRun"><code>i2a-SqlServerFirstRun</code></a></li>
 </ul>
 <p>For more information about the runbooks, see <a href="../runbooks">Runbooks</a>.</p>
 </article>

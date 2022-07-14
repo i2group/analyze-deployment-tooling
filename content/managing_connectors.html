@@ -86,7 +86,7 @@
 <p>You specify the version and tag of a connector in the <code>connector-version.json</code> file of each connector.</p>
 <ul>
 <li><code>version</code><ul>
-<li>The <code>version</code> value is used as a version for your connector. If you are deploying an i2 Connect server connector, the version value has more requirements. For more information, see <a href="#i2cconnector">i2 Connect server connector versioning</a>.</li>
+<li>The <code>version</code> value is used as a version for your connector. If you are deploying an i2 Connect server connector, the version value has more requirements. For more information, see <a href="#i2-connect-server-connectors">i2 Connect server connector versioning</a>.</li>
 </ul>
 </li>
 <li><code>tag</code><ul>
@@ -121,7 +121,7 @@
 <li><code>dev-environment-secrets/generated-secrets/certificates/&lt;connector-name&gt;/server.cer</code></li>
 <li><code>dev-environment-secrets/generated-secrets/certificates/CA/CA.cer</code></li>
 </ul>
-<h2 id="i2cconnector">i2 Connect server connectors</h2>
+<h2 id="i2-connect-server-connectors">i2 Connect server connectors</h2>
 <p>If you are deploying one or more connectors that were developed using the i2 Connect SDK. There are two versions that you must consider; the version of a connector and the version of the i2 Connect server that the connectors depends on.</p>
 <h3 id="connector-version">Connector version</h3>
 <p>In the <code>connector-version.json</code> file, the <code>version</code> specifies the range of supported versions for the connector. This enables you to have more control of the version of a connector that is used in your deployment.  </p>
@@ -174,7 +174,7 @@
 <p>In the <code>connector-images/i2connect-server-version.json</code> file, you specify the range of versions of the i2 Connect server that you want all i2 Connect server connectors to depend on.</p>
 <p>The versions in these files are specified in the npm semantic versioning syntax. For more information about the syntax, see <a href="https://docs.npmjs.com/cli/v6/using-npm/semver#ranges"><code>semver</code> - the semantic versioning for npm</a>.</p>
 <p>If the version of the i2 Connect server that a connector depends on specified in <code>package.json</code> does not match the version, or range of versions, that you specify in <code>i2connect-server-version.json</code> a warning is displayed when you deploy your environment.  </p>
-<p>The following table demonstrates how you can specify the version ranges and their compatibility with i2 Connect server versions: </p>
+<p>The following table demonstrates how you can specify the version ranges and their compatibility with i2 Connect server versions:</p>
 <table>
 <thead>
 <tr>
@@ -210,7 +210,8 @@
 <p>i2 Connect server connectors can have specific connector configuration that is defined in the <code>connector.conf.json</code> and <code>connector.secrets.json</code> files. When the connector is developed, default files can be provided by the developer.</p>
 <ul>
 <li><strong><code>connector.conf.json</code></strong><ul>
-<li>After the first deployment of the connector, if a <code>connector.conf.json</code> file is provided, the system extracts it to the <code>connector-images/&lt;connector-name&gt;/app</code> directory. The file is in the same directory structure as in the supplied connector. For example, <code>&lt;connector-name&gt;/app/dist/connectors/connector.conf.json</code>. To change the configuration, modify the <code>connector.conf.json</code> and redeploy the environment.</li>
+<li>After the first deployment of the connector, if a <code>connector.conf.json</code> file is provided, the system extracts it to the <code>connector-images/&lt;connector-name&gt;/app</code> directory.
+The file is in the same directory structure as in the supplied connector. For example, <code>&lt;connector-name&gt;/app/dist/connectors/connector.conf.json</code>. To change the configuration, modify the <code>connector.conf.json</code> and redeploy the environment.</li>
 </ul>
 </li>
 <li><strong><code>connector.secrets.json</code></strong><ul>

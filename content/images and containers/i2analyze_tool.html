@@ -85,7 +85,7 @@
 <p>The image contains the <code>i2-tools</code> &amp; <code>scripts</code> folder from the toolkit.</p>
 <h3 id="docker-build-command">Docker build command</h3>
 <p>The following <code>docker build</code> command builds the i2 Analyze Tool image:</p>
-<pre><code class="lang-bash">docker image build -t i2a_tools_redhat:4.3.4 images/i2a_tools \
+<pre><code class="lang-bash">docker image build -t i2a_tools_redhat:4.3.5 images/i2a_tools \
   --build-arg USER_UID=&quot;$(id -u &quot;${USER}&quot;)&quot;
 </code></pre><p>The <code>--build-arg</code> flag is used to provide your local user ID to the Docker image when it is built. The value of <code>$USER</code> comes from your shell.</p>
 <p>The local user ID is required so that a user is created in the Docker container with the same user ID as the local user. The user is required to ensure that the local user can access any files that are generated on the container and mounted to the host via a bind mount.</p>
@@ -126,7 +126,7 @@
     -e SSL_PRIVATE_KEY=&quot;SSL_PRIVATE_KEY&quot; \
     -e SSL_CERTIFICATE=&quot;SSL_CERTIFICATE&quot; \
     -e SSL_CA_CERTIFICATE=&quot;SSL_CA_CERTIFICATE&quot; \
-    &quot;i2a_tools_redhat:4.3.4&quot; &quot;$@&quot;
+    &quot;i2a_tools_redhat:4.3.5&quot; &quot;$@&quot;
 </code></pre><h3 id="bind-mounts">Bind mounts</h3>
 <ul>
 <li><p><strong>Configuration</strong>:<br>The i2 Analyze Tool container requires the i2 Analyze configuration. To access the configuration, the <code>configuration</code> directory must be mounted into the container. The <code>CONFIG_DIR</code> environment variable must specify the location where the configuration is mounted.</p>
@@ -156,19 +156,19 @@
 </tr>
 <tr>
 <td><code>DB_DIALECT</code></td>
-<td>See <a href="../tools%20and%20functions/i2analyze_tools.html#connectionproperties">i2a Tools Environment Variables</a>.</td>
+<td>See <a href="../tools%20and%20functions/i2analyze_tools.html#connection-properties">i2a Tools Environment Variables</a>.</td>
 </tr>
 <tr>
 <td><code>DB_SERVER</code></td>
-<td>See <a href="../tools%20and%20functions/i2analyze_tools.html#connectionproperties">i2a Tools Environment Variables</a>.</td>
+<td>See <a href="../tools%20and%20functions/i2analyze_tools.html#connection-properties">i2a Tools Environment Variables</a>.</td>
 </tr>
 <tr>
 <td><code>DB_PORT</code></td>
-<td>See <a href="../tools%20and%20functions/i2analyze_tools.html#connectionproperties">i2a Tools Environment Variables</a>.</td>
+<td>See <a href="../tools%20and%20functions/i2analyze_tools.html#connection-properties">i2a Tools Environment Variables</a>.</td>
 </tr>
 <tr>
 <td><code>DB_NAME</code></td>
-<td>See <a href="../tools%20and%20functions/i2analyze_tools.html#connectionproperties">i2a Tools Environment Variables</a>.</td>
+<td>See <a href="../tools%20and%20functions/i2analyze_tools.html#connection-properties">i2a Tools Environment Variables</a>.</td>
 </tr>
 <tr>
 <td><code>CONFIG_DIR</code></td>
@@ -184,11 +184,11 @@
 </tr>
 <tr>
 <td><code>DB_USERNAME</code></td>
-<td>See <a href="../tools%20and%20functions/i2analyze_tools.html#connectionproperties">i2a Tools Environment Variables</a>.</td>
+<td>See <a href="../tools%20and%20functions/i2analyze_tools.html#connection-properties">i2a Tools Environment Variables</a>.</td>
 </tr>
 <tr>
 <td><code>DB_PASSWORD</code></td>
-<td>See <a href="../tools%20and%20functions/i2analyze_tools.html#connectionproperties">i2a Tools Environment Variables</a>.</td>
+<td>See <a href="../tools%20and%20functions/i2analyze_tools.html#connection-properties">i2a Tools Environment Variables</a>.</td>
 </tr>
 <tr>
 <td><code>SOLR_ADMIN_DIGEST_USERNAME</code></td>
@@ -227,39 +227,39 @@
 <tbody>
 <tr>
 <td><code>SERVER_SSL</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>DB_SSL_CONNECTION</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>SOLR_ZOO_SSL_CONNECTION</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>SSL_PRIVATE_KEY</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>SSL_CERTIFICATE</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>SSL_CA_CERTIFICATE</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>GATEWAY_SSL_CONNECTION</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>SSL_OUTBOUND_PRIVATE_KEY</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>SSL_OUTBOUND_CERTIFICATE</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 </tbody>
 </table>

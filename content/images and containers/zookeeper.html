@@ -80,15 +80,15 @@
 <h1 id="zookeeper">ZooKeeper</h1>
 
 <p>The ZooKeeper image for i2 Analyze is built from a Dockerfile that is based on the Dockerfile from Apache ZooKeeper. The Dockerfile is modified to configure ZooKeeper for use with i2 Analyze.</p>
-<h2 id="buildingazookeeperimage"> Building a ZooKeeper image</h2>
+<h2 id="building-a-zookeeper-image">Building a ZooKeeper image</h2>
 <p>The ZooKeeper image is built from the Dockerfile located in <code>images/zookeeper_redhat</code>.</p>
-<h3 id="dockerbuildcommand"> Docker build command</h3>
+<h3 id="docker-build-command">Docker build command</h3>
 <p>The The following <code>docker build</code> command builds the ZooKeeper image:</p>
-<pre><code class="lang-bash">docker build -t &quot;zookeeper_redhat:4.3.4&quot; images/zookeeper_redhat
-</code></pre><h2 id="runningazookeepercontainer"> Running a ZooKeeper container</h2>
-<p>A ZooKeeper container uses the ZooKeeper image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to ZooKeeper on the container. The environment variables are described in <a href="#environmentvariables">environment variables</a>.</p>
+<pre><code class="lang-bash">docker build -t &quot;zookeeper_redhat:4.3.5&quot; images/zookeeper_redhat
+</code></pre><h2 id="running-a-zookeeper-container">Running a ZooKeeper container</h2>
+<p>A ZooKeeper container uses the ZooKeeper image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to ZooKeeper on the container. The environment variables are described in <a href="#environment-variables">environment variables</a>.</p>
 <p>For more information about the command, see <a href="https://docs.docker.com/engine/reference/run/">docker run reference</a>.</p>
-<h3 id="dockerruncommand"> Docker run command</h3>
+<h3 id="docker-run-command">Docker run command</h3>
 <p>The following <code>docker run</code> command starts a ZooKeeper container:</p>
 <pre><code class="lang-bash">docker run --restart always -d \
    --name &quot;zk1&quot; \
@@ -112,9 +112,9 @@
    -e &quot;SSL_PRIVATE_KEY_FILE=/run/secrets/server.key&quot; \
    -e &quot;SSL_CERTIFICATE_FILE=/run/secrets/server.cer&quot; \
    -e &quot;SSL_CA_CERTIFICATE_FILE=/run/secrets/CA.cer&quot; \
-   &quot;zookeeper_redhat:4.3.4&quot;
-</code></pre><p><em>Note:</em> <code>SERVER_SSL</code> variable is set based on the <code>SOLR_ZOO_SSL_CONNECTION</code> switch, see <a href="#environmentvariables">Environment variables</a>.</p>
-<h3 id="zk_ports"> ​ZooKeeper Service Ports</h3>
+   &quot;zookeeper_redhat:4.3.5&quot;
+</code></pre><p><em>Note:</em> <code>SERVER_SSL</code> variable is set based on the <code>SOLR_ZOO_SSL_CONNECTION</code> switch, see <a href="#environment-variables">Environment variables</a>.</p>
+<h3 id="zookeeper-service-ports">ZooKeeper Service Ports</h3>
 <p>Default ports used by ZooKeeper are:</p>
 <ul>
 <li><code>8080</code> - By default, the server is started on port 8080, and commands are issued by going to the URL &quot;/commands/[command name]&quot;, e.g., <code>http://localhost:8080/commands/stat</code>.</li>
@@ -132,14 +132,14 @@
 <li><code>DATALOG_VOLUME</code> - The name for the <code>datalog</code> named volume. For more information, see <a href="#volumes">Volumes</a>.</li>
 <li><code>LOG_VOLUME</code> - The name for the <code>log</code> named volume. For more information, see <a href="#volumes">Volumes</a>.</li>
 <li><code>HOST_PORT</code> - The port number on the host machine that is mapped to the port on the container.</li>
-<li><code>ZOO_ID</code> - An identifier for the ZooKeeper server. For more information, see <a href="#environmentvariables">Environment variables</a>.</li>
+<li><code>ZOO_ID</code> - An identifier for the ZooKeeper server. For more information, see <a href="#environment-variables">Environment variables</a>.</li>
 </ol>
 <p>An example of running Zookeeper container using <code>runZK</code> function:</p>
 <pre><code class="lang-bash">runZK zk1 zk1.eia zk1_data zk1_datalog zk1_logs 8080 1
-</code></pre><h3 id="volumes"> Volumes</h3>
+</code></pre><h3 id="volumes">Volumes</h3>
 <p>A named volume or a bind mount can be used to persist data and logs that are generated and used in the ZooKeeper container, outside of the container.</p>
 <p>For more information, see <a href="https://hub.docker.com/_/zookeeper">Where to store data</a>.</p>
-<h3 id="named_volumes"> Named Volumes</h3>
+<h3 id="named-volumes">Named Volumes</h3>
 <p>To configure the ZooKeeper container to use the named volume, specify the <code>-v</code> option with the name of the volume and the path where the directory is mounted in the container. By setting <code>-v</code> option in the docker run command, a named volume is created. For ZooKeeper, the directories that must be mounted are <code>/data</code>, <code>/datalog</code>, <code>/logs</code>.
 For example:</p>
 <pre><code class="lang-sh">-v zk1_data:/data \
@@ -155,7 +155,7 @@ For example:</p>
 </code></pre><p>A unique bind mount must be used for each ZooKeeper container.</p>
 <p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access zookeeper and certificates used in SSL.<br>The directory is used to update the named volume location defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>SSL_PRIVATE_KEY_FILE</code> to locate the secrets.
 In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files.</p>
-<h3 id="environmentvariables"> Environment variables</h3>
+<h3 id="environment-variables">Environment variables</h3>
 <p>To configure ZooKeeper, you can provide environment variables to the Docker container in the <code>docker run</code> command. The <code>zoo.cfg</code> configuration file for ZooKeeper is generated from the environment variables passed to the container.</p>
 <p>The following table describes the mandatory environment variables for running ZooKeeper in replicated mode:</p>
 <table>
@@ -200,23 +200,23 @@ In a production environment, the orchestration environment can provide the secre
 </tr>
 <tr>
 <td><code>SOLR_ZOO_SSL_CONNECTION</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>SERVER_SSL</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>SSL_PRIVATE_KEY_FILE</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>SSL_CERTIFICATE_FILE</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
 <td><code>SSL_CA_CERTIFICATE_FILE</code></td>
-<td>See <a href="../security%20and%20users/security.html#secureenvironmentvariables">Secure Environment variables</a>.</td>
+<td>See <a href="../security%20and%20users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 </tbody>
 </table>

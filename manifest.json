@@ -30,7 +30,7 @@
       "output": {
         ".html": {
           "relative_path": "content/HA walkthroughs/liberty_failure.html",
-          "hash": "lYXTXWYqOf7zm2MHcdhshw=="
+          "hash": "NlUoVGVnFbLJ+LIsx+HXmg=="
         }
       },
       "is_incremental": false,
@@ -42,7 +42,7 @@
       "output": {
         ".html": {
           "relative_path": "content/HA walkthroughs/solr_cluster_failure.html",
-          "hash": "QJKvomWzvnVodPJpOxFDSw=="
+          "hash": "LvG/xkEY1CiTd/vALQ6U7w=="
         }
       },
       "is_incremental": false,
@@ -54,7 +54,7 @@
       "output": {
         ".html": {
           "relative_path": "content/HA walkthroughs/solr_node_failure.html",
-          "hash": "9GOspjLhxJj+7K1Q62LwVg=="
+          "hash": "BvS2weJXvLKbSgkq3xvbPw=="
         }
       },
       "is_incremental": false,
@@ -66,7 +66,7 @@
       "output": {
         ".html": {
           "relative_path": "content/HA walkthroughs/zookeeper_quorum_failure.html",
-          "hash": "Sb9Tg40oxIwLSwYbrV7CvA=="
+          "hash": "ZXA6XZSCd5ynEgzHmjpIdQ=="
         }
       },
       "is_incremental": false,
@@ -90,7 +90,7 @@
       "output": {
         ".html": {
           "relative_path": "content/add_data_config_dev.html",
-          "hash": "GpHIB61ly5tMBFGjkpoExA=="
+          "hash": "hsYNTj0YEqJQP+WHQVoZVQ=="
         }
       },
       "is_incremental": false,
@@ -102,7 +102,7 @@
       "output": {
         ".html": {
           "relative_path": "content/backup and restore/backup.html",
-          "hash": "57C7wQ4JfdnPp1q/kKiH5Q=="
+          "hash": "JzwOiZPUYrTIYms8GYo2zg=="
         }
       },
       "is_incremental": false,
@@ -114,7 +114,7 @@
       "output": {
         ".html": {
           "relative_path": "content/backup and restore/br.html",
-          "hash": "udRiOV0oQ6NK5ojvzwa0lA=="
+          "hash": "/tjh1++43d/3r8fqK5XLbA=="
         }
       },
       "is_incremental": false,
@@ -126,7 +126,7 @@
       "output": {
         ".html": {
           "relative_path": "content/backup and restore/restore.html",
-          "hash": "VCS4RhY7nEZeLISZo22Saw=="
+          "hash": "4Ibakdv+o5hy06p/SXXuKw=="
         }
       },
       "is_incremental": false,
@@ -138,7 +138,7 @@
       "output": {
         ".html": {
           "relative_path": "content/connector_config_dev.html",
-          "hash": "qEKA5pWttuDSuoYeYFSngg=="
+          "hash": "jwgIOxQoAIbxmrhSgVmh0w=="
         }
       },
       "is_incremental": false,
@@ -153,7 +153,7 @@
       "output": {
         ".html": {
           "relative_path": "content/deploy_config_dev.html",
-          "hash": "nfkp6DPi/VcViByM9uuR8w=="
+          "hash": "I6Vt+B3jqziJNe87gemvSA=="
         }
       },
       "is_incremental": false,
@@ -177,7 +177,7 @@
       "output": {
         ".html": {
           "relative_path": "content/develop_extensions.html",
-          "hash": "c5svOyjg77l8zojZlp1ElA=="
+          "hash": "MOUBOYaCecREp6D/cZcoJQ=="
         }
       },
       "is_incremental": false,
@@ -192,7 +192,7 @@
       "output": {
         ".html": {
           "relative_path": "content/develop_schemas.html",
-          "hash": "SXSR5Q/Hy/G82D+t/ABrlQ=="
+          "hash": "mCp9NCVSo5s5WJzLVf63bw=="
         }
       },
       "is_incremental": false,
@@ -204,7 +204,7 @@
       "output": {
         ".html": {
           "relative_path": "content/develop_solr_config_dev.html",
-          "hash": "Q4YN1K0k9djgsLj5cFpamw=="
+          "hash": "phlbbxQp8I3BQd3rqkNZlA=="
         }
       },
       "is_incremental": false,
@@ -216,7 +216,7 @@
       "output": {
         ".html": {
           "relative_path": "content/getting_started.html",
-          "hash": "959wrPWOHMTuqYDa77gdYg=="
+          "hash": "fQw6CFmRyWMjXTfM/XsFTQ=="
         }
       },
       "is_incremental": false,
@@ -228,7 +228,7 @@
       "output": {
         ".html": {
           "relative_path": "content/images and containers/etl_client.html",
-          "hash": "gtux7a7uF/4KaDPDudxntQ=="
+          "hash": "+h3obGa2tJhbq9mNzuNfUA=="
         }
       },
       "is_incremental": false,
@@ -240,7 +240,7 @@
       "output": {
         ".html": {
           "relative_path": "content/images and containers/i2analyze_tool.html",
-          "hash": "hA6wGKOixa5Ml/nMfX0OEg=="
+          "hash": "Kv1H62gTmCAQ07hYar+N/g=="
         }
       },
       "is_incremental": false,
@@ -252,7 +252,7 @@
       "output": {
         ".html": {
           "relative_path": "content/images and containers/images.html",
-          "hash": "3IqD1dH2kRrwqv+3ueyu1w=="
+          "hash": "xnw4jMlwthVCE2KnSDGCrw=="
         }
       },
       "is_incremental": false,
@@ -264,7 +264,7 @@
       "output": {
         ".html": {
           "relative_path": "content/images and containers/liberty.html",
-          "hash": "nH18vmYiHnY949gWLskwAg=="
+          "hash": "KRb1xB4k8i1rILU8FhrI4A=="
         }
       },
       "is_incremental": false,
@@ -276,7 +276,7 @@
       "output": {
         ".html": {
           "relative_path": "content/images and containers/solr.html",
-          "hash": "Cl8VCGsyYHsRC85on/tUZQ=="
+          "hash": "OKmcfjlqxM6WrRdMWNL5NA=="
         }
       },
       "is_incremental": false,
@@ -288,7 +288,7 @@
       "output": {
         ".html": {
           "relative_path": "content/images and containers/solr_client.html",
-          "hash": "Nk4KIIcoLDNEL0WSMClg0g=="
+          "hash": "clAV9fLkIk8W6+ONWLg8Rg=="
         }
       },
       "is_incremental": false,
@@ -300,7 +300,7 @@
       "output": {
         ".html": {
           "relative_path": "content/images and containers/sql_client.html",
-          "hash": "FNezFCfuxFYqDz2mf97I6w=="
+          "hash": "X+AkeylLUy20N95YoG++PQ=="
         }
       },
       "is_incremental": false,
@@ -312,7 +312,7 @@
       "output": {
         ".html": {
           "relative_path": "content/images and containers/sql_server.html",
-          "hash": "zJyedL/5nufQuBW+pJaQuQ=="
+          "hash": "6glnzk82eTIUytYgozV3OA=="
         }
       },
       "is_incremental": false,
@@ -324,7 +324,7 @@
       "output": {
         ".html": {
           "relative_path": "content/images and containers/zookeeper.html",
-          "hash": "Q2muZWSc7DOYy5Z71d0p4A=="
+          "hash": "0QBcs07MI7YRdIZhB7sdDw=="
         }
       },
       "is_incremental": false,
@@ -336,7 +336,7 @@
       "output": {
         ".html": {
           "relative_path": "content/ingest_config_dev.html",
-          "hash": "ud1aKlzA167LmWnOo6u5lg=="
+          "hash": "MyWWJZPghyJIEZngeDZOtA=="
         }
       },
       "is_incremental": false,
@@ -348,7 +348,7 @@
       "output": {
         ".html": {
           "relative_path": "content/manage_backup_restore.html",
-          "hash": "o3C4xsUPTnR5KIHj4LJ6Cg=="
+          "hash": "hE9Tluq+i2A8LiH41e6Aeg=="
         }
       },
       "is_incremental": false,
@@ -360,7 +360,7 @@
       "output": {
         ".html": {
           "relative_path": "content/managing_config_dev.html",
-          "hash": "HxNegyQ1j+zzRbjKSq6TnA=="
+          "hash": "RPxAQHW6nbsquhBdwpbHrA=="
         }
       },
       "is_incremental": false,
@@ -372,7 +372,7 @@
       "output": {
         ".html": {
           "relative_path": "content/managing_connectors.html",
-          "hash": "rQ9LhLIaNiyjQEqeDZv2Gg=="
+          "hash": "dt+bAIWpYGhPW5MbPIfRlA=="
         }
       },
       "is_incremental": false,
@@ -384,7 +384,7 @@
       "output": {
         ".html": {
           "relative_path": "content/managing_toolkit_configuration.html",
-          "hash": "3goF3qYCT2JdO0TG0HKrVA=="
+          "hash": "jgQlcZelMmM+L5LAhSLhyg=="
         }
       },
       "is_incremental": false,
@@ -396,19 +396,22 @@
       "output": {
         ".html": {
           "relative_path": "content/managing_update_env.html",
-          "hash": "0s8AFI88TUa/oZ3bNwg1rQ=="
+          "hash": "Vna9hqkq0QA0gcL4tY9R3A=="
         }
       },
       "is_incremental": false,
       "version": ""
     },
     {
+      "log_codes": [
+        "InvalidYamlHeader"
+      ],
       "type": "Conceptual",
       "source_relative_path": "content/managing_upgrade_env.md",
       "output": {
         ".html": {
           "relative_path": "content/managing_upgrade_env.html",
-          "hash": "SLpUEddCHGBz3LlBGUblDw=="
+          "hash": "P834wUGIs7sR1w+Lo51kqA=="
         }
       },
       "is_incremental": false,
@@ -420,7 +423,7 @@
       "output": {
         ".html": {
           "relative_path": "content/reference architecture/deploy_aws.html",
-          "hash": "GZexYDPjc6xlj+6ilcCTCg=="
+          "hash": "+xz1WJachVtzBxpvXqhz+A=="
         }
       },
       "is_incremental": false,
@@ -435,7 +438,7 @@
       "output": {
         ".html": {
           "relative_path": "content/reference architecture/deploy_pre_prod.html",
-          "hash": "XUYLiAqtLbOIzWHx3OCV4A=="
+          "hash": "Qlz40zLlADmHfuKU6QMN7Q=="
         }
       },
       "is_incremental": false,
@@ -447,7 +450,7 @@
       "output": {
         ".html": {
           "relative_path": "content/reference architecture/reference_architectures.html",
-          "hash": "8hi5PckgP2oOyaisxD1/8w=="
+          "hash": "qq96KTH+MkwqtHVxvTWBxA=="
         }
       },
       "is_incremental": false,
@@ -459,7 +462,7 @@
       "output": {
         ".html": {
           "relative_path": "content/reference architecture/understanding.html",
-          "hash": "9KJyq6MvUWE3/bHdfPNCpw=="
+          "hash": "tmE4tGlJg50ihK04s3AqNg=="
         }
       },
       "is_incremental": false,
@@ -471,7 +474,7 @@
       "output": {
         ".html": {
           "relative_path": "content/reference architecture/understanding_aws.html",
-          "hash": "2fjm4iAQuah2CGkGwe61ZQ=="
+          "hash": "0Az034QQ4eA9Vxskmr9pGA=="
         }
       },
       "is_incremental": false,
@@ -483,7 +486,7 @@
       "output": {
         ".html": {
           "relative_path": "content/runbooks/helper_runbooks.html",
-          "hash": "3j/XfEgBVskoVR84OFbw0w=="
+          "hash": "hH6CjGxAshPC53WCARZmXg=="
         }
       },
       "is_incremental": false,
@@ -507,7 +510,7 @@
       "output": {
         ".html": {
           "relative_path": "content/runbooks/solr_runbooks.html",
-          "hash": "+LfTODM8Pwlc+xTWsaNVPw=="
+          "hash": "gRWwIgVL9XP8EAfuCSDoSA=="
         }
       },
       "is_incremental": false,
@@ -519,7 +522,7 @@
       "output": {
         ".html": {
           "relative_path": "content/runbooks/sqlserver_runbooks.html",
-          "hash": "8cwL/DIfB/xG8TZxoyuyQg=="
+          "hash": "ilF/axg5saOXozNk+Nfl3Q=="
         }
       },
       "is_incremental": false,
@@ -543,7 +546,7 @@
       "output": {
         ".html": {
           "relative_path": "content/security and users/db_users.html",
-          "hash": "1G5XHvVm2XNW+7gnNqZCrw=="
+          "hash": "9kRpM6vJJmTe5ruV0PYigg=="
         }
       },
       "is_incremental": false,
@@ -555,7 +558,7 @@
       "output": {
         ".html": {
           "relative_path": "content/security and users/security.html",
-          "hash": "HQgyLh1nUDmsSvS7ZXruTg=="
+          "hash": "ulP5lCr6H1aM0ddQOoSVug=="
         }
       },
       "is_incremental": false,
@@ -567,7 +570,7 @@
       "output": {
         ".html": {
           "relative_path": "content/security and users/security_users.html",
-          "hash": "S47cuvtJntpEvtSmH8qw8g=="
+          "hash": "WCQOGaElT5oeKCyXNbUVmQ=="
         }
       },
       "is_incremental": false,
@@ -615,7 +618,7 @@
       "output": {
         ".html": {
           "relative_path": "content/toc.html",
-          "hash": "mRo7hNFFgdQuV+i/sfDGyw=="
+          "hash": "vYVcQHymKfl7Fyee4jKhSw=="
         }
       },
       "is_incremental": false,
@@ -630,7 +633,7 @@
       "output": {
         ".html": {
           "relative_path": "content/tools and functions/aws_tools.html",
-          "hash": "/4fhCZp5sx9EVWyR5Kp7gg=="
+          "hash": "m/VTtAVOwlrCgtwEVo3Vlw=="
         }
       },
       "is_incremental": false,
@@ -642,7 +645,7 @@
       "output": {
         ".html": {
           "relative_path": "content/tools and functions/client_functions.html",
-          "hash": "MtbuHp4jkcR6pt8RELbBIw=="
+          "hash": "rbEu5RiWzHsEFjMWSn46Ww=="
         }
       },
       "is_incremental": false,
@@ -654,7 +657,7 @@
       "output": {
         ".html": {
           "relative_path": "content/tools and functions/common_variables.html",
-          "hash": "NcLuNtJg4FGS8TpR6aGRug=="
+          "hash": "u2RLL1GezPP1W1s9qIG+Vg=="
         }
       },
       "is_incremental": false,
@@ -666,7 +669,7 @@
       "output": {
         ".html": {
           "relative_path": "content/tools and functions/create_configuration.html",
-          "hash": "yJTxvELEeHyMH+n6+SaX3Q=="
+          "hash": "zfvWbOzrL4SfJ7zrCj0A6Q=="
         }
       },
       "is_incremental": false,
@@ -678,7 +681,7 @@
       "output": {
         ".html": {
           "relative_path": "content/tools and functions/create_environment.html",
-          "hash": "5JyX2/nX4SoqrfCnpQFsIA=="
+          "hash": "oi8+lvE6l3MakCDqmYgvFA=="
         }
       },
       "is_incremental": false,
@@ -690,7 +693,7 @@
       "output": {
         ".html": {
           "relative_path": "content/tools and functions/deploy.html",
-          "hash": "TSQWg/cYMdHedFNzj1Iz7Q=="
+          "hash": "tV85MAgxW2yw9csxVk8gcA=="
         }
       },
       "is_incremental": false,
@@ -702,7 +705,7 @@
       "output": {
         ".html": {
           "relative_path": "content/tools and functions/etl_tools.html",
-          "hash": "Xf+6n7ksZZXGdCX59546qg=="
+          "hash": "qfUSFX7Q2CrOJm6y+h3JWw=="
         }
       },
       "is_incremental": false,
@@ -714,7 +717,7 @@
       "output": {
         ".html": {
           "relative_path": "content/tools and functions/i2analyze_tools.html",
-          "hash": "qLi598oJ/uaoiTwW5axK7w=="
+          "hash": "BgmT+ot9sgbD/7NmxOeK8w=="
         }
       },
       "is_incremental": false,
@@ -726,7 +729,7 @@
       "output": {
         ".html": {
           "relative_path": "content/tools and functions/reset_repository.html",
-          "hash": "rm3V3f97ywWXZx5ItIXawQ=="
+          "hash": "B9GYqdeRxYEg4ehv41N4pw=="
         }
       },
       "is_incremental": false,
@@ -738,7 +741,19 @@
       "output": {
         ".html": {
           "relative_path": "content/tools and functions/tools.html",
-          "hash": "5YJjWFNat/wtG1koPnSrpA=="
+          "hash": "0nYZFJivdyLuHhkNewu+lA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "content/upgrade/upgrade.md",
+      "output": {
+        ".html": {
+          "relative_path": "content/upgrade/upgrade.html",
+          "hash": "Rh7Y7ZZSJkYoUZt7iLH0Jw=="
         }
       },
       "is_incremental": false,
@@ -750,7 +765,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/add_connector.html",
-          "hash": "PahK6FbofVTYcz0GuPHVmw=="
+          "hash": "QkPPii2Zw02E4UeGQqcvtg=="
         }
       },
       "is_incremental": false,
@@ -762,7 +777,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/add_solr_node.html",
-          "hash": "lfw6Yj+jLttHVSClyFw5HQ=="
+          "hash": "vyxDn/VvMmlAE3GqjTNCkg=="
         }
       },
       "is_incremental": false,
@@ -774,7 +789,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/clear_data.html",
-          "hash": "+no/OA0R95EvuFcQsScdMQ=="
+          "hash": "E0z3o4F3yVzXlBOEjMlutQ=="
         }
       },
       "is_incremental": false,
@@ -786,7 +801,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/correlated_data.html",
-          "hash": "iIbcVCc983ZwYyu2ezfSHQ=="
+          "hash": "48VZZidn643+hdzMexa97Q=="
         }
       },
       "is_incremental": false,
@@ -798,7 +813,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/ingestion.html",
-          "hash": "gVx93lyWeCs+GmnoPMuD6A=="
+          "hash": "xBh1Hu4LVGli2jRch9vPlg=="
         }
       },
       "is_incremental": false,
@@ -810,7 +825,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/reset_walkthroughs.html",
-          "hash": "NMlxQeUcQO5lDaXweEMOcg=="
+          "hash": "77OvU7+YbSEeNFLBlgezxQ=="
         }
       },
       "is_incremental": false,
@@ -822,7 +837,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/update_configuration.html",
-          "hash": "6qiZxFPxVvHqezx1l3mAnA=="
+          "hash": "m6Z0TEnqT63jRCZ/KbU8vw=="
         }
       },
       "is_incremental": false,
@@ -834,7 +849,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/update_match_rules.html",
-          "hash": "srBLMUfIO25BmOb4ioOa2g=="
+          "hash": "ghYPTO3OnrndxCciBULphg=="
         }
       },
       "is_incremental": false,
@@ -846,7 +861,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/update_schema.html",
-          "hash": "4WIPk0ohX/TRLTwWFyM7XA=="
+          "hash": "N3/O+NyW79bev4qmygY8pw=="
         }
       },
       "is_incremental": false,
@@ -858,7 +873,7 @@
       "output": {
         ".html": {
           "relative_path": "content/walkthroughs/update_security_schema.html",
-          "hash": "u5N3KqmxNp0Pu2tW34xxyw=="
+          "hash": "cWkw9EXKXf9zqEn8HKsvTQ=="
         }
       },
       "is_incremental": false,
@@ -877,12 +892,24 @@
       "version": ""
     },
     {
+      "type": "Conceptual",
+      "source_relative_path": "guidetoc/index.md",
+      "output": {
+        ".html": {
+          "relative_path": "guidetoc/index.html",
+          "hash": "nARExvDmfI3FuY+3GrXCNQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
       "type": "Toc",
       "source_relative_path": "guidetoc/toc.yml",
       "output": {
         ".html": {
           "relative_path": "guidetoc/toc.html",
-          "hash": "sjWecoS/cKEEJpiZdvmwWQ=="
+          "hash": "yMG6auR2LOqLvgUmu9yiNA=="
         }
       },
       "is_incremental": false,
@@ -949,7 +976,7 @@
       "output": {
         ".html": {
           "relative_path": "index.html",
-          "hash": "5x3QhuoKZ/TZ/zmLcHA8zA=="
+          "hash": "AUtBb3b31L6JNbPrJTPOWg=="
         }
       },
       "is_incremental": false,
@@ -961,7 +988,938 @@
       "output": {
         ".html": {
           "relative_path": "toc.html",
-          "hash": "6x7RzLG2rlnBy8cGP/y+lQ=="
+          "hash": "mBkcPh7p7hYnYVcDze70BQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/HA walkthroughs/ha.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/HA walkthroughs/ha.html",
+          "hash": "e1516eyfSn3Vu72wzBrwYw=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/HA walkthroughs/liberty_failure.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/HA walkthroughs/liberty_failure.html",
+          "hash": "sUQpF4DaP4QfpW8TmA6ewg=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/HA walkthroughs/solr_cluster_failure.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/HA walkthroughs/solr_cluster_failure.html",
+          "hash": "jGQ5njNCpNutTLdUxoa8VQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/HA walkthroughs/solr_node_failure.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/HA walkthroughs/solr_node_failure.html",
+          "hash": "hFSW1yIdG12s9wgaTDydsw=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/HA walkthroughs/zookeeper_quorum_failure.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/HA walkthroughs/zookeeper_quorum_failure.html",
+          "hash": "pBxcwz6mQ/Tmb9nLWT4IBA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/HA walkthroughs/zookeeper_server_failure.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/HA walkthroughs/zookeeper_server_failure.html",
+          "hash": "ESSs+aOheZMmr8vhpXftzQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/add_data_config_dev.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/add_data_config_dev.html",
+          "hash": "AXEidIXwJKswQjMmJJyo1A=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/backup and restore/backup.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/backup and restore/backup.html",
+          "hash": "nGCwnmC1jkUJxI3ahSZYBA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/backup and restore/br.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/backup and restore/br.html",
+          "hash": "jQaPehSOJ+NMU2O10gMppg=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/backup and restore/restore.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/backup and restore/restore.html",
+          "hash": "nrPOTFQI2pe99UldFJLycg=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/connector_config_dev.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/connector_config_dev.html",
+          "hash": "AKXRE+hH161IbnIYGZPI7g=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidYamlHeader"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/deploy_config_dev.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/deploy_config_dev.html",
+          "hash": "cofvm7j8j8doNL0AryoxYg=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/develop_config_dev.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/develop_config_dev.html",
+          "hash": "ALkHKppi/gwGjrs7yrnxvA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/develop_extensions.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/develop_extensions.html",
+          "hash": "VtiEJa42Dg5QPgqSsjC++Q=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidYamlHeader"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/develop_schemas.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/develop_schemas.html",
+          "hash": "0H312JT5XPAVZRkgIYZCWg=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/develop_solr_config_dev.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/develop_solr_config_dev.html",
+          "hash": "rawHBDpk+cetJQiCgZBhmw=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/getting_started.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/getting_started.html",
+          "hash": "QKpoiokxoMB09v97/LOPWA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/images and containers/etl_client.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/images and containers/etl_client.html",
+          "hash": "jge1GbbILKF3DanU46olKA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/images and containers/i2analyze_tool.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/images and containers/i2analyze_tool.html",
+          "hash": "uUHgEfHuPLGh7eQNYeH46Q=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/images and containers/images.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/images and containers/images.html",
+          "hash": "T6t0OPmgHWzEqY16CmipeQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/images and containers/liberty.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/images and containers/liberty.html",
+          "hash": "2Xsf7LXYUHd4xj0Dm5zy/Q=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/images and containers/solr.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/images and containers/solr.html",
+          "hash": "2U931G38yKPGsfCDFE4Bpw=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/images and containers/solr_client.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/images and containers/solr_client.html",
+          "hash": "KT1ZkU/Q5gPOiCJ7trUcaQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/images and containers/sql_client.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/images and containers/sql_client.html",
+          "hash": "ZGFibBugdKGTns0JoDpoyA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/images and containers/sql_server.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/images and containers/sql_server.html",
+          "hash": "Cnqs+QZ/kZxZWZ9ttEuKUA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/images and containers/zookeeper.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/images and containers/zookeeper.html",
+          "hash": "0UMIgNh4Knf93qBJAxfnRA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/ingest_config_dev.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/ingest_config_dev.html",
+          "hash": "ZMv7uKoLjJn1IzTG3NDQtg=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/manage_backup_restore.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/manage_backup_restore.html",
+          "hash": "d9wV1IqRG8vxJVbcJI3sag=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/managing_config_dev.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/managing_config_dev.html",
+          "hash": "ivairFzi8onPUEEa08/Vng=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/managing_connectors.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/managing_connectors.html",
+          "hash": "q3Ht7bw/lj45mMA9TQwFaA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/managing_toolkit_configuration.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/managing_toolkit_configuration.html",
+          "hash": "C5QgcF3+UarCuW4VPYbmSg=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/managing_update_env.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/managing_update_env.html",
+          "hash": "IsgFowN8cHlMBTg2AhiTsg=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/managing_upgrade_env.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/managing_upgrade_env.html",
+          "hash": "Cx0cxfgdOTreZRJzCrFhug=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/reference architecture/deploy_aws.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/reference architecture/deploy_aws.html",
+          "hash": "WRaGlMp4gPWYkooAqE7gxw=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidYamlHeader"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/reference architecture/deploy_pre_prod.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/reference architecture/deploy_pre_prod.html",
+          "hash": "SyzHlGD8SOD2Rcb0+gFCAg=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/reference architecture/reference_architectures.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/reference architecture/reference_architectures.html",
+          "hash": "9i0R5a/Uj/rsVpKuTEmLtA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/reference architecture/understanding.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/reference architecture/understanding.html",
+          "hash": "eDtMbdlNPY7wo5yfFOEMHw=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/reference architecture/understanding_aws.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/reference architecture/understanding_aws.html",
+          "hash": "Q+qfr2W8BeOspKc46BRM5w=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/runbooks/helper_runbooks.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/runbooks/helper_runbooks.html",
+          "hash": "SMFPeGo+PW6LZcNo0BY29Q=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/runbooks/runbooks.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/runbooks/runbooks.html",
+          "hash": "mUlumNmZW138e9fxqSYPkg=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/runbooks/solr_runbooks.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/runbooks/solr_runbooks.html",
+          "hash": "pGOqixALLkFxe55a1oM8gQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/runbooks/sqlserver_runbooks.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/runbooks/sqlserver_runbooks.html",
+          "hash": "KHYFYsH4Ka48T4+5u6gphw=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/security and users/aws_security.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/security and users/aws_security.html",
+          "hash": "vhpC8BYqE0W4jTP0OqkTDQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/security and users/db_users.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/security and users/db_users.html",
+          "hash": "lY/Bn8f6nu9m1jHTg5Andw=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/security and users/security.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/security and users/security.html",
+          "hash": "Ec5brVtG8gpybKvkpdiX3A=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/security and users/security_users.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/security and users/security_users.html",
+          "hash": "MutaxazCtKlqPszHxUGc9g=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/stacks/solr_stack.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/stacks/solr_stack.html",
+          "hash": "79T3om7rcUd6ktN5A3HFEA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/stacks/sqlserver_stack.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/stacks/sqlserver_stack.html",
+          "hash": "mcBDF2iUdR/x5uxlmFEF2Q=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/stacks/stacks.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/stacks/stacks.html",
+          "hash": "9zX+eOw+DvUIX33BB1njfQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "versions/2.1.3/content/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/toc.html",
+          "hash": "LPHXJtXw4GL+99EmwmC2yQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/tools and functions/aws_tools.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/tools and functions/aws_tools.html",
+          "hash": "YVEZlOreXFW3IiN5R6+KJQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/tools and functions/client_functions.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/tools and functions/client_functions.html",
+          "hash": "GGtYO4wzSndBMHNPKVXkRw=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/tools and functions/common_variables.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/tools and functions/common_variables.html",
+          "hash": "PyfslYTaBLF75j16XDk0WQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/tools and functions/create_configuration.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/tools and functions/create_configuration.html",
+          "hash": "zJWKZuBWILi06SKCFOxxiA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/tools and functions/create_environment.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/tools and functions/create_environment.html",
+          "hash": "UrE5iKaShW4twFKImITjQA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/tools and functions/deploy.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/tools and functions/deploy.html",
+          "hash": "2Hfvi7nwCo+sDfJHMGxp+g=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/tools and functions/etl_tools.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/tools and functions/etl_tools.html",
+          "hash": "p9PQAku/y0PQQG4XUZ/t5A=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/tools and functions/i2analyze_tools.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/tools and functions/i2analyze_tools.html",
+          "hash": "MJk/YNW99YV2r1xBO5+tCA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/tools and functions/reset_repository.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/tools and functions/reset_repository.html",
+          "hash": "rmmzWBADW49NjDuR6qnG5w=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/tools and functions/tools.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/tools and functions/tools.html",
+          "hash": "lCLB7WjGHt/FkioztSxREg=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/walkthroughs/add_connector.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/walkthroughs/add_connector.html",
+          "hash": "UiPpX8iWnn17AWjCenO6zw=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/walkthroughs/add_solr_node.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/walkthroughs/add_solr_node.html",
+          "hash": "ybnBNqHGwWbMgqpYAL00+g=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/walkthroughs/clear_data.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/walkthroughs/clear_data.html",
+          "hash": "0NzJUce0zXEudOdzVQb0kg=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/walkthroughs/correlated_data.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/walkthroughs/correlated_data.html",
+          "hash": "YxAk2+5WH8WzXxuX7YURwA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/walkthroughs/ingestion.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/walkthroughs/ingestion.html",
+          "hash": "E8FTsw4AgpwoawjWV2P7PQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/walkthroughs/reset_walkthroughs.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/walkthroughs/reset_walkthroughs.html",
+          "hash": "RJFw4+Rwt1wMvfYafkNy4A=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/walkthroughs/update_configuration.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/walkthroughs/update_configuration.html",
+          "hash": "+V+TSMkRPGfr4MRiLf/o/A=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/walkthroughs/update_match_rules.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/walkthroughs/update_match_rules.html",
+          "hash": "AecaeQ+yWI8lX+BFx5Bpmw=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/walkthroughs/update_schema.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/walkthroughs/update_schema.html",
+          "hash": "t9IOkv82t8h4QZhMN6/tyg=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/walkthroughs/update_security_schema.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/walkthroughs/update_security_schema.html",
+          "hash": "zihKOtgKil97/6zSeIHvVQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/content/walkthroughs/walkthroughs.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/content/walkthroughs/walkthroughs.html",
+          "hash": "tFquYnQjAZiEenv6gQi0sw=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "versions/2.1.3/images/all_connections_ssl_stores.png",
+      "output": {
+        "resource": {
+          "relative_path": "versions/2.1.3/images/all_connections_ssl_stores.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "versions/2.1.3/images/all_connections_ssl_stores.svg",
+      "output": {
+        "resource": {
+          "relative_path": "versions/2.1.3/images/all_connections_ssl_stores.svg"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "versions/2.1.3/images/ca_process.svg",
+      "output": {
+        "resource": {
+          "relative_path": "versions/2.1.3/images/ca_process.svg"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "versions/2.1.3/images/favicon.png",
+      "output": {
+        "resource": {
+          "relative_path": "versions/2.1.3/images/favicon.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "versions/2.1.3/images/topology.svg",
+      "output": {
+        "resource": {
+          "relative_path": "versions/2.1.3/images/topology.svg"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "versions/2.1.3/index.md",
+      "output": {
+        ".html": {
+          "relative_path": "versions/2.1.3/index.html",
+          "hash": "o//in2OOrPbgSZH0tQOdYQ=="
         }
       },
       "is_incremental": false,
@@ -982,7 +1940,7 @@
         "ConceptualDocumentProcessor": {
           "can_incremental": false,
           "incrementalPhase": "build",
-          "total_file_count": 71,
+          "total_file_count": 144,
           "skipped_file_count": 0
         },
         "ResourceDocumentProcessor": {
