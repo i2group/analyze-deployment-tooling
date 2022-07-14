@@ -20,10 +20,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-ARG BASE_IMAGE=registry.access.redhat.com/ubi8/nodejs-14
-FROM ${BASE_IMAGE}
+FROM registry.access.redhat.com/ubi8/nodejs-14:1
 
+LABEL maintainer="i2 Group"
 USER 0
+
+WORKDIR ${HOME}
+ENV NODE_ENV=production
+
+EXPOSE 3000 3443
 
 # Install app dependencies
 # We want to install all the latest dependencies at the time of building the image
@@ -34,11 +39,13 @@ COPY app/package.json ./
 RUN npm install
 
 # Node image comes with a non-root node user. Lets avoid running the connector
-# as root. It is a recommended security practise to avoid running containers as root
+# as root. It is a recommended security practice to avoid running containers as root
 
-# Sets the user to be 1001. This user will be used for all subsquent commands
+# Sets the user to be 1001. This user will be used for all subsequent commands
 USER 1001
 
 # Copy our application code with the appropriate permissions
 COPY --chown=1001:0 app/ .
 
+# The lifecycle of the connector will be attached to node app
+CMD [ "npm", "run", "serve" ]

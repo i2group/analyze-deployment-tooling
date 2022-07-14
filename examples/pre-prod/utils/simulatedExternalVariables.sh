@@ -150,6 +150,7 @@ fi
 ###############################################################################
 # Database variables                                                          #
 ###############################################################################
+HOST_PORT_DB="1433"
 DB_DIALECT="sqlserver"
 DB_INSTALL_DIR="/opt/mssql-tools"
 DB_LOCATION_DIR="/var/opt/mssql/data"
@@ -170,7 +171,7 @@ fi
 ###############################################################################
 BASE_URI="https://${I2_ANALYZE_FQDN}:${I2_ANALYZE_PORT}"
 FRONT_END_URI="${BASE_URI}/opal"
-LOAD_BALANCER_STATS_URI="${BASE_URI}/haproxy_stats;csv"
+LOAD_BALANCER_STATS_URI="${BASE_URI}/haproxy_stats;csv;norefresh"
 
 ###############################################################################
 # User names                                                                  #
@@ -183,6 +184,7 @@ I2_ANALYZE_ADMIN="Jenny"
 PRE_REQS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/pre-reqs"
 PRE_PROD_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod"
 
+LOCAL_CHANGE_SETS_DIR="${PRE_PROD_DIR}/change-sets"
 LOCAL_CONFIG_DIR="${PRE_PROD_DIR}/configuration"
 LOCAL_DATABASE_SCRIPTS_DIR="${PRE_PROD_DIR}/database-scripts"
 LOCAL_GENERATED_DIR="${LOCAL_DATABASE_SCRIPTS_DIR}/generated"

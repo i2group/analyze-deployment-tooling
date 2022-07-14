@@ -23,6 +23,7 @@
 FROM mcr.microsoft.com/mssql/rhel/server:2019-CU11-rhel-8.3
 LABEL maintainer="i2 Group"
 
+# hadolint ignore=DL3002
 USER root
 
 COPY docker-entrypoint.sh /opt/docker-entrypoint.sh

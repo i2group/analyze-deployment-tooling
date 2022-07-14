@@ -37,8 +37,8 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
-warnRootDirNotInPath
 
+warnRootDirNotInPath
 # Local variables
 TRIES=1
 MAX_TRIES=30
@@ -57,22 +57,22 @@ docker stop "${SOLR2_CONTAINER_NAME}" "${SOLR1_CONTAINER_NAME}"
 print "Waiting for Liberty to mark the Solr cluster as unavailable"
 TRIES=1
 while [[ "${TRIES}" -le "${MAX_TRIES}" ]]; do
-  echo "Looking for collection is not healthy message..."
-  status_message="$(getSolrStatus "${SINCE_TIMESTAMP}")"
+	echo "Looking for collection is not healthy message..."
+	status_message="$(getSolrStatus "${SINCE_TIMESTAMP}")"
 
-  if grep -q "DOWN" <<<"$(getSolrStatus "${SINCE_TIMESTAMP}")"; then
-    echo "Solr services are unavailable"
-    echo "Message:"
-    grep "DOWN" <<<"${status_message}"
-    break
-  fi
+	if grep -q "DOWN" <<<"$(getSolrStatus "${SINCE_TIMESTAMP}")"; then
+		echo "Solr services are unavailable"
+		echo "Message:"
+		grep "DOWN" <<<"${status_message}"
+		break
+	fi
 
-  if [[ "${TRIES}" -ge "${MAX_TRIES}" ]]; then
-    printErrorAndExit "Liberty container (${LIBERTY1_CONTAINER_NAME}) does NOT show solr is DOWN"
-  fi
-  echo "Waiting..."
-  sleep 5
-  ((TRIES++))
+	if [[ "${TRIES}" -ge "${MAX_TRIES}" ]]; then
+		printErrorAndExit "Liberty container (${LIBERTY1_CONTAINER_NAME}) does NOT show solr is DOWN"
+	fi
+	echo "Waiting..."
+	sleep 5
+	((TRIES++))
 done
 
 ###############################################################################
@@ -85,22 +85,22 @@ docker start "${SOLR2_CONTAINER_NAME}" "${SOLR1_CONTAINER_NAME}"
 print "Waiting for Liberty to mark the collection as healthy"
 TRIES=1
 while [[ "${TRIES}" -le "${MAX_TRIES}" ]]; do
-  echo "Looking for collection is healthy message..."
-  status_message="$(getSolrStatus "${SINCE_TIMESTAMP}")"
+	echo "Looking for collection is healthy message..."
+	status_message="$(getSolrStatus "${SINCE_TIMESTAMP}")"
 
-  if grep -q "ACTIVE" <<<"$(getSolrStatus "${SINCE_TIMESTAMP}")"; then
-    echo "Solr collection has been marked as healthy"
-    echo "Message:"
-    grep "ACTIVE" <<<"${status_message}"
-    break
-  fi
+	if grep -q "ACTIVE" <<<"$(getSolrStatus "${SINCE_TIMESTAMP}")"; then
+		echo "Solr collection has been marked as healthy"
+		echo "Message:"
+		grep "ACTIVE" <<<"${status_message}"
+		break
+	fi
 
-  if [[ "${TRIES}" -ge "${MAX_TRIES}" ]]; then
-    printErrorAndExit "Liberty container (${LIBERTY1_CONTAINER_NAME}) does NOT show that the solr cluster has recovered"
-  fi
-  echo "Waiting..."
-  sleep 5
-  ((TRIES++))
+	if [[ "${TRIES}" -ge "${MAX_TRIES}" ]]; then
+		printErrorAndExit "Liberty container (${LIBERTY1_CONTAINER_NAME}) does NOT show that the solr cluster has recovered"
+	fi
+	echo "Waiting..."
+	sleep 5
+	((TRIES++))
 done
 
 print "SUCCESS: solrClusterFailureWalkthrough has run successfully"

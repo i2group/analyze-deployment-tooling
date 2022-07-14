@@ -23,18 +23,37 @@
 
 set -e
 
-DB2_CLEAR_DATA_DIR="${GENERATED_DIR}/static"
+source "$(dirname "$0")/utils/common_functions.sh"
 
-db2 "CATALOG TCPIP node \"${DB_NODE}\" REMOTE \"${DB_SERVER}\" SERVER \"${DB_PORT}\""
-db2 "CATALOG DATABASE \"${DB_NAME}\" at node \"${DB_NODE}\""
-db2 "CONNECT TO \"${DB_NAME}\" USER \"${DB_USERNAME}\" USING \"${DB_PASSWORD}\""
+initialize
 
-db2 -tsf "${DB2_CLEAR_DATA_DIR}/A010-create-shared-admin-routines.sql"
-db2 -tsf "${DB2_CLEAR_DATA_DIR}/A020-create-delete-data-admin-routines.sql"
-db2 -tsf "${DB2_CLEAR_DATA_DIR}/A030-create-drop-objects-admin-routines.sql"
-db2 -tsf "${DB2_CLEAR_DATA_DIR}/A100-execute-delete-data.sql"
-db2 -tsf "${DB2_CLEAR_DATA_DIR}/A110-execute-drop-internal-staging-tables.sql"
+function runGenerateSolrSchemaCLI() {
+	local collection_name="$1"
 
-echo "SUCCESS: The data has been cleared from the InfoStore database."
+	java "${JVM_ARGS[@]}" -cp "${JAR_PATH}/*:${JDBC_DRIVERS_PATH}/*:${LOG4J_PATH}:${CLASSES_PATH}" \
+		"com.i2group.disco.solr.schema.generate.internal.GenerateSolrSchemaCLI" \
+		-solrCollectionType "${collection_name}" \
+		-templateFilePath "${CONFIG_DIR}/solr/schema-template-definition.xml" \
+		-schemaFilePath "${CONFIG_DIR}/solr/generated_config/${collection_name}_index/managed-schema" \
+		-force \
+		-stacktrace
+}
+
+function runGenerateSolrConfigCLI() {
+	local collection_name="$1"
+
+	java "${JVM_ARGS[@]}" -cp "${JAR_PATH}/*:${JDBC_DRIVERS_PATH}/*:${LOG4J_PATH}:${CLASSES_PATH}" \
+		"com.i2group.disco.solr.solrconfig.GenerateSolrConfigCLI" \
+		-fp "${CONFIG_DIR}/solr/generated_config/${collection_name}_index/solrconfig.xml" \
+		-force \
+		-stacktrace
+}
+
+COLLECTION_NAMES=("main" "daod" "highlight" "chart" "match" "vq")
+
+for collection_name in "${COLLECTION_NAMES[@]}"; do
+	runGenerateSolrSchemaCLI "${collection_name}"
+	runGenerateSolrConfigCLI "${collection_name}"
+done
 
 set +e

@@ -38,8 +38,8 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
-warnRootDirNotInPath
 
+warnRootDirNotInPath
 ###############################################################################
 # Modifying the system match rules file                                       #
 ###############################################################################

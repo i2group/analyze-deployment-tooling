@@ -31,27 +31,31 @@ COPY tools/ /opt/
 
 ENV TOOLKIT_DIR=/opt
 
-RUN yum install -y ca-certificates
+RUN yum update -y \
+  && yum install -y \
+    ca-certificates \
+  && yum clean all
 
-RUN mkdir -p /opt/databaseScripts/generated
-RUN mkdir -p /opt/toolkit
+RUN mkdir -p /opt/databaseScripts/generated \
+  && mkdir -p /opt/toolkit \
+  && groupadd db2iadm1 \
+  && groupadd db2fadm1 \
+  && useradd -m -g db2iadm1 db2inst1 \
+  && useradd -g db2fadm1 db2fenc1 \
+  && usermod -aG wheel db2inst1 \
+  && chmod 755 /home/db2inst1
 
-RUN groupadd db2iadm1
-RUN groupadd db2fadm1
-RUN useradd -m -g db2iadm1 db2inst1
-RUN useradd -g db2fadm1 db2fenc1
-RUN usermod -aG wheel db2inst1
-
-RUN retry=0; while [[ "${retry}" -lt 3 ]]; do ( /opt/ibm/db2/V11.5/instance/db2icrt -s client db2inst1 && break ) || sleep 1s; retry=${retry}+1; done
+RUN retry=0; while true; do (/opt/ibm/db2/V11.5/instance/db2icrt -s client db2inst1) && break || if [ $retry -lt 5 ]; then retry=$((retry+1)); sleep 3; else exit 1; fi done
 
 # Set the global registry values
-RUN /opt/ibm/db2/V11.5/instance/db2iset -g DB2SYSTEM=db2client
-RUN /opt/ibm/db2/V11.5/instance/db2iset -g DB2INSTDEF=db2inst1
-RUN /opt/ibm/db2/V11.5/instance/db2iset -g DB2COMM=TCPIP,SSL
+RUN /opt/ibm/db2/V11.5/instance/db2iset -g DB2SYSTEM=db2client \
+  && /opt/ibm/db2/V11.5/instance/db2iset -g DB2INSTDEF=db2inst1 \
+  && /opt/ibm/db2/V11.5/instance/db2iset -g DB2COMM=TCPIP,SSL
 
 # Update DB2 registry and DBM cfg settings
 USER db2inst1
 RUN /opt/ibm/db2/V11.5/adm/db2set DB2SYSTEM=db2client
+# hadolint ignore=DL3002
 USER root
 
 ENTRYPOINT ["/opt/docker-entrypoint.sh"]

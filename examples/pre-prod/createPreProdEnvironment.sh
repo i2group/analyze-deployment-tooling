@@ -34,9 +34,7 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
 
 # Load common variables
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
-
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
-warnRootDirNotInPath
 
 print "Running createEnvironment.sh script"
 "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/createEnvironment.sh" -e "${ENVIRONMENT}"

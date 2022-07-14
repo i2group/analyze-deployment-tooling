@@ -27,8 +27,8 @@ source '/opt/db-scripts/commonFunctions.sh'
 
 # Create a Login
 sql_query="\
-    CREATE LOGIN ${DB_USERNAME} WITH PASSWORD = '${DB_PASSWORD}'";
- runSQLQuery "${sql_query}"
+    CREATE LOGIN ${DB_USERNAME} WITH PASSWORD = '${DB_PASSWORD}'"
+runSQLQuery "${sql_query}"
 
 # Create a User
 sql_query="\

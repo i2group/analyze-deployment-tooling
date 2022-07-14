@@ -23,6 +23,7 @@
 FROM ibmcom/db2:11.5.6.0
 
 LABEL maintainer="i2 Group"
+# hadolint ignore=DL3002
 USER root
 
 COPY docker-entrypoint.sh /opt/docker-entrypoint.sh
@@ -33,4 +34,4 @@ RUN mkdir /var/custom
 COPY setup-db.sh /var/custom
 RUN chmod a+x /var/custom/setup-db.sh
 
-ENTRYPOINT ["/opt/docker-entrypoint.sh", "/var/db2_setup/lib/setup_db2_instance.sh"]
+ENTRYPOINT ["/opt/docker-entrypoint.sh"]

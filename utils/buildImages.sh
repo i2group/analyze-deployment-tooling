@@ -26,7 +26,7 @@ set -e
 function printUsage() {
   echo "Usage:"
   echo "    buildImages.sh" 1>&2
-  echo "    buildImages.sh -a -l dependency_label" 1>&2
+  echo "    buildImages.sh -a -l <dependency_label>" 1>&2
   echo "    buildImages.sh -e {pre-prod}" 1>&2
   echo "    buildImages.sh -h" 1>&2
 }
@@ -39,7 +39,7 @@ function usage() {
 function help() {
   printUsage
   echo "Options:"
-  echo "    -a Produce or use artefacts on AWS." 1>&2
+  echo "    -a Produce or use artifacts on AWS." 1>&2
   echo "    -l Name of dependency image label to use on AWS." 1>&2
   echo "    -e {pre-prod} Used to generate images for pre-prod example." 1>&2
   echo "    -h Display the help." 1>&2
@@ -53,7 +53,7 @@ while getopts ":e:l:ah" flag; do
     ENVIRONMENT="${OPTARG}"
     ;;
   a)
-    AWS_ARTEFACTS="true"
+    AWS_ARTIFACTS="true"
     ;;
   l)
     I2A_DEPENDENCIES_IMAGES_TAG="${OPTARG}"
@@ -70,7 +70,7 @@ while getopts ":e:l:ah" flag; do
   esac
 done
 
-if [[ "${AWS_ARTEFACTS}" && -z "${I2A_DEPENDENCIES_IMAGES_TAG}" ]]; then
+if [[ "${AWS_ARTIFACTS}" && -z "${I2A_DEPENDENCIES_IMAGES_TAG}" ]]; then
   usage
 fi
 
@@ -167,14 +167,3 @@ docker build -t "${ETL_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMA
 # Building Example connector image                                            #
 ###############################################################################
 docker build -t "${CONNECTOR_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/example_connector"
-
-###############################################################################
-# Building i2Connect Server base image                                        #
-###############################################################################
-if [[ "${AWS_ARTEFACTS}" == "true" ]]; then
-  print "Running buildi2ConnectServerBaseImage.sh"
-  "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/buildi2ConnectServerBaseImage.sh" -a -l "${I2A_DEPENDENCIES_IMAGES_TAG}"
-else
-  print "Running buildi2ConnectServerBaseImage.sh"
-  "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/buildi2ConnectServerBaseImage.sh"
-fi

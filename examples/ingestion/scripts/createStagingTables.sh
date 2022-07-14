@@ -48,16 +48,15 @@ map_put "$SCHEMA_TYPE_ID_TO_TABLE_NAME" "LEM1" "L_Employment"
 map_put "$SCHEMA_TYPE_ID_TO_TABLE_NAME" "LIN1" "L_Involved_In_Eve_Per"
 map_put "$SCHEMA_TYPE_ID_TO_TABLE_NAME" "LTR1" "L_Transaction"
 
-
 ###############################################################################
 # Creating the staging tables                                                 #
 ###############################################################################
 print "Creating Information Store Staging Table(s)"
 for schema_type_id in $(map_keys "${SCHEMA_TYPE_ID_TO_TABLE_NAME}"); do
-  for table_name in $(map_get "${SCHEMA_TYPE_ID_TO_TABLE_NAME}" "${schema_type_id}"); do
-    runEtlToolkitToolAsi2ETL bash -c "/opt/ibm/etltoolkit/createInformationStoreStagingTable \
+	for table_name in $(map_get "${SCHEMA_TYPE_ID_TO_TABLE_NAME}" "${schema_type_id}"); do
+		runEtlToolkitToolAsi2ETL bash -c "/opt/ibm/etltoolkit/createInformationStoreStagingTable \
       --schemaTypeId ${schema_type_id} \
       --tableName ${table_name}  \
       --databaseSchemaName ${STAGING_SCHEMA}"
-  done
+	done
 done

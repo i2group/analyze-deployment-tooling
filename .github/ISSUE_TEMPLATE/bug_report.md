@@ -12,6 +12,7 @@ A clear and concise description of what the bug is.
 
 **To Reproduce**
 Steps to reproduce the behavior:
+
 1. Run scripts '...'
 2. Go to '...'
 3. See error
@@ -23,11 +24,13 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Hardware and Software information**
- - OS: [e.g. Mac, Windows]
- - Version: [e.g. v2.0.0]
- - i2 Analyze version: [e.g. 4.3.4]
- - Environment type: [e.g. pre-prod, config-dev]
- - Deployment pattern: [e.g. istore, i2c, cstore, i2c_istore, i2c_cstore, schema_dev]
+Fill in the following information:
+
+- OS: [e.g. Mac, Windows]
+- Version: [e.g. v2.0.0]
+- i2 Analyze version: [e.g. 4.3.4]
+- Environment type: [e.g. pre-prod, config-dev]
+- Deployment pattern: [e.g. istore, i2c, cstore, i2c_istore, i2c_cstore, schema_dev]
 
 **Additional context**
 Add any other context about the problem here.

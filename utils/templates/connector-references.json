@@ -1,6 +1,4 @@
 {
-    "connectors": [
-    ],
-    "gatewaySchemas": [
-    ]
+  "connectors": [],
+  "gatewaySchemas": []
 }

@@ -21,8 +21,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# This has a dependency on the commonVariables.sh
-
 ###############################################################################
 # Function definitions start here                                             #
 ###############################################################################
@@ -100,14 +98,14 @@ function getSolrStatus() {
 
 function getAsyncRequestStatus() {
   local async_id="$1"
-  local asynch_response
+  local async_response
   local error_response
 
-  asynch_response="$(runSolrClientCommand bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=REQUESTSTATUS&requestid=${async_id}&wt=json\"")"
-  if [[ $(echo "${asynch_response}" | jq -r ".status.state") == "completed" ]]; then
+  async_response="$(runSolrClientCommand bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=REQUESTSTATUS&requestid=${async_id}&wt=json\"")"
+  if [[ $(echo "${async_response}" | jq -r ".status.state") == "completed" ]]; then
     echo "completed" && return 0
   else
-    error_response=$(echo "${asynch_response}" | jq -r ".success.*.response")
+    error_response=$(echo "${async_response}" | jq -r ".success.*.response")
     echo "${error_response}"
   fi
 }
@@ -124,7 +122,6 @@ function waitForIndexesToBeBuilt() {
   local ready_index
   local index_status_response
   local app_admin_password
-  local i
 
   app_admin_password=$(getApplicationAdminPassword)
   print "Waiting for indexes to be built"
@@ -153,7 +150,7 @@ function waitForIndexesToBeBuilt() {
     sleep 5
   done
 
-  # If you get here, waitForIndexesToBeBuilt has not been succesfull
+  # If you get here, waitForIndexesToBeBuilt has not been successful
   printErrorAndExit "${match_index} is NOT ready."
 }
 
@@ -187,7 +184,7 @@ function waitForConnectorToBeLive() {
       if [[ "${http_status_code}" -eq 200 ]]; then
         echo "Connector is live" && return 0
       else
-        echo "Incorrect status code retured from connector:${http_status_code}"
+        echo "Incorrect status code returned from connector:${http_status_code}"
       fi
     fi
     echo "Could not connect to ${connector_config_url}"
@@ -419,6 +416,7 @@ function runi2AnalyzeTool() {
     -e "DB_OS_TYPE=${DB_OS_TYPE}" \
     -e "DB_INSTALL_DIR=${DB_INSTALL_DIR}" \
     -e "DB_LOCATION_DIR=${DB_LOCATION_DIR}" \
+    -e "DB_CREATE_DATABASE=false" \
     -e SOLR_ADMIN_DIGEST_USERNAME="${SOLR_ADMIN_DIGEST_USERNAME}" \
     -e SOLR_ADMIN_DIGEST_PASSWORD="${SOLR_ADMIN_DIGEST_PASSWORD}" \
     -e ZOO_DIGEST_USERNAME="${ZK_DIGEST_USERNAME}" \

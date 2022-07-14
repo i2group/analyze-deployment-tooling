@@ -20,9 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-FROM registry.access.redhat.com/ubi8/nodejs-14
+FROM registry.access.redhat.com/ubi8/nodejs-14:1
 
 USER 0
+
+WORKDIR ${HOME}
 
 COPY --chown=1001:0 docker-entrypoint.sh /opt/docker-entrypoint.sh
 COPY --chown=1001:0 environment.sh /opt/environment.sh
@@ -33,9 +35,9 @@ COPY --chown=1001:0 environment.sh /opt/environment.sh
 COPY app/package*.json ./
 
 # Node image comes with a non-root node user. Lets avoid running the connector
-# as root. It is a recommended security practise to avoid running containers as root
+# as root. It is a recommended security practice to avoid running containers as root
 
-# Sets the user to be 1001. This user will be used for all subsquent commands
+# Sets the user to be 1001. This user will be used for all subsequent commands
 USER 1001
 
 # Install our dependencies

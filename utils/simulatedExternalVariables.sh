@@ -207,6 +207,7 @@ I2_ANALYZE_ADMIN="I2AnalyzeConfigDevAdmin"
 ###############################################################################
 # Root Paths                                                                  #
 ###############################################################################
+LOCAL_USER_CHANGE_SETS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/change-sets"
 LOCAL_USER_CONFIG_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/configuration"
 LOCAL_CONFIG_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/.configuration"
 GENERATED_LOCAL_CONFIG_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/.configuration-generated"

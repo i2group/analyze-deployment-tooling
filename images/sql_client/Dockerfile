@@ -23,6 +23,7 @@
 FROM mcr.microsoft.com/mssql/rhel/server:2019-CU11-rhel-8.3
 LABEL maintainer="i2 Group"
 
+# hadolint ignore=DL3002
 USER root
 
 COPY docker-entrypoint.sh /opt/docker-entrypoint.sh
@@ -31,10 +32,13 @@ COPY tools/ /opt/
 
 ENV TOOLKIT_DIR=/opt
 
-RUN yum install -y ca-certificates
-RUN ACCEPT_EULA=Y yum update -y mssql-tools
+RUN ACCEPT_EULA=Y yum update -y --nobest \
+  mssql-tools \
+  && yum install -y \
+    ca-certificates \
+  && yum clean all
 
-RUN mkdir -p /opt/databaseScripts/generated
-RUN mkdir -p /opt/toolkit
+RUN mkdir -p /opt/databaseScripts/generated \
+  && mkdir -p /opt/toolkit
 
 ENTRYPOINT ["/opt/docker-entrypoint.sh"]

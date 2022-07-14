@@ -30,7 +30,7 @@ sql_query="\
     CREATE USER dba FOR LOGIN dba;
         ALTER ROLE SQLAgentUserRole ADD MEMBER dba;
             ALTER ROLE db_datareader ADD MEMBER dba;"
- runSQLQueryForDB "${sql_query}" "msdb"
+runSQLQueryForDB "${sql_query}" "msdb"
 
 # Grant dba required permission to be able execute scheduled jobs as the first step of a deletion by rule job checks the server's HADR state.
 sql_query="\

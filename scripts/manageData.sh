@@ -32,9 +32,9 @@ fi
 
 function printUsage() {
   echo "Usage:"
-  echo "  manageData.sh -c <config_name> -t {ingest} -d <data_set> -s <script_name> [-v]"
-  echo "  manageData.sh -c <config_name> -t {sources} [-s <script_name>] [-v]"
-  echo "  manageData.sh -c <config_name> -t {delete} [-v]"
+  echo "  manageData.sh -c <config_name> -t {ingest} -d <data_set> -s <script_name> [-y] [-v]"
+  echo "  manageData.sh -c <config_name> -t {sources} [-s <script_name>] [-y] [-v]"
+  echo "  manageData.sh -c <config_name> -t {delete} [-y] [-v]"
   echo "  manageData.sh -h" 1>&2
 }
 
@@ -47,9 +47,10 @@ function help() {
   printUsage
   echo "Options:" 1>&2
   echo "  -c <config_name>             Name of the config to use." 1>&2
-  echo "  -t {delete|ingest|sources}  The task to run. Either delete or ingest data, or add ingestion sources. Delete permanently removes all data from the database." 1>&2
+  echo "  -t {delete|ingest|sources}   The task to run. Either delete or ingest data, or add ingestion sources. Delete permanently removes all data from the database." 1>&2
   echo "  -d <data_set>                Name of the data set to ingest." 1>&2
   echo "  -s <script_name>             Name of the ingestion script file. If running the 'sources' task, this will default to 'createIngestionSources.sh'" 1>&2
+  echo "  -y                           Answer 'yes' to all prompts." 1>&2
   echo "  -v                           Verbose output." 1>&2
   echo "  -h                           Display the help." 1>&2
   exit 1
@@ -57,7 +58,7 @@ function help() {
 
 AWS_DEPLOY="false"
 
-while getopts ":t:c:d:s:vh" flag; do
+while getopts ":t:c:d:s:vyh" flag; do
   case "${flag}" in
   t)
     TASK="${OPTARG}"
@@ -70,6 +71,9 @@ while getopts ":t:c:d:s:vh" flag; do
     ;;
   s)
     SCRIPT_NAME="${OPTARG}"
+    ;;
+  y)
+    YES_FLAG="true"
     ;;
   v)
     VERBOSE="true"
@@ -106,7 +110,6 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
 
 # Load common variables
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/utils/variables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulatedExternalVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
@@ -156,10 +159,10 @@ function clearSearchIndex() {
   runSolrClientCommand bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/highlight_index/update?commit=true\" -H Content-Type:text/xml --data-binary \"<delete><query>*:*</query></delete>\""
 
   # Remove the collection properties from ZooKeeper
-  runSolrClientCommand "/opt/solr-8.8.2/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/main_index/collectionprops.json"
-  runSolrClientCommand "/opt/solr-8.8.2/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/match_index1/collectionprops.json"
-  runSolrClientCommand "/opt/solr-8.8.2/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/match_index2/collectionprops.json"
-  runSolrClientCommand "/opt/solr-8.8.2/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/chart_index/collectionprops.json"
+  runSolrClientCommand "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/main_index/collectionprops.json"
+  runSolrClientCommand "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/match_index1/collectionprops.json"
+  runSolrClientCommand "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/match_index2/collectionprops.json"
+  runSolrClientCommand "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/chart_index/collectionprops.json"
 }
 
 function clearInfoStore() {

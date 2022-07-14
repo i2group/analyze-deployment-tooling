@@ -166,15 +166,14 @@ function createBackup() {
   CONFIG_NAME="$1"
 
   export ANALYZE_CONTAINERS_ROOT_DIR="${PREVIOUS_PROJECT_PATH}"
+  unset I2A_DEPENDENCIES_IMAGES_TAG
 
-  pushd "${PREVIOUS_PROJECT_PATH}"
   source "${PREVIOUS_PROJECT_PATH}/utils/commonFunctions.sh"
   source "${PREVIOUS_PROJECT_PATH}/utils/clientFunctions.sh"
   source "${PREVIOUS_PROJECT_PATH}/configs/${CONFIG_NAME}/utils/variables.sh"
   source "${PREVIOUS_PROJECT_PATH}/utils/simulatedExternalVariables.sh"
   source "${PREVIOUS_PROJECT_PATH}/utils/commonVariables.sh"
   source "${PREVIOUS_PROJECT_PATH}/utils/internalHelperVariables.sh"
-  popd
 
   if [[ "${DEPLOYMENT_PATTERN}" != *"store"* ]]; then
     # Cannot print and exit since this is done for <all> configs and we want it to continue
@@ -232,12 +231,9 @@ function createBackup() {
 }
 
 function createBackups() {
-  I2A_DEPENDENCIES_IMAGES_TAG="latest"
   for config_name in "${CONFIG_ARRAY[@]}"; do
     createBackup "${config_name}"
   done
-  unset I2A_DEPENDENCIES_IMAGES_TAG
-  setDependenciesTagIfNecessary
 }
 
 function buildConfigArray() {
@@ -449,7 +445,6 @@ function runUpgradeTask() {
     stopConfigDevContainers
     stopConnectorContainers
     "${ANALYZE_CONTAINERS_ROOT_DIR}/scripts/deploy.sh" -c "${config_name}" "${extra_args[@]}"
-    "${ANALYZE_CONTAINERS_ROOT_DIR}/scripts/deploy.sh" -c "${config_name}" -t "restore" -b "${BACKUP_NAME}" "${extra_args[@]}"
   done
 
   print "All configurations have been upgraded"
@@ -496,6 +491,47 @@ function runCleanTask() {
   done
 
   echo "Done"
+}
+
+function runPruneTask() {
+  waitForUserReply "Are you sure you want to run the 'prune' task? This will permanently remove data and images from the deployment."
+
+  for config in "${PREVIOUS_PROJECT_PATH}"/configs/*; do
+    if [[ ! -d "${config}" ]]; then
+      continue
+    fi
+
+    CONFIG_NAME=$(basename "${config}")
+    source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
+
+    printInfo "Deleting previous configuration folder: ${PREVIOUS_CONFIGURATION_DIR}"
+    deleteFolderIfExists "${PREVIOUS_CONFIGURATION_DIR}"
+  done
+
+  printInfo "Deleting deployed extensions: ${LOCAL_LIB_DIR}"
+  deleteFolderIfExists "${LOCAL_LIB_DIR}"
+
+  deleteAllContainers
+
+  print "Removing all volumes"
+  VOLUME_NAME_PREFIX=("zk" "solr" "sqlserver" "db2server" "liberty" "i2a_data" "load_balancer")
+
+  for volume_prefix in "${VOLUME_NAME_PREFIX[@]}"; do
+    readarray -t volumes < <(docker volume ls -q --filter "name=^${volume_prefix}" --format "{{.Name}}")
+    if [[ "${#volumes[@]}" -ne 0 ]]; then
+      docker volume rm "${volumes[@]}"
+    fi
+  done
+
+  print "Removing all images"
+  IMAGE_NAME_PREFIX=("zookeeper_" "solr_" "sqlserver_" "db2_" "liberty_" "etlclient_" "i2a_tools_" "ha_proxy_" "example_connector" "i2connect_sdk")
+
+  for image_prefix in "${IMAGE_NAME_PREFIX[@]}"; do
+    readarray -t images < <(docker image ls -q --filter "reference=${image_prefix}*" --format "{{.Repository}}:{{.Tag}}")
+    if [[ "${#images[@]}" -ne 0 ]]; then
+      docker rmi "${images[@]}"
+    fi
+  done
 }
 
 function runTask() {

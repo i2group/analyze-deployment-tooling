@@ -38,8 +38,8 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
-warnRootDirNotInPath
 
+warnRootDirNotInPath
 # This allows us to version the backups of Solr and SQL server in the same way
 # Note: Solr and SQL must be backed up as a pair and restored as a pair
 backup_version=1
@@ -67,7 +67,7 @@ waitForAsynchronousRequestStatusToBeCompleted "${MAIN_INDEX_BACKUP_NAME}"
 ###############################################################################
 # Backup system-match-rules status                                            #
 ###############################################################################
-runSolrClientCommand "/opt/solr-8.8.2/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd getfile /configs/match_index1/match_index1/app/match-rules.xml "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}/system-match-rules.xml"
+runSolrClientCommand "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd getfile /configs/match_index1/match_index1/app/match-rules.xml "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}/system-match-rules.xml"
 
 ###############################################################################
 # Backing up SQL Server                                                       #

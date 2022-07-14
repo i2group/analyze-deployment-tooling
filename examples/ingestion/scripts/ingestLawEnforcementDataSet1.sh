@@ -22,6 +22,8 @@
 # SOFTWARE.
 set -e
 
+# cspell:ignore organisation acessto
+
 ###############################################################################
 # Etl variables                                                               #
 ###############################################################################
@@ -57,8 +59,8 @@ map_put "$BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME" "L_Involved_In_Eve_Per" "
 map_put "$BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME" "L_Transaction" "account_transaction_account"
 
 # Import IDs used for ingestion with BULK import mode
-BULK_IMPORT_MAPPING_IDS=( 
-  "Account" "Address" "Telephone" "Event" "Organisation" "Person" "Property" "Vehicle" "AccessToOrgAcc" "AccessToOrgAdd" "AccessToPerAcc" "AccessToPerAdd" "AccessToOrgOwnVeh" "AccessToPerOwnTel" "AccessToPerOwnVeh" "AccessToPerShOrg" "Associate" "Communication" "Employment" "InvolvedInEvePer" "Transaction" 
+BULK_IMPORT_MAPPING_IDS=(
+	"Account" "Address" "Telephone" "Event" "Organisation" "Person" "Property" "Vehicle" "AccessToOrgAcc" "AccessToOrgAdd" "AccessToPerAcc" "AccessToPerAdd" "AccessToOrgOwnVeh" "AccessToPerOwnTel" "AccessToPerOwnVeh" "AccessToPerShOrg" "Associate" "Communication" "Employment" "InvolvedInEvePer" "Transaction"
 )
 
 ###############################################################################
@@ -68,32 +70,38 @@ print "Inserting data into the staging tables"
 # To stop the variables being evaluated in this script, the variables are escaped using backslashes (\) and surrounded in double quotes (").
 # Any double quotes in the curl command are also escaped by a leading backslash.
 for table_name in $(map_keys "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}"); do
-  csv_and_format_file_name=$(map_get "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}" "${table_name}")
-  case "${DB_DIALECT}" in
-    db2)
-      IFS=',' read -r -a csv_header <"${DATA_DIR}/${BASE_DATA}/${csv_and_format_file_name}.csv"
-      columns=()
-      for header in "${csv_header[@]}"; do
-        columns+=("${header} varchar(1000) NULL")
-      done
-      sql_query="\
-        INSERT INTO ${STAGING_SCHEMA}.${table_name} ($(IFS=','; echo "${csv_header[*]}")) \
-        SELECT * FROM EXTERNAL '/var/i2a-data/${BASE_DATA}/${csv_and_format_file_name}.csv' ($(IFS=','; echo "${columns[*]}")) \
+	csv_and_format_file_name=$(map_get "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}" "${table_name}")
+	case "${DB_DIALECT}" in
+	db2)
+		IFS=',' read -r -a csv_header <"${DATA_DIR}/${BASE_DATA}/${csv_and_format_file_name}.csv"
+		columns=()
+		for header in "${csv_header[@]}"; do
+			columns+=("${header} varchar(1000) NULL")
+		done
+		sql_query="\
+        INSERT INTO ${STAGING_SCHEMA}.${table_name} ($(
+			IFS=','
+			echo "${csv_header[*]}"
+		)) \
+        SELECT * FROM EXTERNAL '/var/i2a-data/${BASE_DATA}/${csv_and_format_file_name}.csv' ($(
+			IFS=','
+			echo "${columns[*]}"
+		)) \
         USING (DELIMITER ',' SKIP_ROWS 1 TIMESTAMP_FORMAT 'YYYY-MM-DD HH:MI:SS' DATE_FORMAT 'YYYY-MM-DD' NULLVALUE '')"
-      runDb2ServerCommandAsDb2inst1 runSQLQueryForDB "${sql_query}" "${DB_NAME}"
-      ;;
-    sqlserver)
-      sql_query="\
+		runDb2ServerCommandAsDb2inst1 runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+		;;
+	sqlserver)
+		sql_query="\
         BULK INSERT ${STAGING_SCHEMA}.${table_name} \
         FROM '/var/i2a-data/${BASE_DATA}/${csv_and_format_file_name}.csv' \
         WITH (FORMATFILE = '/var/i2a-data/${BASE_DATA}/sqlserver/format-files/${csv_and_format_file_name}.fmt', FIRSTROW = 2)"
-      runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
-      ;;
-  esac
+		runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+		;;
+	esac
 done
 
 for import_id in "${BULK_IMPORT_MAPPING_IDS[@]}"; do
-  runEtlToolkitToolAsi2ETL bash -c "/opt/ibm/etltoolkit/ingestInformationStoreRecords \
+	runEtlToolkitToolAsi2ETL bash -c "/opt/ibm/etltoolkit/ingestInformationStoreRecords \
     --importMappingsFile ${IMPORT_MAPPING_FILE} \
     --importMappingId ${import_id} \
     -importMode BULK"
@@ -104,15 +112,15 @@ done
 ###############################################################################
 print "Truncating the staging tables"
 for table_name in $(map_keys "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}"); do
-  csv_and_format_file_name=$(map_get "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}" "${table_name}")
-  sql_query="TRUNCATE TABLE ${STAGING_SCHEMA}.${table_name}"
-  case "${DB_DIALECT}" in
-    db2)
-      sql_query+=" IMMEDIATE;"
-      runDb2ServerCommandAsDb2inst1 runSQLQueryForDB "${sql_query}" "${DB_NAME}"
-      ;;
-    sqlserver)
-      runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
-      ;;
-  esac
+	csv_and_format_file_name=$(map_get "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}" "${table_name}")
+	sql_query="TRUNCATE TABLE ${STAGING_SCHEMA}.${table_name}"
+	case "${DB_DIALECT}" in
+	db2)
+		sql_query+=" IMMEDIATE;"
+		runDb2ServerCommandAsDb2inst1 runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+		;;
+	sqlserver)
+		runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+		;;
+	esac
 done

@@ -252,7 +252,7 @@ function runLiberty() {
   local ssl_ca_certificate
 
   if [[ "${ENVIRONMENT}" == "config-dev" ]]; then
-    if [[ "${AWS_ARTEFACTS}" == "true" ]]; then
+    if [[ "${AWS_ARTIFACTS}" == "true" ]]; then
       if isSecret "i2a/app-secrets"; then
         app_secrets=$(getSecret "i2a/app-secrets")
       fi
@@ -262,7 +262,7 @@ function runLiberty() {
       app_secrets="None"
     fi
 
-    if [[ "${AWS_ARTEFACTS}" == "true" ]]; then
+    if [[ "${AWS_ARTIFACTS}" == "true" ]]; then
       if isSecret "i2a/additional-trust-certificates"; then
         ssl_additional_trust_certificates=$(getSecret "i2a/additional-trust-certificates")
       fi
@@ -543,7 +543,7 @@ function runConnector() {
   local connector_tag="$4"
   local connector_path="${connector_name}"
 
-  if [[ "${AWS_ARTEFACTS}" == "true" ]]; then
+  if [[ "${AWS_ARTIFACTS}" == "true" ]]; then
     connector_path="${connector_name}-${connector_tag}"
   fi
 
@@ -560,6 +560,7 @@ function runConnector() {
     --network "${DOMAIN_NAME}" \
     --net-alias "${FQDN}" \
     -v "${connector_name}_secrets:${CONTAINER_SECRETS_DIR}" \
+    -e "CONNECTOR_ID=${connector_name}" \
     -e "SSL_ENABLED=${GATEWAY_SSL_CONNECTION}" \
     -e "SSL_PRIVATE_KEY=${ssl_private_key}" \
     -e "SSL_CERTIFICATE=${ssl_certificate}" \

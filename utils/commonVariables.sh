@@ -23,16 +23,14 @@
 # shellcheck disable=SC2034
 
 # This file defines variables that are shared between all environments.
-# It containes variables that may be changed by the end user,
+# It contains variables that may be changed by the end user,
 # but aren't supposed to be changed unless there is a good reason for it.
 # Examples:
 # - image & container names
 # - user names
-# NOTE: this file has a dependency on the requiredEnvironmentVariables.txt
+# NOTE: this file has a dependency on the requiredEnvironmentVariables.txt and commonFunctions.sh
 
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
-
-if [[ "$AWS_ARTEFACTS" == "true" ]]; then
+if [[ "$AWS_ARTIFACTS" == "true" ]]; then
   AWS_SECRETS="true"
   AWS_IMAGES="true"
   # aws cli [v2] - Default command output to a pager (https://github.com/aws/aws-cli/pull/4702)
@@ -61,7 +59,6 @@ if [[ "$AWS_IMAGES" == "true" ]]; then
   LOAD_BALANCER_IMAGE_NAME="ha_proxy_image"
   CONNECTOR_IMAGE_NAME="${ECR_BASE_NAME}/example_connector"
   CONNECTOR_IMAGE_BASE_NAME="${ECR_BASE_NAME}/"
-  I2CONNECT_SERVER_BASE_IMAGE_NAME="${ECR_BASE_NAME}/i2connect_sdk"
 else
   ZOOKEEPER_IMAGE_NAME="zookeeper_redhat"
   SOLR_IMAGE_NAME="solr_redhat"
@@ -76,7 +73,6 @@ else
   LOAD_BALANCER_IMAGE_NAME="ha_proxy_image"
   CONNECTOR_IMAGE_NAME="example_connector"
   CONNECTOR_IMAGE_BASE_NAME=""
-  I2CONNECT_SERVER_BASE_IMAGE_NAME="i2connect_sdk"
 fi
 REDHAT_UBI_IMAGE_NAME="registry.access.redhat.com/ubi8/ubi-minimal:8.6"
 

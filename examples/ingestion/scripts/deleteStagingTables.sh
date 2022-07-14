@@ -53,15 +53,15 @@ map_put "$SCHEMA_TYPE_ID_TO_TABLE_NAME" "ET8" "E_Communications_D"
 ###############################################################################
 print "Deleting the staging tables"
 for schema_type_id in $(map_keys "$SCHEMA_TYPE_ID_TO_TABLE_NAME"); do
-  for table_name in $(map_get "$SCHEMA_TYPE_ID_TO_TABLE_NAME" "$schema_type_id"); do
-    sql_query="DROP TABLE ${STAGING_SCHEMA}.${table_name}"
-    case "${DB_DIALECT}" in
-      db2)
-        runDb2ServerCommandAsDb2inst1 runSQLQueryForDB "${sql_query}" "${DB_NAME}"
-        ;;
-      sqlserver)
-        runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
-        ;;
-    esac
-  done
+	for table_name in $(map_get "$SCHEMA_TYPE_ID_TO_TABLE_NAME" "$schema_type_id"); do
+		sql_query="DROP TABLE ${STAGING_SCHEMA}.${table_name}"
+		case "${DB_DIALECT}" in
+		db2)
+			runDb2ServerCommandAsDb2inst1 runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+			;;
+		sqlserver)
+			runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+			;;
+		esac
+	done
 done

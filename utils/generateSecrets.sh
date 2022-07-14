@@ -27,7 +27,7 @@ function printUsage() {
   echo "Usage:"
   echo "  generateSecrets.sh -t generate [-c {all|core|connectors[-i <connector1_name>] [-e <connector1_name>]}] [-v]" 1>&2
   echo "  generateSecrets.sh -t clean [-v]" 1>&2
-  echo "  generateSecrets.sh -a -t {generate|clean} -l dependency_label [-v]" 1>&2
+  echo "  generateSecrets.sh -a -t {generate|clean} -l <dependency_label> [-v]" 1>&2
   echo "  generateSecrets.s -h" 1>&2
 }
 
@@ -48,7 +48,7 @@ function help() {
   echo "  -e <connector_name>   Names of the connectors to not generate secrets for. To specify multiple connectors, add additional -e options." 1>&2
   echo "  -l <dependency_label> Name of dependency image label to use on AWS." 1>&2
   echo "  -v                    Verbose output." 1>&2
-  echo "  -a                    Produce or use artefacts on AWS." 1>&2
+  echo "  -a                    Produce or use artifacts on AWS." 1>&2
   echo "  -h                    Display the help." 1>&2
   exit 1
 }
@@ -79,7 +79,7 @@ while getopts ":t:c:i:e:l:vahy" flag; do
     YES_FLAG="true"
     ;;
   a)
-    AWS_ARTEFACTS="true"
+    AWS_ARTIFACTS="true"
     ;;
   h)
     help
@@ -101,7 +101,7 @@ if [[ -z "${ENVIRONMENT}" ]]; then
   ENVIRONMENT="config-dev"
 fi
 
-if [[ "${AWS_ARTEFACTS}" && (-z "${I2A_DEPENDENCIES_IMAGES_TAG}") ]]; then
+if [[ "${AWS_ARTIFACTS}" && (-z "${I2A_DEPENDENCIES_IMAGES_TAG}") ]]; then
   usage
 fi
 
@@ -227,7 +227,7 @@ function createCertificates() {
   # Generate certificate signing request
   runJava openssl req -new -key "${KEY}" -subj "/CN=${FQDN}" -out "${TMP}"
   # Generate certificate
-  runJava openssl x509 -req -sha256 -CA "${CA_CER}" -CAkey "${CA_KEY}" -days "${CERTFICIATE_DURATION}" -CAcreateserial -CAserial "${CA_SRL}" -extfile "${EXT}" -extensions "${TYPE}" -in "${TMP}" -out "${CER}"
+  runJava openssl x509 -req -sha256 -CA "${CA_CER}" -CAkey "${CA_KEY}" -days "${CERTIFICATE_DURATION}" -CAcreateserial -CAserial "${CA_SRL}" -extfile "${EXT}" -extensions "${TYPE}" -in "${TMP}" -out "${CER}"
   # Clean up
   runJava chmod a+r "${KEY}" "${CER}" && runJava rm "${TMP}" "${CA_SRL}" "${EXT}"
 }

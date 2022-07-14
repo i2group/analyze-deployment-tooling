@@ -30,19 +30,52 @@ if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
   exit 1
 fi
 
+function printUsage() {
+  echo "Usage:"
+  echo "  createDevEnvironment.sh [-y]"
+  echo "  createDevEnvironment.sh -h" 1>&2
+}
+
+function usage() {
+  printUsage
+  exit 1
+}
+
+function help() {
+  printUsage
+  echo "Options:" 1>&2
+  echo "  -y                                     Answer 'yes' to all prompts." 1>&2
+  echo "  -h                                     Display the help." 1>&2
+  exit 1
+}
+
+while getopts ":yh" flag; do
+  case "${flag}" in
+  y)
+    YES_FLAG="true"
+    ;;
+  h)
+    help
+    ;;
+  \?)
+    usage
+    ;;
+  :)
+    echo "Invalid option: ${OPTARG} requires an argument"
+    ;;
+  esac
+done
+
 # Load common functions
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
-warnRootDirNotInPath
 
 # Load common variables
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulatedExternalVariables.sh"
 
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
 warnRootDirNotInPath
 
 print "Running createEnvironment.sh script"
-
 "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/createEnvironment.sh" -e "${ENVIRONMENT}"
 
 print "Running createConfiguration.sh"

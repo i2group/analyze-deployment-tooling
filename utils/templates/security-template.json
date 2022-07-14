@@ -2,20 +2,19 @@
   "authentication": {
     "blockUnknown": true,
     "class": "solr.BasicAuthPlugin",
-    "credentials":{
-    },
-    "realm":"My Solr users",
+    "credentials": {},
+    "realm": "My Solr users",
     "forwardCredentials": false
   },
   "authorization": {
-    "class":"solr.RuleBasedAuthorizationPlugin",
+    "class": "solr.RuleBasedAuthorizationPlugin",
     "user-role": {
       "solr": "admin",
       "liberty": "client"
     },
     "permissions": [
-      { "name": "security-edit", "role": "admin"},
-      { "name": "read", "role": "client"}
+      { "name": "security-edit", "role": "admin" },
+      { "name": "read", "role": "client" }
     ]
   }
 }

@@ -23,9 +23,9 @@
 FROM adoptopenjdk/openjdk11:ubi
 LABEL maintainer="i2 Group"
 
-ARG SOLR_VERSION="8.8.2"
-ARG SOLR_SHA512="2f0affa8ac1e913ec83c2c4b8dffd6b262140478d5aa33203ac01fd5efb695eb9b1661138ce0c549b050fa0aadeb0912b5838b94703e1cca74ecfacbb57bbaee"
-ARG SOLR_KEYS="86EDB9C33B8517228E88A8F93E48C0C6EF362B9E"
+ARG SOLR_VERSION="8.9.0"
+ARG SOLR_SHA512="15150b7f191fd9e8d2c1bd8bb619dd4b3f27af2e0e94b7609031f7e745a2e263391c30f68865c208afb97ccaa9bde6d16050200e9bfccef65f762c2ed743c242"
+ARG SOLR_KEYS="9722F25F650057E26C803B60A6D064D833B3A969"
 # If specified, this will override SOLR_DOWNLOAD_SERVER and all ASF mirrors. Typically used downstream for custom builds
 ARG SOLR_DOWNLOAD_URL
 
@@ -139,9 +139,9 @@ RUN set -ex; \
   # Remediate log4j vulnerability
   # CVE-2021-44228
   mkdir -p /opt/log4j; \
-  if [ -f "/opt/log4j/$LOG4J_BIN" ]; then break; fi; \
+  if [ ! -f "/opt/log4j/$LOG4J_BIN" ]; then \
   echo "downloading $LOG4J_ARCHIVE_URL"; \
-  if wget -t 10 --max-redirect $MAX_REDIRECTS --retry-connrefused -nv "$LOG4J_ARCHIVE_URL" -O "/opt/log4j/$LOG4J_BIN"; then break; else rm -f "/opt/log4j/$LOG4J_BIN"; fi; \
+  if ! wget -t 10 --max-redirect $MAX_REDIRECTS --retry-connrefused -nv "$LOG4J_ARCHIVE_URL" -O "/opt/log4j/$LOG4J_BIN"; then rm -f "/opt/log4j/$LOG4J_BIN"; fi; \
   if [ ! -f "/opt/log4j/$LOG4J_BIN" ]; then echo "failed all download attempts for $LOG4J_BIN"; exit 1; fi; \
   echo "downloading $LOG4J_BASE_URL/KEYS"; \
   wget -nv "$LOG4J_BASE_URL/KEYS" -O "/opt/log4j/KEYS"; \
@@ -152,32 +152,33 @@ RUN set -ex; \
   gpg --import /opt/log4j/KEYS; \
   gpg --batch --verify "/opt/log4j/$LOG4J_BIN.asc" "/opt/log4j/$LOG4J_BIN"; \
   tar -C /opt/log4j --extract --file "/opt/log4j/$LOG4J_BIN"; \
-  rm -f /opt/solr-$SOLR_VERSION/contrib/prometheus-exporter/lib/log4j-core-*.jar \
-    /opt/solr-$SOLR_VERSION/contrib/prometheus-exporter/lib/log4j-api-*.jar \
-    /opt/solr-$SOLR_VERSION/contrib/prometheus-exporter/lib/log4j-slf4j-impl-*.jar \
-    /opt/solr-$SOLR_VERSION/server/lib/ext/log4j-core-*.jar \
-    /opt/solr-$SOLR_VERSION/server/lib/ext/log4j-1.2-api-*.jar \
-    /opt/solr-$SOLR_VERSION/server/lib/ext/log4j-api-*.jar \
-    /opt/solr-$SOLR_VERSION/server/lib/ext/log4j-web-*.jar \
-    /opt/solr-$SOLR_VERSION/server/lib/ext/log4j-slf4j-impl-*.jar; \
-  cp /opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-core-${LOG4J_VER}.jar \
-    /opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-api-${LOG4J_VER}.jar \
-    /opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-slf4j-impl-${LOG4J_VER}.jar \
-    /opt/solr-$SOLR_VERSION/contrib/prometheus-exporter/lib/; \
-  cp /opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-core-${LOG4J_VER}.jar \
-    /opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-1.2-api-${LOG4J_VER}.jar \
-    /opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-api-${LOG4J_VER}.jar \
-    /opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-web-${LOG4J_VER}.jar \
-    /opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-slf4j-impl-${LOG4J_VER}.jar \
-    /opt/solr-$SOLR_VERSION/server/lib/ext/; \
+  rm -f "/opt/solr-$SOLR_VERSION/contrib/prometheus-exporter/lib/"log4j-core-*.jar \
+    "/opt/solr-$SOLR_VERSION/contrib/prometheus-exporter/lib/"log4j-api-*.jar \
+    "/opt/solr-$SOLR_VERSION/contrib/prometheus-exporter/lib/"log4j-slf4j-impl-*.jar \
+    "/opt/solr-$SOLR_VERSION/server/lib/ext/"log4j-core-*.jar \
+    "/opt/solr-$SOLR_VERSION/server/lib/ext/"log4j-1.2-api-*.jar \
+    "/opt/solr-$SOLR_VERSION/server/lib/ext/"log4j-api-*.jar \
+    "/opt/solr-$SOLR_VERSION/server/lib/ext/"log4j-web-*.jar \
+    "/opt/solr-$SOLR_VERSION/server/lib/ext/"log4j-slf4j-impl-*.jar; \
+  cp "/opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-core-${LOG4J_VER}.jar" \
+    "/opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-api-${LOG4J_VER}.jar" \
+    "/opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-slf4j-impl-${LOG4J_VER}.jar" \
+    "/opt/solr-$SOLR_VERSION/contrib/prometheus-exporter/lib/"; \
+  cp "/opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-core-${LOG4J_VER}.jar" \
+    "/opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-1.2-api-${LOG4J_VER}.jar" \
+    "/opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-api-${LOG4J_VER}.jar" \
+    "/opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-web-${LOG4J_VER}.jar" \
+    "/opt/log4j/apache-log4j-${LOG4J_VER}-bin/log4j-slf4j-impl-${LOG4J_VER}.jar" \
+    "/opt/solr-$SOLR_VERSION/server/lib/ext/"; \
   rm -rf /opt/log4j; \
+  fi; \
   # end log4j remediation
   { command -v gpgconf; gpgconf --kill all || :; }; \
   rm -r "$GNUPGHOME"
 
 COPY --chown=0:0 scripts /opt/docker-solr/scripts
 
-# IBM i2 jars for extending Solr
+# i2 jars for extending Solr
 COPY --chown=0:0 jars/solr-data /opt/i2-plugin/lib
 # Example to copy a custom solr.xml
 # COPY --chown=0:0 solr.xml /var/solr/data/solr.xml

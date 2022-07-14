@@ -29,6 +29,8 @@ if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
   exit 1
 fi
 
+# cspell:ignore organisation acessto
+
 # Load common functions
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
@@ -38,8 +40,8 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
-warnRootDirNotInPath
 
+warnRootDirNotInPath
 ###############################################################################
 # Etl variables                                                               #
 ###############################################################################
@@ -122,12 +124,12 @@ runEtlToolkitToolAsi2ETL bash -c "/opt/ibm/etltoolkit/addInformationStoreIngesti
 ###############################################################################
 print "Creating Information Store Staging Table(s)"
 for schema_type_id in $(map_keys "${SCHEMA_TYPE_ID_TO_TABLE_NAME}"); do
-  for table_name in $(map_get "${SCHEMA_TYPE_ID_TO_TABLE_NAME}" "${schema_type_id}"); do
-    runEtlToolkitToolAsi2ETL bash -c "/opt/ibm/etltoolkit/createInformationStoreStagingTable \
+	for table_name in $(map_get "${SCHEMA_TYPE_ID_TO_TABLE_NAME}" "${schema_type_id}"); do
+		runEtlToolkitToolAsi2ETL bash -c "/opt/ibm/etltoolkit/createInformationStoreStagingTable \
       --schemaTypeId ${schema_type_id} \
       --tableName ${table_name}  \
       --databaseSchemaName ${STAGING_SCHEMA}"
-  done
+	done
 done
 
 ###############################################################################
@@ -137,16 +139,16 @@ print "Inserting data into the staging tables"
 # To stop the variables being evaluated in this script, the variables are escaped using backslashes (\) and surrounded in double quotes (").
 # Any double quotes in the curl command are also escaped by a leading backslash.
 for table_name in $(map_keys "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}"); do
-  csv_and_format_file_name=$(map_get "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}" "${table_name}")
-  sql_query="\
+	csv_and_format_file_name=$(map_get "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}" "${table_name}")
+	sql_query="\
     BULK INSERT ${STAGING_SCHEMA}.${table_name} \
     FROM '/var/i2a-data/${BASE_DATA}/${csv_and_format_file_name}.csv' \
     WITH (FORMATFILE = '/var/i2a-data/${BASE_DATA}/sqlserver/format-files/${csv_and_format_file_name}.fmt', FIRSTROW = 2)"
-  runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+	runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
 done
 
 for import_id in "${BULK_IMPORT_MAPPING_IDS[@]}"; do
-  runEtlToolkitToolAsi2ETL bash -c "/opt/ibm/etltoolkit/ingestInformationStoreRecords \
+	runEtlToolkitToolAsi2ETL bash -c "/opt/ibm/etltoolkit/ingestInformationStoreRecords \
     --importMappingsFile ${IMPORT_MAPPING_FILE} \
     --importMappingId ${import_id} \
     -importMode BULK"
@@ -157,17 +159,17 @@ done
 ###############################################################################
 print "Inserting correlation data into the staging tables"
 for table_name in $(map_keys "${CORRELATED_DATA_TABLE_AND_FORMAT_FILE_NAME}"); do
-  csv_and_format_file_name=$(map_get "${CORRELATED_DATA_TABLE_AND_FORMAT_FILE_NAME}" "${table_name}")
-  sql_query="\
+	csv_and_format_file_name=$(map_get "${CORRELATED_DATA_TABLE_AND_FORMAT_FILE_NAME}" "${table_name}")
+	sql_query="\
     BULK INSERT ${STAGING_SCHEMA}.${table_name} \
     FROM '/var/i2a-data/${CORRELATION_BASE_DATA}/${csv_and_format_file_name}.csv' \
     WITH (FORMATFILE = '/var/i2a-data/${CORRELATION_BASE_DATA}/sqlserver/format-files/${csv_and_format_file_name}.fmt', FIRSTROW = 2)"
-  runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+	runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
 done
 
 print "Ingesting the CORRELATED data"
 for import_id in "${IMPORT_MAPPING_IDS[@]}"; do
-  runEtlToolkitToolAsi2ETL bash -c "/opt/ibm/etltoolkit/ingestInformationStoreRecords \
+	runEtlToolkitToolAsi2ETL bash -c "/opt/ibm/etltoolkit/ingestInformationStoreRecords \
     --importMappingsFile ${IMPORT_MAPPING_FILE} \
     --importMappingId ${import_id} \
     -importMode STANDARD"
@@ -175,10 +177,10 @@ done
 
 print "Cleaning the staging tables"
 for table_name in $(map_keys "${CORRELATED_DATA_TABLE_AND_FORMAT_FILE_NAME}"); do
-  csv_and_format_file_name=$(map_get "${CORRELATED_DATA_TABLE_AND_FORMAT_FILE_NAME}" "${table_name}")
-  sql_query="\
+	csv_and_format_file_name=$(map_get "${CORRELATED_DATA_TABLE_AND_FORMAT_FILE_NAME}" "${table_name}")
+	sql_query="\
     TRUNCATE Table ${STAGING_SCHEMA}.${table_name}"
-  runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+	runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
 done
 
 ###############################################################################
@@ -190,17 +192,17 @@ cp "${LOCAL_CONFIG_CHANGES_DIR}/person.csv" "${LOCAL_TOOLKIT_DIR}/examples/data/
 
 print "Inserting merge correlation data into into the staging tables"
 for table_name in $(map_keys "${CORRELATED_DATA_TABLE_AND_FORMAT_FILE_NAME}"); do
-  csv_and_format_file_name=$(map_get "${CORRELATED_DATA_TABLE_AND_FORMAT_FILE_NAME}" "${table_name}")
-  sql_query="\
+	csv_and_format_file_name=$(map_get "${CORRELATED_DATA_TABLE_AND_FORMAT_FILE_NAME}" "${table_name}")
+	sql_query="\
     BULK INSERT ${STAGING_SCHEMA}.${table_name} \
     FROM '/var/i2a-data/${CORRELATION_MERGE_DATA}/${csv_and_format_file_name}.csv' \
     WITH (FORMATFILE = '/var/i2a-data/${CORRELATION_MERGE_DATA}/sqlserver/format-files/${csv_and_format_file_name}.fmt', FIRSTROW = 2)"
-  runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+	runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
 done
 
 print "Ingesting the merge correlation data"
 for import_id in "${IMPORT_MAPPING_IDS[@]}"; do
-  runEtlToolkitToolAsi2ETL bash -c "/opt/ibm/etltoolkit/ingestInformationStoreRecords \
+	runEtlToolkitToolAsi2ETL bash -c "/opt/ibm/etltoolkit/ingestInformationStoreRecords \
     --importMappingsFile ${IMPORT_MAPPING_FILE} \
     --importMappingId ${import_id} \
     -importMode STANDARD"
@@ -211,11 +213,11 @@ done
 ###############################################################################
 print "Deleting the staging tables"
 for schema_type_id in $(map_keys "$SCHEMA_TYPE_ID_TO_TABLE_NAME"); do
-  for table_name in $(map_get "$SCHEMA_TYPE_ID_TO_TABLE_NAME" "$schema_type_id"); do
-    sql_query="\
+	for table_name in $(map_get "$SCHEMA_TYPE_ID_TO_TABLE_NAME" "$schema_type_id"); do
+		sql_query="\
       DROP TABLE ${STAGING_SCHEMA}.${table_name}"
-    runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
-  done
+		runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+	done
 done
 
 set +e

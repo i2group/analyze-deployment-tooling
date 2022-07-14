@@ -55,11 +55,11 @@ function help() {
   echo "  -t {connectors}                        Deploy or update the connectors" 1>&2
   echo "  -t {backup}                            Backup the database." 1>&2
   echo "  -t {restore}                           Restore the database." 1>&2
-  echo "  -t {package}                           Prepare production artefacts." 1>&2
+  echo "  -t {package}                           Prepare production artifacts." 1>&2
   echo "  -i <connector_name>|<extension_name>   Name of the connectors or extensions to deploy and update. To specify multiple values, add additional -i options." 1>&2
   echo "  -e <connector_name>|<extension_name>   Name of the connectors or extensions to not deploy and update. To specify multiple values, add additional -e options." 1>&2
   echo "  -b <backup_name>                       Name of the backup to create or restore. If not specified, the default backup is used." 1>&2
-  echo "  -a                                     Produce or use artefacts on AWS." 1>&2
+  echo "  -a                                     Produce or use artifacts on AWS." 1>&2
   echo "  -d <deployment_name>                   Name of deployment to use on AWS." 1>&2
   echo "  -l <dependency_label>                  Name of dependency image label to use on AWS." 1>&2
   echo "  -v                                     Verbose output." 1>&2
@@ -103,7 +103,7 @@ while getopts ":c:t:i:e:b:d:l:vayh" flag; do
     YES_FLAG="true"
     ;;
   a)
-    AWS_ARTEFACTS="true"
+    AWS_ARTIFACTS="true"
     ;;
   h)
     help
@@ -127,15 +127,21 @@ if [[ ! "${CONFIG_NAME}" =~ ^[0-9a-zA-Z_+\-]+$ ]]; then
   usage
 fi
 
-if [[ "${AWS_ARTEFACTS}" && (-z "${DEPLOYMENT_NAME}" || -z "${I2A_DEPENDENCIES_IMAGES_TAG}") ]]; then
+if [[ ! -d "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}" ]]; then
+  printf "\e[31mERROR: Config '%s' name does not exist in '%s' directory." "${CONFIG_NAME}" "${ANALYZE_CONTAINERS_ROOT_DIR}/configs\n" >&2
+  printf "\e[0m" >&2
   usage
 fi
 
-if [[ -z "${AWS_ARTEFACTS}" ]]; then
-  AWS_ARTEFACTS="false"
+if [[ "${AWS_ARTIFACTS}" && (-z "${DEPLOYMENT_NAME}" || -z "${I2A_DEPENDENCIES_IMAGES_TAG}") ]]; then
+  usage
 fi
 
-if [[ "${AWS_ARTEFACTS}" == "true" && "${TASK}" == "package" ]]; then
+if [[ -z "${AWS_ARTIFACTS}" ]]; then
+  AWS_ARTIFACTS="false"
+fi
+
+if [[ "${AWS_ARTIFACTS}" == "true" && "${TASK}" == "package" ]]; then
   EXTENSIONS_DEV="false"
 else
   EXTENSIONS_DEV="true"
@@ -162,9 +168,8 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
 
 # Load common variables
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/utils/variables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/version"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/utils/variables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulatedExternalVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
@@ -320,7 +325,7 @@ function configureZKForSolrCluster() {
   print "Configuring ZooKeeper cluster for Solr"
   runSolrClientCommand solr zk mkroot "/${SOLR_CLUSTER_ID}" -z "${ZK_MEMBERS}"
   if [[ "${SOLR_ZOO_SSL_CONNECTION}" == "true" ]]; then
-    runSolrClientCommand "/opt/solr-8.8.2/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clusterprop -name urlScheme -val https
+    runSolrClientCommand "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clusterprop -name urlScheme -val https
   fi
   runSolrClientCommand bash -c "echo \"\${SECURITY_JSON}\" > /tmp/security.json && solr zk cp /tmp/security.json zk:/security.json -z ${ZK_HOST}"
 }
@@ -337,6 +342,7 @@ function configureSolrCollections() {
   runSolrClientCommand solr zk upconfig -v -z "${ZK_HOST}" -n highlight_index -d /opt/configuration/solr/generated_config/highlight_index
   runSolrClientCommand solr zk upconfig -v -z "${ZK_HOST}" -n match_index1 -d /opt/configuration/solr/generated_config/match_index
   runSolrClientCommand solr zk upconfig -v -z "${ZK_HOST}" -n match_index2 -d /opt/configuration/solr/generated_config/match_index
+  runSolrClientCommand solr zk upconfig -v -z "${ZK_HOST}" -n vq_index -d /opt/configuration/solr/generated_config/vq_index
 }
 
 function deleteSolrCollections() {
@@ -350,10 +356,11 @@ function deleteSolrCollections() {
   runSolrClientCommand bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=DELETE&name=chart_index\""
   runSolrClientCommand bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=DELETE&name=daod_index\""
   runSolrClientCommand bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=DELETE&name=highlight_index\""
+  runSolrClientCommand bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=DELETE&name=vq_index\""
 
-  runSolrClientCommand "/opt/solr-8.8.2/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/main_index/collectionprops.json"
-  runSolrClientCommand "/opt/solr-8.8.2/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/match_index1/collectionprops.json"
-  runSolrClientCommand "/opt/solr-8.8.2/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/chart_index/collectionprops.json"
+  runSolrClientCommand "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/main_index/collectionprops.json"
+  runSolrClientCommand "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/match_index1/collectionprops.json"
+  runSolrClientCommand "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/chart_index/collectionprops.json"
 }
 
 function createSolrCollections() {
@@ -367,6 +374,7 @@ function createSolrCollections() {
   runSolrClientCommand bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=chart_index&collection.configName=chart_index&numShards=1&maxShardsPerNode=4&replicationFactor=1\""
   runSolrClientCommand bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=daod_index&collection.configName=daod_index&numShards=1&maxShardsPerNode=4&replicationFactor=1\""
   runSolrClientCommand bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=highlight_index&collection.configName=highlight_index&numShards=1&maxShardsPerNode=4&replicationFactor=1\""
+  runSolrClientCommand bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=vq_index&collection.configName=vq_index&numShards=1&maxShardsPerNode=4&replicationFactor=1\""
 }
 
 function createDatabase() {
@@ -459,6 +467,7 @@ function initializeSQLServer() {
 
 function deploySecureSQLServer() {
   runSQLServer
+
   waitForSQLServerToBeLive "true"
   changeSAPassword
 }
@@ -606,24 +615,161 @@ function createDeployment() {
 }
 
 ###############################################################################
+# Upgrade Helper Functions                                                    #
+###############################################################################
+
+function updateConfigVersion() {
+  local version="$1"
+  sed -i "s/I2ANALYZE_VERSION=.*/I2ANALYZE_VERSION=${version}/g" "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/version"
+}
+
+function upgrade() {
+  waitForUserReply "The '${CONFIG_NAME}' config will be upgraded. You cannot revert the upgrade. Are you sure you want to continue?"
+
+  # Validate Configuration
+  validateMandatoryFilesPresent
+
+  # Restart Docker containers
+  restartDockerContainersForConfig "${CONFIG_NAME}"
+
+  extra_args=()
+  if [[ "${VERBOSE}" == "true" ]]; then
+    extra_args+=("-v")
+  fi
+  "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/createChangeSet.sh" -e "${ENVIRONMENT}" -c "${CONFIG_NAME}" -t "upgrade" "${extra_args[@]}"
+
+  updateConfigVersion "${CURRENT_I2ANALYZE_VERSION}"
+
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/version"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/utils/variables.sh"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulatedExternalVariables.sh"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
+
+  # Delete old containers
+  stopConfigDevContainers
+  removeAllContainersForTheConfig "${CONFIG_NAME}"
+  removeDockerVolumes
+
+  initializeDeployment
+
+  # Running Solr and ZooKeeper
+  deployZKCluster
+  configureZKForSolrCluster
+  deploySolrCluster
+
+  # Configuring Solr and ZooKeeper
+  waitForSolrToBeLive "${SOLR1_FQDN}"
+  configureSolrCollections
+  createSolrCollections
+  updateStateFile "1"
+
+  if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
+    BACKUP_NAME="global-upgrade"
+    restoreDatabase
+    upgradeDatabase
+  fi
+  updateStateFile "2"
+
+  upgradeConnectors
+
+  # Upgrading extensions need to happen before liberty since they are baked into the image
+  upgradeExtensions
+  upgradeLiberty
+  updateStateFile "4"
+
+  print "Upgraded Successfully"
+  echo "This application is configured for access on ${FRONT_END_URI}"
+}
+
+function upgradeDatabase() {
+  print "Upgrading Database"
+
+  case "${DB_DIALECT}" in
+  db2)
+    echo "DB2 is not supported"
+    ;;
+  sqlserver)
+    runSQLServerCommandAsDBA "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/upgrade"
+    ;;
+  esac
+}
+
+function upgradeSolr() {
+  print "Upgrading Solr"
+
+  runSolrClientCommand solr zk upconfig -v -z "${ZK_HOST}" -n vq_index -d /opt/configuration/solr/generated_config/vq_index
+  runSolrClientCommand bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=vq_index&collection.configName=vq_index&numShards=1&maxShardsPerNode=4&replicationFactor=2\""
+}
+
+function upgradeLiberty() {
+  deployLiberty
+  updateLog4jFile
+  addConfigAdmin
+  loginToLiberty
+}
+
+function upgradeExtensionPomXML() {
+  local pom_path="$1"
+
+  # Rename dependency 'guice-throwing-providers' to 'guice-throwingproviders'
+  xmlstarlet edit -L \
+    --update "/project/dependencies/dependency[artifactId='guice-throwing-providers']/artifactId" --value "guice-throwingproviders" \
+    "${pom_path}"
+
+  # Delete dependency icu4j
+  xmlstarlet edit -L \
+    --delete "/project/dependencies/dependency[artifactId='icu4j']" \
+    "${pom_path}"
+}
+
+function upgradeExtensions() {
+  local extension_references_file="${LOCAL_USER_CONFIG_DIR}/extension-references.json"
+
+  print "Upgrading Extensions"
+
+  readarray -t extension_names < <(jq -r '.extensions[].name' <"${extension_references_file}")
+  for extension_name in "${extension_names[@]}"; do
+    upgradeExtensionPomXML "${ANALYZE_CONTAINERS_ROOT_DIR}/i2a-extensions/${extension_name}/pom.xml"
+  done
+}
+
+function upgradeConnectors() {
+  print "Upgrading Connectors"
+
+  # Override Dockerfile with latest template
+  for connector_path in "${CONNECTOR_IMAGES_DIR}"/*; do
+    if [[ -d "${connector_path}" ]]; then
+      connector_type=$(jq -r '.type' <"${connector_path}/connector-definition.json")
+
+      # Upgrade Dockerfile
+      if [[ "${connector_type}" == "${I2CONNECT_SERVER_CONNECTOR_TYPE}" ]]; then
+        cp "${ANALYZE_CONTAINERS_ROOT_DIR}/templates/i2connect-server-connector-image/Dockerfile" "${connector_path}/Dockerfile"
+      fi
+    fi
+  done
+  updateConnectors
+}
+
+###############################################################################
 # Update Helper Functions                                                     #
 ###############################################################################
 
 function notifyUpdateUserRegistry() {
   printInfo "Updating user.registry.xml on i2 Analyze Application"
   if curl \
+    -L --max-redirs 5 -w "%{http_code}" \
     -s -o "/tmp/response.txt" \
     --cacert "${LOCAL_EXTERNAL_CA_CERT_DIR}/CA.cer" \
-    --write-out "%{http_code}" \
     --cookie /tmp/cookie.txt \
     --header 'Content-Type: application/json' \
     --data-raw "{\"params\":[{\"value\" : [\"\"],\"type\" : {\"className\":\"java.util.ArrayList\",\"items\":[\"java.lang.String\"]}},{\"value\" : [\"/opt/ibm/wlp/usr/shared/config/user.registry.xml\"],\"type\" : {\"className\":\"java.util.ArrayList\",\"items\":[\"java.lang.String\"]}},{\"value\" : [\"\"],\"type\" : {\"className\":\"java.util.ArrayList\",\"items\":[\"java.lang.String\"]}}],\"signature\":[\"java.util.Collection\",\"java.util.Collection\",\"java.util.Collection\"]}" \
     --request POST "${BASE_URI}/IBMJMXConnectorREST/mbeans/WebSphere%3Aservice%3Dcom.ibm.ws.kernel.filemonitor.FileNotificationMBean/operations/notifyFileChanges" \
     >/tmp/http_code.txt; then
     # Invoking FileNotificationMBean doc: https://www.ibm.com/docs/en/zosconnect/3.0?topic=demand-invoking-filenotificationmbean-from-rest-api
-    http_status_code=$(cat /tmp/http_code.txt)
-    if [[ "${http_status_code}" != 200 ]]; then
-      printErrorAndExit "Problem updating user.registry.xml application. Returned:${http_status_code}"
+    http_code=$(cat /tmp/http_code.txt)
+    if [[ "${http_code}" != 200 ]]; then
+      printErrorAndExit "Problem updating user.registry.xml application. Returned:${http_code}"
     else
       printInfo "Response from i2 Analyze Web UI:$(cat /tmp/response.txt)"
     fi
@@ -644,6 +790,7 @@ function updateLiveConfiguration() {
 
   print "Calling reload endpoint"
   if curl \
+    -L --max-redirs 5 \
     -s -o /tmp/response.txt -w "%{http_code}" \
     --cookie /tmp/cookie.txt \
     --cacert "${LOCAL_EXTERNAL_CA_CERT_DIR}/CA.cer" \
@@ -668,6 +815,7 @@ function callGatewayReload() {
   loginToLiberty
   print "Calling gateway reload endpoint"
   if curl \
+    -L --max-redirs 5 \
     -s -o /tmp/response.txt -w "%{http_code}" \
     --cookie /tmp/cookie.txt \
     --cacert "${LOCAL_EXTERNAL_CA_CERT_DIR}/CA.cer" \
@@ -694,9 +842,9 @@ function loginToLiberty() {
 
   printInfo "Getting Auth cookie"
   for i in $(seq 1 "${MAX_TRIES}"); do
+    # Don't follow redirects on this curl command since we expect login as 302 (redirect status code)
     if curl \
-      -s -o /tmp/response.txt \
-      --write-out "%{http_code}" \
+      -s -o /tmp/response.txt -w "%{http_code}" \
       --cookie-jar /tmp/cookie.txt \
       --cacert "${LOCAL_EXTERNAL_CA_CERT_DIR}/CA.cer" \
       --request POST "${BASE_URI}/IBMJMXConnectorREST/j_security_check" \
@@ -704,11 +852,11 @@ function loginToLiberty() {
       --header 'Content-Type: application/x-www-form-urlencoded' \
       --data-urlencode "j_username=${I2_ANALYZE_ADMIN}" \
       --data-urlencode "j_password=${app_admin_password}" >/tmp/http_code.txt; then
-      http_status_code=$(cat /tmp/http_code.txt)
-      if [[ "${http_status_code}" -eq 302 ]]; then
+      http_code=$(cat /tmp/http_code.txt)
+      if [[ "${http_code}" == "302" ]]; then
         echo "Logged in to Liberty server" && return 0
       else
-        printInfo "Failed login with status code:${http_status_code}"
+        printInfo "Failed login with status code:${http_code}"
       fi
     fi
     echo "Liberty is NOT live (attempt: $i). Waiting..."
@@ -723,17 +871,17 @@ function controlApplication() {
   local operation="$1"
   printInfo "Running '${operation}' on i2 Analyze Application"
   if curl \
-    -s -o "/tmp/response.txt" \
+    -L --max-redirs 5 \
+    -s -o "/tmp/response.txt" -w "%{http_code}" \
     --cacert "${LOCAL_EXTERNAL_CA_CERT_DIR}/CA.cer" \
-    --write-out "%{http_code}" \
     --cookie /tmp/cookie.txt \
     --header 'Content-Type: application/json' \
     --data-raw '{}' \
     --request POST "${BASE_URI}/IBMJMXConnectorREST/mbeans/WebSphere%3Aname%3Dopal-services%2Cservice%3Dcom.ibm.websphere.application.ApplicationMBean/operations/${operation}" \
     >/tmp/http_code.txt; then
-    http_status_code=$(cat /tmp/http_code.txt)
-    if [[ "${http_status_code}" != 200 ]]; then
-      printErrorAndExit "Problem restarting application. Returned:${http_status_code}"
+    http_code=$(cat /tmp/http_code.txt)
+    if [[ "${http_code}" != 200 ]]; then
+      printErrorAndExit "Problem restarting application. Returned:${http_code}"
     else
       printInfo "Response from i2 Analyze Web UI:$(cat /tmp/response.txt)"
     fi
@@ -785,7 +933,7 @@ function copyLocalConfigToTheLibertyContainer() {
 
   docker exec "${LIBERTY1_CONTAINER_NAME}" bash -c "export CONNECTOR_URL_MAP='${connector_url_map_new}'; \
     rm /opt/ibm/wlp/usr/servers/defaultServer/apps/opal-services.war/WEB-INF/classes/connectors.json; \
-    rm /opt/ibm/wlp/usr/servers/defaultServer/apps/opal-services.war/allready_run; \
+    rm /opt/ibm/wlp/usr/servers/defaultServer/apps/opal-services.war/already_run; \
     /opt/create-connector-config.sh"
 }
 
@@ -843,45 +991,32 @@ function updateSchema() {
     printInfo "Stopping Liberty container"
     stopApplication
 
-    printInfo "Validating the schema"
+    "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/createChangeSet.sh" -c "${CONFIG_NAME}" -t "update"
+
     if ! runi2AnalyzeTool "/opt/i2-tools/scripts/validateSchemaAndSecuritySchema.sh" >'/tmp/result_validate_security_schema'; then
       startApplication
-      echo "[INFO] Response from i2 Analyze Tool: $(cat '/tmp/result_validate_security_schema')"
-      # check i2 Analyze Tool for output indicating a Schema change has occured, if so then prompt user for destructive
-      # rebuild of ISTORE database.
-      #
-      # Note the error message from i2 Analyze is currently not great and incorrectly indicates that the 'Schema file
-      # is not valid', what it really means is its not valid for the current deployment and thus must be re-deployed via
-      # a destructive change to the ISTORE database.
       if grep -q 'ERROR: The new Schema file is not valid, see the summary for more details.' '/tmp/result_validate_security_schema'; then
-        echo "[WARN] Destructive Schema change(s) detected"
         destructiveSchemaOrSecuritySchemaChange
-        echo "[INFO] Destructive Schema change(s) complete"
       else
+        echo "Response from i2 Analyze Tool: $(cat '/tmp/result_validate_security_schema')"
         printErrorAndExit "${errors_message}"
       fi
-    else
-      deleteFolderIfExists "${LOCAL_GENERATED_DIR}/update"
-
-      printInfo "Generating update schema scripts"
-      runi2AnalyzeTool "/opt/i2-tools/scripts/generateUpdateSchemaScripts.sh"
-      if [ -d "${LOCAL_GENERATED_DIR}/update" ]; then
-        if [ "$(ls -A "${LOCAL_GENERATED_DIR}/update")" ]; then
-          printInfo "Running the generated scripts"
-          case "${DB_DIALECT}" in
-          db2)
-            runDb2ServerCommandAsDb2inst1 "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
-            ;;
-          sqlserver)
-            runSQLServerCommandAsDBA "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
-            ;;
-          esac
-        else
-          printInfo "No files present in update schema scripts folder"
-        fi
+    elif [ -d "${LOCAL_GENERATED_DIR}/update" ]; then
+      if [ "$(ls -A "${LOCAL_GENERATED_DIR}/update")" ]; then
+        print "Running the generated scripts"
+        case "${DB_DIALECT}" in
+        db2)
+          runDb2ServerCommandAsDb2inst1 "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
+          ;;
+        sqlserver)
+          runSQLServerCommandAsDBA "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
+          ;;
+        esac
       else
-        printInfo "Update schema scripts folder doesn't exist"
+        print "No files present in update schema scripts folder"
       fi
+    else
+      print "Update schema scripts folder doesn't exist"
     fi
   fi
 }
@@ -901,7 +1036,7 @@ function updateSecuritySchema() {
     if ! runi2AnalyzeTool "/opt/i2-tools/scripts/updateSecuritySchema.sh" >'/tmp/result_update_security_schema'; then
       startApplication
       echo "[INFO] Response from i2 Analyze Tool: $(cat '/tmp/result_update_security_schema')"
-      # check i2 Analyze Tool for output indicating a Security Schema change has occured, if so then prompt user for destructive
+      # check i2 Analyze Tool for output indicating a Security Schema change has occurred, if so then prompt user for destructive
       # rebuild of ISTORE database.
       if grep -q 'ILLEGAL STATE: The new security schema has incompatible differences with the existing one' '/tmp/result_update_security_schema'; then
         echo "[WARN] Destructive Security Schema change(s) detected"
@@ -1036,12 +1171,22 @@ function handleDeploymentPatternChange() {
 function handleExtensionChange() {
   local jars_liberty_path="liberty/wlp/usr/servers/defaultServer/apps/opal-services.war/WEB-INF/lib"
   local extension_references_file="${LOCAL_USER_CONFIG_DIR}/extension-references.json"
-  local extension_files
+  local old_extension_references_file="${PREVIOUS_CONFIGURATION_PATH}/extension-references.json"
+  local extension_files old_extension_files deleted_extensions
   local filename
 
   print "Updating i2Analyze extensions"
-
   # Remove jars that aren't there anymore
+  if [[ -d "${PREVIOUS_CONFIGURATION_PATH}" ]]; then
+    readarray -t extension_files < <(jq -r '.extensions[] | .name + "-" + .version' <"${extension_references_file}")
+    readarray -t old_extension_files < <(jq -r '.extensions[] | .name + "-" + .version' <"${old_extension_references_file}")
+    # Compute deleted extensions
+    IFS=' ' read -r -a deleted_extensions <<<"$(subtractArrayFromArray extension_files old_extension_files)"
+
+    for filename in "${deleted_extensions[@]}"; do
+      rm "${LOCAL_LIB_DIR}/${filename}.jar"
+    done
+  fi
   if [[ -d "${PREVIOUS_CONFIGURATION_LIB_PATH}" ]]; then
     for path in "${PREVIOUS_CONFIGURATION_LIB_PATH}"/*; do
       if [[ ! -e "${path}" ]]; then
@@ -1212,11 +1357,11 @@ function updateConnectors() {
     connector_args+=(-v)
   fi
 
-  if [[ "${AWS_ARTEFACTS}" == "true" ]]; then
+  if [[ "${AWS_ARTIFACTS}" == "true" ]]; then
     print "Running generateSecrets.sh"
     "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/generateSecrets.sh" -a -l "${I2A_DEPENDENCIES_IMAGES_TAG}" -c connectors "${connector_args[@]}"
     print "Running buildConnectorImages.sh"
-    "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/buildConnectorImages.sh" -a -d "${DEPLOYMENT_NAME}" -l "${I2A_DEPENDENCIES_IMAGES_TAG}" "${connector_args[@]}"
+    "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/buildConnectorImages.sh" -a -d "${DEPLOYMENT_NAME}" "${connector_args[@]}"
   else
     print "Running generateSecrets.sh"
     "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/generateSecrets.sh" -c connectors "${connector_args[@]}"
@@ -1231,7 +1376,7 @@ function updateConnectors() {
 
 function initializeDeployment() {
   printInfo "Initializing deployment"
-  if [[ "${AWS_ARTEFACTS}" = "true" ]]; then
+  if [[ "${AWS_ARTIFACTS}" = "true" ]]; then
     aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ECR_BASE_NAME}"
   fi
 
@@ -1307,8 +1452,20 @@ function workOutTaskToRun() {
     print "Current Deployment is NOT healthy"
     TASK="update"
   elif [[ "${STATE}" == "4" ]]; then
-    print "Updating deployment"
-    TASK="update"
+    source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/version"
+    CONFIG_I2ANALYZE_VERSION="${I2ANALYZE_VERSION}"
+    source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
+    CURRENT_I2ANALYZE_VERSION="${I2ANALYZE_VERSION}"
+    if [[ "${CONFIG_I2ANALYZE_VERSION}" != "${CURRENT_I2ANALYZE_VERSION}" ]]; then
+      print "Upgrading deployment"
+      if [[ "${CONFIG_I2ANALYZE_VERSION}" < "4.3.4.0" ]]; then
+        printErrorAndExit "Upgrade from i2 Analyze version ${CONFIG_I2ANALYZE_VERSION} is not supported"
+      fi
+      TASK="upgrade"
+    else
+      print "Updating deployment"
+      TASK="update"
+    fi
   fi
 
   if [[ "${TASK}" == "update" ]]; then
@@ -1339,6 +1496,7 @@ function runTopLevelChecks() {
 
 function printDeploymentInformation() {
   print "Deployment Information:"
+  echo "ANALYZE_CONTAINERS_ROOT_DIR: ${ANALYZE_CONTAINERS_ROOT_DIR}"
   echo "CONFIG_NAME: ${CONFIG_NAME}"
   echo "DEPLOYMENT_PATTERN: ${DEPLOYMENT_PATTERN}"
 }
@@ -1359,6 +1517,9 @@ function runTask() {
     ;;
   "restore")
     restoreFromBackup
+    ;;
+  "upgrade")
+    upgrade
     ;;
   esac
 }
@@ -1386,14 +1547,14 @@ createDockerNetwork "${DOMAIN_NAME}"
 if [[ -z "${TASK}" ]]; then
   runNormalDeployment
 elif [[ "${TASK}" == "connectors" ]]; then
-  #Get connectors uptodate
+  #Get connectors up to date
   updateConnectors
   #Run normal deployment
   runNormalDeployment
   #Reload gateway
   callGatewayReload
 elif [[ "${TASK}" == "extensions" ]]; then
-  #Get extensions uptodate
+  #Get extensions up to date
   deployExtensions
   #Run normal deployment
   runNormalDeployment

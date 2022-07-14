@@ -76,7 +76,7 @@ LOAD_BALANCER_SECRETS_VOLUME_NAME="${LOAD_BALANCER_HOST_NAME}_secrets"
 # Security configuration                                                      #
 ###############################################################################
 CA_DURATION="90"
-CERTFICIATE_DURATION="90"
+CERTIFICATE_DURATION="90"
 CERTIFICATE_KEY_SIZE=4096
 CA_KEY_SIZE=4096
 I2_ANALYZE_CERT_FOLDER_NAME="i2analyze"
@@ -170,7 +170,7 @@ PRE_PROD_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod"
 LOCAL_CONFIG_CHANGES_DIR="${PRE_PROD_DIR}/walkthroughs/change-management/configuration-changes"
 
 ###############################################################################
-# Localisation variables                                                      #
+# Localization variables                                                      #
 ###############################################################################
 SOLR_LOCALE="en_US"
 

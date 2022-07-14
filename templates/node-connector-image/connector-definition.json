@@ -1,7 +1,8 @@
 {
-    "id": "template-connector",
-    "name": "Template Connector",
-    "description": "Template Connector Description",
-    "configurationPath": "/config",
-    "gatewaySchema": "template-schema"
+  "id": "template-connector",
+  "name": "Template Connector",
+  "description": "Template Connector Description",
+  "configurationPath": "/config",
+  "gatewaySchema": "template-schema",
+  "sendSensitiveHeaders": "false"
 }

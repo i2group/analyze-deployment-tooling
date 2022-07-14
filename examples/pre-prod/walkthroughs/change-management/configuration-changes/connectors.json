@@ -1,16 +1,16 @@
 {
   "connectors": [
-      {
-        "id": "example-connector1",
-        "name": "Example Connector 1",
-        "description": "",
-        "baseUrl": "https://exampleconnector1.eia:3443/"
-      },
-      {
-        "id": "example-connector2",
-        "name": "Example Connector 2",
-        "description": "New add connector as part of add connector walkthrough",
-        "baseUrl": "https://exampleconnector2.eia:3443/"
+    {
+      "id": "example-connector1",
+      "name": "Example Connector 1",
+      "description": "",
+      "baseUrl": "https://exampleconnector1.eia:3443/"
+    },
+    {
+      "id": "example-connector2",
+      "name": "Example Connector 2",
+      "description": "New add connector as part of add connector walkthrough",
+      "baseUrl": "https://exampleconnector2.eia:3443/"
     }
   ]
 }

@@ -122,13 +122,14 @@ function help() {
   echo "  -t {prepare}                 Prepares an existing i2 Analyze deployment toolkit configuration to be imported into the config development environment." 1>&2
   echo "  -t {export}                  Export a config development environment configuration to an i2 Analyze deployment toolkit configuration." 1>&2
   echo "  -t {import}                  Import an i2 Analyze deployment toolkit configuration to a config development environment configuration." 1>&2
+  echo "  -y                           Answer 'yes' to all prompts." 1>&2
   echo "  -v                           Verbose output." 1>&2
   echo "  -h                           Display the help." 1>&2
   exit 1
 }
 
 function parseArguments() {
-  while getopts ":t:c:p:vh" flag; do
+  while getopts ":t:c:p:vyh" flag; do
     case "${flag}" in
     t)
       TASK="${OPTARG}"
@@ -142,6 +143,9 @@ function parseArguments() {
       ;;
     v)
       VERBOSE="true"
+      ;;
+    y)
+      YES_FLAG="true"
       ;;
     h)
       help
@@ -181,12 +185,10 @@ function sourceCommonVariablesAndScripts() {
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
 
   # Load common variables
-  source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
-  source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/utils/variables.sh"
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulatedExternalVariables.sh"
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
-  warnRootDirNotInPath
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/utils/variables.sh"
 }
 
 function checkFileExistsOrError() {
@@ -624,11 +626,6 @@ function exportConfig() {
     # Exclude files from copy
     rm "${LOCAL_CONFIG_DIR}/fragments/common/WEB-INF/classes/analyze-connect.properties"
     rm "${LOCAL_CONFIG_DIR}/fragments/common/WEB-INF/classes/ApolloServerSettingsConfigurationSet.properties"
-    # Temporarily add required setting to ApolloServerSettingsMandatory
-    apollo_server_settings_file_path="${LOCAL_CONFIG_DIR}/fragments/common/WEB-INF/classes/ApolloServerSettingsMandatory.properties"
-    if ! grep -xq "UserGroupsProvider=.*" "${apollo_server_settings_file_path}"; then
-      addToPropertiesFile "UserGroupsProvider=com.i2group.disco.user.WebSphereUserGroupsProvider" "${apollo_server_settings_file_path}"
-    fi
   fi
 
   # Check deployment pattern and exclude certain files from copy
@@ -666,5 +663,6 @@ validateArguments
 setDefaults
 runTopLevelChecks
 sourceCommonVariablesAndScripts
+warnRootDirNotInPath
 runLowLevelChecks
 runTask

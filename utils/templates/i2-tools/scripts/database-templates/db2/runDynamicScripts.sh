@@ -40,6 +40,7 @@ db2 -tsf "${DB2_DYNAMIC_DIR}/1000-create-item-tables.sql"
 db2 -tsf "${DB2_DYNAMIC_DIR}/1010-create-item-tables-indexes.sql"
 db2 -tsf "${DB2_DYNAMIC_DIR}/1020-create-item-provenance-tables.sql"
 db2 -tsf "${DB2_DYNAMIC_DIR}/1030-create-item-provenance-tables-indexes.sql"
+db2 -tsf "${DB2_DYNAMIC_DIR}/1040-create-item-source-identifier-tables.sql"
 db2 -tsf "${DB2_DYNAMIC_DIR}/1200-create-item-correlation-tables.sql"
 db2 -tsf "${DB2_DYNAMIC_DIR}/1210-create-item-correlation-tables-indexes.sql"
 db2 -tsf "${DB2_DYNAMIC_DIR}/1220-create-item-provenance-extension-tables.sql"
@@ -55,19 +56,23 @@ db2 -tsf "${DB2_DYNAMIC_DIR}/1600-create-item-views.sql"
 db2 -tsf "${DB2_DYNAMIC_DIR}/1610-create-retrieval-views.sql"
 db2 -tsf "${DB2_DYNAMIC_DIR}/1620-create-provenance-views.sql"
 db2 -tsf "${DB2_DYNAMIC_DIR}/1630-create-links-view.sql"
+db2 -tsf "${DB2_DYNAMIC_DIR}/1640-create-source-identifier-views.sql"
 db2 -tsf "${DB2_DYNAMIC_DIR}/G010-register-item-geo-columns.sql"
 
 # Run static scripts
 db2 -tsf "${DB2_STATIC_DIR}/P010-create-public-ingestion-report-views.sql"
 db2 -tsf "${DB2_STATIC_DIR}/P020-create-public-deletion-by-rule-views.sql"
 db2 -tsf "${DB2_STATIC_DIR}/P030-create-public-upgrade-views.sql"
+db2 -tsf "${DB2_STATIC_DIR}/P040-create-public-third-party-notifications-routines.sql" || echo "Temporarily Ignoring Failure"
+db2 -tsf "${DB2_STATIC_DIR}/P050-create-public-third-party-notifications-view.sql"
+db2 -tsf "${DB2_STATIC_DIR}/P060-create-public-chart-views.sql"
 db2 -tsf "${DB2_STATIC_DIR}/P310-create-public-deletion-by-rule-routines.sql"
 db2 -tsf "${DB2_STATIC_DIR}/P510-grant-deletion-by-rule-permissions.sql"
 db2 -tsf "${DB2_STATIC_DIR}/T020-create-toolkit-routines.sql"
 db2 -tsf "${DB2_STATIC_DIR}/X010-populate-configuration-tables.sql"
 db2 -tsf "${DB2_STATIC_DIR}/X011-set-data-source-id.sql"
 
-# The following will generate a warning on clean install 
+# The following will generate a warning on clean install
 # +w flag will ensure it doesn't return non-zero exit code.
 db2 +w -tsf "${DB2_STATIC_DIR}/update_version.sql"
 

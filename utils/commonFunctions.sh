@@ -25,6 +25,37 @@
 # Function definitions start here                                             #
 ###############################################################################
 
+function startContainer() {
+  local container_name_or_id="$1"
+  local container_id
+  local container_name
+  local max_retries=10
+
+  # identify if name or id supplied as $1 exists
+  container_id="$(docker ps -aq -f network="${DOMAIN_NAME}" -f name="^${container_name_or_id}$")"
+  if [[ -z "${container_id}" ]]; then
+    container_id="$(docker ps -aq -f network="${DOMAIN_NAME}" -f id="${container_name_or_id}")"
+    if [[ -z "${container_id}" ]]; then
+      printInfo "${container_name_or_id} does NOT exist"
+      return 0
+    fi
+  fi
+  container_name="$(docker ps -a --format "{{.Names}}" -f id="${container_id}")"
+  container_status="$(docker ps -a --format "{{.Status}}" -f name="^${container_name}$")"
+  if [[ "${container_status}" != "Up" ]]; then
+    print "Starting ${container_name} container"
+    while ! docker start "${container_name_or_id}"; do
+      if (("${max_retries}" == 0)); then
+        printErrorAndExit "Unable to stop container '${container_name}', exiting script"
+      else
+        echo "[WARN] Having issues stopping container '${container_name}', retrying..."
+        ((max_retries = "${max_retries}" - 1))
+      fi
+      sleep 1s
+    done
+  fi
+}
+
 function deleteContainer() {
   local container_name_or_id="$1"
   local container_id
@@ -568,9 +599,11 @@ function geti2AnalyzeServiceStatus() {
       fi
     else
       echo "Empty response from the load balancer stats page (${LOAD_BALANCER_STATS_URI})"
+      return
     fi
   else
     echo "Response from the load balancer stats page (${LOAD_BALANCER_STATS_URI}) is not OK. We are getting: ${load_balancer_stats_status_code}"
+    return
   fi
   # IF you get here i2 Analyze Service is UP
   echo "ACTIVE"

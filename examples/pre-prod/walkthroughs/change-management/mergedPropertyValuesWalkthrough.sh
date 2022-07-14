@@ -38,8 +38,8 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
-warnRootDirNotInPath
 
+warnRootDirNotInPath
 ###############################################################################
 # Enabling merged property values                                             #
 ###############################################################################
@@ -58,4 +58,4 @@ runSQLServerCommandAsDBA bash -c "${SQLCMD} ${SQLCMD_FLAGS} -S \${DB_SERVER},\${
 # Reingesting the data                                                       #
 ###############################################################################
 print "Reingesting the data"
-"${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/walkthroughs/change-management/ingestDataWalkthrough.sh"
+"${PRE_PROD_DIR}/walkthroughs/change-management/ingestDataWalkthrough.sh"

@@ -51,7 +51,10 @@ COPY --chown=1001:0 environment.sh /opt/environment.sh
 ENV APOLLO_DATA_DIR=/data
 
 USER root
-RUN yum -y install jq
+
+RUN yum update -y --nobest \
+  && yum install -y jq \
+  && yum clean all
 
 RUN mkdir ${APOLLO_DATA_DIR} \
     && chmod -R g+rw ${APOLLO_DATA_DIR} \

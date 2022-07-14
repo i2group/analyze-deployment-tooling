@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # MIT License
 #
 # Copyright (c) 2022, N. Harris Computer Corporation
@@ -20,18 +21,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-FROM registry.access.redhat.com/ubi8/nodejs-14
-ARG I2CONNECT_SERVER_VERSION=^1.0.0
+set -e
 
-LABEL maintainer="i2 Group"
-USER 0
+source "$(dirname "$0")/utils/common_functions.sh"
 
-ENV NODE_ENV=production
+initialize
 
-# Install our dependencies
-RUN npm install "@i2analyze/i2connect@${I2CONNECT_SERVER_VERSION}"
+java "${JVM_ARGS[@]}" -cp "${JAR_PATH}/*:${JDBC_DRIVERS_PATH}/*:${LOG4J_PATH}:${CLASSES_PATH}" \
+	com.i2group.disco.infostore.upgrade.internal.InfoStoreUpgradeCLI \
+	-toolkitDir "${TOOLKIT_DIR}" \
+	-configDir "${CONFIG_DIR}" \
+	-generatedDir "${GENERATED_DIR}"
 
-EXPOSE 3000 3443
-
-# The lifecycle of the connector will be attached to node app
-CMD [ "npm", "run", "serve" ]
+set +e

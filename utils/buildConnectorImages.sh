@@ -282,28 +282,8 @@ function validateConnectorVersion() {
     -e "DECLARED_CONNECTOR_VERSION=${declared_connector_version}" \
     -e "YES_FLAG=${YES_FLAG}" \
     -v "${ANALYZE_CONTAINERS_ROOT_DIR}/utils:/opt/utils" \
-    "${I2CONNECT_SERVER_BASE_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" \
+    registry.access.redhat.com/ubi8/nodejs-14 \
     "/opt/utils/containers/validatei2ConnectVersions.sh"
-}
-
-function buildi2ConnectServerBaseImageIfNecessary() {
-  local i2connect_version_file_path="${CONNECTOR_IMAGES_DIR}/i2connect-server-version.json"
-  local prev_i2connect_version_file_path="${CONNECTOR_IMAGES_DIR}/.connector-images/i2connect-server-version.json"
-  local i2connect_version
-  local prev_i2connect_version
-
-  i2connect_version=$(jq -r '.version' <"${i2connect_version_file_path}")
-  prev_i2connect_version=$(jq -r '.version' <"${prev_i2connect_version_file_path}")
-
-  if [[ "${i2connect_version}" != "${prev_i2connect_version}" ]]; then
-    if [[ "${AWS_ARTIFACTS}" == "true" ]]; then
-      print "Running buildi2ConnectServerBaseImage.sh"
-      "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/buildi2ConnectServerBaseImage.sh" -a -l "${I2A_DEPENDENCIES_IMAGES_TAG}"
-    else
-      print "Running buildi2ConnectServerBaseImage.sh"
-      "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/buildi2ConnectServerBaseImage.sh"
-    fi
-  fi
 }
 
 function findAndCopyFileWithFolderStructure() {
@@ -398,8 +378,7 @@ function buildImage() {
 
   # Build the image
   print "Building connector image: ${connector_image_name}"
-  docker build -t "${connector_image_name}" "${CONNECTOR_IMAGES_DIR}/${connector_name}" \
-    --build-arg BASE_IMAGE="${I2CONNECT_SERVER_BASE_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}"
+  docker build -t "${connector_image_name}" "${CONNECTOR_IMAGES_DIR}/${connector_name}"
 
   if [[ "${connector_type}" == "${I2CONNECT_SERVER_CONNECTOR_TYPE}" ]]; then
     cleanUpConnectorDist "${connector_name}"

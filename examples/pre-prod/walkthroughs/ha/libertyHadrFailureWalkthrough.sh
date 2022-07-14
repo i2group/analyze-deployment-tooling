@@ -38,8 +38,8 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
-warnRootDirNotInPath
 
+warnRootDirNotInPath
 # Local variable
 MAX_TRIES=30
 
@@ -51,22 +51,22 @@ MAX_TRIES=30
 #######################################
 function waitFori2AnalyzeServiceStatus() {
   local expected_status="$1"
-  local i2Analyze_service_status
+  local service_status
   local tries=1
   local max_tries=30
 
   print "Waiting for i2 Analyze service to be ${expected_status}"
   while [[ "${tries}" -le "${max_tries}" ]]; do
-    i2Analyze_service_status="$(geti2AnalyzeServiceStatus)"
-    if [[ "${i2Analyze_service_status}" == "${expected_status}" ]]; then
-      echo "i2 Analyze service status: '${i2Analyze_service_status}'"
+    service_status="$(geti2AnalyzeServiceStatus)"
+    if [[ "${service_status}" == "${expected_status}" ]]; then
+      echo "i2 Analyze service status: '${service_status}'"
       break
     fi
-    echo "i2 Analyze service status: '${i2Analyze_service_status}'"
+    echo "i2 Analyze service status: '${service_status}'"
     echo "Waiting..."
     sleep 5
     if [[ "${tries}" -ge "${max_tries}" ]]; then
-      printErrorAndExit "ERROR: i2 Analyze service status: '${i2Analyze_service_status}'"
+      printErrorAndExit "ERROR: i2 Analyze service status: '${service_status}'"
     fi
     tries=$((tries + 1))
   done

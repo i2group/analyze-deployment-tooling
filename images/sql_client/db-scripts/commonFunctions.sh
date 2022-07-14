@@ -36,13 +36,13 @@
 #   N/A
 #######################################
 function identifyCredentials() {
-  if [[ -n "${SA_USERNAME}" && -n "${SA_PASSWORD}" ]]; then
-    USERNAME="${SA_USERNAME}"
-    PASSWORD="${SA_PASSWORD}"
-  else
-    USERNAME="${DB_USERNAME}"
-    PASSWORD="${DB_PASSWORD}"
-  fi
+	if [[ -n "${SA_USERNAME}" && -n "${SA_PASSWORD}" ]]; then
+		USERNAME="${SA_USERNAME}"
+		PASSWORD="${SA_PASSWORD}"
+	else
+		USERNAME="${DB_USERNAME}"
+		PASSWORD="${DB_PASSWORD}"
+	fi
 }
 
 #######################################
@@ -57,14 +57,14 @@ function identifyCredentials() {
 #    source /opt/db-scripts/commonFunctions.sh && runSQLQuery 'SELECT 1'
 #######################################
 function runSQLQuery() {
-  local sql_query="$1"
+	local sql_query="$1"
 
-  identifyCredentials
+	identifyCredentials
 
-  ${SQLCMD} ${SQLCMD_FLAGS} -C -S "${DB_SERVER}","${DB_PORT}" \
-    -U "${USERNAME}" -P "${PASSWORD}" -Q "${sql_query}"
+	${SQLCMD} ${SQLCMD_FLAGS} -C -S "${DB_SERVER}","${DB_PORT}" \
+		-U "${USERNAME}" -P "${PASSWORD}" -Q "${sql_query}"
 
-  return "${?}"
+	return "${?}"
 }
 
 #######################################
@@ -80,14 +80,14 @@ function runSQLQuery() {
 #    source /opt/db-scripts/commonFunctions.sh && runSQLQueryForDB 'SELECT 1' 'master'
 #######################################
 function runSQLQueryForDB() {
-  local sql_query="$1"
-  shift
-  local sql_db_name="$1"
+	local sql_query="$1"
+	shift
+	local sql_db_name="$1"
 
-  identifyCredentials
+	identifyCredentials
 
-  ${SQLCMD} ${SQLCMD_FLAGS} -C -S "${DB_SERVER}","${DB_PORT}" \
-    -U "${USERNAME}" -P "${PASSWORD}" -d "${sql_db_name}" -Q "${sql_query}"
+	${SQLCMD} ${SQLCMD_FLAGS} -C -S "${DB_SERVER}","${DB_PORT}" \
+		-U "${USERNAME}" -P "${PASSWORD}" -d "${sql_db_name}" -Q "${sql_query}"
 
-  return "${?}"
+	return "${?}"
 }
