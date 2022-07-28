@@ -1,25 +1,8 @@
 #!/usr/bin/env bash
-# MIT License
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
 #
-# Copyright (c) 2022, N. Harris Computer Corporation
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX short identifier: MIT
 
 ###############################################################################
 # Start of function definitions                                               #
@@ -73,7 +56,7 @@ function runZK() {
     -e "SSL_PRIVATE_KEY=${ssl_private_key}" \
     -e "SSL_CERTIFICATE=${ssl_certificate}" \
     -e "SSL_CA_CERTIFICATE=${ssl_ca_certificate}" \
-    "${ZOOKEEPER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}"
+    "${ZOOKEEPER_IMAGE_NAME}:${ZOOKEEPER_VERSION}"
 }
 
 #######################################
@@ -147,6 +130,9 @@ function runSQLServer() {
   local sa_initial_password
   sa_initial_password=$(getSecret "sqlserver/sa_INITIAL_PASSWORD")
 
+  local container_data_dir="/var/i2a-data"
+  updateVolume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
+
   print "SQL Server container ${SQL_SERVER_CONTAINER_NAME} is starting"
   docker run -d \
     --name "${SQL_SERVER_CONTAINER_NAME}" \
@@ -156,7 +142,7 @@ function runSQLServer() {
     -v "${SQL_SERVER_VOLUME_NAME}:/var/opt/mssql" \
     -v "${SQL_SERVER_BACKUP_VOLUME_NAME}:${DB_CONTAINER_BACKUP_DIR}" \
     -v "${SQL_SERVER_SECRETS_VOLUME_NAME}:${CONTAINER_SECRETS_DIR}" \
-    -v "${I2A_DATA_VOLUME_NAME}:/var/i2a-data" \
+    -v "${I2A_DATA_SERVER_VOLUME_NAME}:${container_data_dir}" \
     -e "ACCEPT_EULA=${ACCEPT_EULA}" \
     -e "MSSQL_AGENT_ENABLED=true" \
     -e "MSSQL_PID=${MSSQL_PID}" \
@@ -183,6 +169,9 @@ function runDb2Server() {
   local db2inst1_initial_password
   db2inst1_initial_password=$(getSecret "db2server/db2inst1_INITIAL_PASSWORD")
 
+  local container_data_dir="/var/i2a-data"
+  updateVolume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
+
   print "Db2 Server container ${DB2_SERVER_CONTAINER_NAME} is starting"
   docker run -d \
     --privileged=true \
@@ -193,7 +182,7 @@ function runDb2Server() {
     -v "${DB2_SERVER_BACKUP_VOLUME_NAME}:${DB_CONTAINER_BACKUP_DIR}" \
     -v "${DB2_SERVER_SECRETS_VOLUME_NAME}:${CONTAINER_SECRETS_DIR}" \
     -v "${DB2_SERVER_VOLUME_NAME}:/database/data" \
-    -v "${I2A_DATA_VOLUME_NAME}:/var/i2a-data" \
+    -v "${I2A_DATA_SERVER_VOLUME_NAME}:${container_data_dir}" \
     -e "LICENSE=${DB2_LICENSE}" \
     -e "DB_INSTALL_DIR=${DB_INSTALL_DIR}" \
     -e "DB2INST1_PASSWORD=${db2inst1_initial_password}" \
@@ -252,7 +241,7 @@ function runLiberty() {
   local ssl_ca_certificate
 
   if [[ "${ENVIRONMENT}" == "config-dev" ]]; then
-    if [[ "${AWS_ARTIFACTS}" == "true" ]]; then
+    if [[ "${AWS_SECRETS}" == "true" ]]; then
       if isSecret "i2a/app-secrets"; then
         app_secrets=$(getSecret "i2a/app-secrets")
       fi
@@ -262,7 +251,7 @@ function runLiberty() {
       app_secrets="None"
     fi
 
-    if [[ "${AWS_ARTIFACTS}" == "true" ]]; then
+    if [[ "${AWS_SECRETS}" == "true" ]]; then
       if isSecret "i2a/additional-trust-certificates"; then
         ssl_additional_trust_certificates=$(getSecret "i2a/additional-trust-certificates")
       fi
@@ -315,15 +304,21 @@ function runLiberty() {
   fi
 
   #Pass in mappings environment if there is one
-  if [[ "${ENVIRONMENT}" == "config-dev" && -f ${CONNECTOR_IMAGES_DIR}/connector-url-mappings-file.json ]]; then
+  if [[ "${ENVIRONMENT}" == "config-dev" && -f "${CONNECTOR_IMAGES_DIR}/connector-url-mappings-file.json" ]]; then
     CONNECTOR_URL_MAP=$(cat "${CONNECTOR_IMAGES_DIR}"/connector-url-mappings-file.json)
+  fi
+
+  if [[ "${LIBERTY_SSL_CONNECTION}" == "true" ]]; then
+    CONTAINER_PORT="9443"
+  else
+    CONTAINER_PORT="9080"
   fi
 
   docker run -m 2g -d \
     --name "${CONTAINER}" \
     --network "${DOMAIN_NAME}" \
     --net-alias "${FQDN}" \
-    -p "${HOST_PORT}:9443" \
+    -p "${HOST_PORT}:${CONTAINER_PORT}" \
     -v "${SECRET_VOLUME}:${CONTAINER_SECRETS_DIR}" \
     -v "${VOLUME}:/data" \
     -e "LICENSE=${LIC_AGREEMENT}" \
@@ -384,9 +379,12 @@ function createDataSourceProperties() {
 #   None
 #######################################
 function buildLibertyConfiguredImage() {
-  local liberty_configured_classes_folder_path="${IMAGES_DIR}/liberty_ubi_combined/classes"
-  local liberty_configured_lib_folder_path="${IMAGES_DIR}/liberty_ubi_combined/lib"
-  local liberty_configured_web_app_files_fodler_path="${IMAGES_DIR}/liberty_ubi_combined/application/web-app-files"
+  local liberty_configured_path="${IMAGES_DIR}/liberty_ubi_combined"
+  local liberty_configured_classes_folder_path="${liberty_configured_path}/classes"
+  local liberty_configured_lib_folder_path="${liberty_configured_path}/lib"
+  local liberty_configured_web_app_files_fodler_path="${liberty_configured_path}/application/web-app-files"
+  local extension_references_file="${LOCAL_USER_CONFIG_DIR}/extension-references.json"
+  local extension_dependencies_path="${EXTENSIONS_DIR}/extension-dependencies.json"
 
   print "Building Liberty image"
 
@@ -400,21 +398,43 @@ function buildLibertyConfiguredImage() {
   cp -r "${LOCAL_CONFIG_DIR}/fragments/opal-services/WEB-INF/classes/." "${liberty_configured_classes_folder_path}"
   cp -r "${LOCAL_CONFIG_DIR}/fragments/opal-services-is/WEB-INF/classes/." "${liberty_configured_classes_folder_path}"
   cp -r "${LOCAL_CONFIG_DIR}/live/." "${liberty_configured_classes_folder_path}"
-  cp -r "${LOCAL_CONFIG_DIR}/user.registry.xml" "${IMAGES_DIR}/liberty_ubi_combined/"
+  cp -r "${LOCAL_CONFIG_DIR}/user.registry.xml" "${liberty_configured_path}/"
+  cp -r "${LOCAL_CONFIG_DIR}/fragments/common/privacyagreement.html" "${liberty_configured_path}/"
 
-  deployExtensions
-  cp -r "${LOCAL_LIB_DIR}/." "${liberty_configured_lib_folder_path}"
+  # Copy extensions to the liberty image
+  deleteFolderIfExistsAndCreate "${liberty_configured_lib_folder_path}"
+  readarray -t extension_files < <(jq -r '.extensions[] | .name + "-" + .version' <"${extension_references_file}")
+  createFolder "${PREVIOUS_CONFIGURATION_DIR}/lib"
+  for extension in "${extension_files[@]}"; do
+    # shellcheck disable=SC2001
+    extension_name=$(echo "${extension}" | sed 's|\(.*\)-.*|\1|')
+    if [[ ! -f "${EXTENSIONS_DIR}/${extension_name}/target/${extension}.jar" ]]; then
+      echo "Extension does NOT exist: ${EXTENSIONS_DIR}/${extension_name}/target/${extension}.jar"
+      continue
+    fi
+    # Copy dependencies of the extension
+    IFS=' ' read -ra dependencies <<<"$(jq -r --arg name "${extension_name}" '.[] | select(.name == $name) | .dependencies[]' "${extension_dependencies_path}" | xargs)"
+    for dependency_name in "${dependencies[@]}"; do
+      local dependency_version
+      dependency_version="$(xmlstarlet sel -t -v "/project/version" "${EXTENSIONS_DIR}/${dependency_name}/pom.xml")"
+      cp "${EXTENSIONS_DIR}/${dependency_name}/target/${dependency_name}-${dependency_version}.jar" "${liberty_configured_lib_folder_path}"
+      cp -p "${PREVIOUS_EXTENSIONS_DIR}/${dependency_name}.sha512" "${PREVIOUS_CONFIGURATION_DIR}/lib"
+    done
+    # Copy the extension
+    cp "${EXTENSIONS_DIR}/${extension_name}/target/${extension}.jar" "${liberty_configured_lib_folder_path}"
+    cp -p "${PREVIOUS_EXTENSIONS_DIR}/${extension_name}.sha512" "${PREVIOUS_CONFIGURATION_DIR}/lib"
+  done
 
   # Copy server extensions
   if [[ -f "${LOCAL_CONFIG_DIR}/server.extensions.xml" ]]; then
-    cp -r "${LOCAL_CONFIG_DIR}/server.extensions.xml" "${IMAGES_DIR}/liberty_ubi_combined/"
+    cp -r "${LOCAL_CONFIG_DIR}/server.extensions.xml" "${liberty_configured_path}/"
   else
-    echo '<?xml version="1.0" encoding="UTF-8"?><server/>' >"${IMAGES_DIR}/liberty_ubi_combined/server.extensions.xml"
+    echo '<?xml version="1.0" encoding="UTF-8"?><server/>' >"${liberty_configured_path}/server.extensions.xml"
   fi
   if [[ "${EXTENSIONS_DEV}" == true ]]; then
-    cp -r "${LOCAL_CONFIG_DIR}/server.extensions.dev.xml" "${IMAGES_DIR}/liberty_ubi_combined/"
+    cp -r "${LOCAL_CONFIG_DIR}/server.extensions.dev.xml" "${liberty_configured_path}/"
   else
-    echo '<?xml version="1.0" encoding="UTF-8"?><server/>' >"${IMAGES_DIR}/liberty_ubi_combined/server.extensions.dev.xml"
+    echo '<?xml version="1.0" encoding="UTF-8"?><server/>' >"${liberty_configured_path}/server.extensions.dev.xml"
   fi
 
   # Copy catalog.json & web.xml specific to the DEPLOYMENT_PATTERN
@@ -443,9 +463,10 @@ function buildLibertyConfiguredImage() {
 #   None
 #######################################
 function buildLibertyConfiguredImageForPreProd() {
-  local liberty_configured_classes_folder_path="${IMAGES_DIR}/liberty_ubi_combined/classes"
-  local liberty_configured_lib_folder_path="${IMAGES_DIR}/liberty_ubi_combined/lib"
-  local liberty_configured_web_app_files_fodler_path="${IMAGES_DIR}/liberty_ubi_combined/application/web-app-files"
+  local liberty_configured_path="${IMAGES_DIR}/liberty_ubi_combined"
+  local liberty_configured_classes_folder_path="${liberty_configured_path}/classes"
+  local liberty_configured_lib_folder_path="${liberty_configured_path}/lib"
+  local liberty_configured_web_app_files_fodler_path="${liberty_configured_path}/application/web-app-files"
 
   print "Building Liberty image"
 
@@ -455,12 +476,18 @@ function buildLibertyConfiguredImageForPreProd() {
 
   createDataSourceProperties "${liberty_configured_classes_folder_path}"
 
+  # Updating mpMetrics authentication value
+  xmlstarlet edit -L --update "/server/mpMetrics/@authentication" \
+    --value "${LIBERTY_SSL_CONNECTION}" \
+    "${LOCAL_CONFIG_DIR}/fragments/common/WEB-INF/classes/server.extensions.xml"
+
   cp -r "${LOCAL_CONFIG_DIR}/fragments/common/WEB-INF/classes/." "${liberty_configured_classes_folder_path}"
   cp -r "${LOCAL_CONFIG_DIR}/fragments/opal-services/WEB-INF/classes/." "${liberty_configured_classes_folder_path}"
   cp -r "${LOCAL_CONFIG_DIR}/fragments/opal-services-is/WEB-INF/classes/." "${liberty_configured_classes_folder_path}"
   cp -r "${LOCAL_CONFIG_DIR}/live/." "${liberty_configured_classes_folder_path}"
-  mv "${IMAGES_DIR}/liberty_ubi_combined/classes/server.extensions.xml" "${IMAGES_DIR}/liberty_ubi_combined/"
-  cp -r "${LOCAL_CONFIG_DIR}/user.registry.xml" "${IMAGES_DIR}/liberty_ubi_combined/"
+  mv "${liberty_configured_classes_folder_path}/server.extensions.xml" "${liberty_configured_path}/"
+  cp -r "${LOCAL_CONFIG_DIR}/user.registry.xml" "${liberty_configured_path}/"
+  cp -r "${LOCAL_CONFIG_DIR}/fragments/common/privacyagreement.html" "${liberty_configured_path}/"
 
   # Copy catalog.json & web.xml specific to the DEPLOYMENT_PATTERN
   cp -pr "${TOOLKIT_APPLICATION_DIR}/target-mods/${CATALOGUE_TYPE}/catalog.json" "${liberty_configured_classes_folder_path}"
@@ -469,6 +496,15 @@ function buildLibertyConfiguredImageForPreProd() {
   sed -i.bak -e '1s/^/<?xml version="1.0" encoding="UTF-8"?><web-app xmlns="http:\/\/java.sun.com\/xml\/ns\/javaee" xmlns:xsi="http:\/\/www.w3.org\/2001\/XMLSchema-instance" xsi:schemaLocation="http:\/\/java.sun.com\/xml\/ns\/javaee http:\/\/java.sun.com\/xml\/ns\/javaee\/web-app_3_0.xsd" id="WebApp_ID" version="3.0"> <display-name>opal<\/display-name>/' \
     "${liberty_configured_web_app_files_fodler_path}/web.xml"
   echo '</web-app>' >>"${liberty_configured_web_app_files_fodler_path}/web.xml"
+
+  echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?><server>
+    <featureManager>
+        <feature>restConnector-2.0</feature>
+    </featureManager>
+    <administrator-role>
+        <user>${I2_ANALYZE_ADMIN}</user>
+    </administrator-role>
+  </server>" >"${IMAGES_DIR}/liberty_ubi_combined/server.extensions.dev.xml"
 
   docker build \
     -t "${LIBERTY_CONFIGURED_IMAGE_NAME}:${I2A_LIBERTY_CONFIGURED_IMAGE_TAG}" \
@@ -503,6 +539,7 @@ function runLoadBalancer() {
     -e "LIBERTY1_LB_STANZA=${LIBERTY1_LB_STANZA}" \
     -e "LIBERTY2_LB_STANZA=${LIBERTY2_LB_STANZA}" \
     -e "LIBERTY_SSL_CONNECTION=${LIBERTY_SSL_CONNECTION}" \
+    -e "LIBERTY_SSL=${LIBERTY_SSL}" \
     -e "SERVER_SSL=true" \
     -e "SSL_PRIVATE_KEY=${ssl_private_key}" \
     -e "SSL_CERTIFICATE=${ssl_certificate}" \
@@ -543,7 +580,7 @@ function runConnector() {
   local connector_tag="$4"
   local connector_path="${connector_name}"
 
-  if [[ "${AWS_ARTIFACTS}" == "true" ]]; then
+  if [[ "${AWS_SECRETS}" == "true" ]]; then
     connector_path="${connector_name}-${connector_tag}"
   fi
 
@@ -568,6 +605,105 @@ function runConnector() {
     -e "SSL_GATEWAY_CN=${I2_GATEWAY_USERNAME}" \
     -e "SSL_SERVER_PORT=3443" \
     "${CONNECTOR_IMAGE_BASE_NAME}${connector_name}:${connector_tag}"
+}
+
+function runPrometheus() {
+  local prometheus_config_dir="/etc/prometheus"
+  local prometheus_tmp_config_dir="/tmp/prometheus"
+  local prometheus_start_command=()
+
+  local prometheus_password
+  prometheus_password=$(getPrometheusAdminPassword)
+  local liberty_admin_password
+  liberty_admin_password=$(getApplicationAdminPassword)
+
+  local ssl_private_key
+  ssl_private_key=$(getSecret "certificates/prometheus/server.key")
+  local ssl_certificate
+  ssl_certificate=$(getSecret "certificates/prometheus/server.cer")
+  local ssl_ca_certificate
+  ssl_ca_certificate=$(getSecret "certificates/externalCA/CA.cer")
+
+  local ssl_outbound_private_key
+  ssl_outbound_private_key=$(getSecret "certificates/gateway_user/server.key")
+  local ssl_certificate
+  ssl_outbound_certificate=$(getSecret "certificates/gateway_user/server.cer")
+  local ssl_ca_certificate
+  ssl_outbound_ca_certificate=$(getSecret "certificates/CA/CA.cer")
+
+  if [[ "${ENVIRONMENT}" == "config-dev" ]]; then
+    prometheus_start_command+=("-e" "PROMETHEUS_USERNAME=${PROMETHEUS_USERNAME}")
+    prometheus_start_command+=("-e" "PROMETHEUS_PASSWORD=${prometheus_password}")
+    prometheus_start_command+=("-e" "LIBERTY_ADMIN_USERNAME=${I2_ANALYZE_ADMIN}")
+    prometheus_start_command+=("-e" "LIBERTY_ADMIN_PASSWORD=${liberty_admin_password}")
+    prometheus_start_command+=("-e" "LIBERTY_SSL_CONNECTION=${LIBERTY_SSL_CONNECTION}")
+    prometheus_start_command+=("-e" "SERVER_SSL=${PROMETHEUS_SSL_CONNECTION}")
+    prometheus_start_command+=("-e" "SSL_PRIVATE_KEY=${ssl_private_key}")
+    prometheus_start_command+=("-e" "SSL_CERTIFICATE=${ssl_certificate}")
+    prometheus_start_command+=("-e" "SSL_CA_CERTIFICATE=${ssl_ca_certificate}")
+    prometheus_start_command+=("-e" "SSL_OUTBOUND_PRIVATE_KEY=${ssl_outbound_private_key}")
+    prometheus_start_command+=("-e" "SSL_OUTBOUND_CERTIFICATE=${ssl_outbound_certificate}")
+    prometheus_start_command+=("-e" "SSL_OUTBOUND_CA_CERTIFICATE=${ssl_outbound_ca_certificate}")
+  fi
+
+  checkFileExists "${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml"
+  updateVolume "${LOCAL_PROMETHEUS_CONFIG_DIR}" "${PROMETHEUS_CONFIG_VOLUME_NAME}" "${prometheus_tmp_config_dir}"
+
+  print "Prometheus container ${PROMETHEUS_CONTAINER_NAME} is starting"
+  docker run -d \
+    --name "${PROMETHEUS_CONTAINER_NAME}" \
+    --net "${DOMAIN_NAME}" \
+    --net-alias "${PROMETHEUS_FQDN}" \
+    -p "${HOST_PORT_PROMETHEUS}:9090" \
+    -v "${PROMETHEUS_CONFIG_VOLUME_NAME}:${prometheus_tmp_config_dir}" \
+    -v "${PROMETHEUS_DATA_VOLUME_NAME}:/prometheus" \
+    -v "${PROMETHEUS_SECRETS_VOLUME_NAME}:${CONTAINER_SECRETS_DIR}" \
+    "${prometheus_start_command[@]}" \
+    "${PROMETHEUS_IMAGE_NAME}:${PROMETHEUS_VERSION}"
+}
+
+function runGrafana() {
+  local grafana_provisioning_dir="/etc/grafana/provisioning"
+  local grafana_provisioning_datasources_dir="/etc/grafana/provisioning/datasources"
+  local grafana_dashboards_dir="/etc/grafana/dashboards"
+  updateVolume "${LOCAL_GRAFANA_CONFIG_DIR}/provisioning" "${GRAFANA_PROVISIONING_VOLUME_NAME}" "${grafana_provisioning_dir}"
+  updateGrafanaDashboardVolume
+
+  local grafana_password
+  grafana_password=$(getSecret "grafana/admin_PASSWORD")
+
+  local prometheus_password
+  prometheus_password=$(getPrometheusAdminPassword)
+
+  local ssl_ca_certificate
+  ssl_ca_certificate=$(getSecret "certificates/externalCA/CA.cer")
+
+  local prometheus_scheme="http"
+  if [[ "${PROMETHEUS_SSL_CONNECTION}" == "true" ]]; then
+    prometheus_scheme="https"
+  fi
+  local prometheus_url="${prometheus_scheme}://${PROMETHEUS_FQDN}:9090"
+
+  print "Grafana container ${GRAFANA_CONTAINER_NAME} is starting"
+  docker run -d \
+    -p "${HOST_PORT_GRAFANA}:3000" \
+    --name="${GRAFANA_CONTAINER_NAME}" \
+    --net "${DOMAIN_NAME}" \
+    --net-alias "${GRAFANA_FQDN}" \
+    -v "${GRAFANA_DATA_VOLUME_NAME}:/var/lib/grafana" \
+    -v "${GRAFANA_DASHBOARDS_VOLUME_NAME}:${grafana_dashboards_dir}" \
+    -v "${GRAFANA_PROVISIONING_VOLUME_NAME}:${grafana_provisioning_dir}" \
+    -v "${GRAFANA_SECRETS_VOLUME_NAME}:${CONTAINER_SECRETS_DIR}" \
+    -e "GF_SECURITY_ADMIN_USER=${GRAFANA_USERNAME}" \
+    -e "GF_SECURITY_ADMIN_PASSWORD=${grafana_password}" \
+    -e "GF_SERVER_PROTOCOL=https" \
+    -e "GF_SERVER_CERT_FILE=/run/secrets/server.cer" \
+    -e "GF_SERVER_CERT_KEY=/run/secrets/server.key" \
+    -e "PROMETHEUS_URL=${prometheus_url}" \
+    -e "PROMETHEUS_USERNAME=${PROMETHEUS_USERNAME}" \
+    -e "PROMETHEUS_PASSWORD=${prometheus_password}" \
+    -e "SSL_CA_CERTIFICATE=${ssl_ca_certificate}" \
+    "${GRAFANA_IMAGE_NAME}:${GRAFANA_VERSION}"
 }
 
 ###############################################################################

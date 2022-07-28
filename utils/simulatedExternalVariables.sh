@@ -1,25 +1,8 @@
 #!/usr/bin/env bash
-# MIT License
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
 #
-# Copyright (c) 2022, N. Harris Computer Corporation
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX short identifier: MIT
 # shellcheck disable=SC2034
 
 # This file defines variables that are only used for the configuration development environment.
@@ -30,14 +13,6 @@
 # - Connection Information
 # - Paths, e.g LOCAL_CONFIG_DIR, LOCAL_GENERATED_DIR
 # NOTE: this file does NOT have any dependencies
-
-###############################################################################
-# License Variables                                                           #
-###############################################################################
-LIC_AGREEMENT=REJECT
-MSSQL_PID=REJECT
-ACCEPT_EULA=N
-DB2_LICENSE=reject
 
 ###############################################################################
 # Domain name                                                                 #
@@ -62,6 +37,8 @@ LIBERTY1_HOST_NAME="liberty1"
 LIBERTY2_HOST_NAME="liberty2"
 I2A_TOOL_HOST_NAME="i2atool"
 LOAD_BALANCER_HOST_NAME="loadbalancer"
+PROMETHEUS_HOST_NAME="prometheus"
+GRAFANA_HOST_NAME="grafana"
 CONNECTOR1_HOST_NAME="exampleconnector1"
 CONNECTOR2_HOST_NAME="exampleconnector2"
 I2ANALYZE_HOST_NAME="i2analyze"
@@ -87,19 +64,11 @@ I2_ANALYZE_FQDN="${I2ANALYZE_HOST_NAME}.${DOMAIN_NAME}"
 LOAD_BALANCER_FQDN="${LOAD_BALANCER_HOST_NAME}.${DOMAIN_NAME}"
 CONNECTOR1_FQDN="${CONNECTOR1_HOST_NAME}.${DOMAIN_NAME}"
 CONNECTOR2_FQDN="${CONNECTOR2_HOST_NAME}.${DOMAIN_NAME}"
-
-###############################################################################
-# AWS Variables                                                               #
-###############################################################################
-
-AWS_REGION=None
-ECR_BASE_NAME=None
-
+PROMETHEUS_FQDN="${PROMETHEUS_HOST_NAME}.${DOMAIN_NAME}"
+GRAFANA_FQDN="${GRAFANA_HOST_NAME}.${DOMAIN_NAME}"
 EXTRA_ARGS=()
-if [[ "${AWS_DEPLOY}" == "false" ]]; then
-  EXTRA_ARGS+=("--net")
-  EXTRA_ARGS+=("${DOMAIN_NAME}")
-fi
+EXTRA_ARGS+=("--net")
+EXTRA_ARGS+=("${DOMAIN_NAME}")
 
 ###############################################################################
 # Network Security Variables                                                  #
@@ -108,6 +77,7 @@ DB_SSL_CONNECTION="false"
 SOLR_ZOO_SSL_CONNECTION="false"
 LIBERTY_SSL_CONNECTION="true"
 GATEWAY_SSL_CONNECTION="true"
+PROMETHEUS_SSL_CONNECTION="true"
 
 ###############################################################################
 # Ports                                                                       #
@@ -211,7 +181,7 @@ LOCAL_USER_CHANGE_SETS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME
 LOCAL_USER_CONFIG_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/configuration"
 LOCAL_CONFIG_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/.configuration"
 GENERATED_LOCAL_CONFIG_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/.configuration-generated"
-LOCAL_LIB_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/.i2a-extensions"
+LOCAL_LIB_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/.i2a-extensions" # TODO: only used in upgrade, should be removed together when removing it from upgrade.
 LOCAL_GENERATED_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/database-scripts/generated"
 
 PRE_REQS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/pre-reqs"

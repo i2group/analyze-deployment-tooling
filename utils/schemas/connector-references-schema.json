@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://i2group.github.io/analyze-containers/schemas/connector-references-schema.json",
+  "title": "JSON schema for the Analyze Containers connector references file",
+
+  "type": "object",
+  "properties": {
+    "connectors": {
+      "type": "array",
+      "description": "List of connector objects.",
+      "items": {
+        "type": "object",
+        "default": { "name": "" },
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the connector (folder structure)."
+          }
+        },
+        "required": ["name"]
+      }
+    },
+    "gatewaySchemas": {
+      "type": "array",
+      "description": "List of gateway schema objects.",
+      "items": {
+        "type": "object",
+        "default": { "shortName": "" },
+        "properties": {
+          "shortName": {
+            "type": "string",
+            "description": "The short name of a gateway schema."
+          }
+        },
+        "required": ["shortName"]
+      }
+    }
+  },
+  "required": ["connectors", "gatewaySchemas"]
+}

@@ -1,26 +1,12 @@
-# MIT License
+# syntax=docker/dockerfile:1
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
 #
-# Copyright (c) 2022, N. Harris Computer Corporation
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-FROM ibmcom/websphere-liberty:full-java11-openj9-ubi
-LABEL maintainer="i2 Group"
+# SPDX short identifier: MIT
+FROM i2group/i2eng-liberty:22
+ARG I2ANALYZE_VERSION
+
+LABEL com.i2group.i2analyze-version="${I2ANALYZE_VERSION}"
 
 # Copy server.datasource-db2.xml & server.datasource-sqlserver.xml
 COPY --chown=1001:0 application/server.datasources.db2.xml /opt/ibm/wlp/usr/servers/defaultServer/db2.xml
@@ -44,25 +30,16 @@ COPY --chown=1001:0 application/web-app-files/ /opt/ibm/wlp/usr/servers/defaultS
 # Copy liberty server configuration files
 COPY --chown=1001:0 application/server-config/ /opt/ibm/wlp/usr/servers/defaultServer/
 
-COPY --chown=1001:0 docker-entrypoint.sh /opt/docker-entrypoint.sh
-COPY --chown=1001:0 create-connector-config.sh /opt/create-connector-config.sh 
-COPY --chown=1001:0 environment.sh /opt/environment.sh
+COPY --chown=1001:0 create-connector-config.sh /opt/entrypoint.d/create-connector-config.sh 
 
 ENV APOLLO_DATA_DIR=/data
 
 USER root
 
-RUN yum update -y --nobest \
-  && yum install -y jq \
-  && yum clean all
-
 RUN mkdir ${APOLLO_DATA_DIR} \
-    && chmod -R g+rw ${APOLLO_DATA_DIR} \
-    && chown -R 1001:0 ${APOLLO_DATA_DIR}
-    
+  && chmod -R g+rw ${APOLLO_DATA_DIR} \
+  && chown -R 1001:0 ${APOLLO_DATA_DIR}
+
 USER 1001
 
 VOLUME ${APOLLO_DATA_DIR}
-
-ENTRYPOINT ["/opt/docker-entrypoint.sh"]
-CMD ["/opt/ibm/wlp/bin/server", "run", "defaultServer"]

@@ -1,25 +1,8 @@
 #!/usr/bin/env bash
-# MIT License
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
 #
-# Copyright (c) 2022, N. Harris Computer Corporation
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX short identifier: MIT
 
 set -e
 
@@ -49,17 +32,9 @@ function help() {
   exit 1
 }
 
-AWS_DEPLOY="false"
-
 # cspell:ignore ahvyd
-while getopts "ahvyd:e:i:" flag; do
+while getopts ":e:i:hvy" flag; do
   case "${flag}" in
-  a)
-    AWS_ARTIFACTS="true"
-    ;;
-  d)
-    DEPLOYMENT_NAME="${OPTARG}"
-    ;;
   i)
     INCLUDED_CONNECTORS+=("$OPTARG")
     ;;
@@ -88,10 +63,6 @@ if [[ -z "${ENVIRONMENT}" ]]; then
   ENVIRONMENT="config-dev"
 fi
 
-if [[ "${AWS_ARTIFACTS}" && -z "${DEPLOYMENT_NAME}" ]]; then
-  usage
-fi
-
 if [[ -z "${YES_FLAG}" ]]; then
   YES_FLAG="false"
 fi
@@ -112,148 +83,6 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulatedExternalVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
-
-function removeConnectors() {
-  print "Removing running connector containers"
-  local all_connector_names
-  IFS=' ' read -ra all_connector_names <<<"$(docker ps -a --format "{{.Names}}" -f network="${DOMAIN_NAME}" -f name="^${CONNECTOR_PREFIX}" | xargs)"
-  for container_name in "${all_connector_names[@]}"; do
-    connector_image_name=${container_name#"${CONNECTOR_PREFIX}"}
-    if [[ " ${CONNECTOR_NAMES[*]} " == *" ${connector_image_name} "* ]]; then
-      deleteContainer "${container_name}"
-    fi
-  done
-}
-
-function validateConnectorDefinition() {
-  local connector_definition_file_path="$1"
-  local not_valid_error_message="${connector_definition_file_path} is NOT valid"
-  local valid_json
-
-  print "Validating ${connector_definition_file_path}"
-
-  type="$(jq -r type <"${connector_definition_file_path}" || true)"
-
-  if [[ "${type}" == "object" ]]; then
-    valid_json=$(jq -r '. | select(has("id") and has("name") and has("description") and has("gatewaySchema") and has("configurationPath") and (has("type")==false // .type=="external" and has("baseUrl") // .type!="external"))' <"${connector_definition_file_path}")
-    if [[ -z "${valid_json}" ]]; then
-      printErrorAndExit "${not_valid_error_message}"
-    fi
-  else
-    printErrorAndExit "${not_valid_error_message}"
-  fi
-}
-
-function validateConnectorUrlMappings() {
-  local connector_url_mappings_file="${CONNECTOR_IMAGES_DIR}/connector-url-mappings-file.json"
-  local not_valid_error_message="${connector_url_mappings_file} is NOT valid"
-  local valid_json
-
-  print "Validating ${connector_url_mappings_file}"
-
-  type="$(jq -r type <"${connector_url_mappings_file}" || true)"
-
-  if [[ "${type}" == "array" ]]; then
-    valid_json=$(jq -r '.[] | select(has("id") and has("baseUrl"))' <"${connector_url_mappings_file}")
-    if [[ -z "${valid_json}" ]]; then
-      printErrorAndExit "${not_valid_error_message}"
-    fi
-  else
-    printErrorAndExit "${not_valid_error_message}"
-  fi
-}
-
-function validateConnectorSecrets() {
-  local connector_name="$1"
-  local connector_secrets_file_path="${LOCAL_KEYS_DIR}/${connector_name}"
-  local not_valid_error_message="Secrets have not been created for the ${connector_name} connector"
-
-  print "Validating ${connector_secrets_file_path}"
-  if [ ! -d "${connector_secrets_file_path}" ]; then
-    printErrorAndExit "${not_valid_error_message}"
-  fi
-}
-
-function deployConnectors() {
-  local connector_image_dir
-
-  print "Deploying connectors"
-  for connector_name in "${CONNECTOR_NAMES[@]}"; do
-    connector_image_dir=${CONNECTOR_IMAGES_DIR}/${connector_name}
-    [[ ! -d "${connector_image_dir}" ]] && continue
-    deployConnector "${connector_name}"
-  done
-}
-
-function deployConnector() {
-  local connector_name="${1}"
-  local connector_image_dir="${CONNECTOR_IMAGES_DIR}/${connector_name}"
-  local connector_url_mappings_file="${CONNECTOR_IMAGES_DIR}/connector-url-mappings-file.json"
-  local temp_file="${CONNECTOR_IMAGES_DIR}/temp.json"
-  local connector_type
-  local base_url
-
-  # Validation
-  connector_definition_file_path="${connector_image_dir}/connector-definition.json"
-  validateConnectorDefinition "${connector_definition_file_path}"
-
-  # Definitions
-  configuration_path=$(jq -r '.configurationPath' <"${connector_definition_file_path}")
-  connector_id=$(jq -r '.id' <"${connector_definition_file_path}")
-  connector_type=$(jq -r '.type' <"${connector_definition_file_path}")
-  connector_exists=$(jq -r --arg connector_id "${connector_id}" 'any(.[]; .id==$connector_id)' <"${connector_url_mappings_file}")
-  validateConnectorSecrets "${connector_name}"
-
-  # Run connector if not external
-  if [[ "${connector_type}" != "${EXTERNAL_CONNECTOR_TYPE}" ]]; then
-    local connector_tag connector_fqdn
-
-    connector_tag=$(jq -r '.tag' <"${connector_image_dir}/connector-version.json")
-    connector_fqdn="${connector_name}-${connector_tag}.${DOMAIN_NAME}"
-    base_url="https://${connector_fqdn}:3443"
-
-    # Start up the connector
-    runConnector "${CONNECTOR_PREFIX}${connector_name}" "${connector_fqdn}" "${connector_name}" "${connector_tag}"
-    waitForConnectorToBeLive "${connector_fqdn}" "${configuration_path}"
-
-    # Work out if the connector was running previously
-    local was_running="false"
-    for previously_running_connector_name in "${ALL_RUNNING_CONTAINER_NAMES[@]}"; do
-      if [[ "${previously_running_connector_name}" == "${CONNECTOR_PREFIX}${connector_name}" ]]; then
-        was_running="true"
-      fi
-    done
-
-    # If connector was not running previously stop it
-    if [[ "${was_running}" != "true" ]]; then
-      print "Stopping connector: ${CONNECTOR_PREFIX}${connector_name}"
-      docker stop "${CONNECTOR_PREFIX}${connector_name}"
-    fi
-  else
-    base_url=$(jq -r '.baseUrl' <"${connector_definition_file_path}")
-  fi
-
-  # Update connector-url-mappings-file.json file
-  # shellcheck disable=SC2016
-  if [[ "${connector_exists}" == "true" ]]; then
-    # Update
-    jq -r \
-      --arg base_url "${base_url}" \
-      --arg connector_id "${connector_id}" \
-      ' .[] |= (select(.id==$connector_id) |= (.baseUrl = $base_url))' \
-      <"${connector_url_mappings_file}" >"${temp_file}"
-  else
-    # Insert
-    jq -r \
-      --arg base_url "${base_url}" \
-      --arg connector_id "${connector_id}" \
-      '. += [{id: $connector_id, baseUrl: $base_url}]' \
-      <"${connector_url_mappings_file}" >"${temp_file}"
-  fi
-  mv "${temp_file}" "${connector_url_mappings_file}"
-
-  validateConnectorUrlMappings
-}
 
 function validateConnectorVersion() {
   local connector_name="$1"
@@ -282,7 +111,7 @@ function validateConnectorVersion() {
     -e "DECLARED_CONNECTOR_VERSION=${declared_connector_version}" \
     -e "YES_FLAG=${YES_FLAG}" \
     -v "${ANALYZE_CONTAINERS_ROOT_DIR}/utils:/opt/utils" \
-    registry.access.redhat.com/ubi8/nodejs-14 \
+    registry.access.redhat.com/ubi8/nodejs-16 \
     "/opt/utils/containers/validatei2ConnectVersions.sh"
 }
 
@@ -316,14 +145,23 @@ function extractConnectorDist() {
   cp -Rf "${connector_dir}/app/." "${connector_dir}/.app"
   tar -zxf "${archive_files[0]}" --strip-components=1 -C "${connector_dir}/app"
 
-  # Override connector.conf.json, if there is none then get the default from the archive
+  # Override settings.json with .env and .env.sample (previously connector.conf.json), if there is none then get the default from the archive
   if findAndCopyFileWithFolderStructure "${CONNECTOR_CONFIG_FILE}" "${connector_dir}/.app" "${connector_dir}/app"; then
     findAndCopyFileWithFolderStructure "${CONNECTOR_CONFIG_FILE}" "${connector_dir}/app" "${connector_dir}/.app"
   fi
+  if findAndCopyFileWithFolderStructure "${CONNECTOR_ENV_FILE}" "${connector_dir}/.app" "${connector_dir}/app"; then
+    findAndCopyFileWithFolderStructure "${CONNECTOR_ENV_FILE}" "${connector_dir}/app" "${connector_dir}/.app"
+  fi
+  if findAndCopyFileWithFolderStructure "${CONNECTOR_ENV_SAMPLE_FILE}" "${connector_dir}/.app" "${connector_dir}/app"; then
+    findAndCopyFileWithFolderStructure "${CONNECTOR_ENV_SAMPLE_FILE}" "${connector_dir}/app" "${connector_dir}/.app"
+  fi
+  if findAndCopyFileWithFolderStructure "${OLD_CONNECTOR_CONFIG_FILE}" "${connector_dir}/.app" "${connector_dir}/app"; then
+    findAndCopyFileWithFolderStructure "${OLD_CONNECTOR_CONFIG_FILE}" "${connector_dir}/app" "${connector_dir}/.app"
+  fi
 
-  # Override connector.secrets.json, if there is none then get the default from the archive
-  if findAndCopyFileWithFolderStructure "${CONNECTOR_SECRETS_FILE}" "${connector_dir}/.app" "${connector_dir}/app"; then
-    findAndCopyFileWithFolderStructure "${CONNECTOR_SECRETS_FILE}" "${connector_dir}/app" "${connector_dir}/.app"
+  # Override previously connector.secrets.json, if there is none then get the default from the archive
+  if findAndCopyFileWithFolderStructure "${OLD_CONNECTOR_SECRETS_FILE}" "${connector_dir}/.app" "${connector_dir}/app"; then
+    findAndCopyFileWithFolderStructure "${OLD_CONNECTOR_SECRETS_FILE}" "${connector_dir}/app" "${connector_dir}/.app"
   fi
 }
 
@@ -337,14 +175,24 @@ function cleanUpConnectorDist() {
   deleteFolderIfExists "${connector_dir}/.app"
 }
 
-function buildImages() {
+function buildConnectorImages() {
   local connector_image_dir
-  print "Building connector images"
+  print "Building connectors"
 
   for connector_name in "${CONNECTOR_NAMES[@]}"; do
-    connector_image_dir=${CONNECTOR_IMAGES_DIR}/${connector_name}
+    connector_image_dir="${CONNECTOR_IMAGES_DIR}/${connector_name}"
     [[ ! -d "${connector_image_dir}" ]] && continue
+
+    if ! checkConnectorChanged "${connector_name}"; then
+      continue
+    fi
+    if [[ "${connector_type}" != "${EXTERNAL_CONNECTOR_TYPE}" ]]; then
+      deleteContainer "${CONNECTOR_PREFIX}${connector_name}"
+    fi
     buildImage "${connector_image_dir}"
+
+    # Update old shasum for connector
+    mv "${PREVIOUS_CONNECTOR_IMAGES_DIR}/${connector_name}.sha512.new" "${PREVIOUS_CONNECTOR_IMAGES_DIR}/${connector_name}.sha512"
   done
 }
 
@@ -356,25 +204,20 @@ function buildImage() {
 
   connector_type=$(jq -r '.type' <"${connector_image_dir}/connector-definition.json")
 
+  if [[ "${connector_type}" == "${EXTERNAL_CONNECTOR_TYPE}" ]]; then
+    return
+  fi
+
   # Validate connector and sdk versions
   if [[ "${connector_type}" == "${I2CONNECT_SERVER_CONNECTOR_TYPE}" ]]; then
     extractConnectorDist "${connector_name}"
     validateConnectorVersion "${connector_name}" "${connector_type}" || (cleanUpConnectorDist "${connector_name}" && exit 1)
-  elif [[ "${connector_type}" == "${EXTERNAL_CONNECTOR_TYPE}" ]]; then
-    return
   fi
 
   connector_tag=$(jq -r '.tag' <"${connector_image_dir}/connector-version.json")
 
   # Set connector image name
   connector_image_name="${CONNECTOR_IMAGE_BASE_NAME}${connector_name}:${connector_tag}"
-
-  if [[ "${AWS_ARTIFACTS}" == "true" ]]; then
-    if [[ "${connector_type}" == "${I2CONNECT_SERVER_CONNECTOR_TYPE}" ]] && isSecret "secrets/${connector_name}"; then
-      mkdir -p "${CONNECTOR_IMAGES_DIR}/${connector_name}/app/dist/connectors/${connector_name}"
-      getSecret "secrets/${connector_name}" >"${CONNECTOR_IMAGES_DIR}/${connector_name}/app/dist/connectors/${connector_name}/${CONNECTOR_CONFIG_FILE}"
-    fi
-  fi
 
   # Build the image
   print "Building connector image: ${connector_image_name}"
@@ -384,10 +227,6 @@ function buildImage() {
     cleanUpConnectorDist "${connector_name}"
   fi
 }
-
-if [[ "${AWS_ARTIFACTS}" == "true" ]]; then
-  aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ECR_BASE_NAME}"
-fi
 
 createDockerNetwork "${DOMAIN_NAME}"
 
@@ -402,16 +241,6 @@ IFS=' ' read -ra ALL_RUNNING_CONTAINER_NAMES <<<"$(docker ps --format "{{.Names}
 setListOfConnectorsToUpdate
 
 ###############################################################################
-# Clean up                                                                    #
+# Build Connector Images                                                      #
 ###############################################################################
-removeConnectors
-
-###############################################################################
-# Build Images                                                                #
-###############################################################################
-buildImages
-
-###############################################################################
-# Deploy Containers                                                           #
-###############################################################################
-deployConnectors
+buildConnectorImages

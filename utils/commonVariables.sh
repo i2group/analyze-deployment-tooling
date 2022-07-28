@@ -1,25 +1,8 @@
 #!/usr/bin/env bash
-# MIT License
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
 #
-# Copyright (c) 2022, N. Harris Computer Corporation
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX short identifier: MIT
 # shellcheck disable=SC2034
 
 # This file defines variables that are shared between all environments.
@@ -28,53 +11,29 @@
 # Examples:
 # - image & container names
 # - user names
-# NOTE: this file has a dependency on the requiredEnvironmentVariables.txt and commonFunctions.sh
+# NOTE: this file has a dependency on the requiredEnvironmentVariables.txt, commonFunctions.sh, version and licenses.conf
 
-if [[ "$AWS_ARTIFACTS" == "true" ]]; then
-  AWS_SECRETS="true"
-  AWS_IMAGES="true"
-  # aws cli [v2] - Default command output to a pager (https://github.com/aws/aws-cli/pull/4702)
-  # Disable opening 'less' (default pager)
-  export AWS_PAGER=""
-  export AWS_DEFAULT_OUTPUT="json"
-else
-  AWS_SECRETS="false"
-  AWS_IMAGES="false"
-fi
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
 
 ###############################################################################
 # Image names                                                                 #
 ###############################################################################
-if [[ "$AWS_IMAGES" == "true" ]]; then
-  ZOOKEEPER_IMAGE_NAME="${ECR_BASE_NAME}/zookeeper_redhat"
-  SOLR_IMAGE_NAME="${ECR_BASE_NAME}/solr_redhat"
-  DB2_SERVER_IMAGE_NAME="${ECR_BASE_NAME}/db2_redhat"
-  DB2_CLIENT_IMAGE_NAME="${ECR_BASE_NAME}/db2_client_redhat"
-  SQL_SERVER_IMAGE_NAME="${ECR_BASE_NAME}/sqlserver_redhat"
-  SQL_CLIENT_IMAGE_NAME="${ECR_BASE_NAME}/sqlserver_client_redhat"
-  LIBERTY_BASE_IMAGE_NAME="${ECR_BASE_NAME}/liberty_redhat"
-  LIBERTY_CONFIGURED_IMAGE_NAME="${ECR_BASE_NAME}/liberty_configured_redhat"
-  ETL_CLIENT_IMAGE_NAME="${ECR_BASE_NAME}/etlclient_redhat"
-  I2A_TOOLS_IMAGE_NAME="${ECR_BASE_NAME}/i2a_tools_redhat"
-  LOAD_BALANCER_IMAGE_NAME="ha_proxy_image"
-  CONNECTOR_IMAGE_NAME="${ECR_BASE_NAME}/example_connector"
-  CONNECTOR_IMAGE_BASE_NAME="${ECR_BASE_NAME}/"
-else
-  ZOOKEEPER_IMAGE_NAME="zookeeper_redhat"
-  SOLR_IMAGE_NAME="solr_redhat"
-  SQL_SERVER_IMAGE_NAME="sqlserver_redhat"
-  SQL_CLIENT_IMAGE_NAME="sqlserver_client_redhat"
-  DB2_SERVER_IMAGE_NAME="db2_redhat"
-  DB2_CLIENT_IMAGE_NAME="db2_client_redhat"
-  LIBERTY_BASE_IMAGE_NAME="liberty_redhat"
-  LIBERTY_CONFIGURED_IMAGE_NAME="liberty_configured_redhat"
-  ETL_CLIENT_IMAGE_NAME="etlclient_redhat"
-  I2A_TOOLS_IMAGE_NAME="i2a_tools_redhat"
-  LOAD_BALANCER_IMAGE_NAME="ha_proxy_image"
-  CONNECTOR_IMAGE_NAME="example_connector"
-  CONNECTOR_IMAGE_BASE_NAME=""
-fi
+ZOOKEEPER_IMAGE_NAME="i2group/i2eng-zookeeper"
+SOLR_IMAGE_NAME="solr_redhat"
+SQL_SERVER_IMAGE_NAME="sqlserver_redhat"
+SQL_CLIENT_IMAGE_NAME="sqlserver_client_redhat"
+DB2_SERVER_IMAGE_NAME="db2_redhat"
+DB2_CLIENT_IMAGE_NAME="db2_client_redhat"
+LIBERTY_BASE_IMAGE_NAME="liberty_redhat"
+LIBERTY_CONFIGURED_IMAGE_NAME="liberty_configured_redhat"
+ETL_CLIENT_IMAGE_NAME="etlclient_redhat"
+I2A_TOOLS_IMAGE_NAME="i2a_tools_redhat"
+LOAD_BALANCER_IMAGE_NAME="ha_proxy_image"
+CONNECTOR_IMAGE_NAME="example_connector"
+CONNECTOR_IMAGE_BASE_NAME=""
 REDHAT_UBI_IMAGE_NAME="registry.access.redhat.com/ubi8/ubi-minimal:8.6"
+PROMETHEUS_IMAGE_NAME="i2group/i2eng-prometheus"
+GRAFANA_IMAGE_NAME="grafana/grafana-oss"
 
 ###############################################################################
 # Container names                                                             #
@@ -96,8 +55,10 @@ if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
   LOAD_BALANCER_CONTAINER_NAME="load_balancer"
   CONNECTOR1_CONTAINER_NAME="exampleconnector1"
   CONNECTOR2_CONTAINER_NAME="exampleconnector2"
+  PROMETHEUS_CONTAINER_NAME="prometheus"
+  GRAFANA_CONTAINER_NAME="grafana"
 else
-  CONTAINER_VERSION_SUFFIX="${I2ANALYZE_VERSION%.*}"
+  CONTAINER_VERSION_SUFFIX="${SUPPORTED_I2ANALYZE_VERSION}"
   ETL_CLIENT_CONTAINER_NAME="etlclient.${CONFIG_NAME}_${CONTAINER_VERSION_SUFFIX}"
   I2A_TOOL_CONTAINER_NAME="i2atool.${CONFIG_NAME}_${CONTAINER_VERSION_SUFFIX}"
   ZK1_CONTAINER_NAME="zk1.${CONFIG_NAME}_${CONTAINER_VERSION_SUFFIX}"
@@ -116,6 +77,8 @@ else
   LOAD_BALANCER_CONTAINER_NAME="load_balancer.${CONFIG_NAME}_${CONTAINER_VERSION_SUFFIX}"
   CONNECTOR1_CONTAINER_NAME="exampleconnector1.${CONFIG_NAME}_${CONTAINER_VERSION_SUFFIX}"
   CONNECTOR2_CONTAINER_NAME="exampleconnector2.${CONFIG_NAME}_${CONTAINER_VERSION_SUFFIX}"
+  PROMETHEUS_CONTAINER_NAME="prometheus.${CONFIG_NAME}_${CONTAINER_VERSION_SUFFIX}"
+  GRAFANA_CONTAINER_NAME="grafana.${CONFIG_NAME}_${CONTAINER_VERSION_SUFFIX}"
 fi
 
 ###############################################################################
@@ -133,6 +96,8 @@ ETL_USERNAME="etl"
 DB2INST1_USERNAME="db2inst1"
 I2_ANALYZE_USERNAME="i2analyze"
 I2_GATEWAY_USERNAME="gateway.user"
+PROMETHEUS_USERNAME="prometheus"
+GRAFANA_USERNAME="grafana"
 
 ###############################################################################
 # Liberty variables                                                           #
@@ -176,4 +141,4 @@ if [[ -z "${USER}" ]]; then
   USER="$(whoami)"
 fi
 
-setDependenciesTagIfNecessary
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/licenses.conf"

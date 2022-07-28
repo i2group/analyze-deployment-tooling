@@ -1,31 +1,14 @@
 #!/usr/bin/env bash
-# MIT License
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
 #
-# Copyright (c) 2022, N. Harris Computer Corporation
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX short identifier: MIT
 
 set -e
 
 if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
   echo "ANALYZE_CONTAINERS_ROOT_DIR variable is not set"
-  echo "Please run '. initShell.sh' in your terminal first or set it with 'export ANALYZE_CONTAINERS_ROOT_DIR=<path_to_root>'"
+  echo "This project should be run inside a VSCode Dev Container. For more information read, the Getting Started guide at https://i2group.github.io/analyze-containers/content/getting_started.html"
   exit 1
 fi
 
@@ -34,8 +17,6 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
 
-AWS_ARTIFACTS="false"
-
 # Load common variables
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
@@ -43,6 +24,7 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
 
 warnRootDirNotInPath
+setDependenciesTagIfNecessary
 backup_version=upgrade
 
 ###############################################################################
@@ -96,7 +78,7 @@ sql_query="\
 runSQLServerCommandAsDBB runSQLQuery "${sql_query}"
 
 ###############################################################################
-# Build new images                                                            #
+# Rebuilding images                                                            #
 ###############################################################################
 print "Running buildImages.sh"
 "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/buildImages.sh" -e "${ENVIRONMENT}"
@@ -108,9 +90,9 @@ print "Running createChangeSet.sh"
 "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/createChangeSet.sh" -e "${ENVIRONMENT}" -t "upgrade"
 
 ###############################################################################
-# Clean up previous deployment                                                #
+# Removing the previous containers                                            #
 ###############################################################################
-print "Cleaning up previous deployment"
+print "Removing the previous containers"
 deleteContainer "${SOLR1_CONTAINER_NAME}"
 deleteContainer "${SOLR2_CONTAINER_NAME}"
 deleteContainer "${ZK1_CONTAINER_NAME}"
@@ -121,6 +103,8 @@ deleteContainer "${LIBERTY1_CONTAINER_NAME}"
 deleteContainer "${LIBERTY2_CONTAINER_NAME}"
 deleteContainer "${LOAD_BALANCER_CONTAINER_NAME}"
 deleteContainer "${CONNECTOR1_CONTAINER_NAME}"
+deleteContainer "${PROMETHEUS_CONTAINER_NAME}"
+deleteContainer "${GRAFANA_CONTAINER_NAME}"
 
 quietlyRemoveDockerVolume "${SOLR1_VOLUME_NAME}"
 quietlyRemoveDockerVolume "${SOLR2_VOLUME_NAME}"
@@ -131,9 +115,11 @@ quietlyRemoveDockerVolume "${ZK1_DATALOG_VOLUME_NAME}"
 quietlyRemoveDockerVolume "${ZK2_DATALOG_VOLUME_NAME}"
 quietlyRemoveDockerVolume "${ZK3_DATALOG_VOLUME_NAME}"
 quietlyRemoveDockerVolume "${SQL_SERVER_VOLUME_NAME}"
+quietlyRemoveDockerVolume "${LOAD_BALANCER_VOLUME_NAME}"
+quietlyRemoveDockerVolume "${GRAFANA_DATA_VOLUME_NAME}"
 
 ###############################################################################
-# Upgrade Solr                                                                #
+# Upgrading Solr                                                              #
 ###############################################################################
 # Deploying new Solr and ZooKeeper
 print "Running Zookeeper containers"
@@ -162,6 +148,10 @@ runSolr "${SOLR1_CONTAINER_NAME}" "${SOLR1_FQDN}" "${SOLR1_VOLUME_NAME}" "8983" 
 runSolr "${SOLR2_CONTAINER_NAME}" "${SOLR2_FQDN}" "${SOLR2_VOLUME_NAME}" "8984" "solr2"
 waitForSolrToBeLive "${SOLR1_FQDN}"
 
+###############################################################################
+# Restoring Solr                                                              #
+###############################################################################
+
 # Restoring non-transient Solr collection
 runSolrClientCommand bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=RESTORE&async=${MAIN_INDEX_BACKUP_NAME}&name=${MAIN_INDEX_BACKUP_NAME}&collection=main_index&location=${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}\""
 runSolrClientCommand bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=RESTORE&async=${MATCH_INDEX_BACKUP_NAME}&name=${MATCH_INDEX_BACKUP_NAME}&collection=match_index1&location=${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}\""
@@ -183,16 +173,16 @@ runSolrClientCommand "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "
 runSolrClientCommand "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd putfile /configs/match_index1/match_index1/app/match-rules.xml "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}/system-match-rules.xml"
 
 ###############################################################################
-# Upgrade SQL Server                                                          #
+# Upgrading Information Store                                                        #
 ###############################################################################
-print "Upgrading SQL Server"
+print "Upgrading Information Store"
 
 print "Running a new SQL Server"
 runSQLServer
 waitForSQLServerToBeLive "true"
 changeSAPassword
 
-print "Restoring the ISTORE database"
+print "Restoring the Information Store database"
 
 sql_query="\
   RESTORE DATABASE ISTORE FROM DISK = '${DB_CONTAINER_BACKUP_DIR}/${backup_version}/${DB_BACKUP_FILE_NAME}';"
@@ -224,13 +214,13 @@ print "Running upgrade scripts"
 runSQLServerCommandAsDBA "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/upgrade"
 
 ###############################################################################
-# Upgrade Example Connector                                                   #
+# Upgrading Example Connector                                                 #
 ###############################################################################
 runExampleConnector "${CONNECTOR1_CONTAINER_NAME}" "${CONNECTOR1_FQDN}" "${CONNECTOR1_CONTAINER_NAME}"
 waitForConnectorToBeLive "${CONNECTOR1_FQDN}"
 
 ###############################################################################
-# Upgrade Liberty                                                             #
+# Upgrading Liberty                                                           #
 ###############################################################################
 print "Upgrading Liberty"
 
@@ -241,6 +231,23 @@ runLoadBalancer
 waitFori2AnalyzeServiceToBeLive
 
 ###############################################################################
-# Update version file                                                         s#
+# Upgrading Prometheus                                                        #
 ###############################################################################
-sed -i "s/I2ANALYZE_VERSION=.*/I2ANALYZE_VERSION=${I2ANALYZE_VERSION}/g" "${LOCAL_CONFIGURATION_DIR}/version"
+print "Upgrading Prometheus"
+configurePrometheusForPreProd
+runPrometheus
+waitForPrometheusServerToBeLive
+
+###############################################################################
+# Upgrading Grafana                                                           #
+###############################################################################
+print "Upgrading Grafana"
+
+runGrafana
+waitForGrafanaServerToBeLive
+
+###############################################################################
+# Updating version file                                                       #
+###############################################################################
+sed -i "s/^SUPPORTED_I2ANALYZE_VERSION=.*/SUPPORTED_I2ANALYZE_VERSION=${SUPPORTED_I2ANALYZE_VERSION}/g" \
+  "${LOCAL_CONFIGURATION_DIR}/version"

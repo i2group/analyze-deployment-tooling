@@ -1,32 +1,15 @@
 #!/usr/bin/env bash
-# MIT License
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
 #
-# Copyright (c) 2022, N. Harris Computer Corporation
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX short identifier: MIT
 
 echo "BASH_VERSION: $BASH_VERSION"
 set -e
 
 if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
   echo "ANALYZE_CONTAINERS_ROOT_DIR variable is not set"
-  echo "Please run '. initShell.sh' in your terminal first or set it with 'export ANALYZE_CONTAINERS_ROOT_DIR=<path_to_root>'"
+  echo "This project should be run inside a VSCode Dev Container. For more information read, the Getting Started guide at https://i2group.github.io/analyze-containers/content/getting_started.html"
   exit 1
 fi
 
@@ -35,9 +18,6 @@ fi
 ###############################################################################
 
 function setDefaults() {
-  # AWS variable
-  AWS_DEPLOY="false"
-
   # Local variables
   ON_PREM_CONFIG_DIR="${ON_PREM_TOOLKIT_DIR}/configuration"
   ENVIRONMENT_DIR="${ON_PREM_CONFIG_DIR}/environment"
@@ -189,6 +169,8 @@ function sourceCommonVariablesAndScripts() {
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/utils/variables.sh"
+
+  setDependenciesTagIfNecessary
 }
 
 function checkFileExistsOrError() {
@@ -471,7 +453,7 @@ function addTemplateConfigFiles() {
   done
 }
 
-# https://i2-jira.hursley.ibm.com/browse/BUG-2134
+# TODO: https://i2group.atlassian.net/browse/TAU-823
 # This should be temporary, it should be removed or moved to a different location in the prod-toolkit
 function removeExampleVisualQueryExampleFile() {
   local property_key
@@ -584,6 +566,10 @@ function importConfig() {
 
   importDsidPropertiesFile
 
+  if [[ -f "${FRAGMENTS_DIR}/common/privacyagreement.html" ]]; then
+    cp -p "${FRAGMENTS_DIR}/common/privacyagreement.html" "${LOCAL_USER_CONFIG_DIR}/privacyagreement.html"
+  fi
+
   print "Success: configuration updated"
 
   generateArtifacts
@@ -606,6 +592,8 @@ function exportConfig() {
   deleteFolderIfExists "${LOCAL_CONFIG_DIR}/i2-tools"
   deleteFolderIfExists "${LOCAL_CONFIG_DIR}/ingestion"
   deleteFolderIfExists "${LOCAL_CONFIG_DIR}/solr/generated_config"
+  deleteFolderIfExists "${LOCAL_CONFIG_DIR}/prometheus"
+  deleteFolderIfExists "${LOCAL_CONFIG_DIR}/grafana"
   rm "${LOCAL_CONFIG_DIR}/fragments/common/WEB-INF/classes/log4j2.xml"
   rm "${LOCAL_CONFIG_DIR}/fragments/opal-services/WEB-INF/classes/connectors-template.json"
   rm "${LOCAL_CONFIG_DIR}/fragments/opal-services/WEB-INF/classes/DiscoSolrConfiguration.properties"

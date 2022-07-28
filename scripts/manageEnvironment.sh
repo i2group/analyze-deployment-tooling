@@ -1,40 +1,27 @@
 #!/usr/bin/env bash
-# MIT License
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
 #
-# Copyright (c) 2022, N. Harris Computer Corporation
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX short identifier: MIT
 
+echo "BASH_VERSION: $BASH_VERSION"
 set -e
 
 if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
   echo "ANALYZE_CONTAINERS_ROOT_DIR variable is not set"
-  echo "Please run '. initShell.sh' in your terminal first or set it with 'export ANALYZE_CONTAINERS_ROOT_DIR=<path_to_root>'"
+  echo "This project should be run inside a VSCode Dev Container. For more information read, the Getting Started guide at https://i2group.github.io/analyze-containers/content/getting_started.html"
   exit 1
 fi
 
 function printUsage() {
   echo "Usage:"
-  echo "  manageEnvironment.sh -t backup [-b <backup_name>] [-p <path>] [-i <config_name>] [-e <config_name>] [-y]" 1>&2
+  echo "  manageEnvironment.sh -t backup [-p <path>] [-i <config_name>] [-e <config_name>] [-b <backup_name>] [-y]" 1>&2
   echo "  manageEnvironment.sh -t copy -p <path> [-i <config_name>] [-e <config_name>] [-y]" 1>&2
   echo "  manageEnvironment.sh -t upgrade -p <path> [-y]" 1>&2
+  echo "  manageEnvironment.sh -t update [-y]" 1>&2
   echo "  manageEnvironment.sh -t clean [-i <config_name>] [-e <config_name>] [-y]" 1>&2
+  echo "  manageEnvironment.sh -t connectors [-i <connector_name>] [-e <connector_name>] [-y]" 1>&2
+  echo "  manageEnvironment.sh -t extensions [-i <extension_name>] [-e <extension_name>] [-y]" 1>&2
   echo "  manageEnvironment.sh -h" 1>&2
 }
 
@@ -46,17 +33,20 @@ function usage() {
 function help() {
   printUsage
   echo "Options:" 1>&2
-  echo "  -t {backup}                     Backup the database for a config." 1>&2
-  echo "  -t {copy}                       Copy the dependencies for a config from the specified path, to the current analyze-containers project." 1>&2
-  echo "  -t {upgrade}                    Upgrade all configurations from the specified path." 1>&2
-  echo "  -t {clean}                      Clean the deployment for a config. Will permanently remove all containers and data." 1>&2
-  echo "  -i <config_name>                Name of the config to include for the task. If no config is specified, the task acts on all configs. To specify multiple configs, add additional -i options." 1>&2
-  echo "  -e <config_name>                Name of the config to exclude for the task. If no config is specified, the task acts on all configs. To specify multiple configs, add additional -e options." 1>&2
-  echo "  -b <backup_name>                Name of the backup to create or restore. If not specified, the default backup is used." 1>&2
-  echo "  -p <path>                       Path to the root of an analyze-containers project. Defaults to the current project path." 1>&2
-  echo "  -y                              Answer 'yes' to all prompts." 1>&2
-  echo "  -v                              Verbose output." 1>&2
-  echo "  -h                              Display the help." 1>&2
+  echo "  -t {backup}                                         Backup the database for a config." 1>&2
+  echo "  -t {copy}                                           Copy the dependencies for a config from the specified path, to the current analyze-containers project." 1>&2
+  echo "  -t {upgrade}                                        Upgrade all configurations from the specified path." 1>&2
+  echo "  -t {update}                                         Update images." 1>&2
+  echo "  -t {clean}                                          Clean the deployment for a config. Will permanently remove all containers and data." 1>&2
+  echo "  -t {connectors}                                     Build all connector images." 1>&2
+  echo "  -t {extensions}                                     Build all extensions." 1>&2
+  echo "  -i <config_name|extension_name|connector_name>      Name of the config, connector or extension to include for the task. To specify multiple values, add additional -i options." 1>&2
+  echo "  -e <config_name|extension_name|connector_name>      Name of the config, connector or extension to exclude for the task. To specify multiple values, add additional -e options." 1>&2
+  echo "  -b <backup_name>                                    Name of the backup to create or restore. If not specified, the default backup is used." 1>&2
+  echo "  -p <path>                                           Path to the root of an analyze-containers project. Defaults to the current project path." 1>&2
+  echo "  -y                                                  Answer 'yes' to all prompts." 1>&2
+  echo "  -v                                                  Verbose output." 1>&2
+  echo "  -h                                                  Display the help." 1>&2
   exit 1
 }
 
@@ -70,10 +60,10 @@ function parseArguments() {
       BACKUP_NAME="${OPTARG}"
       ;;
     i)
-      INCLUDED_CONFIGS+=("$OPTARG")
+      INCLUDED_ASSETS+=("$OPTARG")
       ;;
     e)
-      EXCLUDED_CONFIGS+=("${OPTARG}")
+      EXCLUDED_ASSETS+=("${OPTARG}")
       ;;
     p)
       PREVIOUS_PROJECT_PATH="${OPTARG}"
@@ -118,7 +108,8 @@ function validateArguments() {
     printErrorAndUsage "Task is not set."
   fi
 
-  if [[ "${TASK}" != "backup" && "${TASK}" != "copy" && "${TASK}" != "upgrade" && "${TASK}" != "clean" ]]; then
+  if [[ "${TASK}" != "backup" && "${TASK}" != "copy" && "${TASK}" != "upgrade" && "${TASK}" != "update" &&
+    "${TASK}" != "connectors" && "${TASK}" != "extensions" && "${TASK}" != "clean" ]]; then
     printErrorAndUsage "${TASK} is not supported."
   fi
 
@@ -132,7 +123,15 @@ function validateArguments() {
   fi
   CURRENT_PROJECT_PATH="${ANALYZE_CONTAINERS_ROOT_DIR}"
 
-  if [[ "${INCLUDED_CONFIGS[*]}" && "${EXCLUDED_CONFIGS[*]}" ]]; then
+  if [[ "${INCLUDED_ASSETS[*]}" && "${EXCLUDED_ASSETS[*]}" ]]; then
+    printErrorAndUsage "Incompatible options: Both (-i) and (-e) were specified." >&2
+  fi
+
+  if [[ "${INCLUDED_ASSETS[*]}" && "${EXCLUDED_ASSETS[*]}" ]]; then
+    printErrorAndUsage "Incompatible options: Both (-i) and (-e) were specified." >&2
+  fi
+
+  if [[ "${INCLUDED_ASSETS[*]}" && "${EXCLUDED_ASSETS[*]}" ]]; then
     printErrorAndUsage "Incompatible options: Both (-i) and (-e) were specified." >&2
   fi
 }
@@ -145,7 +144,6 @@ function setDefaults() {
       BACKUP_NAME="global-upgrade"
     fi
   fi
-  AWS_DEPLOY="false"
 }
 
 function sourceCommonVariablesAndScripts() {
@@ -159,6 +157,7 @@ function sourceCommonVariablesAndScripts() {
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
 
   warnRootDirNotInPath
+  setDependenciesTagIfNecessary
 }
 
 function createBackup() {
@@ -168,12 +167,17 @@ function createBackup() {
   export ANALYZE_CONTAINERS_ROOT_DIR="${PREVIOUS_PROJECT_PATH}"
   unset I2A_DEPENDENCIES_IMAGES_TAG
 
+  AWS_DEPLOY="false" # TODO: remove this when 2.1.3 is not supported for upgrade. Required to set EXTRA_ARGS
   source "${PREVIOUS_PROJECT_PATH}/utils/commonFunctions.sh"
   source "${PREVIOUS_PROJECT_PATH}/utils/clientFunctions.sh"
   source "${PREVIOUS_PROJECT_PATH}/configs/${CONFIG_NAME}/utils/variables.sh"
+  source "${PREVIOUS_PROJECT_PATH}/configs/${CONFIG_NAME}/version"
   source "${PREVIOUS_PROJECT_PATH}/utils/simulatedExternalVariables.sh"
   source "${PREVIOUS_PROJECT_PATH}/utils/commonVariables.sh"
   source "${PREVIOUS_PROJECT_PATH}/utils/internalHelperVariables.sh"
+  if [[ "${VERSION}" > "2.3.0" || "${VERSION}" == "2.3.0" ]]; then
+    setDependenciesTagIfNecessary
+  fi
 
   if [[ "${DEPLOYMENT_PATTERN}" != *"store"* ]]; then
     # Cannot print and exit since this is done for <all> configs and we want it to continue
@@ -221,9 +225,6 @@ function createBackup() {
   		WITH FORMAT;"
   runSQLServerCommandAsDBB runSQLQuery "${sql_query}"
 
-  # Update backup file permission to your local user
-  docker exec "${SQL_SERVER_CONTAINER_NAME}" bash -c "chown -R $(id -u "${USER}"):$(id -g "${USER}") ${DB_CONTAINER_BACKUP_DIR}"
-
   getVolume "${BACKUP_DIR}" "${SQL_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
 
   print "Stopping container: ${SQL_SERVER_CONTAINER_NAME}"
@@ -238,20 +239,81 @@ function createBackups() {
 
 function buildConfigArray() {
   CONFIG_ARRAY=()
-  if [[ "${INCLUDED_CONFIGS[*]}" ]]; then
+  if [[ "${INCLUDED_ASSETS[*]}" ]]; then
     # if included configs provided assign them to the CONFIG_ARRAY
-    CONFIG_ARRAY+=("${INCLUDED_CONFIGS[@]}")
+    CONFIG_ARRAY+=("${INCLUDED_ASSETS[@]}")
   else
-    for config in "${PREVIOUS_PROJECT_PATH}"/configs/*; do
-      if [[ ! -d "${config}" ]]; then
-        continue
-      fi
-      config_name=$(basename "${config}")
-      if [[ "${EXCLUDED_CONFIGS[*]}" != *"${config_name}"* ]]; then
-        # if excluded configs provided and it is a valid config name don't add it to the CONFIG_ARRAY
-        CONFIG_ARRAY+=("${config_name}")
-      fi
+    # All configs
+    for config_dir in "${PREVIOUS_PROJECT_PATH}"/configs/*; do
+      [[ ! -d "${config_dir}" ]] && continue
+      config_name=$(basename "${config_dir}")
+      CONFIG_ARRAY+=("${config_name}")
     done
+
+    # All configs minus excluded configs
+    if [[ -n "${EXCLUDED_ASSETS}" ]]; then
+      for excluded_config in "${EXCLUDED_ASSETS[@]}"; do
+        for i in "${!CONFIG_ARRAY[@]}"; do
+          if [[ ${CONFIG_ARRAY[i]} == "${excluded_config}" ]]; then
+            unset 'CONFIG_ARRAY[i]'
+          fi
+        done
+      done
+    fi
+  fi
+}
+
+function buildConnectorsArray() {
+  CONNECTORS_ARRAY=()
+  if [[ "${INCLUDED_ASSETS[*]}" ]]; then
+    # if included connectors provided assign them to the CONFIG_ARRAY
+    CONNECTORS_ARRAY+=("${INCLUDED_ASSETS[@]}")
+  else
+    # All connectors
+    for connector_dir in "${PREVIOUS_PROJECT_PATH}"/connector-images/*; do
+      [[ ! -d "${connector_dir}" ]] && continue
+      connector_name=$(basename "${connector_dir}")
+      CONNECTORS_ARRAY+=("${connector_name}")
+      echo ""
+    done
+
+    # All connectors minus excluded connectors
+    if [[ -n "${EXCLUDED_ASSETS}" ]]; then
+      for excluded_connector in "${EXCLUDED_ASSETS[@]}"; do
+        for i in "${!CONNECTORS_ARRAY[@]}"; do
+          if [[ ${CONNECTORS_ARRAY[i]} == "${excluded_connector}" ]]; then
+            unset 'CONNECTORS_ARRAY[i]'
+          fi
+        done
+      done
+    fi
+  fi
+}
+
+function buildExtensionsArray() {
+  EXTENSIONS_ARRAY=()
+  if [[ "${INCLUDED_ASSETS[*]}" ]]; then
+    # if included extensions provided assign them to the CONFIG_ARRAY
+    EXTENSIONS_ARRAY+=("${INCLUDED_ASSETS[@]}")
+  else
+    # All extensions extensions
+    for extension_dir in "${PREVIOUS_PROJECT_PATH}"/i2a-extensions/*; do
+      [[ ! -d "${extension_dir}" ]] && continue
+      extension_name=$(basename "${extension_dir}")
+      EXTENSIONS_ARRAY+=("${extension_name}")
+    done
+
+    # All extensions minus excluded extensions
+    if [[ -n "${EXCLUDED_ASSETS}" ]]; then
+      for excluded_extension in "${EXCLUDED_ASSETS[@]}"; do
+        for i in "${!EXTENSIONS_ARRAY[@]}"; do
+          if [[ ${EXTENSIONS_ARRAY[i]} == "${excluded_extension}" ]]; then
+            unset 'EXTENSIONS_ARRAY[i]'
+          fi
+        done
+      done
+    fi
+
   fi
 }
 
@@ -265,15 +327,71 @@ function runBackupTask() {
 function copyConfigurations() {
   print "Copying configs"
 
+  if [[ -f "${PREVIOUS_PROJECT_PATH}/license.conf" ]]; then
+    cp -pr "${PREVIOUS_PROJECT_PATH}/license.conf" "${CURRENT_PROJECT_PATH}/license.conf"
+  fi
+
+  source "${PREVIOUS_PROJECT_PATH}/version"
+
   for config_name in "${CONFIG_ARRAY[@]}"; do
-    local config_path="${PREVIOUS_PROJECT_PATH}/configs/${config_name}"
-    [[ ! -d "${config_path}" ]] && continue
-    if [[ -d "${CURRENT_PROJECT_PATH}/configs/${config_name}" ]]; then
-      printErrorAndExitIfNecessary "Config folder already exists: ${CURRENT_PROJECT_PATH}/configs/${config_name}"
+    local prev_config_path="${PREVIOUS_PROJECT_PATH}/configs/${config_name}"
+    local current_config_path="${CURRENT_PROJECT_PATH}/configs/${config_name}"
+    [[ ! -d "${prev_config_path}" ]] && continue
+    if [[ -d "${current_config_path}" ]]; then
+      printErrorAndExitIfNecessary "Config folder already exists: ${current_config_path}"
     else
-      cp -pr "${config_path}" "${CURRENT_PROJECT_PATH}/configs"
+      cp -pr "${prev_config_path}" "${CURRENT_PROJECT_PATH}/configs"
+
+      # Ensure the version file is present and upgraded
+      if [[ ! -f "${current_config_path}/version" ]]; then
+        cp "${CURRENT_PROJECT_PATH}/utils/templates/version" "${current_config_path}"
+        if [[ "${VERSION}" < "2.3.0" ]]; then
+          sed -i "s/^SUPPORTED_I2ANALYZE_VERSION=.*/SUPPORTED_I2ANALYZE_VERSION=${I2ANALYZE_VERSION}/g" "${current_config_path}/version"
+        else
+          sed -i "s/^SUPPORTED_I2ANALYZE_VERSION=.*/SUPPORTED_I2ANALYZE_VERSION=${SUPPORTED_I2ANALYZE_VERSION}/g" "${current_config_path}/version"
+        fi
+      else
+        # Rename variable
+        sed -i -r "s/^I2ANALYZE_VERSION=(.*)/SUPPORTED_I2ANALYZE_VERSION=\1/g" "${current_config_path}/version"
+      fi
+      # Add prometheus config
+      if [[ ! -d "${current_config_path}/configuration/prometheus" ]]; then
+        createFolder "${current_config_path}/configuration/prometheus"
+        cp -pr "${CURRENT_PROJECT_PATH}/templates/config-development/configuration/prometheus/"* "${current_config_path}/configuration/prometheus"
+      fi
+      # Add grafana config
+      if [[ ! -d "${current_config_path}/configuration/grafana" ]]; then
+        createFolder "${current_config_path}/configuration/grafana"
+        cp -pr "${CURRENT_PROJECT_PATH}/templates/config-development/configuration/grafana/"* "${current_config_path}/configuration/grafana"
+      fi
+      # Add privacy agreement
+      if [[ ! -f "${current_config_path}/configuration/privacyagreement.html" ]]; then
+        cp -p "${CURRENT_PROJECT_PATH}/templates/config-development/configuration/privacyagreement.html" "${current_config_path}/configuration/privacyagreement.html"
+      fi
+      # Update HOST_PORT_PROMETHEUS to variables.sh
+      if ! grep -q HOST_PORT_PROMETHEUS "${current_config_path}/utils/variables.sh"; then
+        echo -e "\nHOST_PORT_PROMETHEUS=9090" >>"${current_config_path}/utils/variables.sh"
+      fi
+      # Update HOST_PORT_GRAFANA to variables.sh
+      if ! grep -q HOST_PORT_GRAFANA "${current_config_path}/utils/variables.sh"; then
+        echo -e "\nHOST_PORT_GRAFANA=3500" >>"${current_config_path}/utils/variables.sh"
+      fi
     fi
   done
+
+  if [[ -d "${PREVIOUS_PROJECT_PATH}/examples/pre-prod/configuration" ]]; then
+    if [[ ! -f "${PREVIOUS_PROJECT_PATH}/examples/pre-prod/configuration/version" ]]; then
+      cp "${CURRENT_PROJECT_PATH}/utils/templates/version" "${PREVIOUS_PROJECT_PATH}/examples/pre-prod/configuration"
+      if [[ "${VERSION}" < "2.3.0" ]]; then
+        sed -i "s/^SUPPORTED_I2ANALYZE_VERSION=.*/SUPPORTED_I2ANALYZE_VERSION=${I2ANALYZE_VERSION}/g" "${PREVIOUS_PROJECT_PATH}/examples/pre-prod/configuration/version"
+      else
+        sed -i "s/^SUPPORTED_I2ANALYZE_VERSION=.*/SUPPORTED_I2ANALYZE_VERSION=${SUPPORTED_I2ANALYZE_VERSION}/g" "${PREVIOUS_PROJECT_PATH}/examples/pre-prod/configuration/version"
+      fi
+    else
+      # Rename variable
+      sed -i -r "s/^I2ANALYZE_VERSION=(.*)/SUPPORTED_I2ANALYZE_VERSION=\1/g" "${PREVIOUS_PROJECT_PATH}/examples/pre-prod/configuration/version"
+    fi
+  fi
 
   if [[ "${TASK}" == "upgrade" ]]; then
     local previous_pre_prod_config_path="${PREVIOUS_PROJECT_PATH}/examples/pre-prod/configuration"
@@ -281,6 +399,9 @@ function copyConfigurations() {
     if [[ -d "${previous_pre_prod_config_path}" ]]; then
       deleteFolderIfExistsAndCreate "${current_pre_prod_config_path}"
       cp -pr "${previous_pre_prod_config_path}/"* "${current_pre_prod_config_path}"
+      if [[ ! -f "${previous_pre_prod_config_path}/fragments/common/privacyagreement.html" ]]; then
+        cp -p "${CURRENT_PROJECT_PATH}/pre-reqs/i2analyze/toolkit/examples/configurations/all-patterns/configuration/fragments/common/privacyagreement.html" "${current_pre_prod_config_path}/fragments/common/privacyagreement.html"
+      fi
     fi
     local previous_pre_prod_generated_path="${PREVIOUS_PROJECT_PATH}/examples/pre-prod/database-scripts"
     local current_pre_prod_generated_path="${CURRENT_PROJECT_PATH}/examples/pre-prod/database-scripts"
@@ -289,6 +410,7 @@ function copyConfigurations() {
       cp -pr "${previous_pre_prod_generated_path}/"* "${current_pre_prod_generated_path}"
     fi
   fi
+  source "${CURRENT_PROJECT_PATH}/version"
 }
 
 function copyBackups() {
@@ -301,7 +423,9 @@ function copyBackups() {
     if [[ -d "${CURRENT_PROJECT_PATH}/backups/${backup_name}" ]]; then
       printErrorAndExitIfNecessary "Backup folder already exists: ${CURRENT_PROJECT_PATH}/backups/${backup_name}"
     else
-      cp -pr "${backup_path}" "${CURRENT_PROJECT_PATH}/backups"
+      # Fix permissions
+      sudo chown -R "$(id -u "${USER}")" "${backup_path}"
+      cp -r "${backup_path}" "${CURRENT_PROJECT_PATH}/backups"
     fi
   done
 }
@@ -333,6 +457,10 @@ function copySecrets() {
     fi
     cp -pr "${secret}" "${CURRENT_PROJECT_PATH}/dev-environment-secrets"
   done
+
+  printInfo "Generating missing secrets"
+  "${CURRENT_PROJECT_PATH}/utils/generateSecrets.sh"
+
   updateCoreSecretsVolumes
 }
 
@@ -401,23 +529,10 @@ function runUpgradeTask() {
   # Backup all
   createBackups
 
-  source "${PREVIOUS_PROJECT_PATH}/version"
-
-  # Ensure the version file is in all configs
-  for config in "${PREVIOUS_PROJECT_PATH}"/configs/*; do
-    if [[ ! -d "${config}" ]]; then
-      continue
-    fi
-    config_name=$(basename "${config}")
-    if [[ ! -f "${config}/version" ]]; then
-      cp "${CURRENT_PROJECT_PATH}/utils/templates/version" "${config}"
-      sed -i "s/I2ANALYZE_VERSION=.*/I2ANALYZE_VERSION=${I2ANALYZE_VERSION}/g" "${config}/version"
-    fi
-  done
-  if [[ -d "${PREVIOUS_PROJECT_PATH}/examples/pre-prod/configuration" && ! -f "${PREVIOUS_PROJECT_PATH}/examples/pre-prod/configuration/version" ]]; then
-    cp "${CURRENT_PROJECT_PATH}/utils/templates/version" "${PREVIOUS_PROJECT_PATH}/examples/pre-prod/configuration"
-    sed -i "s/I2ANALYZE_VERSION=.*/I2ANALYZE_VERSION=${I2ANALYZE_VERSION}/g" "${PREVIOUS_PROJECT_PATH}/examples/pre-prod/configuration/version"
-  fi
+  # Reset to correct root
+  export ANALYZE_CONTAINERS_ROOT_DIR="${CURRENT_PROJECT_PATH}"
+  unset I2A_DEPENDENCIES_IMAGES_TAG
+  sourceCommonVariablesAndScripts
 
   # Copy all
   copyConfigurations
@@ -427,11 +542,6 @@ function runUpgradeTask() {
   copyConnectors
   copyGatewaySchemas
   copyData
-
-  # Reset to correct root
-  export ANALYZE_CONTAINERS_ROOT_DIR="${CURRENT_PROJECT_PATH}"
-  unset I2A_DEPENDENCIES_IMAGES_TAG
-  sourceCommonVariablesAndScripts
 
   # Upgrade
   extra_args=()
@@ -454,7 +564,49 @@ function runUpgradeTask() {
   rsync -aqprkL --exclude='dev' --delete "${ANALYZE_CONTAINERS_ROOT_DIR}/" "${PREVIOUS_PROJECT_PATH}"
 
   echo "Done"
-  echo "Please delete ${CURRENT_PROJECT_PATH} and run '. initShell.sh' before continuing."
+  echo "Please delete ${CURRENT_PROJECT_PATH} and open ${PREVIOUS_PROJECT_PATH} in a new VSCode window."
+}
+
+function getImageId() {
+  local image_name_and_version="$1"
+
+  docker inspect --format "{{.Id}}" "${image_name_and_version}"
+}
+
+function getImageIds() {
+  local image_ids
+
+  image_ids+=$(getImageId "i2group/i2eng-zookeeper:${ZOOKEEPER_VERSION}")
+  image_ids+=$(getImageId "i2group/i2eng-prometheus:${PROMETHEUS_VERSION}")
+  image_ids+=$(getImageId "grafana/grafana-oss:${GRAFANA_VERSION}")
+  image_ids+=$(getImageId "${LOAD_BALANCER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
+  image_ids+=$(getImageId "${LIBERTY_BASE_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
+  image_ids+=$(getImageId "${SOLR_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
+  image_ids+=$(getImageId "${SQL_SERVER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
+  image_ids+=$(getImageId "${SQL_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
+  image_ids+=$(getImageId "${I2A_TOOLS_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
+
+  echo "${image_ids}"
+}
+
+function runUpdateTask() {
+  setDependenciesTagIfNecessary
+
+  PREVIOUS_IMAGE_IDS=$(getImageIds)
+
+  print "Running buildImages.sh"
+  "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/buildImages.sh"
+
+  CURRENT_IMAGE_IDS=$(getImageIds)
+
+  printInfo "PREVIOUS_IMAGE_IDS: ${PREVIOUS_IMAGE_IDS}"
+  printInfo "CURRENT_IMAGE_IDS: ${CURRENT_IMAGE_IDS}"
+
+  if [[ "${PREVIOUS_IMAGE_IDS}" == "${CURRENT_IMAGE_IDS}" ]]; then
+    print "Your images are already up-to-date. You do NOT need to clean and redeploy your configs."
+  else
+    print "Your images have been updated. Use the deploy script to clean and redeploy your configs."
+  fi
 }
 
 function cleanDeployment() {
@@ -474,9 +626,6 @@ function cleanDeployment() {
   done
 
   removeDockerVolumes
-
-  printInfo "Deleting deployed extensions: ${LOCAL_LIB_DIR}"
-  deleteFolderIfExists "${LOCAL_LIB_DIR}"
 
   printInfo "Deleting previous configuration folder: ${PREVIOUS_CONFIGURATION_DIR}"
   deleteFolderIfExists "${PREVIOUS_CONFIGURATION_DIR}"
@@ -508,9 +657,6 @@ function runPruneTask() {
     deleteFolderIfExists "${PREVIOUS_CONFIGURATION_DIR}"
   done
 
-  printInfo "Deleting deployed extensions: ${LOCAL_LIB_DIR}"
-  deleteFolderIfExists "${LOCAL_LIB_DIR}"
-
   deleteAllContainers
 
   print "Removing all volumes"
@@ -534,6 +680,52 @@ function runPruneTask() {
   done
 }
 
+function runBuildConnectorsTask() {
+  local connector_args=()
+
+  buildConnectorsArray
+
+  for connector in "${CONNECTORS_ARRAY[@]}"; do
+    connector_args+=(-i "${connector}")
+    deleteFileIfExists "${PREVIOUS_CONNECTOR_IMAGES_DIR}/${connector}.sha512"
+  done
+
+  if [[ "${YES_FLAG}" == "true" ]]; then
+    connector_args+=("-y")
+  fi
+
+  if [[ "${VERBOSE}" == "true" ]]; then
+    connector_args+=("-v")
+  fi
+
+  print "Running generateSecrets.sh"
+  "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/generateSecrets.sh" -c connectors "${connector_args[@]}"
+  print "Running buildConnectorImages.sh"
+  "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/buildConnectorImages.sh" "${connector_args[@]}"
+}
+
+function runBuildExtensionsTask() {
+  local extension_args=()
+
+  buildExtensionsArray
+
+  for extension in "${EXTENSIONS_ARRAY[@]}"; do
+    extension_args+=(-i "${extension}")
+    deleteFileIfExists "${PREVIOUS_EXTENSIONS_DIR}/${extension}.sha512"
+  done
+
+  if [[ "${YES_FLAG}" == "true" ]]; then
+    extension_args+=("-y")
+  fi
+
+  if [[ "${VERBOSE}" == "true" ]]; then
+    extension_args+=("-v")
+  fi
+
+  print "Building i2 Analyze extensions"
+  "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/buildExtensions.sh" "${extension_args[@]}"
+}
+
 function runTask() {
   case "${TASK}" in
   backup)
@@ -545,6 +737,15 @@ function runTask() {
   upgrade)
     runUpgradeTask
     ;;
+  update)
+    runUpdateTask
+    ;;
+  connectors)
+    runBuildConnectorsTask
+    ;;
+  extensions)
+    runBuildExtensionsTask
+    ;;
   clean)
     runCleanTask
     ;;
@@ -555,4 +756,5 @@ sourceCommonVariablesAndScripts
 parseArguments "$@"
 validateArguments
 setDefaults
+checkDockerIsRunning
 runTask

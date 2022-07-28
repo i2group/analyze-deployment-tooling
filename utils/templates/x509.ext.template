@@ -65,5 +65,23 @@ subjectKeyIdentifier    = hash
 authorityKeyIdentifier  = keyid,issuer:always
 subjectAltName          = @subject_alt_names
 
+[ prometheus ]
+# X509 extensions for a server
+keyUsage                = critical,digitalSignature,keyEncipherment
+extendedKeyUsage        = serverAuth, clientAuth
+basicConstraints        = critical,CA:FALSE
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid,issuer:always
+subjectAltName          = @subject_alt_names
+
+[ grafana ]
+# X509 extensions for a server
+keyUsage                = critical,digitalSignature,keyEncipherment
+extendedKeyUsage        = serverAuth, clientAuth
+basicConstraints        = critical,CA:FALSE
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid,issuer:always
+subjectAltName          = @subject_alt_names
+
 [ subject_alt_names ]
 DNS.1 = HOST_NAME

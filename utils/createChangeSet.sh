@@ -1,25 +1,8 @@
 #!/usr/bin/env bash
-# MIT License
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
 #
-# Copyright (c) 2022, N. Harris Computer Corporation
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX short identifier: MIT
 
 echo "BASH_VERSION: $BASH_VERSION"
 set -e
@@ -96,11 +79,6 @@ function parseArguments() {
   done
 }
 
-function setDefaults() {
-  AWS_DEPLOY="false"
-  AWS_ARTIFACTS="false"
-}
-
 function nextChangeSetNumber() {
   local nextChangeSetNumber
   # shellcheck disable=SC2012
@@ -153,6 +131,7 @@ function setEnvironmentVariables() {
     CONFIG_DIR="${LOCAL_USER_CONFIG_DIR}"
   fi
 
+  # Only .properties files are supported at the moment
   FILES_TO_UPGRADE=(
     "InfoStoreNamesDb2.properties"
     "InfoStoreNamesSQLServer.properties"
@@ -162,24 +141,42 @@ function setEnvironmentVariables() {
   ALL_PATTERNS_CONFIG_DIR="${LOCAL_TOOLKIT_DIR}/examples/configurations/all-patterns/configuration"
 }
 
-function createChangeSetVersionFile() {
+function setSupportedVersions() {
   if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
     source "${LOCAL_CONFIG_DIR}/version"
   else
     source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/version"
   fi
-  CONFIG_I2ANALYZE_VERSION="${I2ANALYZE_VERSION}"
+  CONFIG_SUPPORTED_I2ANALYZE_VERSION="${SUPPORTED_I2ANALYZE_VERSION}"
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
-  CURRENT_I2ANALYZE_VERSION="${I2ANALYZE_VERSION}"
-  echo -e "FROM_I2ANALYZE_VERSION=${CONFIG_I2ANALYZE_VERSION}\nTO_I2ANALYZE_VERSION=${CURRENT_I2ANALYZE_VERSION}" >"${CHANGE_SET_DIR}/version"
+  CURRENT_SUPPORTED_I2ANALYZE_VERSION="${SUPPORTED_I2ANALYZE_VERSION}"
+}
+
+function createChangeSetVersionFile() {
+  echo -e "FROM_SUPPORTED_I2ANALYZE_VERSION=${CONFIG_SUPPORTED_I2ANALYZE_VERSION}\nTO_SUPPORTED_I2ANALYZE_VERSION=${CURRENT_SUPPORTED_I2ANALYZE_VERSION}" >"${CHANGE_SET_DIR}/version"
 }
 
 function createUpgradeChangeSet() {
   print "Creating Change-Set: ${CHANGE_SET_DIR}"
+  setSupportedVersions
 
   createFolder "${CHANGE_SET_DIR}"
 
   if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
+    local previous_db_container_name
+    if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
+      previous_db_container_name="sqlserver"
+    else
+      if [[ "${CONFIG_SUPPORTED_I2ANALYZE_VERSION}" < "4.4.0" ]]; then
+        previous_db_container_name="sqlserver.${CONFIG_NAME}_${CONFIG_SUPPORTED_I2ANALYZE_VERSION%.*}"
+      else
+        previous_db_container_name="sqlserver.${CONFIG_NAME}_${CONFIG_SUPPORTED_I2ANALYZE_VERSION}"
+      fi
+    fi
+    # Restart Docker containers
+    print "Restarting container: ${previous_db_container_name}"
+    docker start "${previous_db_container_name}"
+    waitForSQLServerToBeLive
     createDatabaseUpgradeChangeSet
   fi
   createConfigurationUpgradeChangeSet
@@ -222,8 +219,8 @@ function createUpdateSchemaChangeSet() {
         createFolder "${DB_CHANGE_SET_DIR}/static"
         createFolder "${DB_CHANGE_SET_DIR}/dynamic"
 
-        cp "${LOCAL_GENERATED_DIR}/static/"* "${DB_CHANGE_SET_DIR}/static"
-        cp "${LOCAL_GENERATED_DIR}/dynamic/"* "${DB_CHANGE_SET_DIR}/dynamic"
+        cp -Rp "${LOCAL_GENERATED_DIR}/static/." "${DB_CHANGE_SET_DIR}/static"
+        cp -Rp "${LOCAL_GENERATED_DIR}/dynamic/." "${DB_CHANGE_SET_DIR}/dynamic"
 
         createFolder "${CONFIG_CHANGE_SET_DIR}"
         cp "${CONFIG_DIR}/schema.xml" "${CONFIG_CHANGE_SET_DIR}"
@@ -320,8 +317,8 @@ function createConfigurationUpgradeChangeSet() {
     for file in "${FILES_TO_UPGRADE[@]}"; do
       filepath=$(find "${CONFIG_DIR}" -type f -name "${file}" -print0 | xargs)
 
-      checksumPrevious=$(shasum -a 256 "${PRE_PROD_DIR}/.configuration_new/${filepath//${CONFIG_DIR}/}" | cut -d ' ' -f 1)
-      checksumCurrent=$(shasum -a 256 "${filepath}" | cut -d ' ' -f 1)
+      checksumPrevious=$(shasum "${PRE_PROD_DIR}/.configuration_new/${filepath//${CONFIG_DIR}/}" | cut -d ' ' -f 1)
+      checksumCurrent=$(shasum "${filepath}" | cut -d ' ' -f 1)
       # if checksums different then add to changeset
       if [[ "$checksumPrevious" != "$checksumCurrent" ]]; then
         printInfo "Adding changed file to changeset: ${file}"
@@ -335,6 +332,7 @@ function createConfigurationUpgradeChangeSet() {
   else
     for file in "${FILES_TO_UPGRADE[@]}"; do
       properties=()
+
       while IFS= read -r line; do
         [[ "${line}" =~ ^#.* ]] && continue
         [[ -z "${line}" ]] && continue
@@ -384,8 +382,8 @@ function createConfigurationUpgradeChangeSet() {
       continue
     fi
 
-    checksumPrevious=$(shasum -a 256 "${CONFIG_DIR}/solr/.generated_config/${filepath}" | cut -d ' ' -f 1)
-    checksumCurrent=$(shasum -a 256 "${file}" | cut -d ' ' -f 1)
+    checksumPrevious=$(shasum "${CONFIG_DIR}/solr/.generated_config/${filepath}" | cut -d ' ' -f 1)
+    checksumCurrent=$(shasum "${file}" | cut -d ' ' -f 1)
     # if checksums different then new config otherwise delete from changeset
     if [[ "$checksumPrevious" == "$checksumCurrent" ]]; then
       printInfo "Deleting non-changed file from changeset: ${filepath}"
@@ -408,7 +406,6 @@ function createConfigurationUpgradeChangeSet() {
 }
 
 parseArguments "$@"
-setDefaults
 sourceCommonVariablesAndScripts
 validateArguments
 setEnvironmentVariables

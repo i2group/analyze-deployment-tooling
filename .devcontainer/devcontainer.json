@@ -1,0 +1,54 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.238.0/containers/docker-from-docker
+{
+  "name": "Analyze Containers Dev",
+  "image": "i2group/i2eng-analyze-containers-dev:1.0",
+  "remoteUser": "vscode",
+  "runArgs": [
+    "--init"
+  ],
+  "mounts": [
+    // Do not modify the following entry. This ensures docker is accesible.
+    "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind",
+    // The following entries are an example for mounting an external configuration.
+    //"source=<path-to-asset-folder>/configs,target=${containerWorkspaceFolder}/configs,type=bind,consistency=cached",
+    //"source=<path-to-asset-folder>/connector-images,target=${containerWorkspaceFolder}/connector-images,type=bind,consistency=cached",
+    //"source=<path-to-asset-folder>/gateway-schemas,target=${containerWorkspaceFolder}/gateway-schemas,type=bind,consistency=cached",
+    //"source=<path-to-asset-folder>/i2a-extensions,target=${containerWorkspaceFolder}/i2a-extensions,type=bind,consistency=cached",
+    //"source=<path-to-asset-folder>/i2a-data,target=${containerWorkspaceFolder}/i2a-data,type=bind,consistency=cached",
+    //"source=<path-to-asset-folder>/backups,target=${containerWorkspaceFolder}/backups,type=bind,consistency=cached",
+    // The following entry is an example that can be used for upgrading.
+    //"source=<path-to-old-analyze-containers>,target=<path-to-old-analyze-containers>,type=bind,consistency=cached",
+  ],
+  "overrideCommand": false,
+  "initializeCommand": "docker pull i2group/i2eng-analyze-containers-dev:1.0",
+  "onCreateCommand": [
+    "/bin/bash",
+    "-c",
+    "if [[ -z $(docker network ls -q --filter name=\"^eia$\") ]]; then docker network create eia; fi; docker network connect eia ${HOSTNAME} && echo \"VSCode dev container connected to docker network: eia\" && find \"${WORKSPACE_FOLDER}\" -type f -name \"*.sh\" -exec sudo chmod +x {} \\; && chown -R vscode:vscode \"${WORKSPACE_FOLDER}\" && echo \"Dev Container is ready\""
+  ],
+  // Use this environment variable if you need to bind mount your local source code into a new container.
+  "remoteEnv": {
+    "WORKSPACE_FOLDER": "${containerWorkspaceFolder}"
+  },
+  // This ensures the volumes are found in the host to allow Docker outside Docker container to work
+  "workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind,consistency=cached",
+  "workspaceFolder": "${localWorkspaceFolder}",
+  // Configure tool-specific properties.
+  "customizations": {
+    // Configure properties specific to VS Code.
+    "vscode": {
+      // Add the IDs of extensions you want installed when the container is created.
+      "extensions": [
+        "ms-azuretools.vscode-docker",
+        "redhat.vscode-yaml",
+        "redhat.vscode-xml",
+        "ms-vscode-remote.remote-wsl",
+        "vscjava.vscode-java-pack"
+      ],
+      "settings": {
+        "remote.autoForwardPorts": false
+      }
+    }
+  }
+}

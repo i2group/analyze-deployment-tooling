@@ -1,25 +1,8 @@
 #!/usr/bin/env bash
-# MIT License
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
 #
-# Copyright (c) 2022, N. Harris Computer Corporation
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX short identifier: MIT
 # shellcheck disable=SC2034
 
 # This file defines variables that are shared between config-dev & pre-prod environments.
@@ -52,10 +35,18 @@ SQL_SERVER_BACKUP_VOLUME_NAME="${SQL_SERVER_CONTAINER_NAME}_sqlbackup"
 DB2_SERVER_BACKUP_VOLUME_NAME="${DB2_SERVER_CONTAINER_NAME}_sqlbackup"
 SOLR_BACKUP_VOLUME_NAME="${SOLR1_CONTAINER_NAME}_solr_backup"
 LOAD_BALANCER_VOLUME_NAME="${LOAD_BALANCER_CONTAINER_NAME}_config"
+PROMETHEUS_DATA_VOLUME_NAME="${PROMETHEUS_CONTAINER_NAME}_data"
+PROMETHEUS_CONFIG_VOLUME_NAME="${PROMETHEUS_CONTAINER_NAME}_config"
+GRAFANA_DATA_VOLUME_NAME="${GRAFANA_CONTAINER_NAME}_data"
+GRAFANA_PROVISIONING_VOLUME_NAME="${GRAFANA_CONTAINER_NAME}_provisioning"
+GRAFANA_DASHBOARDS_VOLUME_NAME="${GRAFANA_CONTAINER_NAME}_dashboards"
 if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
-  I2A_DATA_VOLUME_NAME="i2a_data"
+  # Need to have separate volumes because they have different user permissions
+  I2A_DATA_SERVER_VOLUME_NAME="i2a_data_server"
+  I2A_DATA_CLIENT_VOLUME_NAME="i2a_data_client"
 else
-  I2A_DATA_VOLUME_NAME="i2a_data_${I2ANALYZE_VERSION%.*}"
+  I2A_DATA_SERVER_VOLUME_NAME="i2a_data_server_${SUPPORTED_I2ANALYZE_VERSION}"
+  I2A_DATA_CLIENT_VOLUME_NAME="i2a_data_client_${SUPPORTED_I2ANALYZE_VERSION}"
 fi
 SOLR_BACKUP_VOLUME_NAME="${SOLR1_CONTAINER_NAME}_solr_backup"
 LIBERTY1_SECRETS_VOLUME_NAME="${LIBERTY1_HOST_NAME}_secrets"
@@ -71,6 +62,8 @@ CONNECTOR2_SECRETS_VOLUME_NAME="${CONNECTOR2_HOST_NAME}_secrets"
 SQL_SERVER_SECRETS_VOLUME_NAME="${SQL_SERVER_HOST_NAME}_secrets"
 DB2_SERVER_SECRETS_VOLUME_NAME="${DB2_SERVER_HOST_NAME}_secrets"
 LOAD_BALANCER_SECRETS_VOLUME_NAME="${LOAD_BALANCER_HOST_NAME}_secrets"
+PROMETHEUS_SECRETS_VOLUME_NAME="${PROMETHEUS_HOST_NAME}_secrets"
+GRAFANA_SECRETS_VOLUME_NAME="${GRAFANA_HOST_NAME}_secrets"
 
 ###############################################################################
 # Security configuration                                                      #
@@ -99,7 +92,9 @@ IMAGES_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/images"
 TEMPLATES_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/templates"
 CONNECTOR_PREFIX="connector-"
 CONNECTOR_IMAGES_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/connector-images"
+PREVIOUS_CONNECTOR_IMAGES_DIR="${CONNECTOR_IMAGES_DIR}/.connector-images"
 EXTENSIONS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/i2a-extensions"
+PREVIOUS_EXTENSIONS_DIR="${EXTENSIONS_DIR}/.i2a-extensions"
 GATEWAY_SCHEMA_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/gateway-schemas"
 LOCAL_ETL_TOOLKIT_DIR="${IMAGES_DIR}/etl_client/etltoolkit"
 LOCAL_EXAMPLE_CONNECTOR_APP_DIR="${IMAGES_DIR}/example_connector/app"
@@ -115,6 +110,8 @@ if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
   LOCAL_ISTORE_NAMES_SQL_SERVER_PROPERTIES_FILE="${LOCAL_CONFIGURATION_DIR}/fragments/opal-services-is/WEB-INF/classes/InfoStoreNamesSQLServer.properties"
   LOCAL_ISTORE_NAMES_DB2_PROPERTIES_FILE="${LOCAL_CONFIGURATION_DIR}/fragments/opal-services-is/WEB-INF/classes/InfoStoreNamesDb2.properties"
   LOCAL_DATABASE_SCRIPTS_DIR="${PRE_PROD_DIR}/database-scripts"
+  LOCAL_PROMETHEUS_CONFIG_DIR="${PRE_PROD_DIR}/prometheus"
+  LOCAL_GRAFANA_CONFIG_DIR="${PRE_PROD_DIR}/grafana"
 elif [[ "${ENVIRONMENT}" == "aws" ]]; then
   LOCAL_AWS_CONFIG_DIR="${AWS_DIR}/configuration"
   LOCAL_CONFIGURATION_DIR="${LOCAL_AWS_CONFIG_DIR}"
@@ -127,6 +124,8 @@ elif [[ "${ENVIRONMENT}" == "config-dev" ]]; then
   LOCAL_ISTORE_NAMES_SQL_SERVER_PROPERTIES_FILE="${LOCAL_CONFIGURATION_DIR}/InfoStoreNamesSQLServer.properties"
   LOCAL_ISTORE_NAMES_DB2_PROPERTIES_FILE="${LOCAL_CONFIGURATION_DIR}/InfoStoreNamesDb2.properties"
   LOCAL_DATABASE_SCRIPTS_DIR="${LOCAL_CONFIG_DEV_DIR}/database-scripts"
+  LOCAL_PROMETHEUS_CONFIG_DIR="${LOCAL_CONFIG_DIR}/prometheus"
+  LOCAL_GRAFANA_CONFIG_DIR="${LOCAL_CONFIG_DIR}/grafana"
   PREVIOUS_CONFIGURATION_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/.${CONFIG_NAME}"
   PREVIOUS_CONFIGURATION_PATH="${PREVIOUS_CONFIGURATION_DIR}/configuration"
   PREVIOUS_CONFIGURATION_LIB_PATH="${PREVIOUS_CONFIGURATION_DIR}/lib"
@@ -160,8 +159,12 @@ LOCAL_KEYS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/dev-environment-secrets/simulated
 GENERATED_SECRETS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/dev-environment-secrets/generated-secrets"
 LOCAL_CA_CERT_DIR="${GENERATED_SECRETS_DIR}/certificates/CA"
 LOCAL_EXTERNAL_CA_CERT_DIR="${GENERATED_SECRETS_DIR}/certificates/externalCA"
-CONNECTOR_CONFIG_FILE="connector.conf.json"
-CONNECTOR_SECRETS_FILE="connector.secrets.json"
+# TODO: Remove when version < 2.1 of SDK is out of support
+OLD_CONNECTOR_CONFIG_FILE="connector.conf.json"
+OLD_CONNECTOR_SECRETS_FILE="connector.secrets.json"
+CONNECTOR_CONFIG_FILE="settings.json"
+CONNECTOR_ENV_FILE=".env"
+CONNECTOR_ENV_SAMPLE_FILE=".env.sample"
 
 ###############################################################################
 # Walkthrough paths                                                           #
@@ -246,6 +249,6 @@ DEBUG_LIBERTY_SERVERS=()
 # DEBUG_LIBERTY_SERVERS=("${LIBERTY1_CONTAINER_NAME}" "${LIBERTY2_CONTAINER_NAME}")
 
 # Windows (WSL)
-DEVELOPMENT_JARS_DIR="/c/IBM/iap-discovery/Liberty/wlp/usr/servers/is-daod/apps/opal-services-is-daod.war/WEB-INF/lib"
+DEVELOPMENT_JARS_DIR="/c/i2/iap-discovery/Liberty/wlp/usr/servers/is-daod/apps/opal-services-is-daod.war/WEB-INF/lib"
 # Mac OS
-# DEVELOPMENT_JARS_DIR="/users/[NAME]/deploy/wlp/usr/servers/is-daod/apps/opal-services-is-daod.war/WEB-INF/lib"
+# DEVELOPMENT_JARS_DIR="/users/[NAME]/i2Analyze/deploy/wlp/usr/servers/is-daod/apps/opal-services-is-daod.war/WEB-INF/lib"

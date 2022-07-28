@@ -1,25 +1,8 @@
 #!/usr/bin/env bash
-# MIT License
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
 #
-# Copyright (c) 2022, N. Harris Computer Corporation
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX short identifier: MIT
 
 set -e
 
@@ -27,7 +10,6 @@ function printUsage() {
   echo "Usage:"
   echo "  generateSecrets.sh -t generate [-c {all|core|connectors[-i <connector1_name>] [-e <connector1_name>]}] [-v]" 1>&2
   echo "  generateSecrets.sh -t clean [-v]" 1>&2
-  echo "  generateSecrets.sh -a -t {generate|clean} -l <dependency_label> [-v]" 1>&2
   echo "  generateSecrets.s -h" 1>&2
 }
 
@@ -46,14 +28,12 @@ function help() {
   echo "  -c <connectors>       Generate certificates for connectors only." 1>&2
   echo "  -i <connector_name>   Names of the connectors to generate secrets for. To specify multiple connectors, add additional -i options." 1>&2
   echo "  -e <connector_name>   Names of the connectors to not generate secrets for. To specify multiple connectors, add additional -e options." 1>&2
-  echo "  -l <dependency_label> Name of dependency image label to use on AWS." 1>&2
   echo "  -v                    Verbose output." 1>&2
-  echo "  -a                    Produce or use artifacts on AWS." 1>&2
   echo "  -h                    Display the help." 1>&2
   exit 1
 }
 
-while getopts ":t:c:i:e:l:vahy" flag; do
+while getopts ":t:c:i:e:vhy" flag; do
   case "${flag}" in
   t)
     TASK="${OPTARG}"
@@ -69,17 +49,11 @@ while getopts ":t:c:i:e:l:vahy" flag; do
   e)
     EXCLUDED_CONNECTORS+=("${OPTARG}")
     ;;
-  l)
-    I2A_DEPENDENCIES_IMAGES_TAG="${OPTARG}"
-    ;;
   v)
     VERBOSE="true"
     ;;
   y)
     YES_FLAG="true"
-    ;;
-  a)
-    AWS_ARTIFACTS="true"
     ;;
   h)
     help
@@ -101,10 +75,6 @@ if [[ -z "${ENVIRONMENT}" ]]; then
   ENVIRONMENT="config-dev"
 fi
 
-if [[ "${AWS_ARTIFACTS}" && (-z "${I2A_DEPENDENCIES_IMAGES_TAG}") ]]; then
-  usage
-fi
-
 if [[ -z "${TASK}" ]]; then
   TASK="generate"
 fi
@@ -122,7 +92,6 @@ fi
 
 DEV_ENV_SECRETS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/dev-environment-secrets"
 JAVA_CONTAINER_VOLUME_DIR="/simulatedKeyStore"
-AWS_DEPLOY="false"
 
 ###############################################################################
 # Loading common functions and variables                                      #
@@ -145,7 +114,6 @@ checkEnvironmentIsValid
 function runJava() {
   docker run \
     --rm \
-    --name "${I2A_TOOL_CONTAINER_NAME}" \
     --user "$(id -u "${USER}"):$(id -u "${USER}")" \
     -v "${GENERATED_SECRETS_DIR}/certificates:/simulatedKeyStore" \
     "${I2A_TOOLS_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "$@"
@@ -173,6 +141,11 @@ function createCA() {
 
   print "Creating Certificate Authority"
 
+  if [[ -f "${GENERATED_SECRETS_DIR}/certificates/${CONTEXT}/x509.ext.template" ]] && ! cmp --silent "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/templates/x509.ext.template" "${GENERATED_SECRETS_DIR}/certificates/${CONTEXT}/x509.ext.template"; then
+    # x509 file is different than expected, copy the new template
+    cp -p "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/templates/x509.ext.template" "${GENERATED_SECRETS_DIR}/certificates/${CONTEXT}/x509.ext.template"
+    cp "${GENERATED_SECRETS_DIR}/certificates/${CONTEXT}/x509.ext.template" "${GENERATED_SECRETS_DIR}/certificates/${CONTEXT}/x509.ext"
+  fi
   checkSecretDoesNotExist "${CONTEXT}" "${GENERATED_SECRETS_DIR}/certificates/${CONTEXT}" || return 0
 
   # Invalidate all other certificates
@@ -245,23 +218,38 @@ function createSSLCertificates() {
   createCertificates "${I2A_TOOL_HOST_NAME}" "${I2A_TOOL_FQDN}" solr
   createCertificates "${LIBERTY1_HOST_NAME}" "${LIBERTY1_FQDN}" liberty
   createCertificates "${LIBERTY2_HOST_NAME}" "${LIBERTY2_FQDN}" liberty
-  createCertificates "${DB2_SERVER_HOST_NAME}" "${DB2_SERVER_FQDN}" db2
+  # createCertificates "${DB2_SERVER_HOST_NAME}" "${DB2_SERVER_FQDN}" db2
   createCertificates "${SQL_SERVER_HOST_NAME}" "${SQL_SERVER_FQDN}" sqlserver
   createCertificates "${CONNECTOR1_HOST_NAME}" "${CONNECTOR1_FQDN}" connector
   createCertificates "${CONNECTOR2_HOST_NAME}" "${CONNECTOR2_FQDN}" connector
   createCertificates "${GATEWAY_CERT_FOLDER_NAME}" "${I2_GATEWAY_USERNAME}" liberty
   createCertificates "${I2_ANALYZE_CERT_FOLDER_NAME}" "${I2_ANALYZE_FQDN}" liberty external
+  createCertificates "${PROMETHEUS_HOST_NAME}" "${PROMETHEUS_FQDN}" prometheus external
+  createCertificates "${GRAFANA_HOST_NAME}" "${GRAFANA_FQDN}" grafana external
 }
 
 function generateRandomPassword() {
   local PASSWORD_FILE_LOCATION="$1"
+  local password
+  local max_retries=5
 
   if [[ -f "${PASSWORD_FILE_LOCATION}" ]]; then
     shred -u "${PASSWORD_FILE_LOCATION}"
   fi
 
   touch "${PASSWORD_FILE_LOCATION}"
-  echo -n "$(runJava openssl rand -base64 16)" >"${PASSWORD_FILE_LOCATION}"
+  password="$(runJava openssl rand -base64 16)"
+  while [[ -z "${password}" ]]; do
+    if (("${max_retries}" == 0)); then
+      printErrorAndExit "Unable to generate random password, exiting script"
+    else
+      printWarn "Having issues generating random password, retrying..."
+      ((max_retries = "${max_retries}" - 1))
+      password="$(runJava openssl rand -base64 16)"
+    fi
+  done
+
+  printf "%s" "${password}" >"${PASSWORD_FILE_LOCATION}"
 }
 
 function generateSolrPasswords() {
@@ -312,6 +300,26 @@ function generateDb2serverPasswords() {
 
   generateRandomPassword "${secrets_dir}/db2inst1_PASSWORD"
   generateRandomPassword "${secrets_dir}/db2inst1_INITIAL_PASSWORD"
+}
+
+function generatePrometheusPasswords() {
+  local secrets_dir="${GENERATED_SECRETS_DIR}/prometheus"
+
+  print "Generating Prometheus Passwords"
+  checkSecretDoesNotExist "Prometheus" "${secrets_dir}" || return 0
+  deleteFolderIfExistsAndCreate "${secrets_dir}"
+
+  generateRandomPassword "${secrets_dir}/admin_PASSWORD"
+}
+
+function generateGrafanaPasswords() {
+  local secrets_dir="${GENERATED_SECRETS_DIR}/grafana"
+
+  print "Generating Grafana Passwords"
+  checkSecretDoesNotExist "Grafana" "${secrets_dir}" || return 0
+  deleteFolderIfExistsAndCreate "${secrets_dir}"
+
+  generateRandomPassword "${secrets_dir}/admin_PASSWORD"
 }
 
 function generateSolrSecurityJson() {
@@ -416,6 +424,26 @@ function simulatei2AnalyzeSecretStoreAccess() {
   cp "${GENERATED_SECRETS_DIR}/certificates/CA/CA.cer" "${LOCAL_KEYS_DIR}/${HOST_NAME}/outbound_CA.cer"
 }
 
+function simulatePrometheusSecretStoreAccess() {
+  local HOST_NAME="$1"
+  simulateContainerSecretStoreAccess "${HOST_NAME}" external
+
+  cp "${GENERATED_SECRETS_DIR}/prometheus/admin_PASSWORD" "${LOCAL_KEYS_DIR}/${HOST_NAME}/PROMETHEUS_PASSWORD"
+  cp "${GENERATED_SECRETS_DIR}/application/admin_PASSWORD" "${LOCAL_KEYS_DIR}/${HOST_NAME}/LIBERTY_ADMIN_PASSWORD"
+
+  cp "${GENERATED_SECRETS_DIR}/certificates/gateway_user/server.cer" "${LOCAL_KEYS_DIR}/${HOST_NAME}/out_server.cer"
+  cp "${GENERATED_SECRETS_DIR}/certificates/gateway_user/server.key" "${LOCAL_KEYS_DIR}/${HOST_NAME}/out_server.key"
+  cp "${GENERATED_SECRETS_DIR}/certificates/CA/CA.cer" "${LOCAL_KEYS_DIR}/${HOST_NAME}/outbound_CA.cer"
+}
+
+function simulateGrafanaSecretStoreAccess() {
+  local HOST_NAME="$1"
+  simulateContainerSecretStoreAccess "${HOST_NAME}" external
+
+  cp "${GENERATED_SECRETS_DIR}/prometheus/admin_PASSWORD" "${LOCAL_KEYS_DIR}/${HOST_NAME}/PROMETHEUS_PASSWORD"
+  cp "${GENERATED_SECRETS_DIR}/grafana/admin_PASSWORD" "${LOCAL_KEYS_DIR}/${HOST_NAME}/GRAFANA_PASSWORD"
+}
+
 function simulateServerSecretStoreAccess() {
   deleteFolderIfExistsAndCreate "${LOCAL_KEYS_DIR}"
   simulateLibertySecretStoreAccess "${LIBERTY1_HOST_NAME}"
@@ -429,8 +457,10 @@ function simulateServerSecretStoreAccess() {
   simulateSolrSecretStoreAccess "${SOLR2_HOST_NAME}"
   simulateSolrSecretStoreAccess "${SOLR3_HOST_NAME}"
   simulateSqlserverSecretStoreAccess "${SQL_SERVER_HOST_NAME}"
-  simulateDb2serverSecretStoreAccess "${DB2_SERVER_HOST_NAME}"
+  # simulateDb2serverSecretStoreAccess "${DB2_SERVER_HOST_NAME}"
   simulatei2AnalyzeSecretStoreAccess "${I2ANALYZE_HOST_NAME}"
+  simulatePrometheusSecretStoreAccess "${PROMETHEUS_HOST_NAME}"
+  simulateGrafanaSecretStoreAccess "${GRAFANA_HOST_NAME}"
 }
 
 function generateConnectorSecrets() {
@@ -480,7 +510,9 @@ function generateCoreSecrets() {
   generateApplicationAdminPassword
   generateSolrPasswords
   generateSqlserverPasswords
-  generateDb2serverPasswords
+  # generateDb2serverPasswords
+  generatePrometheusPasswords
+  generateGrafanaPasswords
   generateSolrSecurityJson
   simulateServerSecretStoreAccess
   updateCoreSecretsVolumes

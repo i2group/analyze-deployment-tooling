@@ -1,39 +1,15 @@
-# MIT License
+# syntax=docker/dockerfile:1
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
 #
-# Copyright (c) 2022, N. Harris Computer Corporation
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX short identifier: MIT
 ARG BASE_IMAGE=i2a_tools_redhat
 FROM ${BASE_IMAGE}
 
-LABEL maintainer="i2 Group"
-ARG USERNAME=i2analyze
-ARG USER_UID
-ARG USER_GID=$USER_UID
-
 USER root
 
-COPY etltoolkit /opt/ibm/etltoolkit/
+COPY --chown="${USER}" etltoolkit /opt/i2/etltoolkit/
 
-RUN chown -R $USER_UID:$USER_GID /opt/ibm/etltoolkit \
-  && chmod +x /opt/ibm/etltoolkit
-
-WORKDIR /opt/ibm/etltoolkit/
+WORKDIR /opt/i2/etltoolkit/
 
 USER $USERNAME

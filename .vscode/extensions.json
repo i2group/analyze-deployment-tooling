@@ -4,16 +4,9 @@
 
   // List of extensions which should be recommended for users of this workspace.
   "recommendations": [
-    "GitHub.vscode-pull-request-github",
     "redhat.vscode-yaml",
-    "mads-hartmann.bash-ide-vscode",
-    "ms-azuretools.vscode-docker",
-    "streetsidesoftware.code-spell-checker",
-    "mhutchie.git-graph",
-    "timonwong.shellcheck",
-    "eamodio.gitlens",
-    "AmazonWebServices.aws-toolkit-vscode",
     "redhat.vscode-xml",
+    "ms-azuretools.vscode-docker",
     "ms-vscode-remote.remote-wsl",
     "vscjava.vscode-java-pack"
   ],

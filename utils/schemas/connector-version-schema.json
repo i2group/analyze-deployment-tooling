@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://i2group.github.io/analyze-containers/schemas/connector-version-schema.json",
+  "title": "JSON schema for the Analyze Containers connector version file",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "The version of the connector."
+    },
+    "tag": {
+      "type": "string",
+      "description": "The tag to use for the connector image."
+    }
+  },
+  "required": ["version", "tag"]
+}

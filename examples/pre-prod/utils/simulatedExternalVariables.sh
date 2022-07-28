@@ -1,25 +1,8 @@
 #!/usr/bin/env bash
-# MIT License
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
 #
-# Copyright (c) 2022, N. Harris Computer Corporation
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX short identifier: MIT
 # shellcheck disable=SC2034
 
 # This file defines variables that are only used for the pre-prod environment.
@@ -30,13 +13,6 @@
 # - Connection Information
 # - Paths, e.g LOCAL_CONFIG_DIR, LOCAL_GENERATED_DIR
 # NOTE: this file does NOT have any dependencies
-
-###############################################################################
-# License Variables                                                           #
-###############################################################################
-LIC_AGREEMENT=REJECT
-MSSQL_PID=REJECT
-ACCEPT_EULA=N
 
 ###############################################################################
 # Domain name                                                                 #
@@ -62,6 +38,8 @@ LOAD_BALANCER_HOST_NAME="loadbalancer"
 CONNECTOR1_HOST_NAME="exampleconnector1"
 CONNECTOR2_HOST_NAME="exampleconnector2"
 I2ANALYZE_HOST_NAME="i2analyze"
+PROMETHEUS_HOST_NAME="prometheus"
+GRAFANA_HOST_NAME="grafana"
 
 ###############################################################################
 # Fully qualified domain names                                                #
@@ -82,23 +60,12 @@ I2_ANALYZE_FQDN="${I2ANALYZE_HOST_NAME}.${DOMAIN_NAME}"
 LOAD_BALANCER_FQDN="${LOAD_BALANCER_HOST_NAME}.${DOMAIN_NAME}"
 CONNECTOR1_FQDN="${CONNECTOR1_HOST_NAME}.${DOMAIN_NAME}"
 CONNECTOR2_FQDN="${CONNECTOR2_HOST_NAME}.${DOMAIN_NAME}"
-
-###############################################################################
-# AWS Variables                                                               #
-###############################################################################
-AWS_SECRETS="false"
-AWS_DEPLOY="false"
-AWS_IMAGES="false"
-AWS_REGION=None
-
-ECR_BASE_NAME=None
-AWS_REGION=None
+PROMETHEUS_FQDN="${PROMETHEUS_HOST_NAME}.${DOMAIN_NAME}"
+GRAFANA_FQDN="${GRAFANA_HOST_NAME}.${DOMAIN_NAME}"
 
 EXTRA_ARGS=()
-if [[ "${AWS_DEPLOY}" == "false" ]]; then
-  EXTRA_ARGS+=("--net")
-  EXTRA_ARGS+=("${DOMAIN_NAME}")
-fi
+EXTRA_ARGS+=("--net")
+EXTRA_ARGS+=("${DOMAIN_NAME}")
 
 ###############################################################################
 # Network Security Variables                                                  #
@@ -107,6 +74,7 @@ DB_SSL_CONNECTION="true"
 SOLR_ZOO_SSL_CONNECTION="true"
 LIBERTY_SSL_CONNECTION="true"
 GATEWAY_SSL_CONNECTION="true"
+PROMETHEUS_SSL_CONNECTION="true"
 
 ###############################################################################
 # Ports                                                                       #
@@ -122,6 +90,8 @@ SOLR_PORT=8983
 CONNECTOR1_APP_PORT=3443
 CONNECTOR2_APP_PORT=3443
 DB_PORT=1433
+INTERNAL_LIBERTY_PORT=9080
+INTERNAL_SECURE_LIBERTY_PORT=9443
 
 if [[ "$SOLR_ZOO_SSL_CONNECTION" == true ]]; then
   ZK_ACTIVE_PORT="${ZK_SECURE_CLIENT_PORT}"
@@ -140,11 +110,17 @@ ZK_HOST="${ZK_MEMBERS}/${SOLR_CLUSTER_ID}"
 ZOO_SERVERS="server.1=${ZK1_FQDN}:2888:3888 server.2=${ZK2_FQDN}:2888:3888 server.3=${ZK3_FQDN}:2888:3888"
 
 if [[ "$LIBERTY_SSL_CONNECTION" == "true" ]]; then
-  LIBERTY1_LB_STANZA="${LIBERTY1_FQDN}:9443 ssl verify none"
-  LIBERTY2_LB_STANZA="${LIBERTY2_FQDN}:9443 ssl verify none"
+  LIBERTY1_STANZA="${LIBERTY1_FQDN}:${INTERNAL_SECURE_LIBERTY_PORT}"
+  LIBERTY2_STANZA="${LIBERTY2_FQDN}:${INTERNAL_SECURE_LIBERTY_PORT}"
+  LIBERTY1_LB_STANZA="${LIBERTY1_STANZA} ssl verify none"
+  LIBERTY2_LB_STANZA="${LIBERTY2_STANZA} ssl verify none"
+  LIBERTY_SSL="ssl"
 else
-  LIBERTY1_LB_STANZA="${LIBERTY1_FQDN}:9080"
-  LIBERTY2_LB_STANZA="${LIBERTY2_FQDN}:9080"
+  LIBERTY1_STANZA="${LIBERTY1_FQDN}:${INTERNAL_LIBERTY_PORT}"
+  LIBERTY2_STANZA="${LIBERTY2_FQDN}:${INTERNAL_LIBERTY_PORT}"
+  LIBERTY1_LB_STANZA="${LIBERTY1_STANZA}"
+  LIBERTY2_LB_STANZA="${LIBERTY2_STANZA}"
+  LIBERTY_SSL="no-ssl"
 fi
 
 ###############################################################################
@@ -165,6 +141,16 @@ if [[ "$DB_SSL_CONNECTION" == true ]]; then
 else
   SQLCMD_FLAGS="-b"
 fi
+
+###############################################################################
+# Prometheus variables                                                        #
+###############################################################################
+HOST_PORT_PROMETHEUS="9090"
+
+###############################################################################
+# Grafana variables                                                           #
+###############################################################################
+HOST_PORT_GRAFANA="3500"
 
 ###############################################################################
 # URIs                                                                        #

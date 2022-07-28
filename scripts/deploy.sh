@@ -1,43 +1,22 @@
 #!/usr/bin/env bash
-# MIT License
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
 #
-# Copyright (c) 2022, N. Harris Computer Corporation
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX short identifier: MIT
 
 echo "BASH_VERSION: $BASH_VERSION"
 set -e
 
 if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
   echo "ANALYZE_CONTAINERS_ROOT_DIR variable is not set"
-  echo "Please run '. initShell.sh' in your terminal first or set it with 'export ANALYZE_CONTAINERS_ROOT_DIR=<path_to_root>'"
+  echo "This project should be run inside a VSCode Dev Container. For more information read, the Getting Started guide at https://i2group.github.io/analyze-containers/content/getting_started.html"
   exit 1
 fi
 
 function printUsage() {
   echo "Usage:"
   echo "  deploy.sh -c <config_name> [-t {clean}] [-v] [-y]"
-  echo "  deploy.sh -c <config_name> [-t {connectors} [-i <connector1_name>] [-e <connector1_name>]] [-v] [-y]"
-  echo "  deploy.sh -c <config_name> [-t {extensions} [-i <extension1_name>] [-e <extension1_name>]] [-v] [-y]"
   echo "  deploy.sh -c <config_name> [-t {backup|restore} [-b <backup_name>]] [-v] [-y]"
-  echo "  deploy.sh -c <config_name> -a [-t {connectors} [-i <connector1_name>] [-e <connector1_name>]] -d <deployment_name> -l <dependency_label>] [-v] [-y]"
-  echo "  deploy.sh -c <config_name> -a -t {package} -d <deployment_name> -l <dependency_label> [-v]"
   echo "  deploy.sh -h" 1>&2
 }
 
@@ -51,59 +30,32 @@ function help() {
   echo "Options:" 1>&2
   echo "  -c <config_name>                       Name of the config to use." 1>&2
   echo "  -t {clean}                             Clean the deployment. Will permanently remove all containers and data." 1>&2
-  echo "  -t {extensions}                        Deploy or update the extensions." 1>&2
-  echo "  -t {connectors}                        Deploy or update the connectors" 1>&2
   echo "  -t {backup}                            Backup the database." 1>&2
   echo "  -t {restore}                           Restore the database." 1>&2
-  echo "  -t {package}                           Prepare production artifacts." 1>&2
-  echo "  -i <connector_name>|<extension_name>   Name of the connectors or extensions to deploy and update. To specify multiple values, add additional -i options." 1>&2
-  echo "  -e <connector_name>|<extension_name>   Name of the connectors or extensions to not deploy and update. To specify multiple values, add additional -e options." 1>&2
   echo "  -b <backup_name>                       Name of the backup to create or restore. If not specified, the default backup is used." 1>&2
-  echo "  -a                                     Produce or use artifacts on AWS." 1>&2
-  echo "  -d <deployment_name>                   Name of deployment to use on AWS." 1>&2
-  echo "  -l <dependency_label>                  Name of dependency image label to use on AWS." 1>&2
   echo "  -v                                     Verbose output." 1>&2
   echo "  -y                                     Answer 'yes' to all prompts." 1>&2
   echo "  -h                                     Display the help." 1>&2
   exit 1
 }
 
-AWS_DEPLOY="false"
-
-while getopts ":c:t:i:e:b:d:l:vayh" flag; do
+while getopts ":c:t:b:vyh" flag; do
   case "${flag}" in
   c)
     CONFIG_NAME="${OPTARG}"
     ;;
   t)
     TASK="${OPTARG}"
-    [[ "${TASK}" == "clean" || "${TASK}" == "backup" || "${TASK}" == "restore" || "${TASK}" == "connectors" || "${TASK}" == "package" || "${TASK}" == "extensions" ]] || usage
-    ;;
-  i)
-    INCLUDED_CONNECTORS+=("$OPTARG")
-    INCLUDED_EXTENSIONS+=("$OPTARG")
-    ;;
-  e)
-    EXCLUDED_CONNECTORS+=("${OPTARG}")
-    EXCLUDED_EXTENSIONS+=("${OPTARG}")
+    [[ "${TASK}" == "clean" || "${TASK}" == "backup" || "${TASK}" == "restore" || "${TASK}" == "package" ]] || usage
     ;;
   b)
     BACKUP_NAME="${OPTARG}"
-    ;;
-  d)
-    DEPLOYMENT_NAME="${OPTARG}"
-    ;;
-  l)
-    I2A_DEPENDENCIES_IMAGES_TAG="${OPTARG}"
     ;;
   v)
     VERBOSE="true"
     ;;
   y)
     YES_FLAG="true"
-    ;;
-  a)
-    AWS_ARTIFACTS="true"
     ;;
   h)
     help
@@ -133,15 +85,7 @@ if [[ ! -d "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}" ]]; then
   usage
 fi
 
-if [[ "${AWS_ARTIFACTS}" && (-z "${DEPLOYMENT_NAME}" || -z "${I2A_DEPENDENCIES_IMAGES_TAG}") ]]; then
-  usage
-fi
-
-if [[ -z "${AWS_ARTIFACTS}" ]]; then
-  AWS_ARTIFACTS="false"
-fi
-
-if [[ "${AWS_ARTIFACTS}" == "true" && "${TASK}" == "package" ]]; then
+if [[ "${TASK}" == "package" ]]; then
   EXTENSIONS_DEV="false"
 else
   EXTENSIONS_DEV="true"
@@ -149,17 +93,6 @@ fi
 
 if [[ -z "${YES_FLAG}" ]]; then
   YES_FLAG="false"
-fi
-
-if [[ -z "$DEPLOYMENT_NAME" ]]; then
-  # Only needed when aws is in use
-  DEPLOYMENT_NAME=DEPLOYMENT_NAME_NOT_SET
-fi
-
-if [[ "${INCLUDED_CONNECTORS[*]}" && "${EXCLUDED_CONNECTORS[*]}" ]]; then
-  printf "\e[31mERROR: Incompatible options: Both (-i) and (-e) were specified.\n" >&2
-  printf "\e[0m" >&2
-  usage
 fi
 
 # Load common functions
@@ -174,6 +107,10 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulatedExternalVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
 warnRootDirNotInPath
+checkDockerIsRunning
+setDependenciesTagIfNecessary
+
+RELOAD_GATEWAY_REQUIRED="false"
 
 ###############################################################################
 # Create Helper Functions                                                     #
@@ -186,7 +123,8 @@ warnRootDirNotInPath
 # 0 = default, no files changed
 # 1 = live, web ui reload
 # 2 = requires warm restart
-# 3 = database schema change, requires warm/cold restart
+# 3 = database schema change, requires warm/cold application restart
+# 4 = server changes, requires a server restart
 # Arguments:
 #   None
 #######################################
@@ -198,8 +136,7 @@ function compareCurrentConfiguration() {
     ["highlight-queries-configuration.xml"]=1
     ["type-access-configuration.xml"]=1
     ["user.registry.xml"]=1
-    ["server.extensions.xml"]=1
-    ["server.extensions.dev.xml"]=1
+    ["privacyagreement.html"]=1
     ["mapping-configuration.json"]=2
     ["analyze-settings.properties"]=2
     ["analyze-connect.properties"]=2
@@ -214,7 +151,9 @@ function compareCurrentConfiguration() {
     ["DiscoSolrConfiguration.properties"]=2
     ["schema.xml"]=3
     ["security-schema.xml"]=3
-    ["environment/dsid/dsid.properties"]=3)
+    ["environment/dsid/dsid.properties"]=3
+    ["server.extensions.xml"]=4
+    ["server.extensions.dev.xml"]=4)
   #Add gateway schemas
   for gateway_short_name in "${!GATEWAY_SHORT_NAME_SET[@]}"; do
     checkFilesArray+=(["${gateway_short_name}-schema.xml"]=1)
@@ -239,13 +178,13 @@ function compareCurrentConfiguration() {
 
     # check if filename exists in previous, if so then calc checksum
     if [ -f "${PREVIOUS_CONFIGURATION_PATH}/${filename}" ]; then
-      checksumPrevious=$(shasum -a 256 "${PREVIOUS_CONFIGURATION_PATH}/${filename}" | cut -d ' ' -f 1)
+      checksumPrevious=$(shasum "${PREVIOUS_CONFIGURATION_PATH}/${filename}" | cut -d ' ' -f 1)
     else
       continue
     fi
     # check if filename exists in current, if so then calc checksum
     if [ -f "${CURRENT_CONFIGURATION_PATH}/${filename}" ]; then
-      checksumCurrent=$(shasum -a 256 "${CURRENT_CONFIGURATION_PATH}/${filename}" | cut -d ' ' -f 1)
+      checksumCurrent=$(shasum "${CURRENT_CONFIGURATION_PATH}/${filename}" | cut -d ' ' -f 1)
     else
       continue
     fi
@@ -271,30 +210,38 @@ function compareCurrentConfiguration() {
 
 function compareCurrentExtensions() {
   local extension_references_file="${LOCAL_USER_CONFIG_DIR}/extension-references.json"
-  local extension_files
+  local extension_dependencies_path="${EXTENSIONS_DIR}/extension-dependencies.json"
+  local extension_names
   # Any change to extensions require the same action code 2
   local configActionCode=2
 
   printInfo "Checking extensions for '${CONFIG_NAME}' ..."
-  #Add extensions
-  readarray -t extension_files < <(jq -r '.extensions[] | .name + "-" + .version' <"${extension_references_file}")
-  for filename in "${extension_files[@]}"; do
-    # check if filename exists in previous, if so then calc checksum
-    if [ -f "${PREVIOUS_CONFIGURATION_LIB_PATH}/${filename}.jar" ]; then
-      checksumPrevious=$(shasum -a 256 "${PREVIOUS_CONFIGURATION_LIB_PATH}/${filename}.jar" | cut -d ' ' -f 1)
+  readarray -t extension_names < <(jq -r '.extensions[] | .name' <"${extension_references_file}")
+  for extension in "${extension_names[@]}"; do
+    IFS=' ' read -ra dependencies <<<"$(jq -r --arg name "${extension}" '.[] | select(.name == $name) | .dependencies[]' "${extension_dependencies_path}" | xargs)"
+    for dependency in "${dependencies[@]}"; do
+      # shellcheck disable=SC2076
+      if [[ ! " ${extension_names[*]} " =~ " ${dependency} " ]]; then
+        extension_names+=("${dependencies[@]}")
+      fi
+    done
+  done
+
+  for filename in "${extension_names[@]}"; do
+    if [ -f "${PREVIOUS_CONFIGURATION_LIB_PATH}/${filename}.sha512" ]; then
+      checksumPrevious=$(cat "${PREVIOUS_CONFIGURATION_LIB_PATH}/${filename}.sha512")
     else
       continue
     fi
-    # check if filename exists in current, if so then calc checksum
-    if [ -f "${LOCAL_LIB_DIR}/${filename}.jar" ]; then
-      checksumCurrent=$(shasum -a 256 "${LOCAL_LIB_DIR}/${filename}.jar" | cut -d ' ' -f 1)
+    if [ -f "${PREVIOUS_EXTENSIONS_DIR}/${filename}.sha512" ]; then
+      checksumCurrent=$(cat "${PREVIOUS_EXTENSIONS_DIR}/${filename}.sha512")
     else
       continue
     fi
     # if checksums different then store filename changed and action
-    if [[ "$checksumPrevious" != "$checksumCurrent" ]]; then
-      printInfo "Previous checksum '${checksumPrevious}' and current checksum '${checksumCurrent}' do not match for filename '${filename}.jar'"
-      filesChangedArray+=("lib/${filename}.jar")
+    if [[ "${checksumPrevious}" != "${checksumCurrent}" ]]; then
+      printInfo "Previous checksum '${checksumPrevious}' and current checksum '${checksumCurrent}' do not match for filename '${filename}.sha512'"
+      filesChangedArray+=("lib/${filename}.sha512")
       # set action if higher severity code
       if [[ "${configActionCode}" -gt "${configFinalActionCode}" ]]; then
         configFinalActionCode="${configActionCode}"
@@ -309,6 +256,66 @@ function compareCurrentExtensions() {
     printInfo "Jar changes detected, action code is '${configFinalActionCode}'"
   fi
   printInfo "Results in array '${filesChangedArray[*]}'"
+}
+
+function compareCurrentPrometheusConfig() {
+  local prometheus_template_file="prometheus.yml"
+  PROMETHEUS_ACTION_CODE=0 # set to 1 if update required
+
+  printInfo "Checking prometheus config for '${CONFIG_NAME}' ..."
+
+  # check if filename exists in previous, if so then calc checksum
+  if [ -f "${PREVIOUS_CONFIGURATION_PATH}/prometheus/${prometheus_template_file}" ]; then
+    checksumPrevious=$(shasum "${PREVIOUS_CONFIGURATION_PATH}/prometheus/${prometheus_template_file}" | cut -d ' ' -f 1)
+  fi
+  # check if filename exists in current, if so then calc checksum
+  if [ -f "${CURRENT_CONFIGURATION_PATH}/prometheus/${prometheus_template_file}" ]; then
+    checksumCurrent=$(shasum "${CURRENT_CONFIGURATION_PATH}/prometheus/${prometheus_template_file}" | cut -d ' ' -f 1)
+  fi
+
+  # if checksums different then store filename changed and action
+  if [[ "${checksumPrevious}" != "${checksumCurrent}" ]]; then
+    printInfo "Previous checksum '${checksumPrevious}' and current checksum '${checksumCurrent}' do not match for filename '${prometheus_template_file}'"
+    # set prometheus action to 1
+    PROMETHEUS_ACTION_CODE=1
+  else
+    printInfo "Prometheus config in sync"
+  fi
+}
+
+function compareCurrentGrafanaDashboards() {
+  local dashboards_dir="${LOCAL_USER_CONFIG_DIR}/grafana/dashboards"
+  GRAFANA_ACTION_CODE=0 # set to 1 if update required
+
+  printInfo "Checking grafana config for '${CONFIG_NAME}' ..."
+
+  if ! diff "${CURRENT_CONFIGURATION_PATH}/grafana/dashboards" "${PREVIOUS_CONFIGURATION_PATH}/grafana/dashboards" >/dev/null 2>&1; then
+    printInfo "Grafana dashboard updates detected"
+    GRAFANA_ACTION_CODE=1
+    # All  Grafana Dashboards
+    for file in "${dashboards_dir}"/*; do
+      [[ ! -d "${dashboards_dir}" ]] && continue
+      filename="${file##*/}"
+      # check if filename exists in previous, if so then calc checksum
+      if [ -f "${PREVIOUS_CONFIGURATION_PATH}/grafana/dashboards/${filename}" ]; then
+        checksumPrevious=$(shasum "${PREVIOUS_CONFIGURATION_PATH}/grafana/dashboards/${filename}" | cut -d ' ' -f 1)
+      else
+        continue
+      fi
+      # check if filename exists in current, if so then calc checksum
+      if [ -f "${CURRENT_CONFIGURATION_PATH}/grafana/dashboards/${filename}" ]; then
+        checksumCurrent=$(shasum "${CURRENT_CONFIGURATION_PATH}/grafana/dashboards/${filename}" | cut -d ' ' -f 1)
+      else
+        continue
+      fi
+      # if checksums different then store filename changed and action
+      if [[ "$checksumPrevious" != "$checksumCurrent" ]]; then
+        printInfo "Previous checksum '${checksumPrevious}' and current checksum '${checksumCurrent}' do not match for filename '${filename}'"
+      fi
+    done
+  else
+    printInfo "Grafana dashboards are in sync"
+  fi
 }
 
 function deployZKCluster() {
@@ -537,23 +544,36 @@ function deployLiberty() {
 
 function restartConnectorsForConfig() {
   local connector_references_file="${LOCAL_USER_CONFIG_DIR}/connector-references.json"
-  # local connector_fqdn
-  # local configuration_path
 
   readarray -t all_connector_ids < <(jq -r '.connectors[].name' <"${connector_references_file}")
 
-  for gateway_short_name in "${all_connector_ids[@]}"; do
-    container_id=$(docker ps -a -q -f name="^${CONNECTOR_PREFIX}${gateway_short_name}$" -f status=exited)
+  for connector_name in "${all_connector_ids[@]}"; do
+    container_id=$(docker ps -a -q -f name="^${CONNECTOR_PREFIX}${connector_name}$" -f status=exited)
     if [[ -n ${container_id} ]]; then
       print "Restarting connector container"
-      docker start "${CONNECTOR_PREFIX}${gateway_short_name}"
+      docker start "${CONNECTOR_PREFIX}${connector_name}"
     fi
+    RELOAD_GATEWAY_REQUIRED="true"
+  done
+}
+
+function startConnectorsForConfig() {
+  local connector_references_file="${LOCAL_USER_CONFIG_DIR}/connector-references.json"
+
+  readarray -t all_connector_ids < <(jq -r '.connectors[].name' <"${connector_references_file}")
+
+  for connector_name in "${all_connector_ids[@]}"; do
+    container_id=$(docker ps -a -q -f name="^${CONNECTOR_PREFIX}${connector_name}$" -f status=running)
+    if [[ -z "${container_id}" ]]; then
+      print "Starting connector container"
+      deployConnector "${connector_name}"
+    fi
+    RELOAD_GATEWAY_REQUIRED="true"
   done
 }
 
 function createDeployment() {
-  # Validate Configuration
-  validateMandatoryFilesPresent
+  initializeDeployment
 
   if [[ "${STATE}" == "0" ]]; then
     # Cleaning up Docker resources
@@ -572,7 +592,20 @@ function createDeployment() {
     updateStateFile "1"
   fi
 
+  buildConnectors
+  startConnectorsForConfig
+
   if [[ "${STATE}" == "0" || "${STATE}" == "1" ]]; then
+    # Deploying Prometheus
+    deleteContainer "${PROMETHEUS_CONTAINER_NAME}"
+    runPrometheus
+    waitForPrometheusServerToBeLive
+
+    # Deploying Grafana
+    deleteContainer "${GRAFANA_CONTAINER_NAME}"
+    runGrafana
+    waitForGrafanaServerToBeLive
+
     # Configuring ISTORE
     if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
       if [[ "${TASK}" == "create" ]]; then
@@ -586,30 +619,33 @@ function createDeployment() {
     updateStateFile "2"
   fi
 
-  # Restart connectors
-  restartConnectorsForConfig
+  buildExtensions
 
-  # Configuring i2 Analyze
-  if [[ "${STATE}" != "0" ]]; then
-    print "Removing Liberty container"
-    deleteContainer "${LIBERTY1_CONTAINER_NAME}"
+  if [[ "${STATE}" -lt 4 ]]; then
+    # Configuring i2 Analyze
+    if [[ "${STATE}" != "0" ]]; then
+      print "Removing Liberty container"
+      deleteContainer "${LIBERTY1_CONTAINER_NAME}"
+    fi
+
+    deployLiberty
+    updateLog4jFile
+    addConfigAdmin
+
+    # Creating a copy of the configuration that was deployed originally
+    printInfo "Initializing diff tool"
+    deleteFolderIfExistsAndCreate "${PREVIOUS_CONFIGURATION_PATH}"
+    updatePreviousConfigurationWithCurrent
+
+    # Validate Configuration
+    checkLibertyStatus
+    if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
+      updateMatchRules
+    fi
+
+    updateStateFile "4"
   fi
-  deployLiberty
-  updateLog4jFile
-  addConfigAdmin
 
-  # Creating a copy of the configuration that was deployed originally
-  printInfo "Initializing diff tool"
-  deleteFolderIfExistsAndCreate "${PREVIOUS_CONFIGURATION_PATH}"
-  updatePreviousConfigurationWithCurrent
-  cp -pr "${LOCAL_LIB_DIR}" "${PREVIOUS_CONFIGURATION_LIB_PATH}"
-
-  # Validate Configuration
-  checkLibertyStatus
-  if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
-    updateMatchRules
-  fi
-  updateStateFile "4"
   print "Deployed Successfully"
   echo "This application is configured for access on ${FRONT_END_URI}"
 }
@@ -620,25 +656,23 @@ function createDeployment() {
 
 function updateConfigVersion() {
   local version="$1"
-  sed -i "s/I2ANALYZE_VERSION=.*/I2ANALYZE_VERSION=${version}/g" "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/version"
+  sed -i "s/^SUPPORTED_I2ANALYZE_VERSION=.*/SUPPORTED_I2ANALYZE_VERSION=${version}/g" \
+    "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/version"
 }
 
 function upgrade() {
   waitForUserReply "The '${CONFIG_NAME}' config will be upgraded. You cannot revert the upgrade. Are you sure you want to continue?"
 
-  # Validate Configuration
-  validateMandatoryFilesPresent
-
-  # Restart Docker containers
-  restartDockerContainersForConfig "${CONFIG_NAME}"
+  initializeDeployment
 
   extra_args=()
   if [[ "${VERBOSE}" == "true" ]]; then
     extra_args+=("-v")
   fi
+
   "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/createChangeSet.sh" -e "${ENVIRONMENT}" -c "${CONFIG_NAME}" -t "upgrade" "${extra_args[@]}"
 
-  updateConfigVersion "${CURRENT_I2ANALYZE_VERSION}"
+  updateConfigVersion "${CURRENT_SUPPORTED_I2ANALYZE_VERSION}"
 
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/version"
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/utils/variables.sh"
@@ -651,6 +685,8 @@ function upgrade() {
   removeAllContainersForTheConfig "${CONFIG_NAME}"
   removeDockerVolumes
 
+  # Required to fix text search
+  # TODO: Look into what specifically is required  to repeat inside this function
   initializeDeployment
 
   # Running Solr and ZooKeeper
@@ -669,6 +705,13 @@ function upgrade() {
     restoreDatabase
     upgradeDatabase
   fi
+
+  runPrometheus
+  waitForPrometheusServerToBeLive
+
+  runGrafana
+  waitForGrafanaServerToBeLive
+
   updateStateFile "2"
 
   upgradeConnectors
@@ -677,6 +720,10 @@ function upgrade() {
   upgradeExtensions
   upgradeLiberty
   updateStateFile "4"
+
+  updatePreviousConfigurationWithCurrent
+  updatePreviousGrafanaConfigurationWithCurrent
+  updatePreviousPrometheusConfigurationWithCurrent
 
   print "Upgraded Successfully"
   echo "This application is configured for access on ${FRONT_END_URI}"
@@ -721,6 +768,11 @@ function upgradeExtensionPomXML() {
   xmlstarlet edit -L \
     --delete "/project/dependencies/dependency[artifactId='icu4j']" \
     "${pom_path}"
+
+  # Delete dependency liberty-apis
+  xmlstarlet edit -L \
+    --delete "/project/dependencies/dependency[artifactId='liberty-apis']" \
+    "${pom_path}"
 }
 
 function upgradeExtensions() {
@@ -731,7 +783,10 @@ function upgradeExtensions() {
   readarray -t extension_names < <(jq -r '.extensions[].name' <"${extension_references_file}")
   for extension_name in "${extension_names[@]}"; do
     upgradeExtensionPomXML "${ANALYZE_CONTAINERS_ROOT_DIR}/i2a-extensions/${extension_name}/pom.xml"
+    deleteFileIfExists "${PREVIOUS_EXTENSIONS_DIR}/${extension_name}.sha512"
   done
+
+  buildExtensions
 }
 
 function upgradeConnectors() {
@@ -745,48 +800,51 @@ function upgradeConnectors() {
       # Upgrade Dockerfile
       if [[ "${connector_type}" == "${I2CONNECT_SERVER_CONNECTOR_TYPE}" ]]; then
         cp "${ANALYZE_CONTAINERS_ROOT_DIR}/templates/i2connect-server-connector-image/Dockerfile" "${connector_path}/Dockerfile"
+      elif grep -q "FROM adoptopenjdk/openjdk" "${connector_path}/Dockerfile"; then
+        cp "${ANALYZE_CONTAINERS_ROOT_DIR}/templates/springboot-connector-image/Dockerfile" "${connector_path}/Dockerfile"
+      elif grep -q "FROM registry.access.redhat.com/ubi8/nodejs" "${connector_path}/Dockerfile"; then
+        cp "${ANALYZE_CONTAINERS_ROOT_DIR}/templates/node-connector-image/Dockerfile" "${connector_path}/Dockerfile"
       fi
     fi
   done
-  updateConnectors
+  buildConnectors
+  startConnectorsForConfig
 }
 
 ###############################################################################
 # Update Helper Functions                                                     #
 ###############################################################################
 
-function notifyUpdateUserRegistry() {
-  printInfo "Updating user.registry.xml on i2 Analyze Application"
+function notifyUpdateServerConfiguration() {
+  printInfo "Updating server configuration on i2 Analyze Application"
   if curl \
     -L --max-redirs 5 -w "%{http_code}" \
     -s -o "/tmp/response.txt" \
     --cacert "${LOCAL_EXTERNAL_CA_CERT_DIR}/CA.cer" \
     --cookie /tmp/cookie.txt \
     --header 'Content-Type: application/json' \
-    --data-raw "{\"params\":[{\"value\" : [\"\"],\"type\" : {\"className\":\"java.util.ArrayList\",\"items\":[\"java.lang.String\"]}},{\"value\" : [\"/opt/ibm/wlp/usr/shared/config/user.registry.xml\"],\"type\" : {\"className\":\"java.util.ArrayList\",\"items\":[\"java.lang.String\"]}},{\"value\" : [\"\"],\"type\" : {\"className\":\"java.util.ArrayList\",\"items\":[\"java.lang.String\"]}}],\"signature\":[\"java.util.Collection\",\"java.util.Collection\",\"java.util.Collection\"]}" \
+    --data-raw "{\"params\":[{\"value\" : [\"\"],\"type\" : {\"className\":\"java.util.ArrayList\",\"items\":[\"java.lang.String\"]}},{\"value\" : [\"/opt/ibm/wlp/usr/shared/config/user.registry.xml\", \"/opt/ibm/wlp/usr/servers/defaultServer/server.extensions.dev.xml\", \"/opt/ibm/wlp/usr/servers/defaultServer/server.extensions.xml\"],\"type\" : {\"className\":\"java.util.ArrayList\",\"items\":[\"java.lang.String\",\"java.lang.String\",\"java.lang.String\"]}},{\"value\" : [\"\"],\"type\" : {\"className\":\"java.util.ArrayList\",\"items\":[\"java.lang.String\"]}}],\"signature\":[\"java.util.Collection\",\"java.util.Collection\",\"java.util.Collection\"]}" \
     --request POST "${BASE_URI}/IBMJMXConnectorREST/mbeans/WebSphere%3Aservice%3Dcom.ibm.ws.kernel.filemonitor.FileNotificationMBean/operations/notifyFileChanges" \
     >/tmp/http_code.txt; then
     # Invoking FileNotificationMBean doc: https://www.ibm.com/docs/en/zosconnect/3.0?topic=demand-invoking-filenotificationmbean-from-rest-api
     http_code=$(cat /tmp/http_code.txt)
     if [[ "${http_code}" != 200 ]]; then
-      printErrorAndExit "Problem updating user.registry.xml application. Returned:${http_code}"
+      printErrorAndExit "Problem updating server configuration application. Returned:${http_code}"
     else
       printInfo "Response from i2 Analyze Web UI:$(cat /tmp/response.txt)"
     fi
   else
     printErrorAndExit "Problem calling curl:$(cat /tmp/http_code.txt)"
   fi
+  checkLibertyStatus
 }
 
 function updateLiveConfiguration() {
   local errors_message="Validation errors detected, please review the above message(s)."
 
-  for fileName in "${filesChangedArray[@]}"; do
-    if [[ "${fileName}" == "user.registry.xml" ]]; then
-      notifyUpdateUserRegistry
-      break
-    fi
-  done
+  if [[ " ${filesChangedArray[*]} " == *" user.registry.xml "* || " ${filesChangedArray[*]} " == *" server.extensions.xml "* || " ${filesChangedArray[*]} " == *" server.extensions.dev.xml "* ]]; then
+    notifyUpdateServerConfiguration
+  fi
 
   print "Calling reload endpoint"
   if curl \
@@ -812,30 +870,33 @@ function updateLiveConfiguration() {
 function callGatewayReload() {
   local errors_message="Validation errors detected, please review the above message(s)."
 
-  loginToLiberty
-  print "Calling gateway reload endpoint"
-  if curl \
-    -L --max-redirs 5 \
-    -s -o /tmp/response.txt -w "%{http_code}" \
-    --cookie /tmp/cookie.txt \
-    --cacert "${LOCAL_EXTERNAL_CA_CERT_DIR}/CA.cer" \
-    --header "Origin: ${FRONT_END_URI}" \
-    --header 'Content-Type: application/json' \
-    --request POST "${FRONT_END_URI}/api/v1/gateway/reload" >/tmp/http_code.txt; then
-    http_code=$(cat /tmp/http_code.txt)
-    if [[ "${http_code}" != "200" ]]; then
-      jq '.errorMessage' /tmp/response.txt
-      printErrorAndExit "${errors_message}"
+  if [[ "${RELOAD_GATEWAY_REQUIRED}" == "true" ]]; then
+    print "Calling gateway reload endpoint"
+    loginToLiberty
+
+    if curl \
+      -L --max-redirs 5 \
+      -s -o /tmp/response.txt -w "%{http_code}" \
+      --cookie /tmp/cookie.txt \
+      --cacert "${LOCAL_EXTERNAL_CA_CERT_DIR}/CA.cer" \
+      --header "Origin: ${FRONT_END_URI}" \
+      --header 'Content-Type: application/json' \
+      --request POST "${FRONT_END_URI}/api/v1/gateway/reload" >/tmp/http_code.txt; then
+      http_code=$(cat /tmp/http_code.txt)
+      if [[ "${http_code}" != "200" ]]; then
+        jq '.errorMessage' /tmp/response.txt
+        printErrorAndExit "${errors_message}"
+      else
+        echo "No Validation errors detected."
+      fi
     else
-      echo "No Validation errors detected."
+      printErrorAndExit "Problem calling gateway reload endpoint"
     fi
-  else
-    printErrorAndExit "Problem calling reload endpoint"
   fi
 }
 
 function loginToLiberty() {
-  local MAX_TRIES=10
+  local MAX_TRIES=30
   local app_admin_password
 
   app_admin_password=$(getApplicationAdminPassword)
@@ -860,7 +921,7 @@ function loginToLiberty() {
       fi
     fi
     echo "Liberty is NOT live (attempt: $i). Waiting..."
-    sleep 10
+    sleep 5
   done
   printInfo "Liberty won't start- resetting"
   updateStateFile "2"
@@ -902,14 +963,21 @@ function startApplication() {
   controlApplication start
 }
 
+function restartServer() {
+  # We can't use /opt/ibm/wlp/bin/server stop defaultServer because the container process will stop
+  # which will stop the container
+  docker restart "${LIBERTY1_CONTAINER_NAME}"
+}
+
 function copyLocalConfigToTheLibertyContainer() {
   local liberty_server_path="liberty/wlp/usr/servers/defaultServer"
+  local liberty_app_war_path="${liberty_server_path}/apps/opal-services.war"
   printInfo "Copying configuration to the Liberty container (${LIBERTY1_CONTAINER_NAME})"
 
   # All other configuration is copied to the application WEB-INF/classes directory.
   local tmp_classes_dir="${ANALYZE_CONTAINERS_ROOT_DIR}/tmp_classes"
   createFolder "${tmp_classes_dir}"
-  find "${GENERATED_LOCAL_CONFIG_DIR}" -maxdepth 1 -type f ! -name user.registry.xml ! -name extension-references.json ! -name connector-references.json ! -name '*.xsd' ! -name server.extensions.xml ! -name server.extensions.dev.xml -exec cp -t "${tmp_classes_dir}" {} \;
+  find "${GENERATED_LOCAL_CONFIG_DIR}" -maxdepth 1 -type f ! -name privacyagreement.html ! -name user.registry.xml ! -name extension-references.json ! -name connector-references.json ! -name '*.xsd' ! -name server.extensions.xml ! -name server.extensions.dev.xml -exec cp -t "${tmp_classes_dir}" {} \;
 
   # In the schema_dev deployment point Gateway schemes to the ISTORE schemes
   if [[ "${DEPLOYMENT_PATTERN}" == "schema_dev" ]]; then
@@ -917,7 +985,7 @@ function copyLocalConfigToTheLibertyContainer() {
     sed -i 's/^ChartingSchemesResource=/Gateway.External.ChartingSchemesResource=/' "${tmp_classes_dir}/ApolloServerSettingsMandatory.properties"
   fi
 
-  docker cp "${tmp_classes_dir}/." "${LIBERTY1_CONTAINER_NAME}:${liberty_server_path}/apps/opal-services.war/WEB-INF/classes"
+  docker cp "${tmp_classes_dir}/." "${LIBERTY1_CONTAINER_NAME}:${liberty_app_war_path}/WEB-INF/classes"
   if [[ -f "${GENERATED_LOCAL_CONFIG_DIR}/server.extensions.xml" ]]; then
     docker cp "${GENERATED_LOCAL_CONFIG_DIR}/server.extensions.xml" "${LIBERTY1_CONTAINER_NAME}:${liberty_server_path}"
   fi
@@ -926,6 +994,7 @@ function copyLocalConfigToTheLibertyContainer() {
   fi
   rm -rf "${tmp_classes_dir}"
 
+  docker cp "${GENERATED_LOCAL_CONFIG_DIR}/privacyagreement.html" "${LIBERTY1_CONTAINER_NAME}:${liberty_app_war_path}/privacyagreement.html"
   updateLog4jFile
   addConfigAdmin
 
@@ -934,7 +1003,17 @@ function copyLocalConfigToTheLibertyContainer() {
   docker exec "${LIBERTY1_CONTAINER_NAME}" bash -c "export CONNECTOR_URL_MAP='${connector_url_map_new}'; \
     rm /opt/ibm/wlp/usr/servers/defaultServer/apps/opal-services.war/WEB-INF/classes/connectors.json; \
     rm /opt/ibm/wlp/usr/servers/defaultServer/apps/opal-services.war/already_run; \
-    /opt/create-connector-config.sh"
+    /opt/entrypoint.d/create-connector-config.sh"
+}
+
+function updatePreviousPrometheusConfigurationWithCurrent() {
+  printInfo "Copying Prometheus configuration from (${CURRENT_CONFIGURATION_PATH}) to (${PREVIOUS_CONFIGURATION_PATH})"
+  cp -pR "${CURRENT_CONFIGURATION_PATH}/prometheus"/* "${PREVIOUS_CONFIGURATION_PATH}/prometheus"
+}
+
+function updatePreviousGrafanaConfigurationWithCurrent() {
+  printInfo "Copying Grafana configuration from (${CURRENT_CONFIGURATION_PATH}) to (${PREVIOUS_CONFIGURATION_PATH})"
+  cp -pR "${CURRENT_CONFIGURATION_PATH}/grafana/dashboards/"* "${PREVIOUS_CONFIGURATION_PATH}/grafana/dashboards"
 }
 
 function updatePreviousConfigurationWithCurrent() {
@@ -1067,10 +1146,7 @@ function handleConfigurationChange() {
   compareCurrentExtensions
 
   if [[ "${configFinalActionCode}" == "0" ]]; then
-    print "No updates to the configuration"
-    updatePreviousConfigurationWithCurrent
-    waitForLibertyToBeLive
-    updateStateFile "4"
+    printInfo "No updates to the configuration"
     return
   fi
 
@@ -1078,7 +1154,9 @@ function handleConfigurationChange() {
   updateStateFile "3"
   for fileName in "${filesChangedArray[@]}"; do
     if [[ "${fileName}" == "system-match-rules.xml" ]]; then
-      updateMatchRules
+      if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
+        updateMatchRules
+      fi
     elif [[ "${fileName}" == "schema.xml" ]]; then
       updateSchema
     elif [[ "${fileName}" == "security-schema.xml" ]]; then
@@ -1090,7 +1168,7 @@ function handleConfigurationChange() {
       if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
         destructiveSchemaOrSecuritySchemaChange
       fi
-    elif [[ "${fileName}" == "extension-references.json" || "${fileName}" = lib/*.jar ]]; then
+    elif [[ "${fileName}" == "extension-references.json" || "${fileName}" = lib/*.sha512 ]]; then
       handleExtensionChange
     fi
   done
@@ -1104,18 +1182,30 @@ function handleConfigurationChange() {
   fi
 
   copyLocalConfigToTheLibertyContainer
-  if [[ "${configFinalActionCode}" != "1" ]]; then
+  case "${configFinalActionCode}" in
+  "1")
+    updateLiveConfiguration
+    ;;
+  "2") ;&
+    # Fallthrough
+  "3")
     printInfo "Restarting i2 Analyze application"
     clearLibertyValidationLog
     restartApplication
     checkLibertyStatus
-  else
-    printInfo "Calling reload endpoint"
-    waitForLibertyToBeLive
-    updateLiveConfiguration
-  fi
+
+    if [[ " ${filesChangedArray[*]} " == *" user.registry.xml "* || " ${filesChangedArray[*]} " == *" server.extensions.xml "* || " ${filesChangedArray[*]} " == *" server.extensions.dev.xml "* ]]; then
+      notifyUpdateServerConfiguration
+    fi
+    ;;
+  "4")
+    printInfo "Restarting server"
+    clearLibertyValidationLog
+    restartServer
+    checkLibertyStatus
+    ;;
+  esac
   updatePreviousConfigurationWithCurrent
-  updateStateFile "4"
 }
 
 function handleDeploymentPatternChange() {
@@ -1162,7 +1252,6 @@ function handleDeploymentPatternChange() {
     clearLibertyValidationLog
     startApplication
     checkLibertyStatus
-    updateStateFile "4"
   else
     printInfo "DEPLOYMENT_PATTERN is unchanged: ${CURRENT_DEPLOYMENT_PATTERN}"
   fi
@@ -1172,54 +1261,108 @@ function handleExtensionChange() {
   local jars_liberty_path="liberty/wlp/usr/servers/defaultServer/apps/opal-services.war/WEB-INF/lib"
   local extension_references_file="${LOCAL_USER_CONFIG_DIR}/extension-references.json"
   local old_extension_references_file="${PREVIOUS_CONFIGURATION_PATH}/extension-references.json"
+  local extension_dependencies_path="${EXTENSIONS_DIR}/extension-dependencies.json"
   local extension_files old_extension_files deleted_extensions
   local filename
 
   print "Updating i2Analyze extensions"
-  # Remove jars that aren't there anymore
+  # Remove extensions that were deleted from extension-references.json
   if [[ -d "${PREVIOUS_CONFIGURATION_PATH}" ]]; then
-    readarray -t extension_files < <(jq -r '.extensions[] | .name + "-" + .version' <"${extension_references_file}")
-    readarray -t old_extension_files < <(jq -r '.extensions[] | .name + "-" + .version' <"${old_extension_references_file}")
+    readarray -t extension_files < <(jq -r '.extensions[] | .name' <"${extension_references_file}")
+    readarray -t old_extension_files < <(jq -r '.extensions[] | .name' <"${old_extension_references_file}")
     # Compute deleted extensions
     IFS=' ' read -r -a deleted_extensions <<<"$(subtractArrayFromArray extension_files old_extension_files)"
-
-    for filename in "${deleted_extensions[@]}"; do
-      rm "${LOCAL_LIB_DIR}/${filename}.jar"
+    # Compute deleted extension dependencies
+    for extension_name in "${deleted_extensions[@]}"; do
+      IFS=' ' read -ra dependencies <<<"$(jq -r --arg name "${extension_name}" '.[] | select(.name == $name) | .dependencies[]' "${extension_dependencies_path}" | xargs)"
+      for dependency in "${dependencies[@]}"; do
+        # shellcheck disable=SC2076
+        if [[ ! " ${deleted_extensions[*]} " =~ " ${dependency} " ]]; then
+          deleted_extensions+=("${dependencies[@]}")
+        fi
+      done
+    done
+    for extension_name in "${deleted_extensions[@]}"; do
+      printInfo "Delete old library ${jars_liberty_path}/${extension_name}"
+      extension_version="$(xmlstarlet sel -t -v "/project/version" "${EXTENSIONS_DIR}/${extension_name}/pom.xml")"
+      docker exec "${LIBERTY1_CONTAINER_NAME}" bash -c "rm ${jars_liberty_path}/${extension_name}-${extension_version}.jar > /dev/null" || true
     done
   fi
-  if [[ -d "${PREVIOUS_CONFIGURATION_LIB_PATH}" ]]; then
-    for path in "${PREVIOUS_CONFIGURATION_LIB_PATH}"/*; do
-      if [[ ! -e "${path}" ]]; then
-        continue
-      fi
-      filename=$(basename "${path}")
-      if [ ! -f "${LOCAL_LIB_DIR}/${filename}" ]; then
-        printInfo "Delete old library ${jars_liberty_path}/${filename}"
-        docker exec "${LIBERTY1_CONTAINER_NAME}" bash -c "rm ${jars_liberty_path}/${filename} > /dev/null 2>&1"
-      fi
-    done
-  fi
 
+  # Update extensions
   deleteFolderIfExistsAndCreate "${PREVIOUS_CONFIGURATION_LIB_PATH}"
-  readarray -t extension_files < <(jq -r '.extensions[] | .name + "-" + .version' <"${extension_references_file}")
-
-  for filename in "${extension_files[@]}"; do
-    cp -pr "${LOCAL_LIB_DIR}/${filename}.jar" "${PREVIOUS_CONFIGURATION_LIB_PATH}"
+  readarray -t extension_files < <(jq -r '.extensions[] | .name' <"${extension_references_file}")
+  for extension in "${extension_files[@]}"; do
+    IFS=' ' read -ra dependencies <<<"$(jq -r --arg name "${extension}" '.[] | select(.name == $name) | .dependencies[]' "${extension_dependencies_path}" | xargs)"
+    for dependency in "${dependencies[@]}"; do
+      # shellcheck disable=SC2076
+      if [[ ! " ${extension_files[*]} " =~ " ${dependency} " ]]; then
+        extension_files+=("${dependencies[@]}")
+      fi
+    done
   done
+  for extension_name in "${extension_files[@]}"; do
+    # Save current sha in the previous config
+    cp -pr "${PREVIOUS_EXTENSIONS_DIR}/${extension_name}.sha512" "${PREVIOUS_CONFIGURATION_LIB_PATH}"
+    extension_version="$(xmlstarlet sel -t -v "/project/version" "${EXTENSIONS_DIR}/${extension_name}/pom.xml")"
+    # Copy extension to the liberty container
+    docker cp "${EXTENSIONS_DIR}/${extension_name}/target/${extension_name}-${extension_version}.jar" "${LIBERTY1_CONTAINER_NAME}:${jars_liberty_path}"
+  done
+}
 
-  # Update all Extension jars
-  printInfo "Copy current Extension jars to Liberty container"
-  docker cp "${PREVIOUS_CONFIGURATION_LIB_PATH}/." "${LIBERTY1_CONTAINER_NAME}:${jars_liberty_path}"
+function handlePrometheusConfigurationChange() {
+  local prometheus_tmp_config_dir="/tmp/prometheus"
+  local prometheus_template_file="prometheus.yml"
+  local prometheus_config_file="${LOCAL_USER_CONFIG_DIR}/prometheus/${prometheus_template_file}"
+  local prometheus_password
+  local reload_status_code
+  compareCurrentPrometheusConfig
+
+  if [[ "${PROMETHEUS_ACTION_CODE}" != "0" ]]; then
+    print "Updating prometheus configuration"
+    printInfo "Copy current Prometheus configuration to Prometheus container"
+    updateVolume "${LOCAL_PROMETHEUS_CONFIG_DIR}" "${PROMETHEUS_CONFIG_VOLUME_NAME}" "${prometheus_tmp_config_dir}"
+    docker exec "${PROMETHEUS_CONTAINER_NAME}" bash -c "/opt/update-prometheus-config.sh"
+    updatePreviousPrometheusConfigurationWithCurrent
+    prometheus_password=$(getPrometheusAdminPassword)
+    reload_status_code=$(runi2AnalyzeToolAsExternalUser bash -c "curl --write-out \"%{http_code}\" --silent --output /dev/null \
+      -X POST -u ${PROMETHEUS_USERNAME}:${prometheus_password} \
+      --cacert /tmp/i2acerts/CA.cer https://${PROMETHEUS_FQDN}:9090/-/reload")
+    if [[ "${reload_status_code}" == "200" ]]; then
+      echo "Prometheus configuration is updated successfully"
+    else
+      printErrorAndExit "Prometheus configuration is NOT updated successfully. Unexpected status code: ${reload_status_code}"
+    fi
+  else
+    printInfo "No updates to the prometheus configuration"
+  fi
+}
+
+function handleGrafanaDashboardsChange() {
+  compareCurrentGrafanaDashboards
+
+  if [[ "${GRAFANA_ACTION_CODE}" != "0" ]]; then
+    print "Updating grafana dashboards"
+    printInfo "Copy current Grafana dashboards to Grafana container"
+    exit_code="$(updateGrafanaDashboardVolume)"
+    updatePreviousGrafanaConfigurationWithCurrent
+    if [[ "${exit_code}" -eq 0 ]]; then
+      echo "Grafana dashboards updated successfully"
+    else
+      printErrorAndExit "Grafana dashboards NOT updated successfully. Unexpected status code: ${exit_code}"
+    fi
+  else
+    printInfo "No updates to the grafana configuration"
+  fi
+}
+
+function handleConnectorsChange() {
+  buildConnectors
+  startConnectorsForConfig
 }
 
 function updateDeployment() {
-
-  # Validate Configuration
-  validateMandatoryFilesPresent
-
-  # Restart Docker containers
-  restartDockerContainersForConfig "${CONFIG_NAME}"
-  restartConnectorsForConfig
+  initializeDeployment
 
   # Login to Liberty
   loginToLiberty
@@ -1227,8 +1370,26 @@ function updateDeployment() {
   # Handling DEPLOYMENT_PATTERN Change
   handleDeploymentPatternChange
 
+  updateStateFile "3"
+
+  buildExtensions
+
+  # Handling Prometheus Configuration Change
+  handlePrometheusConfigurationChange
+
+  # Handling Grafana Configuration Change
+  handleGrafanaDashboardsChange
+
+  # Handling Connectors Change
+  handleConnectorsChange
+
   # Handling Configuration Change
   handleConfigurationChange
+
+  updateStateFile "4"
+
+  # Update configuration
+  updatePreviousConfigurationWithCurrent
 
   print "Updated Successfully"
   echo "This application is configured for access on ${FRONT_END_URI}"
@@ -1252,12 +1413,12 @@ function moveBackupIfExist() {
 }
 
 function createBackup() {
+  initializeDeployment
+
   if [[ "${DB_DIALECT}" == "db2" ]]; then
     printErrorAndExit "Not implemented yet"
   fi
-  # Restart Docker containers
-  restartDockerContainersForConfig "${CONFIG_NAME}"
-  restartConnectorsForConfig
+  waitForLibertyToBeLive
 
   # Check for backup file
   if [[ -z "${BACKUP_NAME}" ]]; then
@@ -1279,13 +1440,12 @@ function createBackup() {
       WITH FORMAT;"
   runSQLServerCommandAsDBB runSQLQuery "${sql_query}"
 
-  # Update backup file permission to your local user
-  docker exec "${SQL_SERVER_CONTAINER_NAME}" bash -c "chown -R $(id -u "${USER}"):$(id -g "${USER}") ${DB_CONTAINER_BACKUP_DIR}"
-
   getVolume "${BACKUP_DIR}" "${SQL_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
 }
 
 function restoreFromBackup() {
+  initializeDeployment
+
   if [[ -z "${BACKUP_NAME}" ]]; then
     print "No backup_name provided, using the 'default' name"
     BACKUP_NAME="default"
@@ -1322,9 +1482,6 @@ function cleanDeployment() {
 
   removeDockerVolumes
 
-  printInfo "Deleting deployed extensions: ${LOCAL_LIB_DIR}"
-  deleteFolderIfExists "${LOCAL_LIB_DIR}"
-
   printInfo "Deleting previous configuration folder: ${PREVIOUS_CONFIGURATION_DIR}"
   deleteFolderIfExists "${PREVIOUS_CONFIGURATION_DIR}"
 }
@@ -1333,22 +1490,9 @@ function cleanDeployment() {
 # Connector Helper Functions                                                  #
 ###############################################################################
 
-function updateConnectors() {
-  local connector_args
-  local included_connector
-  local excluded_connector
-
-  if [[ -n "${INCLUDED_CONNECTORS[*]}" ]]; then
-    for included_connector in "${INCLUDED_CONNECTORS[@]}"; do
-      connector_args+=(-i "${included_connector}")
-    done
-  elif [[ -n "${EXCLUDED_CONNECTORS[*]}" ]]; then
-    for excluded_connector in "${EXCLUDED_CONNECTORS[@]}"; do
-      connector_args+=(-e "${excluded_connector}")
-    done
-  else
-    connector_args=()
-  fi
+function buildConnectors() {
+  local connector_references_file="${LOCAL_USER_CONFIG_DIR}/connector-references.json"
+  local connector_args=()
 
   if [[ "${YES_FLAG}" == "true" ]]; then
     connector_args+=(-y)
@@ -1357,12 +1501,16 @@ function updateConnectors() {
     connector_args+=(-v)
   fi
 
-  if [[ "${AWS_ARTIFACTS}" == "true" ]]; then
-    print "Running generateSecrets.sh"
-    "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/generateSecrets.sh" -a -l "${I2A_DEPENDENCIES_IMAGES_TAG}" -c connectors "${connector_args[@]}"
-    print "Running buildConnectorImages.sh"
-    "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/buildConnectorImages.sh" -a -d "${DEPLOYMENT_NAME}" "${connector_args[@]}"
-  else
+  readarray -t all_connector_names < <(jq -r '.connectors[].name' <"${connector_references_file}")
+
+  if [[ "${#all_connector_names}" -gt 0 ]]; then
+    print "Building connector images"
+
+    # Only attempt to rebuild connectors for the current config
+    for connector_name in "${all_connector_names[@]}"; do
+      connector_args+=("-i" "${connector_name}")
+    done
+
     print "Running generateSecrets.sh"
     "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/generateSecrets.sh" -c connectors "${connector_args[@]}"
     print "Running buildConnectorImages.sh"
@@ -1376,9 +1524,9 @@ function updateConnectors() {
 
 function initializeDeployment() {
   printInfo "Initializing deployment"
-  if [[ "${AWS_ARTIFACTS}" = "true" ]]; then
-    aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ECR_BASE_NAME}"
-  fi
+
+  # Validate Configuration
+  validateMandatoryFilesPresent
 
   # Auto generate dsid into config folder before we create the generated one
   createDataSourceId
@@ -1386,13 +1534,16 @@ function initializeDeployment() {
   generateArtifacts
 
   # Add files that could be missing
-  if [[ ! -f "${LOCAL_USER_CONFIG_DIR}/extension-references.json" ]]; then
-    cp "${LOCAL_CONFIGURATION_DIR}/extension-references.json" "${LOCAL_USER_CONFIG_DIR}/extension-references.json"
-  fi
+  readarray -d '' fileList < <(find "${LOCAL_CONFIGURATION_DIR}" -type f -print0)
+  for file in "${fileList[@]}"; do
+    filename="${file//"${LOCAL_CONFIGURATION_DIR}/"/}"
+    if [[ ! -f "${LOCAL_USER_CONFIG_DIR}/${filename}" ]]; then
+      cp "${file}" "${LOCAL_USER_CONFIG_DIR}/${filename}"
+    fi
+  done
 
   addConfigAdminToSecuritySchema
   createMountedConfigStructure
-  mkdir -p "${LOCAL_LIB_DIR}"
 
   if [[ ! -f "${PREVIOUS_STATE_FILE_PATH}" ]]; then
     createInitialStateFile
@@ -1429,17 +1580,15 @@ function createInitialStateFile() {
   printInfo "Creating initial ${PREVIOUS_STATE_FILE_PATH} file"
   createFolder "${PREVIOUS_CONFIGURATION_DIR}"
   cp -p "${template_state_file_path}" "${PREVIOUS_STATE_FILE_PATH}"
-  STATE=0
-}
-
-function updateStateFile() {
-  local new_state="$1"
-  printInfo "Updating ${PREVIOUS_STATE_FILE_PATH} with state: ${new_state}"
-  sed -i "s/STATE=.*/STATE=${new_state}/g" "${PREVIOUS_STATE_FILE_PATH}"
+  STATE="0"
 }
 
 function workOutTaskToRun() {
-  source "${PREVIOUS_STATE_FILE_PATH}"
+  if [[ -f "${PREVIOUS_STATE_FILE_PATH}" ]]; then
+    source "${PREVIOUS_STATE_FILE_PATH}"
+  else
+    STATE=0
+  fi
   printInfo "STATE: ${STATE}"
 
   if [[ "${STATE}" == "0" ]]; then
@@ -1453,13 +1602,13 @@ function workOutTaskToRun() {
     TASK="update"
   elif [[ "${STATE}" == "4" ]]; then
     source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/version"
-    CONFIG_I2ANALYZE_VERSION="${I2ANALYZE_VERSION}"
+    CONFIG_SUPPORTED_I2ANALYZE_VERSION="${SUPPORTED_I2ANALYZE_VERSION}"
     source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
-    CURRENT_I2ANALYZE_VERSION="${I2ANALYZE_VERSION}"
-    if [[ "${CONFIG_I2ANALYZE_VERSION}" != "${CURRENT_I2ANALYZE_VERSION}" ]]; then
+    CURRENT_SUPPORTED_I2ANALYZE_VERSION="${SUPPORTED_I2ANALYZE_VERSION}"
+    if [[ "${CONFIG_SUPPORTED_I2ANALYZE_VERSION}" != "${CURRENT_SUPPORTED_I2ANALYZE_VERSION}" ]]; then
       print "Upgrading deployment"
-      if [[ "${CONFIG_I2ANALYZE_VERSION}" < "4.3.4.0" ]]; then
-        printErrorAndExit "Upgrade from i2 Analyze version ${CONFIG_I2ANALYZE_VERSION} is not supported"
+      if [[ "${CONFIG_SUPPORTED_I2ANALYZE_VERSION}" < "4.3.4.0" ]]; then
+        printErrorAndExit "Upgrade from i2 Analyze version ${CONFIG_SUPPORTED_I2ANALYZE_VERSION} is not supported"
       fi
       TASK="upgrade"
     else
@@ -1473,14 +1622,13 @@ function workOutTaskToRun() {
       print "Some containers are missing, the deployment is NOT healthy."
       waitForUserReply "Do you want to clean and recreate the deployment? This will permanently remove data from the deployment."
       # Reset state
-      STATE=0
+      STATE="0"
       TASK="create"
     fi
     if ! checkConnectorContainersExist; then
       # Reset state
-      STATE=0
-      TASK="create"
-      printErrorAndExit "Some connector containers are missing, the deployment is NOT healthy."
+      STATE="3"
+      printWarn "Some connector containers are missing, the deployment is NOT healthy."
     fi
   fi
 }
@@ -1492,13 +1640,17 @@ function runTopLevelChecks() {
   checkVariableIsSet "${HOST_PORT_SOLR}" "HOST_PORT_SOLR environment variable is not set"
   checkVariableIsSet "${HOST_PORT_I2ANALYZE_SERVICE}" "HOST_PORT_I2ANALYZE_SERVICE environment variable is not set"
   checkVariableIsSet "${HOST_PORT_DB}" "HOST_PORT_DB environment variable is not set"
+  checkVariableIsSet "${HOST_PORT_PROMETHEUS}" "HOST_PORT_PROMETHEUS environment variable is not set"
+  checkVariableIsSet "${HOST_PORT_GRAFANA}" "HOST_PORT_GRAFANA environment variable is not set"
 }
 
 function printDeploymentInformation() {
+  local toolkit_version
   print "Deployment Information:"
   echo "ANALYZE_CONTAINERS_ROOT_DIR: ${ANALYZE_CONTAINERS_ROOT_DIR}"
   echo "CONFIG_NAME: ${CONFIG_NAME}"
   echo "DEPLOYMENT_PATTERN: ${DEPLOYMENT_PATTERN}"
+  echo "I2A_DEPENDENCIES_IMAGES_TAG: ${I2A_DEPENDENCIES_IMAGES_TAG}"
 }
 
 function runTask() {
@@ -1521,12 +1673,21 @@ function runTask() {
   "upgrade")
     upgrade
     ;;
+  "package")
+    package
+    ;;
   esac
 }
 
 function runNormalDeployment() {
   workOutTaskToRun
   runTask
+}
+
+function package() {
+  initializeDeployment
+  buildExtensions
+  buildLibertyConfiguredImage
 }
 
 ###############################################################################
@@ -1536,7 +1697,7 @@ function runNormalDeployment() {
 runTopLevelChecks
 printDeploymentInformation
 
-initializeDeployment
+checkLicensesAcceptedIfRequired "${ENVIRONMENT}" "${DEPLOYMENT_PATTERN}" "${DB_DIALECT}"
 
 # If you would like to call a specific function you should do it after this line
 
@@ -1544,22 +1705,14 @@ initializeDeployment
 cleanUpDockerResources
 createDockerNetwork "${DOMAIN_NAME}"
 
+if [[ "${TASK}" != "clean" && "${TASK}" != "package" ]]; then
+  # Restart exited Docker containers
+  restartDockerContainersForConfig "${CONFIG_NAME}"
+  restartConnectorsForConfig
+fi
+
 if [[ -z "${TASK}" ]]; then
   runNormalDeployment
-elif [[ "${TASK}" == "connectors" ]]; then
-  #Get connectors up to date
-  updateConnectors
-  #Run normal deployment
-  runNormalDeployment
-  #Reload gateway
-  callGatewayReload
-elif [[ "${TASK}" == "extensions" ]]; then
-  #Get extensions up to date
-  deployExtensions
-  #Run normal deployment
-  runNormalDeployment
-elif [[ "${TASK}" == "package" ]]; then
-  buildLibertyConfiguredImage
 else
   runTask
 fi

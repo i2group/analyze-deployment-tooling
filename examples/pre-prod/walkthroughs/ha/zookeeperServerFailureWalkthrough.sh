@@ -1,31 +1,14 @@
 #!/usr/bin/env bash
-# MIT License
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
 #
-# Copyright (c) 2022, N. Harris Computer Corporation
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX short identifier: MIT
 
 set -e
 
 if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
   echo "ANALYZE_CONTAINERS_ROOT_DIR variable is not set"
-  echo "Please run '. initShell.sh' in your terminal first or set it with 'export ANALYZE_CONTAINERS_ROOT_DIR=<path_to_root>'"
+  echo "This project should be run inside a VSCode Dev Container. For more information read, the Getting Started guide at https://i2group.github.io/analyze-containers/content/getting_started.html"
   exit 1
 fi
 
@@ -40,6 +23,7 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
 
 warnRootDirNotInPath
+setDependenciesTagIfNecessary
 # Local variables
 TRIES=1
 MAX_TRIES=30
@@ -57,17 +41,17 @@ docker stop "${ZK1_CONTAINER_NAME}"
 print "Waiting for the ZooKeeper quorum status to be DEGRADED"
 TRIES=1
 while [[ "${TRIES}" -le "${MAX_TRIES}" ]]; do
-	if grep -q "DEGRADED" <<<"$(getZkQuorumEnsembleStatus)"; then
-		echo "The Zookeeper ensemble is DEGRADED, a server is missing"
-		break
-	fi
+  if grep -q "DEGRADED" <<<"$(getZkQuorumEnsembleStatus)"; then
+    echo "The Zookeeper ensemble is DEGRADED, a server is missing"
+    break
+  fi
 
-	if [[ "${TRIES}" -ge "${MAX_TRIES}" ]]; then
-		printErrorAndExit "The ZooKeeper ensemble did not report any degradation"
-	fi
-	echo "Waiting..."
-	sleep 5
-	((TRIES++))
+  if [[ "${TRIES}" -ge "${MAX_TRIES}" ]]; then
+    printErrorAndExit "The ZooKeeper ensemble did not report any degradation"
+  fi
+  echo "Waiting..."
+  sleep 5
+  ((TRIES++))
 done
 
 ###############################################################################
@@ -80,17 +64,17 @@ docker start "${ZK1_CONTAINER_NAME}"
 print "Waiting for the ZooKeeper ensemble status to be ACTIVE"
 TRIES=1
 while [[ "${TRIES}" -le "${MAX_TRIES}" ]]; do
-	if grep -q "ACTIVE" <<<"$(getZkQuorumEnsembleStatus)"; then
-		echo "The ZooKeeper quorum is ACTIVE, all servers are running"
-		break
-	fi
+  if grep -q "ACTIVE" <<<"$(getZkQuorumEnsembleStatus)"; then
+    echo "The ZooKeeper quorum is ACTIVE, all servers are running"
+    break
+  fi
 
-	if [[ "${TRIES}" -ge "${MAX_TRIES}" ]]; then
-		printErrorAndExit "ZooKeeper ensemble did come back correctly"
-	fi
-	echo "Waiting..."
-	sleep 5
-	((TRIES++))
+  if [[ "${TRIES}" -ge "${MAX_TRIES}" ]]; then
+    printErrorAndExit "ZooKeeper ensemble did come back correctly"
+  fi
+  echo "Waiting..."
+  sleep 5
+  ((TRIES++))
 done
 
 print "SUCCESS: zookeeperServerFailureWalkthrough has run successfully"

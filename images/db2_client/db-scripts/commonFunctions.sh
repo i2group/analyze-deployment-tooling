@@ -1,25 +1,8 @@
 #!/usr/bin/env bash
-# MIT License
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
 #
-# Copyright (c) 2022, N. Harris Computer Corporation
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX short identifier: MIT
 
 # Disable shellcheck SC2086 as we need word splitting for flags
 # shellcheck disable=SC2086
@@ -36,46 +19,46 @@
 #   N/A
 #######################################
 function identifyCredentials() {
-	if [[ -n "${SA_USERNAME}" && -n "${SA_PASSWORD}" ]]; then
-		USERNAME="${SA_USERNAME}"
-		PASSWORD="${SA_PASSWORD}"
-	else
-		USERNAME="${DB_USERNAME}"
-		PASSWORD="${DB_PASSWORD}"
-	fi
+  if [[ -n "${SA_USERNAME}" && -n "${SA_PASSWORD}" ]]; then
+    USERNAME="${SA_USERNAME}"
+    PASSWORD="${SA_PASSWORD}"
+  else
+    USERNAME="${DB_USERNAME}"
+    PASSWORD="${DB_PASSWORD}"
+  fi
 }
 
 function runSQLCMD() {
-	local command="${1}"
+  local command="${1}"
 
-	${SQLCMD} "${command}"
+  ${SQLCMD} "${command}"
 }
 
 function attachToRemote() {
-	runSQLCMD "ATTACH TO \"${DB_NODE}\" USER \"${DB_USERNAME}\" USING \"${DB_PASSWORD}\""
+  runSQLCMD "ATTACH TO \"${DB_NODE}\" USER \"${DB_USERNAME}\" USING \"${DB_PASSWORD}\""
 }
 
 function catalogRemoteNode() {
-	runSQLCMD "CATALOG TCPIP NODE \"${DB_NODE}\" REMOTE \"${DB_SERVER}\" SERVER \"${DB_PORT}\""
+  runSQLCMD "CATALOG TCPIP NODE \"${DB_NODE}\" REMOTE \"${DB_SERVER}\" SERVER \"${DB_PORT}\""
 }
 
 function catalogRemoteDatabase() {
-	local db_name="${1}"
-	runSQLCMD "CATALOG DATABASE \"${db_name}\" AT NODE \"${DB_NODE}\""
+  local db_name="${1}"
+  runSQLCMD "CATALOG DATABASE \"${db_name}\" AT NODE \"${DB_NODE}\""
 }
 
 function connectToDatabase() {
-	local db_name="${1}"
-	runSQLCMD "CONNECT TO \"${db_name}\" USER \"${USERNAME}\" USING \"${PASSWORD}\""
+  local db_name="${1}"
+  runSQLCMD "CONNECT TO \"${db_name}\" USER \"${USERNAME}\" USING \"${PASSWORD}\""
 }
 
 function connectToRemoteDatabase() {
-	local db_name="${1}"
-	identifyCredentials
+  local db_name="${1}"
+  identifyCredentials
 
-	catalogRemoteNode
-	catalogRemoteDatabase "${db_name}"
-	connectToDatabase "${db_name}"
+  catalogRemoteNode
+  catalogRemoteDatabase "${db_name}"
+  connectToDatabase "${db_name}"
 }
 
 #######################################
@@ -90,14 +73,14 @@ function connectToRemoteDatabase() {
 #    source /opt/db-scripts/commonFunctions.sh && runSQLQuery 'SELECT 1'
 #######################################
 function runSQLQuery() {
-	local sql_query="$1"
+  local sql_query="$1"
 
-	catalogRemoteNode
-	attachToRemote
+  catalogRemoteNode
+  attachToRemote
 
-	runSQLCMD "${sql_query}"
+  runSQLCMD "${sql_query}"
 
-	return "${?}"
+  return "${?}"
 }
 
 #######################################
@@ -113,15 +96,15 @@ function runSQLQuery() {
 #    source /opt/db-scripts/commonFunctions.sh && runSQLQueryForDB 'SELECT 1' 'master'
 #######################################
 function runSQLQueryForDB() {
-	local sql_query="$1"
-	shift
-	local sql_db_name="$1"
+  local sql_query="$1"
+  shift
+  local sql_db_name="$1"
 
-	connectToRemoteDatabase "${sql_db_name}"
+  connectToRemoteDatabase "${sql_db_name}"
 
-	runSQLCMD "${sql_query}"
+  runSQLCMD "${sql_query}"
 
-	return "${?}"
+  return "${?}"
 }
 
 #######################################
@@ -136,9 +119,9 @@ function runSQLQueryForDB() {
 #    source /opt/db-scripts/commonFunctions.sh && runSQLFile <filepath>
 #######################################
 function runSQLFile() {
-	local file="$1"
+  local file="$1"
 
-	${SQLCMD} ${SQLCMD_FLAGS} ${file}
+  ${SQLCMD} ${SQLCMD_FLAGS} ${file}
 
-	return "${?}"
+  return "${?}"
 }

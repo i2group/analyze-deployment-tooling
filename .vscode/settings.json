@@ -1,0 +1,50 @@
+{
+  "xml.catalogs": ["catalog.xml"],
+  "terminal.integrated.profiles.osx": {
+    "bash": {
+      "path": "/usr/local/opt/bash/bin/bash",
+      "icon": "terminal-bash"
+    }
+  },
+  "terminal.integrated.defaultProfile.osx": "bash",
+  "files.exclude": {
+    "**/.{config*}*": true,
+    "**/.{connector-images*}": true,
+    "**/.{i2a-extensions*}": true,
+    "**/.": true,
+    "**/.{github*}*": true,
+    "**/.{vscode*}*": true,
+    "**/configs/*/.*":true,
+    "**/.root":true,
+    "**/.gitattributes":true,
+    "**/.gitkeep":true
+  },
+  "terminal.integrated.defaultProfile.windows": "C:\\WINDOWS\\System32\\wsl.exe",
+  "java.project.referencedLibraries": [
+    "pre-reqs/i2analyze/toolkit/application/shared/lib/*.jar",
+    "pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/disco-api-*.jar",
+    "pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/solr-core-*.jar",
+    "pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/solr-solrj-*.jar",
+    "pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/Daod.jar",
+    "pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/httpclient-*.jar",
+    "pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/httpcore-*.jar",
+    "pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/ApolloLegacy.jar"
+  ],
+  "json.schemas": [{
+    "fileMatch": ["*connector-definition.json"],
+    "url": "./utils/schemas/connector-definition-schema.json"
+  },
+  {
+    "fileMatch": ["*connector-version.json"],
+    "url": "./utils/schemas/connector-version-schema.json"
+  },
+  {
+    "fileMatch": ["*connector-references.json"],
+    "url": "./utils/schemas/connector-references-schema.json"
+  },
+  {
+    "fileMatch": ["*extension-references.json"],
+    "url": "./utils/schemas/extension-references-schema.json"
+  }],
+  "json.validate.enable": true,
+}

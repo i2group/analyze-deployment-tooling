@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://i2group.github.io/analyze-containers/schemas/connector-definition-schema.json",
+  "title": "JSON schema for the Analyze Containers connector definition file",
+
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "An identifier that is unique for all connectors that will be deployed."
+    },
+    "name": {
+      "type": "string",
+      "description": "A name for the connector that is displayed to users in the client."
+    },
+    "description": {
+      "type": "string",
+      "description": "The description of the connector."
+    },
+    "configurationPath": {
+      "default": "/config",
+      "type": "string",
+      "description": "The full path to the configuration endpoint of the connector."
+    },
+    "sendSensitiveHeaders": {
+      "type": "string",
+      "description": "This setting effectively disables connectors that employ user-specific configuration.",
+      "enum": ["true", "false"]
+    },
+    "gatewaySchema": {
+      "default": "",
+      "type": "string",
+      "description": "The short name of an optional gateway schema. When no gateway schema is used, do not provide a value."
+    },
+    "baseUrl": {
+      "default": "http://<hostname>:3000",
+      "type": "string",
+      "description": "Used only for connectors of type `external`. The `baseUrl` value is the URL address of the connector. For any other connectors, the `baseUrl` key is not required."
+    },
+    "type": {
+      "type": "string",
+      "enum": ["i2connect-server", "external"],
+      "description": "Used to identify the type of connector. For i2 Connect server connectors, set to `i2connect-server`. For external connectors, set to `external`. For any other connectors, the `type` key is not required."
+    }
+  },
+  "if": {
+    "properties": {
+      "type": {
+        "const": "external"
+      }
+    },
+    "required": ["type"]
+  },
+  "then": {
+    "required": ["id", "name", "description", "configurationPath", "gatewaySchema", "baseUrl"]
+  },
+  "else": {
+    "required": ["id", "name", "description", "configurationPath", "gatewaySchema"]
+  }
+}

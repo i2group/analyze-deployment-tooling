@@ -1,25 +1,8 @@
 #!/usr/bin/env bash
-# MIT License
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
 #
-# Copyright (c) 2022, N. Harris Computer Corporation
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX short identifier: MIT
 set -e
 
 # cspell:ignore organisation acessto
@@ -60,7 +43,7 @@ map_put "$BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME" "L_Transaction" "account_
 
 # Import IDs used for ingestion with BULK import mode
 BULK_IMPORT_MAPPING_IDS=(
-	"Account" "Address" "Telephone" "Event" "Organisation" "Person" "Property" "Vehicle" "AccessToOrgAcc" "AccessToOrgAdd" "AccessToPerAcc" "AccessToPerAdd" "AccessToOrgOwnVeh" "AccessToPerOwnTel" "AccessToPerOwnVeh" "AccessToPerShOrg" "Associate" "Communication" "Employment" "InvolvedInEvePer" "Transaction"
+  "Account" "Address" "Telephone" "Event" "Organisation" "Person" "Property" "Vehicle" "AccessToOrgAcc" "AccessToOrgAdd" "AccessToPerAcc" "AccessToPerAdd" "AccessToOrgOwnVeh" "AccessToPerOwnTel" "AccessToPerOwnVeh" "AccessToPerShOrg" "Associate" "Communication" "Employment" "InvolvedInEvePer" "Transaction"
 )
 
 ###############################################################################
@@ -70,38 +53,38 @@ print "Inserting data into the staging tables"
 # To stop the variables being evaluated in this script, the variables are escaped using backslashes (\) and surrounded in double quotes (").
 # Any double quotes in the curl command are also escaped by a leading backslash.
 for table_name in $(map_keys "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}"); do
-	csv_and_format_file_name=$(map_get "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}" "${table_name}")
-	case "${DB_DIALECT}" in
-	db2)
-		IFS=',' read -r -a csv_header <"${DATA_DIR}/${BASE_DATA}/${csv_and_format_file_name}.csv"
-		columns=()
-		for header in "${csv_header[@]}"; do
-			columns+=("${header} varchar(1000) NULL")
-		done
-		sql_query="\
+  csv_and_format_file_name=$(map_get "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}" "${table_name}")
+  case "${DB_DIALECT}" in
+  db2)
+    IFS=',' read -r -a csv_header <"${DATA_DIR}/${BASE_DATA}/${csv_and_format_file_name}.csv"
+    columns=()
+    for header in "${csv_header[@]}"; do
+      columns+=("${header} varchar(1000) NULL")
+    done
+    sql_query="\
         INSERT INTO ${STAGING_SCHEMA}.${table_name} ($(
-			IFS=','
-			echo "${csv_header[*]}"
-		)) \
+      IFS=','
+      echo "${csv_header[*]}"
+    )) \
         SELECT * FROM EXTERNAL '/var/i2a-data/${BASE_DATA}/${csv_and_format_file_name}.csv' ($(
-			IFS=','
-			echo "${columns[*]}"
-		)) \
+      IFS=','
+      echo "${columns[*]}"
+    )) \
         USING (DELIMITER ',' SKIP_ROWS 1 TIMESTAMP_FORMAT 'YYYY-MM-DD HH:MI:SS' DATE_FORMAT 'YYYY-MM-DD' NULLVALUE '')"
-		runDb2ServerCommandAsDb2inst1 runSQLQueryForDB "${sql_query}" "${DB_NAME}"
-		;;
-	sqlserver)
-		sql_query="\
+    runDb2ServerCommandAsDb2inst1 runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+    ;;
+  sqlserver)
+    sql_query="\
         BULK INSERT ${STAGING_SCHEMA}.${table_name} \
         FROM '/var/i2a-data/${BASE_DATA}/${csv_and_format_file_name}.csv' \
         WITH (FORMATFILE = '/var/i2a-data/${BASE_DATA}/sqlserver/format-files/${csv_and_format_file_name}.fmt', FIRSTROW = 2)"
-		runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
-		;;
-	esac
+    runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+    ;;
+  esac
 done
 
 for import_id in "${BULK_IMPORT_MAPPING_IDS[@]}"; do
-	runEtlToolkitToolAsi2ETL bash -c "/opt/ibm/etltoolkit/ingestInformationStoreRecords \
+  runEtlToolkitToolAsi2ETL bash -c "/opt/i2/etltoolkit/ingestInformationStoreRecords \
     --importMappingsFile ${IMPORT_MAPPING_FILE} \
     --importMappingId ${import_id} \
     -importMode BULK"
@@ -112,15 +95,15 @@ done
 ###############################################################################
 print "Truncating the staging tables"
 for table_name in $(map_keys "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}"); do
-	csv_and_format_file_name=$(map_get "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}" "${table_name}")
-	sql_query="TRUNCATE TABLE ${STAGING_SCHEMA}.${table_name}"
-	case "${DB_DIALECT}" in
-	db2)
-		sql_query+=" IMMEDIATE;"
-		runDb2ServerCommandAsDb2inst1 runSQLQueryForDB "${sql_query}" "${DB_NAME}"
-		;;
-	sqlserver)
-		runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
-		;;
-	esac
+  csv_and_format_file_name=$(map_get "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}" "${table_name}")
+  sql_query="TRUNCATE TABLE ${STAGING_SCHEMA}.${table_name}"
+  case "${DB_DIALECT}" in
+  db2)
+    sql_query+=" IMMEDIATE;"
+    runDb2ServerCommandAsDb2inst1 runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+    ;;
+  sqlserver)
+    runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+    ;;
+  esac
 done

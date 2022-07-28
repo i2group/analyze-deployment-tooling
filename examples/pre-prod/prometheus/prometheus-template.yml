@@ -1,0 +1,56 @@
+# [Editable] Global configuration
+global:
+  scrape_interval: 15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+# [Editable] Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+# [Editable] Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+# [Non-Editable] Unless you add a new scrape config this shouldn't be changed
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: "prometheus"
+    # metrics_path defaults to '/metrics'
+    scheme: ${PROMETHEUS_SCHEME}
+    static_configs:
+      - targets: ["prometheus.eia:9090"]
+    tls_config:
+      cert_file: /run/secrets/server.cer
+      key_file: /run/secrets/server.key
+      ca_file: /run/secrets/CA.cer
+    basic_auth:
+      username: prometheus
+      password: prometheus
+  - job_name: liberty
+    scheme: ${LIBERTY_SCHEME}
+    static_configs:
+      - targets: ["${LIBERTY1_STANZA}", "${LIBERTY2_STANZA}"]
+    tls_config:
+      cert_file: /run/secrets/out_server.cer
+      key_file: /run/secrets/out_server.key
+      ca_file: /run/secrets/outbound_CA.cer
+    basic_auth:
+      username: Jenny
+      password: Jenny
+  - job_name: i2analyze
+    scheme: ${LIBERTY_SCHEME}
+    static_configs:
+      - targets: ["${LIBERTY1_STANZA}", "${LIBERTY2_STANZA}"]
+    metrics_path: opal/api/v1/metrics
+    tls_config:
+      cert_file: /run/secrets/out_server.cer
+      key_file: /run/secrets/out_server.key
+      ca_file: /run/secrets/outbound_CA.cer
+    basic_auth:
+      username: Jenny
+      password: Jenny

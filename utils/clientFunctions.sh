@@ -1,25 +1,8 @@
 #!/usr/bin/env bash
-# MIT License
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
 #
-# Copyright (c) 2022, N. Harris Computer Corporation
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX short identifier: MIT
 
 ###############################################################################
 # Function definitions start here                                             #
@@ -142,7 +125,7 @@ function waitForIndexesToBeBuilt() {
         --cacert /tmp/i2acerts/CA.cer\
         \"${FRONT_END_URI}/api/v1/admin/indexes/status\""
     )
-    ready_index=$(echo "${index_status_response}" | jq -r ".match[] | select(.state == \"READY\") | .name")
+    ready_index=$(echo "${index_status_response}" | jq -r ".status.match[] | select(.state == \"READY\") | .name")
     if [[ "${ready_index}" == "${match_index}" ]]; then
       echo "${match_index} is ready" && return 0
     fi
@@ -194,7 +177,7 @@ function waitForConnectorToBeLive() {
 
   # If you get here, waitForConnectorToBeLive has not been successful. Run curl with -v
   runi2AnalyzeToolAsGatewayUser bash -c "curl -v --cert /tmp/i2acerts/i2Analyze.pem --cacert /tmp/i2acerts/CA.cer \"${connector_config_url}\""
-  printErrorAndExit "Connector is NOT live"
+  printWarn "Connector is NOT live at ${connector_config_url}"
 }
 
 ###############################################################################
@@ -400,7 +383,6 @@ function runi2AnalyzeTool() {
     --rm \
     "${EXTRA_ARGS[@]}" \
     --name "${I2A_TOOL_CONTAINER_NAME}" \
-    --user "$(id -u "${USER}"):$(id -u "${USER}")" \
     -v "${LOCAL_CONFIG_DIR}:/opt/configuration" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
     -e "LIC_AGREEMENT=${LIC_AGREEMENT}" \
@@ -446,6 +428,9 @@ function runSQLServerCommandAsETL() {
     SSL_CA_CERTIFICATE=$(getSecret certificates/CA/CA.cer)
   fi
 
+  local container_data_dir="/var/i2a-data"
+  updateVolume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
+
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
@@ -479,6 +464,9 @@ function runSQLServerCommandAsi2ETL() {
   if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
     SSL_CA_CERTIFICATE=$(getSecret certificates/CA/CA.cer)
   fi
+
+  local container_data_dir="/var/i2a-data"
+  updateVolume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
 
   docker run \
     --rm \
@@ -547,6 +535,9 @@ function runSQLServerCommandAsSA() {
     SSL_CA_CERTIFICATE=$(getSecret certificates/CA/CA.cer)
   fi
 
+  local container_data_dir="/var/i2a-data"
+  updateVolume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
+
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
@@ -580,6 +571,9 @@ function runSQLServerCommandAsDBA() {
     SSL_CA_CERTIFICATE=$(getSecret certificates/CA/CA.cer)
   fi
 
+  local container_data_dir="/var/i2a-data"
+  updateVolume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
+
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
@@ -612,6 +606,9 @@ function runSQLServerCommandAsDBB() {
   if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
     SSL_CA_CERTIFICATE=$(getSecret certificates/CA/CA.cer)
   fi
+
+  local container_data_dir="/var/i2a-data"
+  updateVolume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
 
   # shellcheck disable=SC2153
   docker run \
@@ -662,15 +659,15 @@ function runEtlToolkitToolAsi2ETL() {
   fi
 
   local container_data_dir="/var/i2a-data"
-  updateVolume "${DATA_DIR}" "${I2A_DATA_VOLUME_NAME}" "${container_data_dir}"
+  updateVolume "${DATA_DIR}" "${I2A_DATA_CLIENT_VOLUME_NAME}" "${container_data_dir}"
+  updateVolume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
 
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
     --name "${ETL_CLIENT_CONTAINER_NAME}" \
-    --user "$(id -u "${USER}"):$(id -u "${USER}")" \
     -v "${LOCAL_CONFIG_DIR}/logs:/opt/configuration/logs" \
-    -v "${I2A_DATA_VOLUME_NAME}:${container_data_dir}" \
+    -v "${I2A_DATA_CLIENT_VOLUME_NAME}:${container_data_dir}" \
     -e "DB_SERVER=${DB_SERVER_FQDN}" \
     -e "DB_PORT=${DB_PORT}" \
     -e "DB_NAME=${DB_NAME}" \
@@ -678,7 +675,7 @@ function runEtlToolkitToolAsi2ETL() {
     -e "DB_OS_TYPE=${DB_OS_TYPE}" \
     -e "DB_INSTALL_DIR=${DB_INSTALL_DIR}" \
     -e "DB_LOCATION_DIR=${DB_LOCATION_DIR}" \
-    -e "ETL_TOOLKIT_JAVA_HOME=/opt/java/openjdk" \
+    -e "ETL_TOOLKIT_JAVA_HOME=/opt/java/openjdk/bin" \
     -e "DB_USERNAME=${DB_USERNAME}" \
     -e "DB_PASSWORD=${DB_PASSWORD}" \
     -e "DB_SSL_CONNECTION=${DB_SSL_CONNECTION}" \
@@ -713,15 +710,15 @@ function runEtlToolkitToolAsDBA() {
   fi
 
   local container_data_dir="/var/i2a-data"
-  updateVolume "${DATA_DIR}" "${I2A_DATA_VOLUME_NAME}" "${container_data_dir}"
+  updateVolume "${DATA_DIR}" "${I2A_DATA_CLIENT_VOLUME_NAME}" "${container_data_dir}"
+  updateVolume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
 
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
     --name "${ETL_CLIENT_CONTAINER_NAME}" \
-    --user "$(id -u "${USER}"):$(id -u "${USER}")" \
     -v "${LOCAL_CONFIG_DIR}/logs:/opt/configuration/logs" \
-    -v "${I2A_DATA_VOLUME_NAME}:${container_data_dir}" \
+    -v "${I2A_DATA_CLIENT_VOLUME_NAME}:${container_data_dir}" \
     -e "DB_SERVER=${SQL_SERVER_FQDN}" \
     -e "DB_PORT=${DB_PORT}" \
     -e "DB_NAME=${DB_NAME}" \
@@ -729,7 +726,7 @@ function runEtlToolkitToolAsDBA() {
     -e "DB_OS_TYPE=${DB_OS_TYPE}" \
     -e "DB_INSTALL_DIR=${DB_INSTALL_DIR}" \
     -e "DB_LOCATION_DIR=${DB_LOCATION_DIR}" \
-    -e "ETL_TOOLKIT_JAVA_HOME=/opt/java/openjdk" \
+    -e "ETL_TOOLKIT_JAVA_HOME=/opt/java/openjdk/bin" \
     -e "DB_USERNAME=${DB_USERNAME}" \
     -e "DB_PASSWORD=${DB_PASSWORD}" \
     -e "DB_SSL_CONNECTION=${DB_SSL_CONNECTION}" \
@@ -751,6 +748,9 @@ function runDb2ServerCommandAsDb2inst1() {
   if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
     SSL_CA_CERTIFICATE=$(getSecret certificates/CA/CA.cer)
   fi
+
+  local container_data_dir="/var/i2a-data"
+  updateVolume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
 
   docker run \
     --rm \
@@ -848,7 +848,7 @@ function updateVolume() {
     -v "${local_dir}:/run/bind-mount" \
     -v "${volume_name}:${volume_dir}" \
     "${REDHAT_UBI_IMAGE_NAME}" \
-    bash -c "rm -rf ${volume_dir}/* && cp -pr '/run/bind-mount/.' '${volume_dir}'"
+    bash -c "rm -rf ${volume_dir}/* && cp -r '/run/bind-mount/.' '${volume_dir}'"
 }
 
 #######################################
@@ -869,11 +869,15 @@ function getVolume() {
 
   docker run \
     --rm \
-    "${EXTRA_ARGS[@]}" \
     -v "${local_dir}:/run/bind-mount" \
     -v "${volume_name}:${volume_dir}" \
     "${REDHAT_UBI_IMAGE_NAME}" \
-    cp -pr "${volume_dir}/." /run/bind-mount
+    bash -c "cp -r '${volume_dir}/.' /run/bind-mount && chown -R $(id -u "${USER}"):$(id -g "${USER}") /run/bind-mount"
+}
+
+function updateGrafanaDashboardVolume() {
+  local grafana_dashboards_dir="/etc/grafana/dashboards"
+  updateVolume "${LOCAL_GRAFANA_CONFIG_DIR}/dashboards" "${GRAFANA_DASHBOARDS_VOLUME_NAME}" "${grafana_dashboards_dir}"
 }
 
 ###############################################################################

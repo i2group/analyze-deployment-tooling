@@ -1,25 +1,8 @@
 #!/usr/bin/env bash
-# MIT License
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
 #
-# Copyright (c) 2022, N. Harris Computer Corporation
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX short identifier: MIT
 
 ###############################################################################
 # Function definitions start here                                             #
@@ -92,6 +75,14 @@ function forceDeleteContainer() {
   docker rm -f "${container_name_or_id}" &>/dev/null
 }
 
+function checkFileExists() {
+  local file_path="$1"
+
+  if [[ ! -f "${file_path}" ]]; then
+    printErrorAndExit "File does NOT exist: ${file_path}"
+  fi
+}
+
 function checkDeploymentIsLive() {
   local config_name="$1"
   local live_flag="true"
@@ -125,8 +116,8 @@ function checkDeploymentIsLive() {
 }
 
 function clearLibertyValidationLog() {
-  docker exec "${LIBERTY1_CONTAINER_NAME}" bash -c 'rm /logs/opal-services/IBM_i2_Validation.log > /dev/null 2>&1 || true'
-  docker exec "${LIBERTY1_CONTAINER_NAME}" bash -c 'rm /logs/opal-services/IBM_i2_Status.log > /dev/null 2>&1 || true'
+  docker exec "${LIBERTY1_CONTAINER_NAME}" bash -c 'rm /logs/opal-services/i2_Validation.log > /dev/null 2>&1 || true'
+  docker exec "${LIBERTY1_CONTAINER_NAME}" bash -c 'rm /logs/opal-services/i2_Status.log > /dev/null 2>&1 || true'
 }
 
 function replaceXmlElementWithHeredoc() {
@@ -166,6 +157,7 @@ function addConfigAdmin() {
   printInfo "Adding config dev environment administrator user to the system"
   addConfigAdminToUserRegistry
   addConfigAdminToCommandAccessControl
+  addConfigAdminToServerXml
 }
 
 function addConfigAdminToSecuritySchema() {
@@ -251,6 +243,23 @@ function addConfigAdminToUserRegistry() {
   docker cp "${tmp_user_registry_file_path}" "${LIBERTY1_CONTAINER_NAME}:${user_registry_container_path}"
 }
 
+function addConfigAdminToServerXml() {
+  local tmp_server_xml_file_path="/tmp/server.xml"
+  local server_xml_file_path="${LOCAL_USER_CONFIG_DIR}/server.xml"
+  local server_xml_container_path="liberty/wlp/usr/servers/defaultServer"
+
+  # Create tmp server.xml file
+  docker cp "${LIBERTY1_CONTAINER_NAME}:${server_xml_container_path}/server.xml" "${tmp_server_xml_file_path}"
+
+  xmlstarlet edit -L \
+    --subnode "/server/application/application-bnd/security-role[@name='Administrator']" --type elem -n "group" \
+    --insert "/server/application/application-bnd/security-role[@name='Administrator']/group[last()]" --type attr -n "name" --value "${I2_ANALYZE_ADMIN}" \
+    "${tmp_server_xml_file_path}"
+
+  # Copy modified server.xml to container
+  docker cp "${tmp_server_xml_file_path}" "${LIBERTY1_CONTAINER_NAME}:${server_xml_container_path}"
+}
+
 function updateLog4jFile() {
   local tmp_log4j2_file_path="/tmp/log4j2.xml"
   local log4j2_file_path="${LOCAL_USER_CONFIG_DIR}/log4j2.xml"
@@ -298,8 +307,8 @@ function updateLog4jFile() {
 EOF
   cat >"${appenders_heredoc_file_path}" <<'EOF'
     <RollingFile name="i2_VALIDATIONLOG" append="true">
-      <FileName>${i2_rootDir}/IBM_i2_Validation.log</FileName>
-      <FilePattern>"${i2_archiveDir}/IBM_i2_Validation-${i2_archiveFileDateFormat}.log</FilePattern>
+      <FileName>${i2_rootDir}/i2_Validation.log</FileName>
+      <FilePattern>"${i2_archiveDir}/i2_Validation-${i2_archiveFileDateFormat}.log</FilePattern>
       <PatternLayout charset="UTF-8" pattern="${i2_validationMessagesPatternLayout}" />
       <Policies>
         <SizeBasedTriggeringPolicy size="${i2_triggerSize}" />
@@ -307,8 +316,8 @@ EOF
       <DefaultRolloverStrategy max="${i2_maxRollover}" />
     </RollingFile>
     <RollingFile name="i2_STATUSLOG" append="true">
-      <FileName>${i2_rootDir}/IBM_i2_Status.log</FileName>
-      <FilePattern>"${i2_archiveDir}/IBM_i2_Status-${i2_archiveFileDateFormat}.log</FilePattern>
+      <FileName>${i2_rootDir}/i2_Status.log</FileName>
+      <FilePattern>"${i2_archiveDir}/i2_Status-${i2_archiveFileDateFormat}.log</FilePattern>
       <PatternLayout charset="UTF-8" pattern="${i2_validationMessagesPatternLayout}" />
       <Policies>
         <SizeBasedTriggeringPolicy size="${i2_triggerSize}" />
@@ -376,12 +385,12 @@ EOF
 
 function waitForLibertyToBeLive() {
   print "Waiting for i2Analyze service to be live"
-  local MAX_TRIES=15
+  local max_tries=30
 
   local ssl_ca_certificate
   getSecret "certificates/externalCA/CA.cer" >/tmp/CA.cer
 
-  for i in $(seq 1 "${MAX_TRIES}"); do
+  for i in $(seq 1 "${max_tries}"); do
     if curl \
       -L --max-redirs 5 \
       -s -S -o /tmp/response.txt \
@@ -399,7 +408,7 @@ function waitForLibertyToBeLive() {
       fi
     fi
     echo "i2Analyze service is NOT live (attempt: $i). Waiting..."
-    sleep 15
+    sleep 5
   done
   echo "Response from the /health/live endpoint: $(cat /tmp/response.txt)"
   docker logs --tail 50 "${LIBERTY1_CONTAINER_NAME}"
@@ -411,8 +420,8 @@ function checkLibertyStatus() {
 
   local warn_message="Warnings detected, please review the above message(s)."
   local errors_message="Validation errors detected, please review the above message(s)."
-  local validation_log_path="/logs/opal-services/IBM_i2_Validation.log"
-  local status_log_path="/logs/opal-services/IBM_i2_Status.log"
+  local validation_log_path="/logs/opal-services/i2_Validation.log"
+  local status_log_path="/logs/opal-services/i2_Status.log"
   local validation_messages
 
   waitForLibertyToBeLive
@@ -433,8 +442,8 @@ function checkLibertyStatus() {
         echo "${validation_messages}"
         printErrorAndExit "${errors_message}"
       fi
+      echo "No Validation errors detected."
     fi
-    echo "No Validation errors detected."
   else
     validation_messages=$(docker exec "${LIBERTY1_CONTAINER_NAME}" cat "${validation_log_path}")
     if [[ -z "${validation_messages}" ]]; then
@@ -480,7 +489,7 @@ function waitForAsynchronousRequestStatusToBeCompleted() {
 #######################################
 function waitForSolrToBeLive() {
   local solr_node="$1"
-  local max_tries=15
+  local max_tries=30
   local can_access_admin_endpoint=true
 
   print "Waiting for Solr Node to be live: ${solr_node}"
@@ -648,7 +657,7 @@ function getZkQuorumEnsembleStatus() {
 #   None
 #######################################
 function waitFori2AnalyzeServiceToBeLive() {
-  local max_tries=50
+  local max_tries=30
   local exit_code=1 # Initialize with DOWN
   local i2analyze_service_status
 
@@ -668,7 +677,7 @@ function waitFori2AnalyzeServiceToBeLive() {
     else
       echo "${i2analyze_service_status}"
     fi
-    sleep 10
+    sleep 5
   done
 
   if [[ "${exit_code}" -eq 0 ]]; then
@@ -691,7 +700,7 @@ function waitFori2AnalyzeServiceToBeLive() {
 #       if 'false' uses SA Password
 #######################################
 function waitForSQLServerToBeLive() {
-  local max_tries=15
+  local max_tries=30
   local sql_query='SELECT 1'
   local first_run="${1:-false}"
   print "Waiting for SQL Server to be live"
@@ -742,6 +751,77 @@ function waitForDb2ServerToBeLive() {
 
   # If you get here, waitForDb2ServerToBeLive has not been successful
   printErrorAndExit "Db2 Server is NOT live."
+}
+
+#######################################
+# Wait for Prometheus to be live
+#######################################
+function waitForPrometheusServerToBeLive() {
+  local max_tries=20
+  local prometheus_password
+  prometheus_password=$(getPrometheusAdminPassword)
+  local prometheus_target_health
+  local liberty1_target_health liberty2_target_health
+  local analyze1_target_health analyze2_target_health
+
+  print "Waiting for Prometheus to be live"
+  for i in $(seq 1 "${max_tries}"); do
+    if status_code=$(runi2AnalyzeToolAsExternalUser bash -c \
+      "curl --write-out \"%{http_code}\" \
+      --silent \
+      --output /dev/null \
+      -u ${PROMETHEUS_USERNAME}:${prometheus_password} \
+      --cacert /tmp/i2acerts/CA.cer \
+      https://${PROMETHEUS_FQDN}:9090/-/healthy"); then
+      if [[ "${status_code}" == "200" ]]; then
+        echo "Prometheus is live" && return 0
+      fi
+    fi
+    echo "Prometheus is NOT live (attempt: ${i}). Waiting..."
+    sleep 5
+  done
+  docker logs --tail 50 "${PROMETHEUS_CONTAINER_NAME}"
+  printErrorAndExit "Prometheus is NOT live"
+}
+
+#######################################
+# Wait for Grafana to be live
+#######################################
+function waitForGrafanaServerToBeLive() {
+  local max_tries=20
+  local grafana_password
+  grafana_password=$(getSecret "grafana/admin_PASSWORD")
+
+  print "Waiting for Grafana to be live"
+  for i in $(seq 1 "${max_tries}"); do
+    if status_code=$(runi2AnalyzeToolAsExternalUser bash -c \
+      "curl --write-out \"%{http_code}\" \
+      --silent \
+      --output /dev/null \
+      -u ${GRAFANA_USERNAME}:${grafana_password} \
+      --cacert /tmp/i2acerts/CA.cer \
+      https://${GRAFANA_FQDN}:3000/api/health"); then
+      if [[ "${status_code}" == "200" ]]; then
+        printInfo "Checking Grafana Datasource"
+        status_code=$(runi2AnalyzeToolAsExternalUser bash -c \
+          "curl --write-out \"%{http_code}\" \
+          --silent \
+          --output /dev/null \
+          -X POST \"https://${GRAFANA_FQDN}:3000/api/ds/query\" \
+          -H \"content-type: application/json\" \
+          --cacert /tmp/i2acerts/CA.cer \
+          -u ${GRAFANA_USERNAME}:${grafana_password} \
+          --data-raw '{\"queries\":[{\"refId\":\"test\",\"expr\":\"1+1\",\"datasource\":{\"type\":\"prometheus\",\"uid\":\"prometheus\"}}],\"from\":\"now-1m\",\"to\":\"now\"}'")
+        if [[ "${status_code}" == "200" ]]; then
+          echo "Grafana is live" && return 0
+        fi
+      fi
+    fi
+    echo "Grafana is NOT live (attempt: ${i}). Waiting..."
+    sleep 5
+  done
+  docker logs --tail 50 "${GRAFANA_CONTAINER_NAME}"
+  printErrorAndExit "Grafana is NOT live"
 }
 
 #######################################
@@ -840,7 +920,7 @@ function printErrorAndExit() {
 #   1: The message
 #######################################
 function printWarn() {
-  printf "\n\e[31mWARN: %s\n" "$1" >&2
+  printf "\n\e[33mWARN: %s\n" "$1" >&2
   printf "\e[0m" >&2
 }
 
@@ -852,6 +932,18 @@ function printWarn() {
 function printInfo() {
   if [[ "${VERBOSE}" == "true" ]]; then
     printf "[INFO] %s\n" "$1"
+  fi
+}
+
+#######################################
+# Delete file if exists.
+# Arguments:
+#   1: File path
+#######################################
+function deleteFileIfExists() {
+  local file_path="$1"
+  if [[ -f "${file_path}" ]]; then
+    rm -f "${file_path}"
   fi
 }
 
@@ -896,6 +988,18 @@ function createFolder() {
 }
 
 #######################################
+# Print error if command not installed.
+# Arguments:
+#   1: Command
+#######################################
+function printErrorIfCommandNotInstalled() {
+  local command="$1"
+  if ! command -v "${command}" &>/dev/null; then
+    printErrorAndExit "${command} could not be found."
+  fi
+}
+
+#######################################
 # Create dsid.properties file
 # Arguments:
 #   1: File path for the properties file
@@ -910,6 +1014,7 @@ function createDsidPropertiesFile() {
   if [[ ! -f "${dsid_properties_file_path}" ]]; then
     print "Creating ${dsid_file_name} file"
     createFolder "${dsid_folder_path}"
+    printErrorIfCommandNotInstalled uuidgen
     echo "DataSourceId=$(uuidgen)" >"${dsid_properties_file_path}"
   fi
 }
@@ -959,16 +1064,16 @@ function removeContainer() {
 #######################################
 function removeAllContainersForTheConfig() {
   local config_name="$1"
-  if [[ -n $(docker network ls -q --filter name="^${DOMAIN_NAME}$") ]]; then
-    local container_ids
-    container_ids=$(docker ps -a -q -f network="${DOMAIN_NAME}" -f name=".${config_name}_${CONTAINER_VERSION_SUFFIX}$")
-    if [[ -n "${container_ids}" ]]; then
-      print "Removing containers running in the network (${DOMAIN_NAME}) with the config name (${config_name}) and version (${I2ANALYZE_VERSION})"
-      while IFS= read -r container_id; do
-        deleteContainer "${container_id}"
-      done <<<"${container_ids}"
-    fi
+  if [[ -z $(docker network ls -q --filter name="^${DOMAIN_NAME}$") ]]; then
+    return
   fi
+  print "Removing containers running in the network (${DOMAIN_NAME}) with the config name (${config_name}) and version (${SUPPORTED_I2ANALYZE_VERSION})"
+
+  local container_ids
+  IFS=' ' read -ra container_ids <<<"$(docker ps -aq -f network="${DOMAIN_NAME}" -f name=".${config_name}_${CONTAINER_VERSION_SUFFIX}$" | xargs)"
+  for container_id in "${container_ids[@]}"; do
+    deleteContainer "${container_id}"
+  done
 }
 
 function cleanUpDockerResources() {
@@ -994,6 +1099,8 @@ function deleteAllPreProdContainers() {
     "${LOAD_BALANCER_CONTAINER_NAME%%.*}"
     "${CONNECTOR1_CONTAINER_NAME%%.*}"
     "${CONNECTOR2_CONTAINER_NAME%%.*}"
+    "${PROMETHEUS_CONTAINER_NAME%%.*}"
+    "${GRAFANA_CONTAINER_NAME%%.*}"
   )
 
   for pre_prod_container in "${pre_prod_containers[@]}"; do
@@ -1004,7 +1111,7 @@ function deleteAllPreProdContainers() {
 function deleteAllContainers() {
   local container_names container_name prefix
 
-  CONTAINER_NAMES_PREFIX=("etlclient" "i2atool" "zk" "solr" "sql" "db2" "liberty" "load_balancer" "exampleconnector")
+  CONTAINER_NAMES_PREFIX=("etlclient" "i2atool" "zk" "solr" "sql" "db2" "liberty" "load_balancer" "exampleconnector" "prometheus" "grafana")
 
   print "Removing all containers"
 
@@ -1021,14 +1128,18 @@ function deleteAllContainers() {
 function stopConfigDevContainers() {
   local container_names container_name prefix
 
-  CONTAINER_NAMES_PREFIX=("etlclient" "i2atool" "zk" "solr" "sql" "db2" "liberty" "load_balancer" "exampleconnector")
+  CONTAINER_NAMES_PREFIX=("etlclient" "i2atool" "zk" "solr" "sql" "db2" "liberty" "load_balancer" "exampleconnector" "prometheus" "grafana")
 
-  print "Stopping config-dev containers"
+  print "Stopping containers for other configs"
 
   IFS=' ' read -ra container_names <<<"$(docker ps --format "{{.Names}}" -f network="${DOMAIN_NAME}" | xargs)"
   for container_name in "${container_names[@]}"; do
     for prefix in "${CONTAINER_NAMES_PREFIX[@]}"; do
       if [[ "${container_name}" == "${prefix}"* ]]; then
+        if [[ "${ENVIRONMENT}" == "config-dev" && "${container_name}" == *".${CONFIG_NAME}_${CONTAINER_VERSION_SUFFIX}" ]]; then
+          # Skip current config containers
+          continue
+        fi
         stopContainer "${container_name}"
       fi
     done
@@ -1036,13 +1147,23 @@ function stopConfigDevContainers() {
 }
 
 function stopConnectorContainers() {
-  local container_ids
+  local container_names container_name config_connector_names
+  local connector_references_file="${LOCAL_USER_CONFIG_DIR}/connector-references.json"
 
-  IFS=' ' read -ra container_ids <<<"$(docker ps -q -f name="^${CONNECTOR_PREFIX}" | xargs)"
+  # Get all connector running
+  IFS=' ' read -ra container_names <<<"$(docker ps --format "{{.Names}}" -f name="^${CONNECTOR_PREFIX}" | xargs)"
 
-  print "Stopping connector containers"
-  for container_id in "${container_ids[@]}"; do
-    stopContainer "${container_id}"
+  if [[ -n "${CONFIG_NAME}" ]]; then
+    readarray -t config_connector_names < <(jq -r '.connectors[].name' <"${connector_references_file}")
+  fi
+  print "Stopping connector containers for other configs"
+  for container_name in "${container_names[@]}"; do
+    # shellcheck disable=SC2076
+    if [[ -n "${CONFIG_NAME}" && " ${config_connector_names[*]} " =~ " ${container_name//${CONNECTOR_PREFIX}/} " ]]; then
+      # Skip current config containers
+      continue
+    fi
+    stopContainer "${container_name}"
   done
 }
 
@@ -1070,14 +1191,13 @@ function restartDockerContainersForConfig() {
       fi
     done
 
-    # Waiting for system to be up
-    if [[ "${database_restarted}" == "true" ]]; then
+    # Waiting for system to be up if state is pass the creation
+    source "${PREVIOUS_STATE_FILE_PATH}"
+    if [[ "${database_restarted}" == "true" && "${STATE}" -gt "2" ]]; then
       waitForSQLServerToBeLive
-    elif [[ "${solr_restarted}" == "true" ]]; then
+    elif [[ "${solr_restarted}" == "true" && "${STATE}" -gt "2" ]]; then
       waitForSolrToBeLive "${SOLR1_FQDN}"
     fi
-    # if at least one container has been restarted, wait for Liberty to be up
-    waitForLibertyToBeLive
   fi
 }
 
@@ -1159,6 +1279,11 @@ function removeDockerVolumes() {
   quietlyRemoveDockerVolume "${LIBERTY1_VOLUME_NAME}"
   quietlyRemoveDockerVolume "${LIBERTY2_VOLUME_NAME}"
   quietlyRemoveDockerVolume "${SOLR_BACKUP_VOLUME_NAME}"
+  quietlyRemoveDockerVolume "${PROMETHEUS_DATA_VOLUME_NAME}"
+  quietlyRemoveDockerVolume "${PROMETHEUS_CONFIG_VOLUME_NAME}"
+  quietlyRemoveDockerVolume "${GRAFANA_DATA_VOLUME_NAME}"
+  quietlyRemoveDockerVolume "${GRAFANA_PROVISIONING_VOLUME_NAME}"
+  quietlyRemoveDockerVolume "${GRAFANA_DASHBOARDS_VOLUME_NAME}"
 }
 
 #######################################
@@ -1212,6 +1337,18 @@ function checkEnvironmentIsValid() {
 }
 
 #######################################
+# Checks if docker daemon is running.
+# Arguments:
+#   None
+#######################################
+function checkDockerIsRunning() {
+  if ! docker ps >/dev/null 2>&1; then
+    printError "Docker error"
+    docker ps
+  fi
+}
+
+#######################################
 # Returns the application admin password depending
 # of the environment.
 # Arguments:
@@ -1227,6 +1364,24 @@ function getApplicationAdminPassword() {
   fi
 
   echo "${app_admin_password}"
+}
+
+#######################################
+# Returns the prometheus admin password depending
+# of the environment.
+# Arguments:
+#   None
+#######################################
+function getPrometheusAdminPassword() {
+  local prometheus_admin_password
+
+  if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
+    prometheus_admin_password="${PROMETHEUS_USERNAME}"
+  else
+    prometheus_admin_password=$(getSecret prometheus/admin_PASSWORD)
+  fi
+
+  echo "${prometheus_admin_password}"
 }
 
 #######################################
@@ -1265,7 +1420,7 @@ function isI2ConnectDeploymentPattern() {
 #######################################
 function checkContainersExist() {
   local all_present=0
-  local containers=("${SOLR1_CONTAINER_NAME}" "${ZK1_CONTAINER_NAME}" "${LIBERTY1_CONTAINER_NAME}")
+  local containers=("${SOLR1_CONTAINER_NAME}" "${ZK1_CONTAINER_NAME}" "${LIBERTY1_CONTAINER_NAME}" "${PROMETHEUS_CONTAINER_NAME}" "${GRAFANA_CONTAINER_NAME}")
 
   print "Checking all containers required for the deployment exist"
   if [[ "${PREVIOUS_DEPLOYMENT_PATTERN}" == *"store"* ]]; then
@@ -1357,7 +1512,7 @@ function setListOfConnectorsToUpdate() {
 function validateConnectorsExist() {
   local connector_name
   for connector_name in "${CONNECTOR_NAMES[@]}"; do
-    connector_image_dir=${CONNECTOR_IMAGES_DIR}/${connector_name}
+    connector_image_dir="${CONNECTOR_IMAGES_DIR}/${connector_name}"
     if [[ ! -d "${connector_image_dir}" ]]; then
       printErrorAndExit "Connector image directory ${connector_image_dir} does NOT exist"
     fi
@@ -1461,7 +1616,8 @@ function createMountedConfigStructure() {
   local OPAL_SERVICES_IS_PATH="${LOCAL_CONFIG_DIR}/fragments/opal-services-is/WEB-INF/classes"
   local OPAL_SERVICES_PATH="${LOCAL_CONFIG_DIR}/fragments/opal-services/WEB-INF/classes"
   local OPAL_SERVICES_LIB_PATH="${LOCAL_CONFIG_DIR}/fragments/opal-services/WEB-INF/lib"
-  local COMMON_PATH="${LOCAL_CONFIG_DIR}/fragments/common/WEB-INF/classes"
+  local COMMON_PATH="${LOCAL_CONFIG_DIR}/fragments/common"
+  local CLASSES_COMMON_PATH="${COMMON_PATH}/WEB-INF/classes"
   local ENV_COMMON_PATH="${LOCAL_CONFIG_DIR}/environment/common"
   local LIVE_PATH="${LOCAL_CONFIG_DIR}/live"
   local LOG4J_PATH="${LOCAL_CONFIG_DIR}/i2-tools/classes"
@@ -1475,7 +1631,7 @@ function createMountedConfigStructure() {
   deleteFolderIfExistsAndCreate "${ENV_COMMON_PATH}"
 
   # Recreate structure and copy right files
-  mkdir -p "${LOG4J_PATH}" "${ENV_COMMON_PATH}" "${OPAL_SERVICES_IS_PATH}" "${OPAL_SERVICES_PATH}" "${COMMON_PATH}" "${LIVE_PATH}"
+  mkdir -p "${LOG4J_PATH}" "${ENV_COMMON_PATH}" "${OPAL_SERVICES_IS_PATH}" "${OPAL_SERVICES_PATH}" "${CLASSES_COMMON_PATH}" "${LIVE_PATH}"
   cp -pr "${PRE_REQS_DIR}/jdbc-drivers" "${ENV_COMMON_PATH}"
   mv "${LOCAL_CONFIG_DIR}/analyze-settings.properties" \
     "${LOCAL_CONFIG_DIR}/analyze-connect.properties" \
@@ -1484,7 +1640,7 @@ function createMountedConfigStructure() {
     "${LOCAL_CONFIG_DIR}/schema-charting-schemes.xml" \
     "${LOCAL_CONFIG_DIR}/schema.xml" "${LOCAL_CONFIG_DIR}/security-schema.xml" \
     "${LOCAL_CONFIG_DIR}/mapping-configuration.json" \
-    "${LOCAL_CONFIG_DIR}/log4j2.xml" "${COMMON_PATH}"
+    "${LOCAL_CONFIG_DIR}/log4j2.xml" "${CLASSES_COMMON_PATH}"
   mv "${LOCAL_CONFIG_DIR}/schema-results-configuration.xml" "${LOCAL_CONFIG_DIR}/schema-vq-configuration.xml" \
     "${LOCAL_CONFIG_DIR}/schema-source-reference-schema.xml" \
     "${LOCAL_CONFIG_DIR}/command-access-control.xml" \
@@ -1496,14 +1652,18 @@ function createMountedConfigStructure() {
     "${LOCAL_CONFIG_DIR}/highlight-queries-configuration.xml" "${LOCAL_CONFIG_DIR}/geospatial-configuration.json" \
     "${LOCAL_CONFIG_DIR}/type-access-configuration.xml" \
     "${LIVE_PATH}"
+  mv "${LOCAL_CONFIG_DIR}/privacyagreement.html" "${COMMON_PATH}"
   rm "${LOCAL_CONFIG_DIR}/extension-references.json" &>/dev/null || true
 
   createDsidPropertiesForDeploymentPattern "${LOCAL_CONFIG_DIR}/environment/dsid/dsid.properties"
 
+  # Move all outstanding .properties files into the common classes dir
+  find "${LOCAL_CONFIG_DIR}" -maxdepth 1 -name "*.properties" -exec mv -t "${CLASSES_COMMON_PATH}" {} +
+
   # Add gateway schemas
   for gateway_short_name in "${!GATEWAY_SHORT_NAME_SET[@]}"; do
-    mv "${LOCAL_CONFIG_DIR}/${gateway_short_name}-schema.xml" "${COMMON_PATH}"
-    mv "${LOCAL_CONFIG_DIR}/${gateway_short_name}-schema-charting-schemes.xml" "${COMMON_PATH}"
+    mv "${LOCAL_CONFIG_DIR}/${gateway_short_name}-schema.xml" "${CLASSES_COMMON_PATH}"
+    mv "${LOCAL_CONFIG_DIR}/${gateway_short_name}-schema-charting-schemes.xml" "${CLASSES_COMMON_PATH}"
   done
 }
 
@@ -1519,7 +1679,9 @@ function createDataSourceId() {
 }
 
 function generateBoilerPlateFiles() {
-  local all_patterns_config_dir="${LOCAL_TOOLKIT_DIR}/examples/configurations/all-patterns/configuration"
+  local examples_dir="${LOCAL_TOOLKIT_DIR}/examples"
+  local grafana_provisioning_dir="${examples_dir}/grafana/provisioning"
+  local all_patterns_config_dir="${examples_dir}/configurations/all-patterns/configuration"
   local toolkit_common_classes_dir="${all_patterns_config_dir}/fragments/common/WEB-INF/classes"
   local toolkit_opal_services_classes_dir="${all_patterns_config_dir}/fragments/opal-services/WEB-INF/classes"
 
@@ -1537,6 +1699,10 @@ function generateBoilerPlateFiles() {
         <user>${I2_ANALYZE_ADMIN}</user>
     </administrator-role>
   </server>" >"${GENERATED_LOCAL_CONFIG_DIR}/server.extensions.dev.xml"
+
+  mkdir -p "${GENERATED_LOCAL_CONFIG_DIR}/grafana/provisioning/datasources"
+  cp -pr "${grafana_provisioning_dir}/." "${GENERATED_LOCAL_CONFIG_DIR}/grafana/provisioning"
+  cp -p "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/templates/prometheus-datasource.yml" "${GENERATED_LOCAL_CONFIG_DIR}/grafana/provisioning/datasources/prometheus-datasource.yml"
 }
 
 function generateConnectorsArtifacts() {
@@ -1551,7 +1717,7 @@ function generateConnectorsArtifacts() {
   jq -n '. += {connectors: []}' >"${connector_definitions_file}"
 
   for connector_name in "${all_connector_names[@]}"; do
-    local connector_image_dir=${CONNECTOR_IMAGES_DIR}/${connector_name}
+    local connector_image_dir="${CONNECTOR_IMAGES_DIR}/${connector_name}"
     if [[ ! -d "${connector_image_dir}" ]]; then
       printErrorAndExit "Connector image directory ${connector_image_dir} does NOT exist"
     fi
@@ -1623,39 +1789,36 @@ function subtractArrayFromArray() {
   echo "${new_array[*]}"
 }
 
-function deployExtensions() {
+function buildExtensions() {
   local extension_references_file="${LOCAL_USER_CONFIG_DIR}/extension-references.json"
   local extension_names
   local extension_args=()
 
   readarray -t extension_names < <(jq -r '.extensions[].name' <"${extension_references_file}")
 
-  if [[ -n "${INCLUDED_EXTENSIONS[*]}" ]]; then
-    for included_extension in "${INCLUDED_EXTENSIONS[@]}"; do
-      extension_args+=(-i "${included_extension}")
+  if [[ "${#extension_names}" -gt 0 ]]; then
+    # Only attempt to rebuild extensions for the current config
+    for extension_name in "${extension_names[@]}"; do
+      extension_args+=("-i" "${extension_name}")
     done
-  elif [[ -n "${EXCLUDED_EXTENSIONS[*]}" ]]; then
-    for excluded_connector in "${EXCLUDED_CONNECTORS[@]}"; do
-      extension_args+=(-e "${excluded_extension}")
-    done
-  fi
 
-  if [[ "${#extension_names[@]}" -gt 0 ]]; then
-    print "Deploying i2Analyze extensions"
-    "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/deployExtensions.sh" -c "${CONFIG_NAME}" "${extension_args[@]}"
+    if [[ "${#extension_names[@]}" -gt 0 ]]; then
+      print "Building i2Analyze extensions"
+      "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/buildExtensions.sh" -c "${CONFIG_NAME}" "${extension_args[@]}"
+    fi
   fi
 }
 
 function setDependenciesTagIfNecessary() {
   if [[ -z "${I2A_DEPENDENCIES_IMAGES_TAG}" ]]; then
-    source "${ANALYZE_CONTAINERS_ROOT_DIR}/version"
-    local version_tag="${I2ANALYZE_VERSION%.*}"
-    I2A_DEPENDENCIES_IMAGES_TAG="${version_tag}"
+    local version_tag
+    version_tag=$(cat "${LOCAL_TOOLKIT_DIR}/scripts/version.txt")
+    export I2A_DEPENDENCIES_IMAGES_TAG="${version_tag%%-*}"
   fi
   if [[ -z "${CONFIG_NAME}" ]]; then
-    I2A_LIBERTY_CONFIGURED_IMAGE_TAG="${I2A_DEPENDENCIES_IMAGES_TAG}"
+    export I2A_LIBERTY_CONFIGURED_IMAGE_TAG="${I2A_DEPENDENCIES_IMAGES_TAG}"
   else
-    I2A_LIBERTY_CONFIGURED_IMAGE_TAG="${CONFIG_NAME}-${I2A_DEPENDENCIES_IMAGES_TAG}"
+    export I2A_LIBERTY_CONFIGURED_IMAGE_TAG="${CONFIG_NAME}-${I2A_DEPENDENCIES_IMAGES_TAG}"
   fi
 }
 
@@ -1673,6 +1836,8 @@ function updateCoreSecretsVolumes() {
   updateVolume "${LOCAL_KEYS_DIR}/${SQL_SERVER_HOST_NAME}" "${SQL_SERVER_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
   updateVolume "${LOCAL_KEYS_DIR}/${DB2_SERVER_HOST_NAME}" "${DB2_SERVER_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
   updateVolume "${LOCAL_KEYS_DIR}/${I2ANALYZE_HOST_NAME}" "${LOAD_BALANCER_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
+  updateVolume "${LOCAL_KEYS_DIR}/${PROMETHEUS_HOST_NAME}" "${PROMETHEUS_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
+  updateVolume "${LOCAL_KEYS_DIR}/${GRAFANA_HOST_NAME}" "${GRAFANA_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
 }
 
 function warnRootDirNotInPath() {
@@ -1682,6 +1847,289 @@ function warnRootDirNotInPath() {
   if [[ "${current_path}" != "${ANALYZE_CONTAINERS_ROOT_DIR}"* ]]; then
     echo "ANALYZE_CONTAINERS_ROOT_DIR=${ANALYZE_CONTAINERS_ROOT_DIR}"
     waitForUserReply "The current script path is not inside the set ANALYZE_CONTAINERS_ROOT_DIR. Are you sure you want to continue?"
+  fi
+}
+
+function updateStateFile() {
+  local new_state="$1"
+  printInfo "Updating ${PREVIOUS_STATE_FILE_PATH} with state: ${new_state}"
+  sed -i "s/STATE=.*/STATE=${new_state}/g" "${PREVIOUS_STATE_FILE_PATH}"
+}
+
+function addLibertyFeature() {
+  local feature="$1"
+  local file="$2"
+
+  featureManagerCount=$(xmlstarlet sel -t -v "count(/server/featureManager)" "${file}")
+  if [[ "${featureManagerCount}" != "0" ]]; then
+    printInfo "featureManager found in ${file##*/}"
+  else
+    printInfo "featureManager NOT found in ${file##*/}. Adding a featureManager..."
+    xmlstarlet edit -L --subnode "/server" --type elem -n "featureManager" \
+      --update "/server/featureManager" --value " " "${file}"
+  fi
+
+  if xmlstarlet sel -Q -t -c \
+    "/server/featureManager/feature[contains(text(),'${feature}')]" \
+    "${file}"; then
+    printInfo "Feature ${feature} found in ${file##*/}"
+    echo "0"
+    return
+  else
+    printInfo "Adding feature ${feature} to file ${file##*/}"
+    xmlstarlet edit -L \
+      --subnode "/server/featureManager" --type elem -n "feature" \
+      --update "/server/featureManager/feature[last()]" --value "${feature}" \
+      "${file}"
+    echo "1"
+    return
+  fi
+}
+
+function ensureLicenseAccepted() {
+  local license_name="$1"
+
+  case "${license_name}" in
+  "LIC_AGREEMENT")
+    if [[ "${LIC_AGREEMENT}" == "ACCEPT" ]]; then
+      return
+    fi
+    ;;
+  "MSSQL_PID")
+    # This is tied to the sql server image so it is easier to check for our shipped value instead of
+    # the possible values that might change in the future
+    if [[ "${MSSQL_PID}" != "REJECT" ]]; then
+      return
+    fi
+    ;;
+  "ACCEPT_EULA")
+    if [[ "${ACCEPT_EULA}" == "Y" ]]; then
+      return
+    fi
+    ;;
+  "DB2_LICENSE")
+    if [[ "${DB2_LICENSE}" == "accept" ]]; then
+      return
+    fi
+    ;;
+  *)
+    printErrorAndExit "Unknown license ${license_name}"
+    ;;
+  esac
+  printErrorAndExit "${license_name} needs to be accepted in the licenses.conf file"
+}
+
+function checkLicensesAcceptedIfRequired() {
+  local environment="$1"
+  local deployment_pattern="$2"
+  local db_dialect="$3"
+
+  print "Checking Licenses Accepted"
+  ensureLicenseAccepted "LIC_AGREEMENT"
+  if [[ "${environment}" == "config-dev" ]]; then
+    if [[ -z "${deployment_pattern}" ]]; then
+      printErrorAndExit "checkLicenseAccepted requires a deployment pattern in config-dev"
+    fi
+    if [[ "${deployment_pattern}" == *"store"* ]]; then
+      if [[ -z "${db_dialect}" ]]; then
+        printErrorAndExit "checkLicenseAccepted requires a database dialect when deploying ISTORE"
+      fi
+      if [[ "${db_dialect}" == "db2" ]]; then
+        ensureLicenseAccepted "DB2_LICENSE"
+      elif [[ "${db_dialect}" == "sqlserver" ]]; then
+        ensureLicenseAccepted "MSSQL_PID"
+        ensureLicenseAccepted "ACCEPT_EULA"
+      fi
+    fi
+  elif [[ "${environment}" == "pre-prod" ]]; then
+    ensureLicenseAccepted "MSSQL_PID"
+    ensureLicenseAccepted "ACCEPT_EULA"
+  fi
+}
+
+function configurePrometheusForPreProd() {
+  local prometheus_scheme="http"
+  local liberty_scheme="http"
+  if [[ "${PROMETHEUS_SSL_CONNECTION}" == "true" ]]; then
+    prometheus_scheme="https"
+  fi
+  if [[ "${LIBERTY_SSL_CONNECTION}" == "true" ]]; then
+    liberty_scheme="https"
+  fi
+
+  sed \
+    -e "s/\${PROMETHEUS_SCHEME}/https/g" \
+    -e "s/\${LIBERTY_SCHEME}/${liberty_scheme}/g" \
+    -e "s/\${LIBERTY1_STANZA}/${LIBERTY1_STANZA}/g" \
+    -e "s/\${LIBERTY2_STANZA}/${LIBERTY2_STANZA}/g" \
+    "${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus-template.yml" >"${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml"
+}
+
+function createLicenseConfiguration() {
+  local license_conf_template="${ANALYZE_CONTAINERS_ROOT_DIR}/utils/templates/licenses.conf"
+  local license_conf="${ANALYZE_CONTAINERS_ROOT_DIR}/licenses.conf"
+  declare -A licenses
+
+  if [[ ! -f "${ANALYZE_CONTAINERS_ROOT_DIR}/licenses.conf" ]]; then
+    cp -p "${license_conf_template}" "${license_conf}"
+  else
+    licenses=()
+    while IFS= read -r line; do
+      [[ "${line}" =~ ^#.* ]] && continue
+      [[ -z "${line}" ]] && continue
+      licenses["${line%%=*}"]="${line#*=}"
+    done <"${license_conf_template}"
+
+    # Add empty new line if none
+    if [[ -n "$(tail -c1 "${license_conf}")" ]]; then
+      echo >>"${license_conf}"
+    fi
+    for prop in "${!licenses[@]}"; do
+      if grep -q -E -o -m 1 "${prop}" <"${license_conf}"; then
+        continue
+      fi
+      echo "${prop}=${licenses["${prop}"]}" >>"${license_conf}"
+    done
+  fi
+}
+
+function getChecksumOfDir() {
+  local path="$1"
+  local exclude="$2"
+  local extra_args=()
+
+  if [[ -n "${exclude}" ]]; then
+    extra_args=(-not -path "${exclude}")
+  fi
+
+  # Get the checksum of each file then do checksum of that
+  find "${path}" -type f "${extra_args[@]}" -exec sha1sum {} \; | awk '{print $1}' | sort | sha1sum
+}
+
+function checkConnectorChanged() {
+  local connector_name="$1"
+  local old_checksum=""
+  local new_checksum
+
+  if [[ -f "${PREVIOUS_CONNECTOR_IMAGES_DIR}/${connector_name}.sha512" ]]; then
+    old_checksum="$(cat "${PREVIOUS_CONNECTOR_IMAGES_DIR}/${connector_name}.sha512")"
+  fi
+
+  new_checksum="$(getChecksumOfDir "${CONNECTOR_IMAGES_DIR}/${connector_name}")"
+
+  if [[ "${old_checksum}" == "${new_checksum}" ]]; then
+    return 1
+  else
+    createFolder "${PREVIOUS_CONNECTOR_IMAGES_DIR}"
+    echo "${new_checksum}" >"${PREVIOUS_CONNECTOR_IMAGES_DIR}/${connector_name}.sha512.new"
+    return 0
+  fi
+}
+
+function deployConnector() {
+  local connector_name="$1"
+  local connector_image_dir="${CONNECTOR_IMAGES_DIR}/${connector_name}"
+  local connector_url_mappings_file="${CONNECTOR_IMAGES_DIR}/connector-url-mappings-file.json"
+  local temp_file="${CONNECTOR_IMAGES_DIR}/temp.json"
+  local connector_type
+  local base_url
+
+  # Validation
+  connector_definition_file_path="${connector_image_dir}/connector-definition.json"
+  validateConnectorDefinition "${connector_definition_file_path}"
+
+  # Definitions
+  configuration_path=$(jq -r '.configurationPath' <"${connector_definition_file_path}")
+  connector_id=$(jq -r '.id' <"${connector_definition_file_path}")
+  connector_type=$(jq -r '.type' <"${connector_definition_file_path}")
+  connector_exists=$(jq -r --arg connector_id "${connector_id}" 'any(.[]; .id==$connector_id)' <"${connector_url_mappings_file}")
+  validateConnectorSecrets "${connector_name}"
+
+  # Run connector if not external
+  if [[ "${connector_type}" != "${EXTERNAL_CONNECTOR_TYPE}" ]]; then
+    local connector_tag connector_fqdn
+
+    connector_tag=$(jq -r '.tag' <"${connector_image_dir}/connector-version.json")
+    connector_fqdn="${connector_name}-${connector_tag}.${DOMAIN_NAME}"
+    base_url="https://${connector_fqdn}:3443"
+
+    deleteContainer "${CONNECTOR_PREFIX}${connector_name}"
+
+    # Start up the connector
+    runConnector "${CONNECTOR_PREFIX}${connector_name}" "${connector_fqdn}" "${connector_name}" "${connector_tag}"
+    waitForConnectorToBeLive "${connector_fqdn}" "${configuration_path}"
+  else
+    base_url=$(jq -r '.baseUrl' <"${connector_definition_file_path}")
+  fi
+
+  # Update connector-url-mappings-file.json file
+  # shellcheck disable=SC2016
+  if [[ "${connector_exists}" == "true" ]]; then
+    # Update
+    jq -r \
+      --arg base_url "${base_url}" \
+      --arg connector_id "${connector_id}" \
+      ' .[] |= (select(.id==$connector_id) |= (.baseUrl = $base_url))' \
+      <"${connector_url_mappings_file}" >"${temp_file}"
+  else
+    # Insert
+    jq -r \
+      --arg base_url "${base_url}" \
+      --arg connector_id "${connector_id}" \
+      '. += [{id: $connector_id, baseUrl: $base_url}]' \
+      <"${connector_url_mappings_file}" >"${temp_file}"
+  fi
+  mv "${temp_file}" "${connector_url_mappings_file}"
+
+  validateConnectorUrlMappings
+}
+
+function validateConnectorDefinition() {
+  local connector_definition_file_path="$1"
+  local not_valid_error_message="${connector_definition_file_path} is NOT valid"
+  local valid_json
+
+  print "Validating ${connector_definition_file_path}"
+
+  type="$(jq -r type <"${connector_definition_file_path}" || true)"
+
+  if [[ "${type}" == "object" ]]; then
+    valid_json=$(jq -r '. | select(has("id") and has("name") and has("description") and has("gatewaySchema") and has("configurationPath") and (has("type")==false // .type=="external" and has("baseUrl") // .type!="external"))' <"${connector_definition_file_path}")
+    if [[ -z "${valid_json}" ]]; then
+      printErrorAndExit "${not_valid_error_message}"
+    fi
+  else
+    printErrorAndExit "${not_valid_error_message}"
+  fi
+}
+
+function validateConnectorSecrets() {
+  local connector_name="$1"
+  local connector_secrets_file_path="${LOCAL_KEYS_DIR}/${connector_name}"
+  local not_valid_error_message="Secrets have not been created for the ${connector_name} connector"
+
+  print "Validating ${connector_secrets_file_path}"
+  if [ ! -d "${connector_secrets_file_path}" ]; then
+    printErrorAndExit "${not_valid_error_message}"
+  fi
+}
+
+function validateConnectorUrlMappings() {
+  local connector_url_mappings_file="${CONNECTOR_IMAGES_DIR}/connector-url-mappings-file.json"
+  local not_valid_error_message="${connector_url_mappings_file} is NOT valid"
+  local valid_json
+
+  print "Validating ${connector_url_mappings_file}"
+
+  type="$(jq -r type <"${connector_url_mappings_file}" || true)"
+
+  if [[ "${type}" == "array" ]]; then
+    valid_json=$(jq -r '.[] | select(has("id") and has("baseUrl"))' <"${connector_url_mappings_file}")
+    if [[ -z "${valid_json}" ]]; then
+      printErrorAndExit "${not_valid_error_message}"
+    fi
+  else
+    printErrorAndExit "${not_valid_error_message}"
   fi
 }
 ###############################################################################

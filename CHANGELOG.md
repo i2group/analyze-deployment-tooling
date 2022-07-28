@@ -12,7 +12,21 @@ The format is based on [Keep a Changelog], and this project adheres to
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
 
-## [2.2.0] - 06/05/2022
+## 2.3.0 - 22/07/2022
+
+### Added
+
+* Updated for compatibility with i2 Analyze 4.4.0
+* Support for Prometheus and Grafana
+
+### Changed
+
+* The environment must be run inside a VS Code development container
+* The base Docker images are no longer built locally. The images are pulled from [docker hub - i2group](https://hub.docker.com/u/i2group)
+
+[2.3.0]: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.3.0><!-- markdown-link-check-enable -->
+
+## 2.2.0 - 06/05/2022
 
 ### Added
 
@@ -24,31 +38,31 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 * i2Connect SDK connector base image
 
-[2.2.0]: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.2.0><!-- markdown-link-check-enable -->
+[2.2.0]: <https://github.com/i2group/analyze-containers/tree/v2.2.0>
 
-## [2.1.3] - 13/05/2022
+## 2.1.3 - 13/05/2022
 
 ### Added
 
 * Functionality to support upgrading to future releases of i2 Analyze
 
-[2.1.3]: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.1.3><!-- markdown-link-check-enable -->
+[2.1.3]: <https://github.com/i2group/analyze-containers/tree/v2.1.3>
 
-## 2.1.2[Deprecated] - 31/03/2022
+## 2.1.2 [Deprecated] - 31/03/2022
 
 ### Security
 
 * Updated the Liberty and Solr images to use Log4j2 version 2.17.2 to remediate <https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-44228>
   * To remediate the CVE, you must rebuild the Docker images in your environment. To rebuild the Docker images, complete the instructions [Updating to the latest version of the analyze-containers repository](https://i2group.github.io/analyze-containers/content/managing_update_env.html).
 
-## 2.1.1[Deprecated] - 12/01/2022
+## 2.1.1 [Deprecated] - 12/01/2022
 
 ### Security
 
 * Updated the Liberty and Solr images to use Log4j2 version 2.17.1 to remediate <https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-44228>
   * To remediate the CVE, you must rebuild the Docker images in your environment. To rebuild the Docker images, complete the instructions [Updating to the latest version of the analyze-containers repository](https://i2group.github.io/analyze-containers/content/managing_update_env.html).
 
-## 2.1.0[Deprecated] - 06/10/2021
+## 2.1.0 [Deprecated] - 06/10/2021
 
 ### Added
 
@@ -62,7 +76,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 * Additional command line tools required.
   * See [Updating to the latest version of the analyze-containers repository](https://i2group.github.io/analyze-containers/content/managing_update_env.html).
 
-## 2.0.0[Deprecated] - 23/07/2021
+## 2.0.0 [Deprecated] - 23/07/2021
 
 ### Added
 
@@ -74,14 +88,14 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 * Moved `environments/pre-prod` to `examples/pre-prod`
 
-## 1.1.0[Deprecated] - 18/02/2021
+## 1.1.0 [Deprecated] - 18/02/2021
 
 ### Added
 
 * Walkthroughs to demonstrate backup and restore procedure
 * Updated for compatibility with i2 Analyze 4.3.3.1
 
-## 1.0.1[Deprecated] - 29/01/2021
+## 1.0.1 [Deprecated] - 29/01/2021
 
 ### Added
 
@@ -94,7 +108,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 * environments/pre-prod/walkthroughs/change-management/ingestDataWalkthrough.sh fixed to ingest all of the data in the example data set
 * Broken links in markdown documentation
 
-## 1.0.0[Deprecated] - 17/12/2020
+## 1.0.0 [Deprecated] - 17/12/2020
 
 ### Added
 

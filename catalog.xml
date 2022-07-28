@@ -1,13 +1,13 @@
 <catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
-    <uri name="http://www.i2group.com/Schemas/2018-01-19/CommandAccessControl" uri="./pre-reqs/i2analyze/toolkit/scripts/xsds/CommandAccessControl.xsd" />
-    <uri name="http://www.i2group.com/Schemas/2015-11-10/ModelData/DynamicSecurity" uri="./pre-reqs/i2analyze/toolkit/scripts/xsds/DynamicSecuritySchema.xsd" />
-    <uri name="http://www.i2group.com/Schemas/2019-05-14/MatchRules" uri="./pre-reqs/i2analyze/toolkit/scripts/xsds/MatchRules.xsd" />
-    <uri name="http://www.i2group.com/Schemas/2016-04-25/ResultsConfiguration" uri="./pre-reqs/i2analyze/toolkit/scripts/xsds/ResultsConfiguration.xsd" />
-    <uri name="http://www.i2group.com/Schemas/2019-07-05/SourceReferenceSchema" uri="./pre-reqs/i2analyze/toolkit/scripts/xsds/SourceReferenceSchema.xsd" />
-    <uri name="http://www.i2group.com/Schemas/2021-03-23/TypeAccessConfiguration" uri="./pre-reqs/i2analyze/toolkit/scripts/xsds/TypeAccessConfiguration.xsd" />
-    <uri name="http://www.i2group.com/Schemas/2016-04-25/VisualQueryConfiguration" uri="./pre-reqs/i2analyze/toolkit/scripts/xsds/VisualQueryConfiguration.xsd" />
-    <uri name="http://www.i2group.com/Schemas/2011-03-03/ModelSchemaExtension" uri="./pre-reqs/i2analyze/toolkit/scripts/xsds/ModelSchemaExtension.xsd" />
-    <uri name="http://www.i2group.com/Schemas/2011-03-03/ModelSchema" uri="./pre-reqs/i2analyze/toolkit/scripts/xsds/ModelSchema.xsd" />
-    <uri name="http://www.i2group.com/Schemas/2016-08-12/IngestionMappings" uri="./pre-reqs/i2analyze/toolkit/scripts/xsds/IngestionMappings.xsd" />
-    <uri name="http://www.i2group.com/Schemas/2021-02-12/SolrSchemaTemplate" uri="./pre-reqs/i2analyze/toolkit/scripts/xsds/SolrSchemaTemplate.xsd" />
+  <uri name="http://www.i2group.com/Schemas/2018-01-19/CommandAccessControl" uri="./pre-reqs/i2analyze/toolkit/scripts/xsd/CommandAccessControl.xsd" />
+  <uri name="http://www.i2group.com/Schemas/2015-11-10/ModelData/DynamicSecurity" uri="./pre-reqs/i2analyze/toolkit/scripts/xsd/DynamicSecuritySchema.xsd" />
+  <uri name="http://www.i2group.com/Schemas/2019-05-14/MatchRules" uri="./pre-reqs/i2analyze/toolkit/scripts/xsd/MatchRules.xsd" />
+  <uri name="http://www.i2group.com/Schemas/2016-04-25/ResultsConfiguration" uri="./pre-reqs/i2analyze/toolkit/scripts/xsd/ResultsConfiguration.xsd" />
+  <uri name="http://www.i2group.com/Schemas/2019-07-05/SourceReferenceSchema" uri="./pre-reqs/i2analyze/toolkit/scripts/xsd/SourceReferenceSchema.xsd" />
+  <uri name="http://www.i2group.com/Schemas/2021-03-23/TypeAccessConfiguration" uri="./pre-reqs/i2analyze/toolkit/scripts/xsd/TypeAccessConfiguration.xsd" />
+  <uri name="http://www.i2group.com/Schemas/2016-04-25/VisualQueryConfiguration" uri="./pre-reqs/i2analyze/toolkit/scripts/xsd/VisualQueryConfiguration.xsd" />
+  <uri name="http://www.i2group.com/Schemas/2011-03-03/ModelSchemaExtension" uri="./pre-reqs/i2analyze/toolkit/scripts/xsd/ModelSchemaExtension.xsd" />
+  <uri name="http://www.i2group.com/Schemas/2011-03-03/ModelSchema" uri="./pre-reqs/i2analyze/toolkit/scripts/xsd/ModelSchema.xsd" />
+  <uri name="http://www.i2group.com/Schemas/2016-08-12/IngestionMappings" uri="./pre-reqs/i2analyze/toolkit/scripts/xsd/IngestionMappings.xsd" />
+  <uri name="http://www.i2group.com/Schemas/2021-02-12/SolrSchemaTemplate" uri="./pre-reqs/i2analyze/toolkit/scripts/xsd/SolrSchemaTemplate.xsd" />
 </catalog>
