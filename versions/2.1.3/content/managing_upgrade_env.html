@@ -83,14 +83,14 @@
 <p>The process of upgrading the config development environment is completed in a different directory from your current environment.</p>
 <ol>
 <li>Download the <code>tar.gz</code> for the latest version of the analyze-containers repository from <a href="https://github.com/i2group/analyze-containers">https://github.com/i2group/analyze-containers</a>.<ul>
-<li>Extract the contents into a new directory. For example, <code>analyze-containers-2.1</code>.</li>
+<li>Extract the contents into a new directory. For example, <code>analyze-containers-213</code>.</li>
 </ul>
 </li>
-<li>Copy the <code>analyze-containers/pre-reqs</code> to the <code>analyze-containers-2.1/pre-reqs</code> directory.</li>
+<li>Copy the <code>analyze-containers/pre-reqs</code> to the <code>analyze-containers-213/pre-reqs</code> directory.</li>
 <li><p>To set the <code>ANALYZE_CONTAINERS_ROOT_DIR</code> variable, run the following command:</p>
 <pre><code class="lang-sh">. initShell.sh
 </code></pre></li>
-<li><p>To create the configuration development environment and template config, in the <code>analyze-containers-2.1/scripts</code> directory run:</p>
+<li><p>To create the configuration development environment and template config, in the <code>analyze-containers-213/scripts</code> directory run:</p>
 <pre><code class="lang-sh">./createDevEnvironment.sh
 </code></pre><p>The script performs the following actions:</p>
 </li>
@@ -105,9 +105,9 @@
 </li>
 </ul>
 <ol>
-<li><p>Before you can use i2 Analyze and the tools, you must read the license agreement and copyright notices. The license file is in the <code>analyze-containers-2.1/pre-reqs/i2analyze/license</code> directory.</p>
+<li><p>Before you can use i2 Analyze and the tools, you must read the license agreement and copyright notices. The license file is in the <code>analyze-containers-213/pre-reqs/i2analyze/license</code> directory.</p>
 <ul>
-<li>To accept the license agreement, change the value of the <code>LIC_AGREEMENT</code> environment variable to <code>ACCEPT</code>. The environment variable is in the <code>analyze-containers-2.1/utils/simulatedExternalVariables.sh</code> script.</li>
+<li>To accept the license agreement, change the value of the <code>LIC_AGREEMENT</code> environment variable to <code>ACCEPT</code>. The environment variable is in the <code>analyze-containers-213/utils/simulatedExternalVariables.sh</code> script.</li>
 </ul>
 </li>
 <li><p>Before you can use Microsoft SQL Server, you must accept the license agreement and the EULA. For more information about using the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables, see <a href="https://docs.microsoft.com/en-gb/sql/linux/sql-server-linux-configure-environment-variables?view=sql-server-ver15#environment-variables">Configure SQL Server settings with environment variables on Linux</a>.</p>
@@ -122,9 +122,9 @@ ACCEPT_EULA=Y
 </li>
 </ol>
 <hr>
-<p>After you upgrade, you will have 2 directories for each version of the analyze-containers project. The <code>manageEnvironment</code> script can delete the <code>analyze-containers</code> directory and rename your <code>analyze-containers-2.1</code> directory for you.</p>
+<p>After you upgrade, you will have 2 directories for each version of the analyze-containers project. The <code>manageEnvironment</code> script can delete the <code>analyze-containers</code> directory and rename your <code>analyze-containers-213</code> directory for you.</p>
 <ol>
-<li><p>To upgrade all of the configs in your environment to use the latest version, run the following command from the <code>analyze-containers-2.1/scripts</code> directory:</p>
+<li><p>To upgrade all of the configs in your environment to use the latest version, run the following command from the <code>analyze-containers-213/scripts</code> directory:</p>
 <pre><code class="lang-sh">./manageEnvironment.sh -t upgrade -p &lt;path-to-previous-project&gt;
 </code></pre><p> Where <code>&lt;path-to-previous-project&gt;</code> is the absolute path to the root of your previous <code>analyze-containers</code> repository.</p>
 <p> This script completes the following actions:</p>

@@ -81,35 +81,19 @@
 
 <p>All scripts in the containerized environment use variables to configure the system such as location of file paths, host names, port etc</p>
 <p>These variables are all stored in a central script in <code>utils/commonVariables.sh</code> script.</p>
-<p>The following descriptions explains the variables in the <code>createVariables.sh</code> script in more detail.</p>
-<h2 id="license-variables">License Variables</h2>
-<p>This section contains the license variables that are used by the containers. These variables must be accepted before running the system.</p>
-<h2 id="network-security-variables">Network Security Variables</h2>
-<p>This section contains the variables to turn on or off SSL. For more information about switching SSL on or off see the image and containers section or secrets section</p>
-<h2 id="ports">Ports</h2>
-<p>This section contains the variables for all the ports that are exposed on the containers.</p>
-<h2 id="connection-information">Connection Information</h2>
-<p>This section contains connection variables such as the Zookeeper hosts that are used by various containers</p>
-<h2 id="localization-variables">Localization variables</h2>
-<p>This section contains the localization variables. These variables are used by the <code>createConfiguration.sh</code> script to set up the configuration in the correct locale.</p>
+<p>The following descriptions explains the variables in the <code>commonVariables.sh</code> script in more detail.</p>
 <h2 id="image-names">Image names</h2>
 <p>This section contains the image names for all the images built by the buildImages.sh script. These variables are also used by the <code>clientFunctions.sh</code> and <code>severFunctions.sh</code> scripts.</p>
 <h2 id="container-names">Container names</h2>
 <p>This section contains the container names for all the containers run in the environment.</p>
-<h2 id="volume-names">Volume names</h2>
-<p>This section contains the volume names for all the volumes used by the containers run in the environment.</p>
 <h2 id="user-names">User names</h2>
 <p>This section contains all the usernames used by the servers in the containerized environment.</p>
-<h2 id="container-secrets-paths">Container secrets paths</h2>
-<p>This section contains variables for the container secrets and certificate directories. For more information about these variables see the secrets section.</p>
-<h2 id="security-configuration">Security configuration</h2>
-<p>This section contains security variables used by the <code>generateSecrets.sh</code> scripts. For example the duration or the certificate or the certificate key size.</p>
-<h2 id="database-variables">Database variables</h2>
-<p>This section contains database connection variables, database paths, OS type and other database related variables used by the scripts.</p>
-<h2 id="path-variables">Path variables</h2>
-<p>The section contains the various paths in the environment that are used by the scripts.</p>
-<h2 id="front-end-uri">Front end URI</h2>
-<p>This section contains the variable for the front end URI.</p>
+<h2 id="liberty-variables">Liberty variables</h2>
+<p>This section contains the liberty variables for the chosen deployment pattern.</p>
+<h2 id="gateway-variables">Gateway variables</h2>
+<p>This section contains the variables definition for the i2Connect gateway configuration. The values of these variables are generated during deployment.</p>
+<h2 id="user-variables">User variables</h2>
+<p>This section contains user variables.</p>
 </article>
           </div>
           

@@ -89,17 +89,17 @@ The process includes the following high-level steps:</p>
 <li>Updating property value definitions</li>
 <li>Ingest data that correlates and review its properties</li>
 </ul>
-<p>The <code>mergedPropertyValuesWalkthrough.sh</code> script is a worked example that demonstrates how to enables and modify the views in a containerized environment.</p>
+<p>The <code>examples/pre-prod/walkthroughs/change-management/mergedPropertyValuesWalkthrough.sh</code> script is a worked example that demonstrates how to enable and modify the views in a containerized environment.</p>
 <blockquote><p>Note: Before you complete this walkthrough, reset your environment to the base configuration. For more information, see <a href="reset_walkthroughs.html">Resetting your environment</a>.</p>
 </blockquote>
 <h2 id="default-merge-property-behavior">Default merge property behavior</h2>
 <ul>
-<li><p>To demonstrate the default behavior, use the <code>ingestDataWalkthrough.sh</code> script to ingest some data the correlates. For more information about ingesting the data, see <a href="ingestion.html">Ingesting data into the Information Store</a>.</p>
+<li><p>To demonstrate the default behavior, use the <code>examples/pre-prod/walkthroughs/change-management/ingestDataWalkthrough.sh</code> script to ingest some correlated data. For more information about ingesting the data, see <a href="ingestion.html">Ingesting data into the Information Store</a>.</p>
 </li>
 <li><p>During the ingestion walk-through, the default behavior is used to determine the property values of the correlated record. In the default behavior, the property values from the merge contributor with the most recent value for <code>source_last_updated</code> are used.</p>
 </li>
 </ul>
-<p>For more information about the how the property values for merged records are calculated, see <a href="https://www.ibm.com/docs/en/i2-analyze/4.3.5?topic=isdc-define-how-property-values-merged-records-are-calculated">Define how property values of merged records are calculated</a></p>
+<p>For more information about the how the property values for merged records are calculated, see <a href="https://docs.i2group.com/analyze/4.4.0/c_merged_properties.html">Define how property values of merged records are calculated</a></p>
 <p>After you ingest the data, in Analyst&#39;s Notebook Premium search for <code>Julia Yochum</code> and add the returned entity to the chart. Keep the chart open for the remainder of the walkthrough script.</p>
 <h2 id="enabling-merged-property-values">Enabling merged property values</h2>
 <p>To inform i2 Analyze that you intend to define the property values of merged records, run the <code>enableMergedPropertyValues.sh</code> tool. You can take control of the property values for records of specific item types, or all item types in the i2 Analyze schema.
@@ -109,7 +109,7 @@ Note that this operation must be performed by the database administrator.</p>
 <ul>
 <li><a href="../tools%20and%20functions/client_functions.html#runEtlToolkitToolAsDBA">runEtlToolkitToolAsDBA</a></li>
 <li><a href="../tools%20and%20functions/etl_tools.html#enable-merge-property-values">enableMergedPropertyValues</a></li>
-<li><a href="https://www.ibm.com/docs/en/i2-analyze/4.3.5?topic=isdc-define-how-property-values-merged-records-are-calculated">Defining the property values of merged i2 Analyze records</a></li>
+<li><a href="https://docs.i2group.com/analyze/4.4.0/c_merged_properties.html">Defining the property values of merged i2 Analyze records</a></li>
 </ul>
 <p>In the <code>mergedPropertyValuesWalkthrough.sh</code>, the views are created for the Person item type. The <code>enableMergedPropertyValues.sh</code> tool is used in the <code>Create the merged property views for the CORRELATED_SCHEMA_TYPE_IDS</code> section.</p>
 <h2 id="updating-property-value-definitions">Updating property value definitions</h2>
@@ -120,7 +120,7 @@ Note, this step is also performed by the database administrator.</p>
 <p>The <code>runSQLServerCommandAsDBA</code> client functions in used to run the <code>createAlternativeMergedPropertyValuesView.sql</code> script.</p>
 <ul>
 <li><a href="../tools%20and%20functions/client_functions.html#runSQLServerCommandAsDBA">runSQLServerCommandAsDBA</a></li>
-<li><a href="https://www.ibm.com/docs/en/i2-analyze/4.3.5?topic=calculated-merged-property-values-definition-view">The merged property values definition view</a></li>
+<li><a href="https://docs.i2group.com/analyze/4.4.0/c_view_definition.html">The merged property values definition view</a></li>
 </ul>
 <h2 id="reingesting-the-data">Reingesting the data</h2>
 <p>The property values of merged records do not update when the MPVDV views are modified. To update the values of existing records, you must reingest at least one of the merge contributors to the record.</p>

@@ -1,0 +1,144 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Common Variables </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Common Variables ">
+    <meta name="generator" content="docfx 2.56.2.0">
+    
+    <link rel="shortcut icon" href="../../../../images/favicon.png">
+    <link rel="stylesheet" href="../../../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../../../styles/docfx.css">
+    <link rel="stylesheet" href="../../../../styles/main.css">
+    <meta property="docfx:navrel" content="../../../../toc.html">
+    <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../../../index.html">
+                i2 Analyze Containers
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+          
+          <div class="subnav navbar navbar-default">
+            <div class="container hide-when-search" id="breadcrumb">
+              <ul class="breadcrumb">
+                <li></li>
+              </ul>
+            </div>
+          </div>
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="common-variables">Common Variables</h1>
+
+<p>All scripts in the containerized environment use variables to configure the system such as location of file paths, host names, port etc</p>
+<p>These variables are all stored in a central script in <code>utils/commonVariables.sh</code> script.</p>
+<p>The following descriptions explains the variables in the <code>createVariables.sh</code> script in more detail.</p>
+<h2 id="license-variables">License Variables</h2>
+<p>This section contains the license variables that are used by the containers. These variables must be accepted before running the system.</p>
+<h2 id="network-security-variables">Network Security Variables</h2>
+<p>This section contains the variables to turn on or off SSL. For more information about switching SSL on or off see the image and containers section or secrets section</p>
+<h2 id="ports">Ports</h2>
+<p>This section contains the variables for all the ports that are exposed on the containers.</p>
+<h2 id="connection-information">Connection Information</h2>
+<p>This section contains connection variables such as the Zookeeper hosts that are used by various containers</p>
+<h2 id="localization-variables">Localization variables</h2>
+<p>This section contains the localization variables. These variables are used by the <code>createConfiguration.sh</code> script to set up the configuration in the correct locale.</p>
+<h2 id="image-names">Image names</h2>
+<p>This section contains the image names for all the images built by the buildImages.sh script. These variables are also used by the <code>clientFunctions.sh</code> and <code>severFunctions.sh</code> scripts.</p>
+<h2 id="container-names">Container names</h2>
+<p>This section contains the container names for all the containers run in the environment.</p>
+<h2 id="volume-names">Volume names</h2>
+<p>This section contains the volume names for all the volumes used by the containers run in the environment.</p>
+<h2 id="user-names">User names</h2>
+<p>This section contains all the usernames used by the servers in the containerized environment.</p>
+<h2 id="container-secrets-paths">Container secrets paths</h2>
+<p>This section contains variables for the container secrets and certificate directories. For more information about these variables see the secrets section.</p>
+<h2 id="security-configuration">Security configuration</h2>
+<p>This section contains security variables used by the <code>generateSecrets.sh</code> scripts. For example the duration or the certificate or the certificate key size.</p>
+<h2 id="database-variables">Database variables</h2>
+<p>This section contains database connection variables, database paths, OS type and other database related variables used by the scripts.</p>
+<h2 id="path-variables">Path variables</h2>
+<p>The section contains the various paths in the environment that are used by the scripts.</p>
+<h2 id="front-end-uri">Front end URI</h2>
+<p>This section contains the variable for the front end URI.</p>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            &copy; N. Harris Computer Corporation (2022)
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../../styles/main.js"></script>
+  </body>
+</html>

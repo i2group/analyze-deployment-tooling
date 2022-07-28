@@ -89,7 +89,7 @@
 <p>The following <code>docker run</code> command runs a Solr Client container:</p>
 <pre><code class="lang-bash">docker run --rm \
     --net &quot;eia&quot; \
-    -v &quot;/examples/pre-prod/configuration:/opt/configuration&quot; \
+    -v &quot;examples/pre-prod/configuration:/opt/configuration&quot; \
     -e SOLR_ADMIN_DIGEST_USERNAME=&quot;solr&quot; \
     -e SOLR_ADMIN_DIGEST_PASSWORD=&quot;SOLR_ADMIN_DIGEST_PASSWORD&quot; \
     -e ZOO_DIGEST_USERNAME=&quot;solr&quot; \
@@ -101,7 +101,7 @@
     -e SSL_PRIVATE_KEY=&quot;SSL_PRIVATE_KEY&quot; \
     -e SSL_CERTIFICATE=&quot;SSL_CERTIFICATE&quot; \
     -e SSL_CA_CERTIFICATE=&quot;SSL_CA_CERTIFICATE&quot; \
-    &quot;solr_redhat:4.3.5&quot; &quot;$@&quot;
+    &quot;solr_redhat:4.4.0&quot; &quot;$@&quot;
 </code></pre><p>For an example of the <code>docker run</code> command, see <code>runSolrClientCommand</code> function in <code>clientFunctions.sh</code> script.
 For an example of how to use <code>runSolrClientCommand</code> function, see <a href="../tools%20and%20functions/client_functions.html#runSolrClientCommand">runSolrClientCommand</a>.</p>
 <h2 id="bind-mounts">Bind mounts</h2>

@@ -100,7 +100,7 @@
 <ol>
 <li><p>Before you can use i2 Analyze and the tools, you must read the license agreement and copyright notices. The license file is in the <code>pre-reqs/i2analyze/license</code> directory.  </p>
 <ol>
-<li><p>To accept the license agreement, change the value of the <code>LIC_AGREEMENT</code> environment variable to <code>ACCEPT</code>. The environment variable is in the <code>examples/aws/utils/simulated-external-variables.sh</code> script.
+<li><p>To accept the license agreement, change the value of the <code>LIC_AGREEMENT</code> variable to <code>ACCEPT</code>. The variable is in the <code>licenses.conf</code> file.
  For example:</p>
 <pre><code class="lang-sh">LIC_AGREEMENT=ACCEPT
 </code></pre></li>
@@ -108,7 +108,7 @@
 </li>
 <li><p>Before you can use Microsoft SQL Server, you must accept the license agreement and the EULA. For more information about using the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables, see <a href="https://docs.microsoft.com/sql/linux/sql-server-linux-configure-environment-variables?view=sql-server-ver15#environment-variables">Configure SQL Server settings with environment variables on Linux</a>  </p>
 <ol>
-<li><p>To accept the license in this environment, change the value of the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables. The environment variables are in the <code>utils/simulatedExternalVariables.sh</code> script.</p>
+<li><p>To accept the license in this environment, change the value of the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables. The variables are in the <code>licenses.conf</code> file.</p>
 <p> For example:</p>
 <pre><code class="lang-sh">MSSQL_PID=Developer
 ACCEPT_EULA=Y

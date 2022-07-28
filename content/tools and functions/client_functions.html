@@ -101,7 +101,8 @@ The <code>waitForConnectorToBeLive</code> function sends a request to the connec
 <p><code>&quot;No response was found from the component availability log (attempt: ${i}). Waiting...&quot;</code></p>
 <h2 id="database-security-utilities">Database Security Utilities</h2>
 <h3 id="changesapassword">changeSAPassword</h3>
-<p>The <code>changeSAPassword</code> function uses the generated secrets to call the <code>changeSAPassword.sh</code> with the initial (generated) sa password and the new (generated) password.</p>
+<p>The <code>changeSAPassword</code> function uses the generated secrets to call the <code>changeSAPassword.sh</code> with the initial (generated) sa password and the new (generated) password.
+For more information, see <a href="../security%20and%20users/db_users.html#changing-sa-password">changeSAPassword</a>.</p>
 <h3 id="createdbloginanduser">createDbLoginAndUser</h3>
 <p>The <code>createDbLoginAndUser</code> function takes a <code>user</code> and a <code>role</code> as its arguments.
 The function creates a database login and user for the provided <code>user</code>, and assigns the user to the provided <code>role</code>.</p>
@@ -178,13 +179,13 @@ WITH (FORMATFILE = &#39;/var/i2a-data/law-enforcement-data-set-2-merge/sqlserver
 <p>For more information about running the ETL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/etl_client.html">ETL Client</a>.</p>
 <p>For more information about running the ETL toolkit container and the tasks that you can run, see <a href="etl_tools.html">ETL</a></p>
 <p>The <code>runEtlToolkitToolAsi2ETL</code> function takes command that you want to run as an argument. For example:</p>
-<pre><code class="lang-bash">runEtlToolkitToolAsi2ETL bash -c &quot;/opt/ibm/etltoolkit/addInformationStoreIngestionSource --ingestionSourceName EXAMPLE_1 --ingestionSourceDescription EXAMPLE_1&quot;
+<pre><code class="lang-bash">runEtlToolkitToolAsi2ETL bash -c &quot;/opt/i2/etltoolkit/addInformationStoreIngestionSource --ingestionSourceName EXAMPLE_1 --ingestionSourceDescription EXAMPLE_1&quot;
 </code></pre><h3 id="runetltoolkittoolasdba">runEtlToolkitToolAsDBA</h3>
 <p>Some ETL tasks must be performed by the DBA. The <code>runEtlToolkitToolAsDBA</code> function used the same ephemeral ETL toolkit container but uses the DBA user instead of the ETL user.</p>
 <p>For more information about running the ETL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/etl_client.html">ETL Client</a>.</p>
 <p>For more information about running the ETL toolkit container and the tasks that you can run, see <a href="etl_tools.html">ETL</a></p>
 <p>The <code>runEtlToolkitToolAsDBA</code> function takes command that you want to run as an argument. For example:</p>
-<pre><code class="lang-bash">runEtlToolkitToolAsDBA bash -c &quot;/opt/ibm/etltoolkit/enableMergedPropertyValues --schemaTypeId ET5&quot;
+<pre><code class="lang-bash">runEtlToolkitToolAsDBA bash -c &quot;/opt/i2/etltoolkit/enableMergedPropertyValues --schemaTypeId ET5&quot;
 </code></pre><h2 id="volume-utilities">Volume utilities</h2>
 <h3 id="getvolume">getVolume</h3>
 <p>The <code>getVolume</code> function uses an ephemeral Red Hat UBI Docker image to update a local directory with the contents of a specified volume.</p>

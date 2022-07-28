@@ -79,7 +79,15 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="liberty">Liberty</h1>
 
-<p>In a containerized deployment, you configure the i2 Analyze application and Liberty in an image that is layered on top of the <em>liberty_ubi_base</em> image. The <em>liberty_ubi_base</em> contains static configuration and application jars that are required by i2 Analyze and should not be changed.</p>
+<p>In a containerized deployment, you configure the i2 Analyze application and Liberty in an image that is layered on top of the <code>liberty_ubi_base</code> image. The <code>liberty_ubi_base</code> contains static configuration and application jars that are required by i2 Analyze and should not be changed. The <code>liberty_ubi_base</code> image is built on top a <a href="https://hub.docker.com/repository/docker/i2group/i2eng-liberty">Liberty image</a> maintained by i2 Group on Docker Hub.</p>
+<h2 id="building-a-liberty-base-image">Building a Liberty base image</h2>
+<p>The Liberty base image for i2 Analyze is built on top of a <a href="https://hub.docker.com/repository/docker/i2group/i2eng-liberty">Liberty image</a> maintained by i2 Group on Docker Hub.</p>
+<h3 id="docker-build-command">Docker build command</h3>
+<p>The <em>base image</em> is built from the Dockerfile in <code>images/liberty_ubi_base</code>.
+The following <code>docker build</code> command builds the Liberty base image:</p>
+<pre><code class="lang-bash">docker build -t &quot;liberty_ubi_base:4.4.0&quot; images/liberty_ubi_base \
+  --build-arg I2ANALYZE_VERSION=&quot;4.4.0&quot;
+</code></pre><p>For examples of the build commands, see <code>buildImages.sh</code> script.</p>
 <h2 id="configuring-the-liberty-server">Configuring the Liberty server</h2>
 <p>Liberty is configured by exception. The runtime environment operates from a set of built-in configuration default settings, and you only need to specify configuration that overrides those default settings. You do this by editing either the <code>server.xml</code> file or another XML file that is included in <code>server.xml</code> at run time.</p>
 <p>In a containerized deployment of i2 Analyze, a <code>server.xml</code> file is provided for you. To provide or modify any values, you specify a number of <a href="#environment-variables">environment variables</a> when you run a Liberty container.</p>
@@ -90,9 +98,10 @@
 </blockquote>
 <h2 id="building-a-configured-liberty-image">Building a configured Liberty image</h2>
 <p>The <em>configured image</em> is built from the base image. The configured image contains the i2 Analyze application and Liberty configuration that is required to start the i2 Analyze application. When you change the configuration, the configured image must be rebuilt to reflect the changes.</p>
-<h3 id="docker-build-command">Docker build command</h3>
+<h3 id="docker-build-command-1">Docker build command</h3>
 <p>The configured image is built from the Dockerfile in <code>images/liberty_ubi_combined</code>. The following <code>docker build</code> command builds the configured image:</p>
-<pre><code class="lang-bash">docker build -t &quot;liberty_configured_redhat:4.3.5&quot; images/liberty_ubi_combined --build-arg BASE_IMAGE=&quot;liberty_redhat:4.3.5&quot;
+<pre><code class="lang-bash">docker build -t &quot;liberty_configured_redhat:4.4.0&quot; &quot;images/liberty_ubi_combined&quot; \
+    --build-arg BASE_IMAGE=&quot;liberty_redhat:4.4.0&quot;
 </code></pre><p>An example of providing the configuration to the classes directory and building the image is included in the <code>buildLibertyConfiguredImage</code> function in the <code>serverFunctions.sh</code> script.</p>
 <h2 id="running-a-liberty-container">Running a Liberty container</h2>
 <p>A Liberty container uses the configured image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to Liberty on the container. The environment variables are described in <a href="#environment-variables">environment variables</a></p>
@@ -130,7 +139,7 @@
   -e SSL_OUTBOUND_CA_CERTIFICATE_FILE=&quot;/run/secrets/outbound_CA.cer&quot; \
   -e LIBERTY_HADR_MODE=1 \
   -e LIBERTY_HADR_POLL_INTERVAL=1 \
-  liberty_configured_redhat
+  &quot;liberty_configured_redhat&quot;
 </code></pre><p>For an example of the <code>docker run</code> command, see <a href="https://github.com/i2group/analyze-containers/blob/main/utils/serverFunctions.sh">serverFunctions.sh</a>. The <code>runLiberty</code> function takes the following arguments to support running multiple Liberty containers:</p>
 <ol>
 <li><code>CONTAINER</code> - The name for the container.</li>
@@ -161,7 +170,7 @@
 <tbody>
 <tr>
 <td><code>FRONT_END_URI</code></td>
-<td>The URI that clients use to connect to i2 Analyze. For more information, see <a href="https://www.ibm.com/docs/en/i2-analyze/4.3.5?topic=settings-deploying-proxy-server-use-i2-analyze">Specifying the connection URI</a>.</td>
+<td>The URI that clients use to connect to i2 Analyze. For more information, see <a href="https://docs.i2group.com/analyze/4.4.0/t_edge_url.html">Specifying the connection URI</a>.</td>
 </tr>
 <tr>
 <td><code>DB_DIALECT</code></td>

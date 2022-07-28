@@ -97,47 +97,61 @@
 <ol>
 <li>Use the config development environment to create and develop a config.<br>For more information, see <a href="deploy_config_dev.html">Configuration development environment</a>.
 When you are happy with the developed configuration, you can complete the process that enables you to use it with the i2 Analyze deployment toolkit.</li>
-<li>Install the i2 Analyze deployment toolkit.<br>For more information, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=analyze-installing-i2">Installing i2 Analyze</a>.</li>
+<li>Install the i2 Analyze deployment toolkit.<br>For more information, see <a href="https://docs.i2group.com/analyze/4.4.0/analyze_install.html">Installing i2 Analyze</a>.</li>
+<li><p>To mount the directory where you installed the i2 Analyze toolkit to the dev container, open the <code>devcontainer.json</code> file inside <code>.devcontainer</code> directory. In the <code>mounts</code> object, add the path to the toolkit directory as the source and target.<br>On Windows, you must use forward slashes (<code>/</code>). If your toolkit is on the Windows filesystem, access it by using the <code>/mnt</code> directory.<br>For example:</p>
+<pre><code class="lang-json"> &quot;mounts&quot;: [
+   ...
+   &quot;source=/mnt/c/i2/i2analyze/toolkit,target=/mnt/c/i2/i2analyze/toolkit,type=bind,consistency=cached&quot;
+ ]
+</code></pre></li>
+<li><p>Press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS) and type <code>Remote-Containers: Rebuild Container</code> and select it.</p>
+</li>
 <li><p>Export the configuration from the config development environment to the i2 Analyze deployment toolkit.</p>
 <ol>
 <li><p>Run the <code>manageToolkitConfiguration.sh</code> script with the <code>create</code> task to create a base configuration in the i2 Analyze deployment toolkit.</p>
-<pre><code class="lang-sh">./manageToolkitConfiguration.sh -c config-development -p /mnt/c/IBM/i2analyze/toolkit -t create
+<pre><code class="lang-sh">./manageToolkitConfiguration.sh -c config-development -p /mnt/c/i2/i2analyze/toolkit -t create
 </code></pre><p>Where:</p>
 <ul>
 <li><code>-c</code> is the name of the config.</li>
-<li><code>-p</code> is the absolute path to the root of the i2 Analyze deployment toolkit that was installed in step 2.<br>On Windows, you must use forward slashes (<code>/</code>) and access the Windows filesystem using the <code>/mnt</code> directory in WSL.</li>
+<li><code>-p</code> is the absolute path to the root of the i2 Analyze deployment toolkit that was mounted into the dev container.  </li>
 </ul>
 <p><strong>Note:</strong> The base configuration that is created is suitable for the deployment pattern that is specified in the <code>variables.sh</code> file of the specified config.</p>
 </li>
 <li><p>Run the <code>manageToolkitConfiguration.sh</code> script with the <code>export</code> task to export the config dev configuration into the deployment toolkit.</p>
-<pre><code class="lang-sh">./manageToolkitConfiguration.sh -c config-development -p /mnt/c/IBM/i2analyze/toolkit -t export
+<pre><code class="lang-sh">./manageToolkitConfiguration.sh -c config-development -p /mnt/c/i2/i2analyze/toolkit -t export
 </code></pre><p>Where:</p>
 <ul>
 <li><code>-c</code> is the name of the config to export.</li>
-<li><code>-p</code> is the full path to the i2 Analyze deployment toolkit that was installed in step 2.<br>On Windows, you must use forward slashes (<code>/</code>) and access the Windows filesystem using the <code>/mnt</code> directory in WSL.</li>
+<li><code>-p</code> is the absolute path to the root of the i2 Analyze deployment toolkit that was mounted into the dev container.</li>
 </ul>
 </li>
 </ol>
 </li>
-<li><p>You can then deploy your i2 Analyze deployment toolkit configuration. For more information about deploying i2 Analyze, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=environment-creating-configuration-development">Deploying i2 Analyze</a>.
+<li><p>You can then deploy your i2 Analyze deployment toolkit configuration. For more information about deploying i2 Analyze, see <a href="https://docs.i2group.com/analyze/4.4.0/t_create_config.html">Deploying i2 Analyze</a>.
 Start at step 3 from the linked documentation. There are a number of environment specific configuration files that are not populated in the config development environment.</p>
 </li>
 </ol>
 <h2 id="use-case-2">Use case 2</h2>
-<p>This section assumes that you are starting with a configuration from an i2 Analyze deployment toolkit. For more information about deploying i2 Analyze, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=deploying-i2-analyze">Deploying i2 Analyze</a>.</p>
-<p>The config development environment uses fixed names for schemas and configuration files. Before you can import you deployment toolkit configuration into the config development environment, your configuration must be updated to use the expected file names. The <code>manageToolkitConfiguration.sh</code> script can rename the files for you and update any references to them.</p>
+<p>This section assumes that you are starting with a configuration from an i2 Analyze deployment toolkit. For more information about deploying i2 Analyze, see <a href="https://docs.i2group.com/analyze/4.4.0/analyze_deployment.html">Deploying i2 Analyze</a>.</p>
+<p>The config development environment uses fixed names for schemas and configuration files. Before you can import your deployment toolkit configuration into the config development environment, your configuration must be updated to use the expected file names. The <code>manageToolkitConfiguration.sh</code> script can rename the files for you and update any references to them.</p>
 <p>You can also decide whether or not to use the config development environment configuration set in your deployment toolkit configuration.
 If you decide to use the new config set, all settings for the deployment must be specified in the <code>analyze-settings.properties</code> file.
 If you choose not to use the new configuration set, any additions that you make to the <code>analyze-settings</code> file in the config development environment are not exported.</p>
 <ol>
-<li>Back up your i2 Analyze deployment toolkit configuration.<br>Fore more information about backing up your configuration, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=restore-back-up-configuration">Back up and restore the configuration</a>.</li>
+<li>Back up your i2 Analyze deployment toolkit configuration.<br>Fore more information about backing up your configuration, see <a href="https://docs.i2group.com/analyze/4.4.0/backup-restore-config.html">Back up and restore the configuration</a>.</li>
 <li>Use the config development environment to create an empty config to import your configuration in to.<br>For more information, see <a href="deploy_config_dev.html">Configuration development environment</a>. You do not need to specify any schema files or deploy the config.</li>
+<li><p>To mount the directory where your i2 Analyze toolkit is installed to the dev container, open the <code>devcontainer.json</code> file inside <code>.devcontainer</code> directory. In the <code>mounts</code> object, add the path to the toolkit directory as the source and target.<br>On Windows, you must use forward slashes (<code>/</code>). If your toolkit is on the Windows filesystem, access it by using the <code>/mnt</code> directory.<br>For example:</p>
+<pre><code class="lang-json"> &quot;mounts&quot;: [
+   ...
+   &quot;source=/mnt/c/i2/i2analyze/toolkit,target=/mnt/c/i2/i2analyze/toolkit,type=bind,consistency=cached&quot;
+ ]
+</code></pre></li>
 <li><p>Run the <code>manageToolkitConfiguration.sh</code> script with the <code>prepare</code> task to rename the schema and configuration files and update the references:</p>
-<pre><code class="lang-sh">./manageToolkitConfiguration.sh -c config-development -p /mnt/c/IBM/i2analyze/toolkit -t prepare
+<pre><code class="lang-sh">./manageToolkitConfiguration.sh -c config-development -p /mnt/c/i2/i2analyze/toolkit -t prepare
 </code></pre><p>Where:</p>
 <ul>
 <li><code>-c</code> is the config name you are working with.</li>
-<li><code>-p</code> is the absolute path to the root of the i2 Analyze deployment toolkit.<br> On Windows, you must use forward slashes (<code>/</code>) and access the Windows filesystem using the <code>/mnt</code> directory in WSL.</li>
+<li><code>-p</code> is the absolute path to the root of the i2 Analyze deployment toolkit that was mounted into the dev container.</li>
 </ul>
 </li>
 <li><p>To use the config development environment configuration set, complete the following 2 steps.
@@ -149,11 +163,11 @@ You can remove the <code>DiscoClientSettings</code> and <code>DiscoServerSetting
 </ol>
 </li>
 <li><p>Run the <code>manageToolkitConfiguration.sh</code> script with the <code>import</code> task to import the configuration into the config development environment:</p>
-<pre><code class="lang-sh">./manageToolkitConfiguration.sh -c config-development -p /mnt/c/IBM/i2analyze/toolkit -t import
+<pre><code class="lang-sh">./manageToolkitConfiguration.sh -c config-development -p /mnt/c/i2/i2analyze/toolkit -t import
 </code></pre><p>Where:</p>
 <ul>
 <li><code>-c</code> is the config name to import the configuration into.</li>
-<li><code>-p</code> is the absolute path to the root of the i2 Analyze deployment toolkit.<br> On Windows, you must use forward slashes (<code>/</code>) and access the Windows filesystem using the <code>/mnt</code> directory in WSL.</li>
+<li><code>-p</code> is the absolute path to the root of the i2 Analyze deployment toolkit that was mounted into the dev container.</li>
 </ul>
 </li>
 <li><p>Use the config development environment to develop the configuration.<br>For more information, see <a href="develop_config_dev.html">Developing the configuration</a>.</p>
@@ -162,11 +176,11 @@ You can remove the <code>DiscoClientSettings</code> and <code>DiscoServerSetting
 </ol>
 </li>
 <li><p>If you want to use your developed configuration in your i2 Analyze deployment toolkit, you can use the <code>export</code> task to export the configuration into your toolkit. Otherwise, continue to use the config development environment.<br>Run the <code>manageToolkitConfiguration.sh</code> script with the <code>export</code> task. For example:</p>
-<pre><code class="lang-sh">./manageToolkitConfiguration.sh -c config-development -p /mnt/c/IBM/i2analyze/toolkit -t export
+<pre><code class="lang-sh">./manageToolkitConfiguration.sh -c config-development -p /mnt/c/i2/i2analyze/toolkit -t export
 </code></pre><p>Where:</p>
 <ul>
 <li><code>-c</code> is the config name you have created to synchronize the configuration to.</li>
-<li><code>-p</code> is the absolute path to the root of the i2 Analyze deployment toolkit.<br>On Windows, you must use forward slashes (<code>/</code>) and access the Windows filesystem using the <code>/mnt</code> directory in WSL.</li>
+<li><code>-p</code> is the absolute path to the root of the i2 Analyze deployment toolkit that was mounted into the dev container.</li>
 </ul>
 </li>
 <li><p>You must update the i2 Analyze deployment toolkit deployment with the changes to the configuration.</p>
@@ -177,12 +191,14 @@ You can remove the <code>DiscoClientSettings</code> and <code>DiscoServerSetting
 <p>The connector IDs are displayed when you run the <code>import</code> and <code>export</code> tasks to enable you to provide the connectors in each environment. For more information about deploying connectors, see:</p>
 <ul>
 <li><a href="connector_config_dev.html">Adding connectors to your config development environment</a></li>
-<li><a href="https://www.ibm.com/docs/en/i2-analyze/4.3.5?topic=source-adding-connector-topology">Adding connectors to your i2 Analyze deployment toolkit configuration</a></li>
+<li><a href="https://docs.i2group.com/analyze/4.4.0/i2_connect_topology.html">Adding connectors to your i2 Analyze deployment toolkit configuration</a></li>
 </ul>
 <h2 id="extensions">Extensions</h2>
 <p>In the config development environment, i2Analyze extensions are built and deployed using Maven.</p>
 <p>To add an extension to your i2 Analyze deployment toolkit, copy the JAR from <code>i2a-extensions/&lt;extension-name&gt;/target/&lt;extension-name&gt;-&lt;version&gt;.jar</code> and follow the DevEssentials deployment steps.
 For more information, see <a href="https://github.com/i2group/analyze/blob/master/documentation/Configuring-the-group-based-default-security-dimension-values-example-project.md">Configuring the &#39;group-based default security dimension values&#39; example project</a> for an example of the steps to take.</p>
+<h2 id="prometheus-and-grafana">Prometheus and Grafana</h2>
+<p>In the config development environment, Prometheus and Grafana are run on Docker images. You can modify the <code>configs/&lt;config-name&gt;/configuration/prometheus/prometheus.yml</code> file and the Grafana dashboards in <code>configs/&lt;config-name&gt;/configuration/grafana/dashboards</code> folder to further develop your metrics configuration and once finished this can be copied to the locations that are required by Prometheus and Grafana. For more information, see <a href="https://docs.i2group.com/analyze/4.4.0/configure_monitoring.html">Configure server monitoring</a>.</p>
 <hr>
 <h2 id="managetoolkitconfigurationsh-script">manageToolkitConfiguration.sh script</h2>
 <pre><code class="lang-sh">Usage:

@@ -82,16 +82,23 @@
 <h2 id="prerequisites">Prerequisites</h2>
 <p>You can run the code in the analyze-containers repository on Windows with Windows Subsystem for Linux and MacOS.</p>
 <h3 id="windows-subsystem-for-linux-wsl">Windows Subsystem for Linux (WSL)</h3>
+<p>If you are on <strong>Windows</strong>, you must use WSL 2 as the backend for Docker and to run the shell scripts in this repository.</p>
 <ol>
-<li><p>If you are on Windows, you must use WSL 2 to run the shell scripts in this repository.</p>
-<p> For information about installing WSL, see <a href="https://docs.microsoft.com/windows/wsl/install-win10">Windows Subsystem for Linux Installation Guide</a>.</p>
+<li><p>To install WSL, in an administrator Command Prompt, run:</p>
+<pre><code class="lang-sh">wsl --install
+</code></pre><p> Then, restart your machine.<br> For information about installing WSL, see <a href="https://docs.microsoft.com/en-gb/windows/wsl/setup/environment#get-started">Install Linux on Windows with WSL</a>.</p>
+</li>
+<li>Configure your WSL user. For more information, see <a href="https://docs.microsoft.com/en-gb/windows/wsl/setup/environment#set-up-your-linux-username-and-password">Set up your Linux username and password</a>.</li>
+<li><p>Create a mapped network drive in Windows for WSL.</p>
+<ol>
+<li><p>In a command prompt, run the following command to list your WSL distributions.</p>
+<pre><code class="lang-sh">wsl --list
+</code></pre></li>
+<li><p>Run the following command to map your WSL distribution to the Z: drive. Use the name of your default WSL distribution as displayed after running the previous command. You can use any drive letter.</p>
+<pre><code class="lang-sh">net use Z: \\wsl$\Ubuntu
+</code></pre><p>You can now access the WSL filesystem from Windows</p>
 </li>
 </ol>
-<h3 id="code">Code</h3>
-<ol>
-<li><p>Download the <code>tar.gz</code> or clone the analyze-containers repository from <a href="https://github.com/i2group/analyze-containers">https://github.com/i2group/analyze-containers</a>.</p>
-</li>
-<li><p>If you download the <code>tar.gz</code> file, extract it. On Windows, extract it to a location that is in your WSL file system. For example: <code>\\wsl$\Ubuntu-20.04\home\&lt;user-name&gt;</code>.</p>
 </li>
 </ol>
 <h3 id="docker">Docker</h3>
@@ -106,107 +113,36 @@
 </li>
 </ul>
 </li>
-<li><p>After you install Docker, you must allocate enough memory to Docker to run the containers in the example deployment. For this deployment, allocate at least 5GB of memory.</p>
-<p> For more information about modifying the resources allocated to Docker, see:</p>
+<li><p>After you install Docker, allocate at least 5GB of memory to Docker to run the containers in the example deployment.</p>
+<p> On Windows, Docker is automatically allocated 8GB or 50% of available memory whichever is less.</p>
+<p> For more information about modifying the resources allocated to Docker on MacOS, see:</p>
 <ul>
-<li><a href="https://docs.docker.com/docker-for-windows/#resources">Docker Desktop for Windows</a></li>
 <li><a href="https://docs.docker.com/docker-for-mac/#resources">Docker Desktop for Mac</a></li>
 </ul>
 </li>
 </ol>
-<h3 id="command-line-tools">Command line tools</h3>
+<h3 id="code">Code</h3>
 <ol>
-<li><p>If you are using WSL, install and configure the following command line tools:</p>
-<ul>
-<li><a href="https://stedolan.github.io/jq/download/">jq</a></li>
-<li><p><a href="http://xmlstar.sourceforge.net/">XMLStarlet</a></p>
-<p>For example:</p>
-<pre><code class="lang-sh">sudo apt-get update
-sudo apt-get install jq
-sudo apt-get install xmlstarlet
-</code></pre></li>
-</ul>
-</li>
-<li><p>If you are using MacOS, install and configure the following command line tools:  </p>
-<ul>
-<li><a href="https://www.gnu.org/software/sed/">GNU sed</a></li>
-<li><a href="https://www.gnu.org/software/bash/">GNU bash</a></li>
-<li><a href="https://www.gnu.org/software/coreutils/">Coreutils - GNU core utilities</a></li>
-<li><a href="https://stedolan.github.io/jq/download/">jq</a></li>
-<li><p><a href="http://xmlstar.sourceforge.net/">XMLStarlet</a></p>
-<p>You can install these command line tools by using <a href="https://brew.sh/">Homebrew</a>. Run the following commands to install Homebrew and then install the tools with it:</p>
-<pre><code class="lang-sh">/bin/bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)&quot;
-brew install gnu-sed bash coreutils jq xmlstarlet
-</code></pre><p>After you install the tools, ensure they are added to your shell&#39;s path. If you installed the tools by using Homebrew, run the following commands:</p>
-<pre><code class="lang-sh">echo &#39;export PATH=&quot;$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$PATH&quot;&#39; &gt;&gt; ~/.bash_profile
-echo &#39;export PATH=&quot;$(brew --prefix)/opt/bash/bin:$PATH&quot;&#39; &gt;&gt; ~/.bash_profile
-echo &#39;export PATH=&quot;$(brew --prefix)/opt/coreutils/libexec/gnubin:$PATH&quot;&#39; &gt;&gt; ~/.bash_profile
-</code></pre></li>
-</ul>
-</li>
-</ol>
-<h3 id="visual-studio-code">Visual Studio Code</h3>
-<p>The repository is designed to be used with VS Code to create the development environment.</p>
+<li>Download the <code>tar.gz</code> from <a href="https://github.com/i2group/analyze-containers/releases/tag/v2.3.0">https://github.com/i2group/analyze-containers/releases/tag/v2.3.0</a>.</li>
+<li><p>Extract the <code>tar.gz</code> file by using the following steps:</p>
 <ol>
-<li><p>Download and install <a href="https://code.visualstudio.com/download">VS Code</a></p>
-</li>
-<li><p>To make the environment easier to use, install the following extensions in VS Code:  </p>
-<ul>
-<li><a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl">Remote - WSL</a></li>
-<li><a href="https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker">Docker</a></li>
-<li><a href="https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck">ShellCheck</a></li>
-<li><a href="https://marketplace.visualstudio.com/items?itemName=mads-hartmann.bash-ide-vscode">Bash IDE</a></li>
-<li><a href="https://marketplace.visualstudio.com/items?itemName=redhat.vscode-xml">Red Hat XML</a></li>
-<li><a href="https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml">Red Hat YAML</a></li>
-</ul>
-</li>
-<li><p>Modify the VS Code <code>settings.json</code> file:</p>
-<ol>
-<li>Open the <code>settings.json</code> file by pressing <strong>F1</strong> and typing <em>Preferences: Open Settings (JSON)</em>.</li>
-<li><p>Add the <code>catalog.xml</code> to enable XSD validation.<br>In the <code>settings.json file</code>, add the following JSON object and reference the <code>catalog.xml</code> file at the root of the <code>analyze-containers</code> directory:  </p>
-<pre><code class="lang-json">&quot;xml.catalogs&quot;: [
-    &quot;catalog.xml&quot;
-]
+<li>On Windows, copy the <code>analyze-containers-2.3.0.tar.gz</code> file to your WSL filesystem. For example: <code>Z:\home\&lt;user&gt;</code></li>
+<li><p>Extract the <code>tar.gz</code> file (On Windows, run the commands from a WSL terminal. <strong>Start</strong> &gt; <strong>wsl</strong>):</p>
+<pre><code class="lang-sh">cd /home/&lt;user&gt;
+</code></pre><pre><code class="lang-sh">tar -xvzf analyze-containers-2.3.0.tar.gz
+</code></pre><pre><code class="lang-sh">mv analyze-containers-2.3.0/ analyze-containers
 </code></pre></li>
 </ol>
 </li>
-<li><p>If you are using MacOS, ensure the VS Code uses GNU bash for the integrated terminal.</p>
-<ol>
-<li><p>In the <code>settings.json</code> file, add the following code:  </p>
-<pre><code class="lang-json">&quot;terminal.integrated.profiles.osx&quot;: {
- &quot;bash&quot;: {
-     &quot;path&quot;: &quot;/usr/local/opt/bash/bin/bash&quot;,
-     &quot;icon&quot;: &quot;terminal-bash&quot;
- }
-},
-&quot;terminal.integrated.defaultProfile.osx&quot;: &quot;bash&quot;,
-</code></pre></li>
-</ol>
-</li>
-<li><p>To run the scripts in the analyze-containers repository, use the VS Code integrated terminal.</p>
-<ol>
-<li>Set the default terminal to WSL.<ol>
-<li>Press <strong>F1</strong> and type <code>Terminal: Select Default Profile</code>.</li>
-<li>Select <code>WSL</code>.</li>
-</ol>
-</li>
-<li><p>To open the integrated terminal, click <strong>Terminal</strong> &gt; <strong>New Terminal</strong>.  </p>
-<p>You do not need to run any scripts now, but whenever the documentation instructs you to run a script, do so from the integrated terminal.</p>
-</li>
-</ol>
-</li>
-<li><p>To set the <code>ANALYZE_CONTAINERS_ROOT_DIR</code> variable, run the following command:</p>
-<pre><code class="lang-sh">. initShell.sh
-</code></pre></li>
 </ol>
 <h3 id="i2-analyze-minimal-toolkit">i2 Analyze minimal toolkit</h3>
 <ol>
-<li>Download the i2 Analyze V4.3.5 Minimal for Linux.<ul>
+<li>Download the i2 Analyze V4.4.0 Minimal for Linux.<ul>
 <li>To download i2 Analyze, follow the procedure described in <a href="https://support.i2group.com/s/article/2290">Where can I download the latest i2 Products?</a></li>
-<li>Populate the subject of the form with <code>Request for i2 Analyze 4.3.5 minimal toolkit for Linux</code>.</li>
+<li>Populate the subject of the form with <code>Request for i2 Analyze 4.4.0 minimal toolkit for Linux</code>.</li>
 </ul>
 </li>
-<li>Rename the <code>i2analyzeMinimal_4350.tar.gz</code> file to <code>i2analyzeMinimal.tar.gz</code>, then copy it to the <code>analyze-containers/pre-reqs</code> directory.</li>
+<li>Rename the <code>i2analyzeMinimal_440.tar.gz</code> file to <code>i2analyzeMinimal.tar.gz</code>, then copy it to the <code>analyze-containers/pre-reqs</code> directory.</li>
 </ol>
 <p><strong>Note:</strong> If you used the <code>analyze-containers</code> repository with a previous version of i2 Analyze, overwrite the existing minimal toolkit.</p>
 <h3 id="i2-analyze-fix-packs-optional">i2 Analyze Fix Packs (optional)</h3>
@@ -216,16 +152,16 @@ echo &#39;export PATH=&quot;$(brew --prefix)/opt/coreutils/libexec/gnubin:$PATH&
 <p><strong>Note:</strong> If you used the <code>analyze-containers</code> repository with a previous fix pack version of i2 Analyze, overwrite the existing fix pack file.</p>
 <h3 id="analysts-notebook-premium">Analyst&#39;s Notebook Premium</h3>
 <ol>
-<li><p>Download <em>i2 Analyst&#39;s Notebook Premium</em> version 9.3.2.</p>
+<li><p>Download <em>i2 Analyst&#39;s Notebook Premium</em> version 9.4.0.</p>
 <ul>
 <li>To download i2 Analyst&#39;s Notebook Premium, follow the procedure described in <a href="https://support.i2group.com/s/article/2290">Where can I download the latest i2 Products?</a></li>
-<li>Populate the subject of the form with <code>Request for i2 Analyst&#39;s Notebook Premium 9.3.2</code>.</li>
+<li>Populate the subject of the form with <code>Request for i2 Analyst&#39;s Notebook Premium 9.4.0</code>.</li>
 </ul>
 </li>
 <li><p>Install i2 Analyst&#39;s Notebook Premium on a Windows machine.</p>
 <blockquote><p>Note: If you are running Docker on MacOS, you can install Analyst&#39;s Notebook Premium on a Windows virtual machine.</p>
 </blockquote>
-<p> For more information, see <a href="https://www.ibm.com/docs/en/i2-anb/latest?topic=installing-i2-analysts-notebook-premium">Installing i2 Analyst&#39;s Notebook Premium</a>.</p>
+<p> For more information, see <a href="https://docs.i2group.com/anbp/9.4.0/installing_anbp.html">Installing i2 Analyst&#39;s Notebook Premium</a>.</p>
 </li>
 </ol>
 <h3 id="jdbc-drivers">JDBC drivers</h3>
@@ -233,6 +169,51 @@ echo &#39;export PATH=&quot;$(brew --prefix)/opt/coreutils/libexec/gnubin:$PATH&
 <ol>
 <li>Download the Microsoft JDBC Driver 9.4.1 for SQL Server from <a href="https://github.com/microsoft/mssql-jdbc/releases/tag/v9.4.1">https://github.com/microsoft/mssql-jdbc/releases/tag/v9.4.1</a> by clicking the <code>mssql-jdbc-9.4.1.jre11.jar</code> asset.</li>
 <li>Copy the <code>mssql-jdbc-9.4.1.jre11.jar</code> file to the <code>analyze-containers/pre-reqs/jdbc-drivers</code> directory.</li>
+</ol>
+<h3 id="modifying-the-hosts-file">Modifying the hosts file</h3>
+<ol>
+<li><p>To enable you to connect to a deployment, the Solr Web UI, the database, the Prometheus Web UI and grafana, update your hosts file to include entries for the containers:</p>
+<pre><code class="lang-sh">127.0.0.1 solr1.eia
+127.0.0.1 sqlserver.eia
+127.0.0.1 i2analyze.eia
+127.0.0.1 prometheus.eia
+127.0.0.1 grafana.eia
+</code></pre><ul>
+<li>On Windows, edit the hosts file in <code>C:\Windows\System32\drivers\etc</code>.</li>
+<li>On MacOS, edit the hosts file in <code>/etc/hosts</code>.</li>
+</ul>
+</li>
+</ol>
+<p>If you deploy on MacOS, for your virtual machine to connect to i2 Analyze, complete the following:</p>
+<ol>
+<li><p>On your MacOS terminal, run <code>ifconfig</code> and identify the IP address for your virtual machine in a section such as <code>vmnet1</code>. For example, <code>172.16.100.1</code>.</p>
+</li>
+<li><p>Then, on your Windows virtual machine add the following line to the <code>C:\Windows\System32\drivers\etc\hosts</code> file:</p>
+<pre><code class="lang-sh">172.16.100.1 i2analyze.eia
+</code></pre></li>
+</ol>
+<h3 id="visual-studio-code">Visual Studio Code</h3>
+<p>The repository is designed to be used with VS Code to create the development environment.</p>
+<ol>
+<li><p>Download and install <a href="https://code.visualstudio.com/download">VS Code</a>
+ When prompted to Select Additional Tasks during installation, be sure to check the <strong>Add to PATH</strong> option so you can easily open a folder in WSL using the code command.</p>
+</li>
+<li><p>Install the <a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers">Remote Containers extension</a></p>
+</li>
+<li><p>On Windows, use the following instructions to open the folder in WSL.</p>
+<ol>
+<li>Install the <a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl">Remote WSL extension</a></li>
+<li>Press <strong>F1</strong> and type <code>Remote-WSL: New WSL Window</code> and select it.</li>
+</ol>
+</li>
+<li><p>Press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS) and type <code>Remote-Containers: Open Folder in Container</code> and select it. In the file explorer, navigate to your <code>analyze-containers</code> directory. For example: <code>/home/&lt;user-name&gt;/analyze-containers</code>.<br>If you are prompted, click <strong>Trust Folder &amp; Continue</strong>.</p>
+</li>
+<li>After the dev container starts, if you are prompted, click <strong>Install</strong> in the pop-up that is displayed that prompts you to install the recommended VS Code extensions.</li>
+</ol>
+<p>Your config dev environment is correctly opened when the following is displayed in the bottom left-hand corner of the VS Code window:<br><img src="../images/vscode_green.png" alt="Dev Container: Analyze Containers Dev" title="VS Code status">
+For more information about VS Code dev containers, see <a href="https://code.visualstudio.com/docs/remote/containers">Developing in a container</a>.</p>
+<ol>
+<li>To run the scripts in the analyze-containers repository, use the VS Code integrated terminal. To open the integrated terminal, click <strong>Terminal</strong> &gt; <strong>New Terminal</strong>.  </li>
 </ol>
 <hr>
 <h2 id="what-to-do-next">What to do next</h2>

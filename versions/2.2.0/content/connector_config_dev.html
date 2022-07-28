@@ -1,0 +1,300 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Adding connectors to your development environment </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Adding connectors to your development environment ">
+    <meta name="generator" content="docfx 2.56.2.0">
+    
+    <link rel="shortcut icon" href="../../../images/favicon.png">
+    <link rel="stylesheet" href="../../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../../styles/docfx.css">
+    <link rel="stylesheet" href="../../../styles/main.css">
+    <meta property="docfx:navrel" content="../../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../../index.html">
+                i2 Analyze Containers
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+          
+          <div class="subnav navbar navbar-default">
+            <div class="container hide-when-search" id="breadcrumb">
+              <ul class="breadcrumb">
+                <li></li>
+              </ul>
+            </div>
+          </div>
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="adding-connectors-to-your-development-environment">Adding connectors to your development environment</h1>
+
+<p>To add a connector to your deployment of i2 Analyze, you must develop an i2 Connect connector. For more information about developing connectors, see <a href="https://i2group.github.io/analyze-connect/index.html">i2 Connect gateway connector development</a>.</p>
+<p>Ensure that the <code>DEPLOYMENT_PATTERN</code> variable in the <code>&lt;config_name&gt;/utils/variables.sh</code> file is set to a pattern that includes the i2 Connect gateway.<br>For example:  </p>
+<pre><code class="lang-sh">DEPLOYMENT_PATTERN=&quot;i2c_istore&quot;
+</code></pre><p>Process overview:</p>
+<ul>
+<li>Create a custom connector image</li>
+<li>Update the configuration to reference connectors</li>
+<li>Build connector images and redeploy</li>
+</ul>
+<h2 id="creating-a-connector-image">Creating a connector image</h2>
+<p>Create a connector image from one of the image templates. You can deploy connectors using the following templates:</p>
+<ul>
+<li><a href="#spring-boot-based-connector-image">Spring Boot</a> for Java based connectors</li>
+<li><a href="#i2-connect-server-based-connector-image">i2 Connect server</a> for Node v14 based connectors developed using the i2 Connect server SDK</li>
+<li><a href="#nodejs-based-connector-image">NodeJS</a> for Node v14 based connectors</li>
+<li><a href="#external-connector">External</a> for connectors hosted outside of the config development environment</li>
+</ul>
+<p>The connector should be secured and run on port <code>3443</code>. For more information about securing your system, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=application-securing-i2-analyze">Securing i2 Analyze</a>.</p>
+<h3 id="spring-boot-based-connector-image">Spring Boot based connector image</h3>
+<ol>
+<li><p>Copy the <code>/templates/springboot-connector-image</code> directory (including the sub-directories) to the <code>/connector-images</code> directory.<br> Rename the <code>springboot-connector-image</code> folder to a custom connector name. The name of the directory is used to determine which connectors to deploy. Do not use spaces or special characters in the name.<br> The directory structure is:  </p>
+<pre><code class="lang-sh">- connector-images
+    - &lt;connector_name&gt;
+        - target
+        - connector-definition.json
+        - connector-version.json
+        - ...
+</code></pre></li>
+<li><p>Copy your connector code into the <code>target</code> directory of the connector directory. For example, copy your <code>.jar</code> file into the <code>&lt;connector_name&gt;/target</code> directory.</p>
+<p> Next, <a href="#configuring-a-connector">configure your connector</a>.</p>
+</li>
+</ol>
+<h3 id="i2-connect-server-based-connector-image">i2 Connect server based connector image</h3>
+<ol>
+<li><p>Copy the <code>/templates/i2connect-server-connector-image</code> directory (including the sub-directories) to the <code>/connector-images</code> directory.<br> Rename the <code>i2connect-server-connector-image</code> folder to a custom connector name. The name of the directory is used to determine which connectors to deploy. Do not use spaces or special characters in the name.<br> The directory structure is:  </p>
+<pre><code class="lang-sh">- connector-images
+    - &lt;connector_name&gt;
+        - app
+        - connector-definition.json
+        - connector-version.json
+        - ...
+</code></pre></li>
+<li><p>Copy the i2 Connect server connector distributable ( the <code>.tar.gz</code> or <code>.tgz</code> file) into the connector directory.</p>
+<p> Next, <a href="#configuring-a-connector">configure your connector</a>.</p>
+</li>
+</ol>
+<h3 id="nodejs-based-connector-image">NodeJS based connector image</h3>
+<ol>
+<li><p>Copy the <code>/templates/node-connector-image</code> directory (including the sub-directories) to the <code>/connector-images</code> directory.<br> Rename the <code>node-connector-image</code> folder to a custom connector name. The name of the directory is used to determine which connectors to deploy. Do not use spaces or special characters in the name.<br> The directory structure is:  </p>
+<pre><code class="lang-sh">- connector-images
+    - &lt;connector_name&gt;
+        - app
+        - connector-definition.json
+        - connector-version.json
+        - ...
+</code></pre></li>
+<li><p>Copy your connector code into the <code>app</code> directory of the connector directory. For example, copy the files into the <code>&lt;connector_name&gt;/app</code> directory. By default, the image will start node with the file <code>app.js</code>.</p>
+<p> Next, <a href="#configuring-a-connector">configure your connector</a>.</p>
+</li>
+</ol>
+<h3 id="external-connector">External connector</h3>
+<ol>
+<li><p>Copy the <code>/templates/external-connector</code> directory to the <code>/connector-images</code> directory.<br> Rename the <code>external-connector</code> folder to a custom connector name. The name of the directory is used to determine which connectors to deploy. Do not use spaces or special characters in the name.<br> The directory structure is:  </p>
+<pre><code class="lang-sh">- connector-images
+    - &lt;connector_name&gt;
+        - connector-definition.json
+</code></pre><p> Next, <a href="#configuring-a-connector">configure your connector</a>.</p>
+</li>
+</ol>
+<h2 id="configuring-a-connector">Configuring a connector</h2>
+<ol>
+<li><p>Populate the values in the <code>&lt;connector_name&gt;/connector-definition.json</code> file with information about your connector.  </p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>An identifier that is unique for all connectors that will be deployed.</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>A name for the connector that is displayed to users in the client.</td>
+</tr>
+<tr>
+<td><code>configurationPath</code></td>
+<td>The full path to the configuration endpoint of the connector. By default, it is <code>/config</code>.</td>
+</tr>
+<tr>
+<td><code>gatewaySchema</code></td>
+<td>The short name of an optional gateway schema. When no gateway schema is used, do not provide a value.</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>Used to identify the type of connector. For i2 Connect server connectors, set to <code>i2connect-server</code>. For external connectors, set to <code>external</code>. For any other connectors, the <code>type</code> key is not required.</td>
+</tr>
+<tr>
+<td><code>sendSensitiveHeaders</code></td>
+<td>This setting effectively disables connectors that employ user-specific configuration.</td>
+</tr>
+<tr>
+<td><code>baseUrl</code></td>
+<td>Used only for connectors of type <code>external</code>. The <code>baseUrl</code> value is the URL address of the connector. For any other connectors, the <code>baseUrl</code> key is not required.</td>
+</tr>
+</tbody>
+</table>
+<p> For example:</p>
+<pre><code class="lang-json">{
+    &quot;id&quot;: &quot;connector1&quot;,
+    &quot;name&quot;: &quot;Connector 1&quot;,
+    &quot;description&quot;: &quot;First connector&quot;,
+    &quot;configurationPath&quot;: &quot;/config&quot;,
+    &quot;gatewaySchema&quot;: &quot;template-schema&quot;,
+    &quot;sendSensitiveHeaders&quot;: &quot;false&quot;,
+    &quot;type&quot;: &quot;i2connect-server&quot;
+}
+</code></pre><p> or</p>
+<pre><code class="lang-json">{
+    &quot;id&quot;: &quot;connector2&quot;,
+    &quot;name&quot;: &quot;Connector 2&quot;,
+    &quot;description&quot;: &quot;Second connector&quot;,
+    &quot;configurationPath&quot;: &quot;/config&quot;,
+    &quot;gatewaySchema&quot;: &quot;template-schema&quot;,
+    &quot;sendSensitiveHeaders&quot;: &quot;false&quot;,
+    &quot;type&quot;: &quot;external&quot;,
+    &quot;baseUrl&quot;: &quot;https://example-connector:3443&quot; 
+}
+</code></pre><p> <strong>Note:</strong></p>
+<ol>
+<li>If your external connector is hosted in a Docker container on a different network to your config development environment, connect the Liberty container to the same network as your external connector container. For example, run <code>docker network connect &lt;connector-network-name&gt; liberty1.&lt;config-name&gt;</code>.</li>
+<li>If your connector is running on your host machine, use the IP address of your host machine in the <code>baseUrl</code> value.</li>
+</ol>
+</li>
+<li><p>Provide the version of the connector in the <code>&lt;connector_name&gt;/connector-version.json</code> file. For external connectors, this file is not required.
+ The <code>version</code> value specifies the version of the connector.</p>
+<p> For example:</p>
+<pre><code class="lang-json">{
+    &quot;version&quot;: &quot;0.0.1&quot;,
+    &quot;tag&quot;: &quot;0-0-1&quot;
+}
+</code></pre></li>
+</ol>
+<p>For more information about configuring connectors, see <a href="managing_connectors.html">Managing connectors</a>.</p>
+<h2 id="adding-connectors-to-a-config">Adding connectors to a config</h2>
+<ol>
+<li><p>In the configuration you want to deploy your connector with, update the <code>/configs/&lt;config_name&gt;/configuration/connector-references.json</code> file and add the directory name for your connector in the <code>connectors</code> array.<br>For example, to add the connector in <code>connector-images\example-connector</code> the <code>connector-references.json</code> file contains the following <code>connectors</code> array:  </p>
+<pre><code class="lang-json">{
+    &quot;connectors&quot;: [
+        {
+            &quot;name&quot;: &quot;example-connector&quot;
+        }
+    ],
+...
+}
+</code></pre></li>
+</ol>
+<h2 id="defining-a-gateway-schema-optional">Defining a gateway schema (Optional)</h2>
+<p>You can develop the gateway schema and associated charting schemes by changing the deployment pattern to <code>schema-dev</code> and following the instructions in <a href="develop_schemas.html">Developing schemas in your configuration development environment</a>.
+After you develop the schemes, complete the following steps to add deploy them with your configuration:</p>
+<ol>
+<li>Copy the schema and charting scheme files to the <code>/gateway-schemas</code> directory.<br>To define the short name of the gateway schema, the prefix of the file name is used. The convention is defined as: <code>&lt;short&gt;-&lt;name&gt;-schema.xml</code> and <code>&lt;short&gt;-&lt;name&gt;-schema-charting-scheme.xml</code>.<br>For example, files with the names <code>law-enforcement-schema.xml</code> and <code>law-enforcement-charting-schemes.xml</code> have the short name <code>law-enforcement</code>.</li>
+<li><p>Add the short name of your schema to the <code>/configs/&lt;config_name&gt;/configuration/connector-references.json</code> file in the <code>gatewaySchemas</code> array.<br> For example, to add a gateway schema with the short name <code>law-enforcement</code>, the file contains the following <code>gatewaySchemas</code> array:</p>
+<pre><code class="lang-json">{
+    ...
+    ],
+    &quot;gatewaySchemas&quot;: [
+        {
+            &quot;shortName&quot;: &quot;law-enforcement&quot;
+        }
+    ]
+}
+</code></pre><p> <strong>Note:</strong> If you are not using any gateway schemas, do not remove the <code>gatewaySchemas</code> key from the file.</p>
+</li>
+<li><p>Set the short name of your schema in the <code>&lt;connector_name&gt;/connector-definition.json</code> as the value for the <code>gatewaySchema</code> key of the connector that will use the gateway schema.</p>
+</li>
+</ol>
+<h2 id="building-the-connector-images-and-redeploying">Building the connector images and redeploying</h2>
+<ol>
+<li><p>Run the <code>./deploy.sh</code> script with your config name and the <code>connectors</code> task from the <code>/scripts</code> directory to generate the secrets for your connectors, build the connector images, and deploy your environment.  </p>
+<pre><code class="lang-sh">./deploy.sh -c &lt;config_name&gt; -t connectors
+</code></pre></li>
+</ol>
+<p>After you add connectors to your environment, you can <a href="develop_config_dev.html">configure the rest of the configuration</a>.</p>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            &copy; N. Harris Computer Corporation (2022)
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../styles/main.js"></script>
+  </body>
+</html>

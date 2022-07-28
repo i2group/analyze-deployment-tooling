@@ -110,7 +110,7 @@ For more information about docker storage, see <a href="https://docs.docker.com/
 <h3 id="running-the-database-server-container">Running the database server container</h3>
 <p>The <code>runSQLServer</code> server function creates the secure SQL Server container for the deployment.</p>
 <p>For more information about building the SQL Server image and running a container, see <a href="../images%20and%20containers/sql_server.html">Microsoft SQL Server</a>.</p>
-<p>Before continuing, <code>deploy.sh</code> uses the <code>waitForSolrToBeLive</code> client function and <code>waitForSQLServerToBeLive</code> common function to ensure that Solr and SQL Server are running. For more information, see <a href="client_functions.html#status-utilities">Status utilities</a></p>
+<p>Before continuing, <code>deploy.sh</code> uses the <code>waitForSolrToBeLive</code> and <code>waitForSQLServerToBeLive</code> common function to ensure that Solr and SQL Server are running.</p>
 <h3 id="configuring-sql-server">Configuring SQL Server</h3>
 <p>The <code>configureSecureSqlServer</code> function uses a number of client and server functions to complete the following actions:</p>
 <ol>
@@ -218,8 +218,8 @@ For more information about docker storage, see <a href="https://docs.docker.com/
 <li><p>The <code>runLiberty</code> server function runs a Liberty container from the configured image.<br>For more information, see <a href="../images%20and%20containers/liberty.html#running-a-liberty-container">Running a Liberty container</a>
 In <code>deploy.sh</code>, 2 liberty containers are used.</p>
 </li>
-<li><p>Starting the load balancer.<br>The <code>runLoadBalancer</code> functions in <code>serverFunctions.sh</code> runs HAProxy as a load balancer in a Docker container.<br>The load balancer configuration we use is generated from the <code>haproxy-template.cfg</code> template file. The load balancer routes requests to the application to both Liberty servers that are running.<br>The configuration that used is a simplified configuration for example purposes and is not to be used in production.</p>
-<p>For more information about configuring a load balancer with i2 Analyze, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=availability-deploying-load-balancer">Load balancer</a>.</p>
+<li><p>Starting the load balancer.<br>The <code>runLoadBalancer</code> functions in <code>serverFunctions.sh</code> runs HAProxy as a load balancer in a Docker container.<br>The load balancer configuration we use can be found in <code>haproxy.cfg</code> file and the variables are passed as environment variables to the Docker container. The load balancer routes requests to the application to both Liberty servers that are running.<br>The configuration that used is a simplified configuration for example purposes and is not to be used in production.</p>
+<p>For more information about configuring a load balancer with i2 Analyze, see <a href="https://docs.i2group.com/analyze/4.4.0/hadr_loadbalancer.html">Load balancer</a>.</p>
 </li>
 <li><p>Before continuing, <code>deploy.sh</code> uses the <code>waitFori2AnalyzeServiceToBeLive</code> common function to ensure that Liberty is running.</p>
 </li>
@@ -229,6 +229,11 @@ In <code>deploy.sh</code>, 2 liberty containers are used.</p>
 </ul>
 </li>
 </ol>
+<h3 id="running-prometheus-and-grafana">Running Prometheus and Grafana</h3>
+<p>The <code>runPrometheus</code> server function creates the Prometheus container and the <code>runGrafana</code> server function creates the Grafana container.</p>
+<p>For more information about running a Prometheus container, see <a href="../images%20and%20containers/prometheus.html">Prometheus</a>.
+For more information about running a Grafana container, see <a href="../images%20and%20containers/grafana.html">Grafana</a>.</p>
+<p>Before continuing, <code>deploy.sh</code> uses the <code>waitForPrometheusServerToBeLive</code> and <code>waitForGrafanaServerToBeLive</code> common functions to ensure that Prometheus and Grafana are running.</p>
 </article>
           </div>
           

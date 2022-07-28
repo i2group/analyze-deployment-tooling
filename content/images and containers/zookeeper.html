@@ -79,13 +79,8 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="zookeeper">ZooKeeper</h1>
 
-<p>The ZooKeeper image for i2 Analyze is built from a Dockerfile that is based on the Dockerfile from Apache ZooKeeper. The Dockerfile is modified to configure ZooKeeper for use with i2 Analyze.</p>
-<h2 id="building-a-zookeeper-image">Building a ZooKeeper image</h2>
-<p>The ZooKeeper image is built from the Dockerfile located in <code>images/zookeeper_redhat</code>.</p>
-<h3 id="docker-build-command">Docker build command</h3>
-<p>The The following <code>docker build</code> command builds the ZooKeeper image:</p>
-<pre><code class="lang-bash">docker build -t &quot;zookeeper_redhat:4.3.5&quot; images/zookeeper_redhat
-</code></pre><h2 id="running-a-zookeeper-container">Running a ZooKeeper container</h2>
+<p>In a containerized deployment, ZooKeeper is configured and run from a <a href="https://hub.docker.com/repository/docker/i2group/i2eng-zookeeper">ZooKeeper image</a> maintained by i2 Group on Docker Hub.</p>
+<h2 id="running-a-zookeeper-container">Running a ZooKeeper container</h2>
 <p>A ZooKeeper container uses the ZooKeeper image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to ZooKeeper on the container. The environment variables are described in <a href="#environment-variables">environment variables</a>.</p>
 <p>For more information about the command, see <a href="https://docs.docker.com/engine/reference/run/">docker run reference</a>.</p>
 <h3 id="docker-run-command">Docker run command</h3>
@@ -112,7 +107,7 @@
    -e &quot;SSL_PRIVATE_KEY_FILE=/run/secrets/server.key&quot; \
    -e &quot;SSL_CERTIFICATE_FILE=/run/secrets/server.cer&quot; \
    -e &quot;SSL_CA_CERTIFICATE_FILE=/run/secrets/CA.cer&quot; \
-   &quot;zookeeper_redhat:4.3.5&quot;
+   &quot;i2eng/i2eng-zookeeper:3.6&quot;
 </code></pre><p><em>Note:</em> <code>SERVER_SSL</code> variable is set based on the <code>SOLR_ZOO_SSL_CONNECTION</code> switch, see <a href="#environment-variables">Environment variables</a>.</p>
 <h3 id="zookeeper-service-ports">ZooKeeper Service Ports</h3>
 <p>Default ports used by ZooKeeper are:</p>

@@ -1,0 +1,279 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Getting started with the analyze-containers repository </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Getting started with the analyze-containers repository ">
+    <meta name="generator" content="docfx 2.56.2.0">
+    
+    <link rel="shortcut icon" href="../../../images/favicon.png">
+    <link rel="stylesheet" href="../../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../../styles/docfx.css">
+    <link rel="stylesheet" href="../../../styles/main.css">
+    <meta property="docfx:navrel" content="../../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../../index.html">
+                i2 Analyze Containers
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+          
+          <div class="subnav navbar navbar-default">
+            <div class="container hide-when-search" id="breadcrumb">
+              <ul class="breadcrumb">
+                <li></li>
+              </ul>
+            </div>
+          </div>
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="getting-started-with-the-analyze-containers-repository">Getting started with the analyze-containers repository</h1>
+
+<h2 id="prerequisites">Prerequisites</h2>
+<p>You can run the code in the analyze-containers repository on Windows with Windows Subsystem for Linux and MacOS.</p>
+<h3 id="windows-subsystem-for-linux-wsl">Windows Subsystem for Linux (WSL)</h3>
+<ol>
+<li><p>If you are on Windows, you must use WSL 2 to run the shell scripts in this repository.</p>
+<p> For information about installing WSL, see <a href="https://docs.microsoft.com/windows/wsl/install-win10">Windows Subsystem for Linux Installation Guide</a>.</p>
+</li>
+</ol>
+<h3 id="code">Code</h3>
+<ol>
+<li><p>Download the <code>tar.gz</code> or clone the analyze-containers repository from <a href="https://github.com/i2group/analyze-containers">https://github.com/i2group/analyze-containers</a>.</p>
+</li>
+<li><p>If you download the <code>tar.gz</code> file, extract it. On Windows, extract it to a location that is in your WSL file system. For example: <code>\\wsl$\Ubuntu-20.04\home\&lt;user-name&gt;</code>.</p>
+</li>
+</ol>
+<h3 id="docker">Docker</h3>
+<ol>
+<li><p>Install Docker CE for your operating system. For more information about installing Docker CE, see <a href="https://docs.docker.com/engine/installation/">https://docs.docker.com/engine/installation/</a>.</p>
+<ul>
+<li><em>Mac OS</em> : <a href="https://docs.docker.com/docker-for-mac/install/">Install Docker CE</a></li>
+<li><em>Windows</em> :  <ol>
+<li><a href="https://docs.docker.com/docker-for-windows/install/">Install Docker CE</a></li>
+<li><a href="https://docs.docker.com/docker-for-windows/wsl/">Set up Docker on WSL 2</a></li>
+</ol>
+</li>
+</ul>
+</li>
+<li><p>After you install Docker, you must allocate enough memory to Docker to run the containers in the example deployment. For this deployment, allocate at least 5GB of memory.</p>
+<p> For more information about modifying the resources allocated to Docker, see:</p>
+<ul>
+<li><a href="https://docs.docker.com/docker-for-windows/#resources">Docker Desktop for Windows</a></li>
+<li><a href="https://docs.docker.com/docker-for-mac/#resources">Docker Desktop for Mac</a></li>
+</ul>
+</li>
+</ol>
+<h3 id="command-line-tools">Command line tools</h3>
+<ol>
+<li><p>If you are using WSL, install and configure the following command line tools:</p>
+<ul>
+<li><a href="https://stedolan.github.io/jq/download/">jq</a></li>
+<li><p><a href="http://xmlstar.sourceforge.net/">XMLStarlet</a></p>
+<p>For example:</p>
+<pre><code class="lang-sh">sudo apt-get update
+sudo apt-get install jq
+sudo apt-get install xmlstarlet
+</code></pre></li>
+</ul>
+</li>
+<li><p>If you are using MacOS, install and configure the following command line tools:  </p>
+<ul>
+<li><a href="https://www.gnu.org/software/sed/">GNU sed</a></li>
+<li><a href="https://www.gnu.org/software/bash/">GNU bash</a></li>
+<li><a href="https://www.gnu.org/software/coreutils/">Coreutils - GNU core utilities</a></li>
+<li><a href="https://stedolan.github.io/jq/download/">jq</a></li>
+<li><p><a href="http://xmlstar.sourceforge.net/">XMLStarlet</a></p>
+<p>You can install these command line tools by using <a href="https://brew.sh/">Homebrew</a>. Run the following commands to install Homebrew and then install the tools with it:</p>
+<pre><code class="lang-sh">/bin/bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)&quot;
+brew install gnu-sed bash coreutils jq xmlstarlet
+</code></pre><p>After you install the tools, ensure they are added to your shell&#39;s path. If you installed the tools by using Homebrew, run the following commands:</p>
+<pre><code class="lang-sh">echo &#39;export PATH=&quot;$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$PATH&quot;&#39; &gt;&gt; ~/.bash_profile
+echo &#39;export PATH=&quot;$(brew --prefix)/opt/bash/bin:$PATH&quot;&#39; &gt;&gt; ~/.bash_profile
+echo &#39;export PATH=&quot;$(brew --prefix)/opt/coreutils/libexec/gnubin:$PATH&quot;&#39; &gt;&gt; ~/.bash_profile
+</code></pre></li>
+</ul>
+</li>
+</ol>
+<h3 id="visual-studio-code">Visual Studio Code</h3>
+<p>The repository is designed to be used with VS Code to create the development environment.</p>
+<ol>
+<li><p>Download and install <a href="https://code.visualstudio.com/download">VS Code</a></p>
+</li>
+<li><p>To make the environment easier to use, install the following extensions in VS Code:  </p>
+<ul>
+<li><a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl">Remote - WSL</a></li>
+<li><a href="https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker">Docker</a></li>
+<li><a href="https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck">ShellCheck</a></li>
+<li><a href="https://marketplace.visualstudio.com/items?itemName=mads-hartmann.bash-ide-vscode">Bash IDE</a></li>
+<li><a href="https://marketplace.visualstudio.com/items?itemName=redhat.vscode-xml">Red Hat XML</a></li>
+<li><a href="https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml">Red Hat YAML</a></li>
+</ul>
+</li>
+<li><p>Modify the VS Code <code>settings.json</code> file:</p>
+<ol>
+<li>Open the <code>settings.json</code> file by pressing <strong>F1</strong> and typing <em>Preferences: Open Settings (JSON)</em>.</li>
+<li><p>Add the <code>catalog.xml</code> to enable XSD validation.<br>In the <code>settings.json file</code>, add the following JSON object and reference the <code>catalog.xml</code> file at the root of the <code>analyze-containers</code> directory:  </p>
+<pre><code class="lang-json">&quot;xml.catalogs&quot;: [
+    &quot;catalog.xml&quot;
+]
+</code></pre></li>
+</ol>
+</li>
+<li><p>If you are using MacOS, ensure the VS Code uses GNU bash for the integrated terminal.</p>
+<ol>
+<li><p>In the <code>settings.json</code> file, add the following code:  </p>
+<pre><code class="lang-json">&quot;terminal.integrated.profiles.osx&quot;: {
+ &quot;bash&quot;: {
+     &quot;path&quot;: &quot;/usr/local/opt/bash/bin/bash&quot;,
+     &quot;icon&quot;: &quot;terminal-bash&quot;
+ }
+},
+&quot;terminal.integrated.defaultProfile.osx&quot;: &quot;bash&quot;,
+</code></pre></li>
+</ol>
+</li>
+<li><p>To run the scripts in the analyze-containers repository, use the VS Code integrated terminal.</p>
+<ol>
+<li>Set the default terminal to WSL.<ol>
+<li>Press <strong>F1</strong> and type <code>Terminal: Select Default Profile</code>.</li>
+<li>Select <code>WSL</code>.</li>
+</ol>
+</li>
+<li><p>To open the integrated terminal, click <strong>Terminal</strong> &gt; <strong>New Terminal</strong>.  </p>
+<p>You do not need to run any scripts now, but whenever the documentation instructs you to run a script, do so from the integrated terminal.</p>
+</li>
+</ol>
+</li>
+<li><p>To set the <code>ANALYZE_CONTAINERS_ROOT_DIR</code> variable, run the following command:</p>
+<pre><code class="lang-sh">. initShell.sh
+</code></pre></li>
+</ol>
+<h3 id="i2-analyze-minimal-toolkit">i2 Analyze minimal toolkit</h3>
+<ol>
+<li>Download the i2 Analyze V4.3.5 Minimal for Linux.<ul>
+<li>To download i2 Analyze, follow the procedure described in <a href="https://support.i2group.com/s/article/2290">Where can I download the latest i2 Products?</a></li>
+<li>Populate the subject of the form with <code>Request for i2 Analyze 4.3.5 minimal toolkit for Linux</code>.</li>
+</ul>
+</li>
+<li>Rename the <code>i2analyzeMinimal_4350.tar.gz</code> file to <code>i2analyzeMinimal.tar.gz</code>, then copy it to the <code>analyze-containers/pre-reqs</code> directory.</li>
+</ol>
+<p><strong>Note:</strong> If you used the <code>analyze-containers</code> repository with a previous version of i2 Analyze, overwrite the existing minimal toolkit.</p>
+<h3 id="i2-analyze-fix-packs-optional">i2 Analyze Fix Packs (optional)</h3>
+<ol>
+<li>If there is a Fix Pack available for the version of i2Analyze, download it and rename the file to <code>i2analyzeFixPack.tar.gz</code>, then copy it to the <code>analyze-containers/pre-reqs</code> directory.</li>
+</ol>
+<p><strong>Note:</strong> If you used the <code>analyze-containers</code> repository with a previous fix pack version of i2 Analyze, overwrite the existing fix pack file.</p>
+<h3 id="analysts-notebook-premium">Analyst&#39;s Notebook Premium</h3>
+<ol>
+<li><p>Download <em>i2 Analyst&#39;s Notebook Premium</em> version 9.3.2.</p>
+<ul>
+<li>To download i2 Analyst&#39;s Notebook Premium, follow the procedure described in <a href="https://support.i2group.com/s/article/2290">Where can I download the latest i2 Products?</a></li>
+<li>Populate the subject of the form with <code>Request for i2 Analyst&#39;s Notebook Premium 9.3.2</code>.</li>
+</ul>
+</li>
+<li><p>Install i2 Analyst&#39;s Notebook Premium on a Windows machine.</p>
+<blockquote><p>Note: If you are running Docker on MacOS, you can install Analyst&#39;s Notebook Premium on a Windows virtual machine.</p>
+</blockquote>
+<p> For more information, see <a href="https://www.ibm.com/docs/en/i2-anb/latest?topic=installing-i2-analysts-notebook-premium">Installing i2 Analyst&#39;s Notebook Premium</a>.</p>
+</li>
+</ol>
+<h3 id="jdbc-drivers">JDBC drivers</h3>
+<p>You must provide the JDBC driver to enable the application to communicate with the database.</p>
+<ol>
+<li>Download the Microsoft JDBC Driver 9.4.1 for SQL Server from <a href="https://github.com/microsoft/mssql-jdbc/releases/tag/v9.4.1">https://github.com/microsoft/mssql-jdbc/releases/tag/v9.4.1</a> by clicking the <code>mssql-jdbc-9.4.1.jre11.jar</code> asset.</li>
+<li>Copy the <code>mssql-jdbc-9.4.1.jre11.jar</code> file to the <code>analyze-containers/pre-reqs/jdbc-drivers</code> directory.</li>
+</ol>
+<hr>
+<h2 id="what-to-do-next">What to do next</h2>
+<ul>
+<li>Create and use a development environment to develop an i2 Analyze configuration. For more information, see <a href="deploy_config_dev.html">Configuration development environment</a>.</li>
+<li>Create an example pre-production deployment that is used to demonstrate how i2 Analyze can be deployed in a distributed cloud environment. For more information, see <a href="reference%20architecture/deploy_pre_prod.html">Pre-production example environment</a>.</li>
+</ul>
+<p>To understand how the containerized environment is created, you can review the documentation that explains the images, containers, tools, and functions:</p>
+<ul>
+<li><a href="images%20and%20containers/images.html">Images and containers</a></li>
+<li><a href="tools%20and%20functions/tools.html">Tools and functions</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            &copy; N. Harris Computer Corporation (2022)
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../styles/main.js"></script>
+  </body>
+</html>

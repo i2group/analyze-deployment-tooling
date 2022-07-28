@@ -85,35 +85,39 @@ Updating the configuration includes the following high-level steps:</p>
 * Rebuilding the Docker images for the new version of i2 Analyze
 * Create the upgrade change set
 * Remove the previous containers and volumes
-* Upgrade Solr, the database, the Liberty application, and the example connector
+* Upgrading Solr, the database, the example connector, the Liberty application, Prometheus and Grafana
+* Restoring Solr and the database
 </code></pre><blockquote><p>Note: Before you complete this walkthrough, reset your environment to the base configuration. For more information, see <a href="../walkthroughs/reset_walkthroughs.html">Resetting your environment</a>.</p>
 </blockquote>
-<p>Before you upgrade, follow the instructions to prepare the prerequisites in <a href="../managing_upgrade_env.html">Upgrading</a>.</p>
-<p>The <code>example/pre-prod/walkthroughs/upgrade/upgradeWalkthrough.sh</code> script is a worked example that demonstrates how to upgrade a deployment in a containerized environment.</p>
+<p>The <code>examples/pre-prod/walkthroughs/upgrade/upgradeWalkthrough.sh</code> script is a worked example that demonstrates how to upgrade a deployment in a containerized environment.</p>
 <h2 id="creating-the-solr-backup">Creating the Solr backup</h2>
-<p>In the <code>upgradeWalkthrough.sh</code> script, the Backup Solr section demonstrates the commands that are used to back up the Solr collections and system match rules. For more information about backing up Solr, see [Backing up Solr](../backup and restore/backup.md#BackingUpTheSolrCollections).</p>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Backing up Solr</code> section demonstrates the commands that are used to back up the Solr collections and system match rules. For more information about backing up Solr, see <a href="../backup%20and%20restore/backup.html#BackingUpTheSolrCollections">Backing up Solr</a>.</p>
 <h2 id="creating-sql-server-backups">Creating SQL Server backups</h2>
-<p>In the <code>upgradeWalkthrough.sh</code> script, the Backup SQL Server section demonstrates the commands that are used to back up the SQL Server Information Store database. For more information about backing up the database, see [Backing up the Information Store database](../backup and restore/backup.md#BackingUpTheInformationStoreDatabase).</p>
-<h2 id="creating-the-change-change-set">Creating the change change set</h2>
-<p>In the <code>upgradeWalkthrough.sh</code> script, the Create change set section demonstrates running the <code>createChangeSet.sh</code> script that creates the upgrade change set. The change set is created in XXX and contains the database scripts that are required to upgrade the Information Store database.</p>
-<h2 id="remove-the-previous-containers">Remove the previous containers</h2>
-<p>In the <code>upgradeWalkthrough.sh</code> script, the Remove previous containers section demonstrates the commands to delete the previous containers and remove any Docker volumes.</p>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Backing up SQL Server</code> section demonstrates the commands that are used to back up the SQL Server Information Store database. For more information about backing up the database, see <a href="../backup%20and%20restore/backup.html#BackingUpTheInformationStoreDatabase">Backing up the Information Store database</a>.</p>
 <h2 id="rebuilding-the-images">Rebuilding the images</h2>
-<p>In the <code>upgradeWalkthrough.sh</code> script, the Rebuilding images section demonstrates running the <code>buildImages.sh</code> script to build images with for the new version of i2 Analyze.</p>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Rebuilding images</code> section demonstrates running the <code>buildImages.sh</code> script to build images with for the new version of i2 Analyze.</p>
+<h2 id="creating-the-change-set">Creating the change set</h2>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Create change set</code> section demonstrates running the <code>createChangeSet.sh</code> script that creates the upgrade change set. The change set is created in <code>examples/pre-prod/change-sets</code> and contains the database scripts that are required to upgrade the Information Store database.</p>
+<h2 id="removing-the-previous-containers">Removing the previous containers</h2>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Removing the previous containers</code> section demonstrates the commands to delete the previous containers and remove any Docker volumes.</p>
 <h2 id="upgrading-solr">Upgrading Solr</h2>
-<p>In the <code>upgradeWalkthrough.sh</code> script, the Upgrading Solr section demonstrates the commands that are used to run the new Solr and ZooKeeper containers.</p>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Upgrading Solr</code> section demonstrates the commands that are used to run the new Solr and ZooKeeper containers.</p>
 <p>The 3 ZooKeeper containers and 2 Solr containers are started. The Solr collections are configured, including the new <code>vq_index</code> collection.</p>
 <h2 id="restoring-the-solr-collections">Restoring the Solr collections</h2>
-<p>The non-transient Solr collections that were backed up are restored.
-For more information about restoring Solr, see [Restoring Solr](../backup and restore/restore.md#RestoreSolr).</p>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Restore Solr</code> section demonstrates the commands that are used to restore the Solr Collections.</p>
+<p>For more information about restoring Solr, see [Restoring Solr](../backup and restore/restore.md#RestoreSolr).</p>
 <h2 id="restoring-the-information-store-database">Restoring the Information Store database</h2>
-<p>In the <code>upgradeWalkthrough.sh</code> script, the Restore Information Store section demonstrates the commands that are used to restore the database to a new SQL Server container.</p>
-<h3 id="upgrading-the-information-store-database">Upgrading the Information Store database</h3>
-<p>In the <code>upgradeWalkthrough.sh</code> script, the Upgrading Information Store section demonstrates the commands that are used to run the generated database scripts that upgrade the Information Store database.</p>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Restoring the Information Store database</code> section demonstrates the commands that are used to restore the database to a new SQL Server container.</p>
+<h2 id="upgrading-the-information-store-database">Upgrading the Information Store database</h2>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Upgrading Information Store</code> section demonstrates the commands that are used to run the generated database scripts that upgrade the Information Store database.</p>
 <h2 id="upgrading-example-connector">Upgrading example connector</h2>
-<p>In the <code>upgradeWalkthrough.sh</code> script, the Upgrade example connector section demonstrates the commands that are used to run the example connector.</p>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Upgrading example connector</code> section demonstrates the commands that are used to run the example connector.</p>
 <h2 id="upgrading-liberty">Upgrading Liberty</h2>
-<p>In the <code>upgradeWalkthrough.sh</code> script, the Upgrading Liberty section demonstrates the commands that are used to build the new Liberty configured image. Two Liberty containers are started using the new configured image. Then, the load balancer container is started.</p>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Upgrading Liberty</code> section demonstrates the commands that are used to build the new Liberty configured image. Two Liberty containers are started using the new configured image. Then, the load balancer container is started.</p>
+<h2 id="upgrading-prometheus">Upgrading Prometheus</h2>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Upgrading Prometheus</code> section demonstrates the commands that are used to run Prometheus.</p>
+<h2 id="upgrading-grafana">Upgrading Grafana</h2>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Upgrading Grafana</code> section demonstrates the commands that are used to run Grafana.</p>
 </article>
           </div>
           

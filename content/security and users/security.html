@@ -131,8 +131,12 @@
 The docker desktop does not support secrets, but the example environment example simulates this by mounting the secrets folder. For more information see <a href="https://docs.docker.com/engine/swarm/secrets/">Manage sensitive data with Docker secrets</a>.</p>
 <p>After these passwords have been generated, they can be uploaded to a secrets manager. Alternatively you can use a secrets manager to generate your passwords.</p>
 <h2 id="solr-basic-authentication">Solr Basic Authentication</h2>
-<p>Solr authorization can be enabled using the BasicAuthPlugin. The basic auth plugin defines users, user roles and passwords for users. For the BasicAuthPlugin to be enabled, solr requires a <code>security.json</code> file to be uploaded. In our example the <code>security.json</code> file is created by the <code>generateSecrets.sh</code> and located in <code>dev-environment-secrets/generated-secrets/secrets/solr/security.json</code>.</p>
+<p>Solr authentication can be enabled using the BasicAuthPlugin. The basic auth plugin defines users, user roles and passwords for users. For the BasicAuthPlugin to be enabled, solr requires a <code>security.json</code> file to be uploaded. In our example the <code>security.json</code> file is created by the <code>generateSecrets.sh</code> and located in <code>dev-environment-secrets/generated-secrets/solr/security.json</code>.</p>
 <p>For more information about solr authentication see <a href="https://lucene.apache.org/solr/guide/8_3/basic-authentication-plugin.html">Basic Authentication Plugin</a></p>
+<h2 id="prometheus-basic-authentication">Prometheus Basic Authentication</h2>
+<p>Prometheus authentication can be enabled using the web-config.yml. The YAML file defines users and passwords for users. In our example the password is the same as the username.</p>
+<h2 id="grafana-basic-authentication">Grafana Basic Authentication</h2>
+<p>Grafana authentication can be enabled by passing <code>GF_SECURITY_ADMIN_USER</code> and <code>GF_SECURITY_ADMIN_PASSWORD</code> environment variables to the container. In our example the password is created by <code>generateSecrets.sh</code> and located in <code>dev-environment-secrets/generated-secrets/grafana/admin_PASSWORD</code>.</p>
 <h2 id="secure-environment-variables">Secure Environment variables</h2>
 <p>In general secrets used by a particular container can be supplied via an environment variable containing the path to a file containing the secret, or an environment variable specifying the literal secret value, for example:
 <strong>Note:</strong> Secrets can be passwords, keys or certificates.</p>
@@ -216,8 +220,7 @@ The docker desktop does not support secrets, but the example environment example
 </tr>
 </tbody>
 </table>
-<p>&lt;!-- cspell:ignore jhga98u43jndfj &gt;</p>
-</article>
+<!-- cspell:ignore jhga98u43jndfj --></article>
           </div>
           
           <div class="hidden-sm col-md-2" role="complementary">

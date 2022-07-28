@@ -84,9 +84,8 @@
 <p>The ETL Client image is built from the Dockerfile in <code>images/etl_client</code>. It uses the i2 Analyze Tools image as the base image.</p>
 <h3 id="docker-build-command">Docker build command</h3>
 <p>The following <code>docker build</code> command builds the ETL Client image:</p>
-<pre><code class="lang-sh">docker build -t &quot;etlclient_redhat:4.3.5&quot; &quot;/images/etl_client&quot; \
-    --build-arg USER_UID=&quot;$(id -u &quot;${USER}&quot;)&quot; \
-    --build-arg BASE_IMAGE=&quot;i2a_tools_redhat:4.3.5&quot;
+<pre><code class="lang-bash">docker build -t &quot;etlclient_redhat:4.4.0&quot; &quot;images/etl_client&quot; \
+    --build-arg BASE_IMAGE=&quot;i2a_tools_redhat:4.4.0&quot;
 </code></pre><p>The <code>--build-arg</code> flag is used to provide your local user ID to the Docker image when it is built. The value of <code>$USER</code> comes from your shell.</p>
 <p>For examples of the build commands, see the <a href="https://github.com/i2group/analyze-containers/blob/main/utils/buildImages.sh">buildImages.sh</a> script.</p>
 <h2 id="running-an-etl-client-container">Running an ETL Client container</h2>
@@ -94,27 +93,33 @@
 <p>For more information about the command, see <a href="https://docs.docker.com/engine/reference/run/">docker run reference</a>.</p>
 <h3 id="docker-run-command">Docker run command</h3>
 <p>The following <code>docker run</code> command runs the ETL Client container:</p>
-<pre><code class="lang-sh">docker run --rm \
+<pre><code class="lang-bash">docker run --rm \
     --name &quot;etl_client&quot; \
     --network &quot;eia&quot; \
-    --user &quot;$(id -u &quot;${USER}&quot;):$(id -u &quot;${USER}&quot;)&quot; \
-    -v &quot;/examples/pre-prod/configuration/logs:/opt/configuration/logs&quot; \
-    -v &quot;/prereqs/i2analyze/toolkit/examples/data:/var/i2a-data&quot; \
+    -v &quot;examples/pre-prod/configuration/logs:/opt/configuration/logs&quot; \
+    -v &quot;prereqs/i2analyze/toolkit/examples/data:/var/i2a-data&quot; \
     -e DB_SERVER=&quot;sqlserver.eia&quot; \
-    -e DB_PORT=1433 \
+    -e DB_PORT=&quot;1433&quot; \
     -e DB_NAME=&quot;ISTORE&quot; \
     -e DB_DIALECT=&quot;sqlserver&quot; \
     -e DB_OS_TYPE=&quot;UNIX&quot; \
     -e DB_INSTALL_DIR=&quot;/opt/mssql-tools&quot; \
     -e DB_LOCATION_DIR=&quot;/var/opt/mssql/data&quot; \
-    -e ETL_TOOLKIT_JAVA_HOME=&quot;/opt/java/openjdk&quot; \
+    -e ETL_TOOLKIT_JAVA_HOME=&quot;/opt/java/openjdk/bin&quot; \
     -e DB_USERNAME=&quot;i2etl&quot; \
     -e DB_PASSWORD=&quot;DB_PASSWORD&quot; \
-    -e DB_SSL_CONNECTION=true \
+    -e DB_SSL_CONNECTION=&quot;true&quot; \
     -e SSL_CA_CERTIFICATE=&quot;SSL_CA_CERTIFICATE&quot; \
-    &quot;etlclient_image:4.3.5&quot; &quot;$@&quot;
+    &quot;etlclient_redhat:4.4.0&quot; &quot;$@&quot;
 </code></pre><p>For an example of the <code>docker run</code> command, see <code>runEtlToolkitToolAsi2ETL</code> function in the <a href="https://github.com/i2group/analyze-containers/blob/main/utils/clientFunctions.sh">clientFunctions.sh</a> script.
 For an example of how to use <code>runEtlToolkitToolAsi2ETL</code> function, see <a href="../tools%20and%20functions/client_functions.html#runEtlToolkitToolAsi2ETL">runEtlToolkitToolAsi2ETL</a>.</p>
+<h3 id="bind-mounts">Bind mounts</h3>
+<ul>
+<li><p><strong>Logs</strong>:<br>The ETL Client container generates logs when running ingestion commands. To make these logs easily accessible, the directory where they are generated must be mounted into the container. In the example, the logs can be accessed in the <code>examples/pre-prod/configuration/logs</code> directory.</p>
+</li>
+<li><p><strong>Data</strong>:<br>The ETL Client container requires access to the data directory to run the ingestion scripts. To access the data, the <code>data</code> directory must be mounted into the container.</p>
+</li>
+</ul>
 <h2 id="environment-variables">Environment variables</h2>
 <p>The ETl Client is built on top of the SQL Client. Any environment variables referenced in the <a href="sql_client.html#environment-variables">SQL Client</a> can be used in the ETL Client.</p>
 <h3 id="additional-environment-variables">Additional Environment variables</h3>
@@ -144,13 +149,13 @@ For an example of how to use <code>runEtlToolkitToolAsi2ETL</code> function, see
 </tr>
 <tr>
 <td><code>ETL_TOOLKIT_JAVA_HOME</code></td>
-<td>Specifies the location on Java.</td>
+<td>Specifies the location of Java bin directory.</td>
 </tr>
 </tbody>
 </table>
 <h2 id="useful-links">Useful links</h2>
 <ul>
-<li><a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=ingestion-defining-source">Defining an ingestion source</a></li>
+<li><a href="https://docs.i2group.com/analyze/4.4.0/define_ingestion_source.html">Defining an ingestion source</a></li>
 </ul>
 </article>
           </div>

@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Upgrading i2 Analyze Pre-prod Environment </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Upgrading i2 Analyze Pre-prod Environment ">
+    <meta name="generator" content="docfx 2.56.2.0">
+    
+    <link rel="shortcut icon" href="../../../../images/favicon.png">
+    <link rel="stylesheet" href="../../../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../../../styles/docfx.css">
+    <link rel="stylesheet" href="../../../../styles/main.css">
+    <meta property="docfx:navrel" content="../../../../toc.html">
+    <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../../../index.html">
+                i2 Analyze Containers
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+          
+          <div class="subnav navbar navbar-default">
+            <div class="container hide-when-search" id="breadcrumb">
+              <ul class="breadcrumb">
+                <li></li>
+              </ul>
+            </div>
+          </div>
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="upgrading-i2-analyze-pre-prod-environment">Upgrading i2 Analyze Pre-prod Environment</h1>
+
+<p>This section describes an example of the process to upgrade i2 Analyze in a containerized environment.
+Updating the configuration includes the following high-level steps:</p>
+<pre><code>* Backing up Solr and the database
+* Rebuilding the Docker images for the new version of i2 Analyze
+* Create the upgrade change set
+* Remove the previous containers and volumes
+* Upgrade Solr, the database, the Liberty application, and the example connector
+</code></pre><blockquote><p>Note: Before you complete this walkthrough, reset your environment to the base configuration. For more information, see <a href="../walkthroughs/reset_walkthroughs.html">Resetting your environment</a>.</p>
+</blockquote>
+<p>Before you upgrade, follow the instructions to prepare the prerequisites in <a href="../managing_upgrade_env.html">Upgrading</a>.</p>
+<p>The <code>example/pre-prod/walkthroughs/upgrade/upgradeWalkthrough.sh</code> script is a worked example that demonstrates how to upgrade a deployment in a containerized environment.</p>
+<h2 id="creating-the-solr-backup">Creating the Solr backup</h2>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the Backup Solr section demonstrates the commands that are used to back up the Solr collections and system match rules. For more information about backing up Solr, see [Backing up Solr](../backup and restore/backup.md#BackingUpTheSolrCollections).</p>
+<h2 id="creating-sql-server-backups">Creating SQL Server backups</h2>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the Backup SQL Server section demonstrates the commands that are used to back up the SQL Server Information Store database. For more information about backing up the database, see [Backing up the Information Store database](../backup and restore/backup.md#BackingUpTheInformationStoreDatabase).</p>
+<h2 id="creating-the-change-change-set">Creating the change change set</h2>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the Create change set section demonstrates running the <code>createChangeSet.sh</code> script that creates the upgrade change set. The change set is created in XXX and contains the database scripts that are required to upgrade the Information Store database.</p>
+<h2 id="remove-the-previous-containers">Remove the previous containers</h2>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the Remove previous containers section demonstrates the commands to delete the previous containers and remove any Docker volumes.</p>
+<h2 id="rebuilding-the-images">Rebuilding the images</h2>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the Rebuilding images section demonstrates running the <code>buildImages.sh</code> script to build images with for the new version of i2 Analyze.</p>
+<h2 id="upgrading-solr">Upgrading Solr</h2>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the Upgrading Solr section demonstrates the commands that are used to run the new Solr and ZooKeeper containers.</p>
+<p>The 3 ZooKeeper containers and 2 Solr containers are started. The Solr collections are configured, including the new <code>vq_index</code> collection.</p>
+<h2 id="restoring-the-solr-collections">Restoring the Solr collections</h2>
+<p>The non-transient Solr collections that were backed up are restored.
+For more information about restoring Solr, see [Restoring Solr](../backup and restore/restore.md#RestoreSolr).</p>
+<h2 id="restoring-the-information-store-database">Restoring the Information Store database</h2>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the Restore Information Store section demonstrates the commands that are used to restore the database to a new SQL Server container.</p>
+<h3 id="upgrading-the-information-store-database">Upgrading the Information Store database</h3>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the Upgrading Information Store section demonstrates the commands that are used to run the generated database scripts that upgrade the Information Store database.</p>
+<h2 id="upgrading-example-connector">Upgrading example connector</h2>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the Upgrade example connector section demonstrates the commands that are used to run the example connector.</p>
+<h2 id="upgrading-liberty">Upgrading Liberty</h2>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the Upgrading Liberty section demonstrates the commands that are used to build the new Liberty configured image. Two Liberty containers are started using the new configured image. Then, the load balancer container is started.</p>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            &copy; N. Harris Computer Corporation (2022)
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../../styles/main.js"></script>
+  </body>
+</html>

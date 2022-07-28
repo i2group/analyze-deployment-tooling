@@ -80,18 +80,18 @@
 <h1 id="adding-a-new-connector">Adding a new Connector</h1>
 
 <p>This section describes an example of the process of adding a new Connector.</p>
-<p>You can use <code>addExampleConnector.sh</code> script to add a new second example connector to the example deployment.</p>
+<p>You can use the <code>examples/pre-prod/walkthroughs/change-management/addExampleConnectorWalkthrough.sh</code> script to add a new second example connector to the example deployment.</p>
 <blockquote><p>Note: Before you complete this walkthrough, reset your environment to the base configuration. For more information, see <a href="reset_walkthroughs.html">Resetting your environment</a>.</p>
 </blockquote>
 <h2 id="updating-connectorsjson">Updating Connectors.json</h2>
-<p>To make liberty aware of the new connector, you need to add a new connector definition to the connectors.json. The <code>addConnectorToConnectorsJson</code> can be used to do this. See <code>Add example Connector to connectors.json</code> section of the walkthrough script.</p>
+<p>To make liberty aware of the new connector, you need to add a new connector definition to the connectors.json. See <code>Add example Connector to connectors.json</code> section of the walkthrough script.</p>
 <h2 id="running-a-new-connector-container">Running a new Connector container</h2>
 <p>To add a connector in the Docker environment, you need to run a new Connector container.
 See the <code>Add example Connector</code> section of the walkthrough script.</p>
 <p>The <code>runExampleConnector</code> server function in the <code>serverFunctions.sh</code> is used to run a new Example connector container.</p>
 <h2 id="updating-your-configuration">Updating your configuration</h2>
 <p>After the connectors.json has been updated and the example connector has been run, build a new configured liberty image with the updated configuration.</p>
-<p>The <code>buildLibertyConfiguredImage</code> server function builds the configured Liberty image.  For more information, see <a href="../images%20and%20containers/liberty.html#building-a-configured-liberty-image">Building a configured Liberty image</a>.</p>
+<p>The <code>buildLibertyConfiguredImageForPreProd</code> server function builds the configured Liberty image.  For more information, see <a href="../images%20and%20containers/liberty.html#building-a-configured-liberty-image">Building a configured Liberty image</a>.</p>
 <p>The <code>runLiberty</code> server function runs a Liberty container. For more information about running a Liberty container, see <a href="../images%20and%20containers/liberty.html">Liberty</a>.<br>See the <code>Running the Liberty containers</code> section of the walkthrough script.</p>
 <blockquote><p>Note: You must run both Liberty containers.</p>
 </blockquote>

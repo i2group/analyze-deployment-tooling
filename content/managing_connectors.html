@@ -100,19 +100,18 @@
     &quot;tag&quot;: &quot;1-0-0&quot;
 }
 </code></pre><h2 id="building-connectors">Building connectors</h2>
-<p>Use the <code>deploy.sh</code> script with the <code>connectors</code> task to generate secrets and build the images for all connectors. You can specify connector names to build a subset of the connectors in your environment.</p>
-<p>For example, to build and run all of the connectors in the <code>connector-images</code> directory:</p>
-<pre><code class="lang-bash">./deploy.sh -c &lt;config_name&gt; -t connectors
-</code></pre><p>If you do not want to build and run all of the connectors, you can use the <code>-i</code> and <code>-e</code> options to include or exclude connectors from the process. For example, to build and run only the connectors named <code>example-connector</code> and <code>example-connector-2</code>:</p>
-<pre><code class="lang-bash">./deploy.sh -c &lt;config_name&gt; -t connectors -i example-connector -i example-connector-2
-</code></pre><h2 id="connector-secrets">Connector secrets</h2>
+<p>Use the <code>deploy.sh</code> script to generate secrets and build the images for connectors referenced in that config.</p>
+<p>For example, to build and run all of the connectors referenced in the <code>&lt;config-name&gt;</code> config, run:</p>
+<pre><code class="lang-bash">./deploy.sh -c &lt;config_name&gt;
+</code></pre><p>To build the images for all connectors in your environment, see <a href="managing_environment.html">Managing the environment</a>.</p>
+<h2 id="connector-secrets">Connector secrets</h2>
 <p>Before you can use a connector, you must generate secrets for it. For more information about the secrets used in the environment, see <a href="security%20and%20users/security.html">Managing container security</a>.</p>
 <p>The secrets that are generated for a particular connector are tied to the tag, if you change the tag you must to regenerate the secrets for that connector.  </p>
 <p>To regenerate the secrets for a connector after you change the tag, complete the following steps:</p>
 <ol>
 <li>Remove the <code>dev-environment-secrets/&lt;connector_name&gt;</code> directory for the connector that you changed the tag of.</li>
-<li><p>Run the <code>deploy.sh</code> script and specify the connector name to regenerate the secrets, rebuild the image, and deploy the environment. For example:</p>
-<pre><code class="lang-bash">./deploy.sh -c &lt;config_name&gt; -t connectors -i &lt;connector_name&gt;
+<li><p>Run the <code>deploy.sh</code> script with a config that references the connector.</p>
+<pre><code class="lang-bash">./deploy.sh -c &lt;config_name&gt;
 </code></pre></li>
 </ol>
 <p><strong>Note:</strong> To secure the connection to an external connector, you must install the following certificates where the connector is running. At this release, your connector must be configured to use the certificates signed by the config development environment CA.</p>
@@ -207,18 +206,18 @@
 </tbody>
 </table>
 <h3 id="i2-connect-server-connector-configuration-optional">i2 Connect server connector configuration (Optional)</h3>
-<p>i2 Connect server connectors can have specific connector configuration that is defined in the <code>connector.conf.json</code> and <code>connector.secrets.json</code> files. When the connector is developed, default files can be provided by the developer.</p>
-<ul>
-<li><strong><code>connector.conf.json</code></strong><ul>
-<li>After the first deployment of the connector, if a <code>connector.conf.json</code> file is provided, the system extracts it to the <code>connector-images/&lt;connector-name&gt;/app</code> directory.
-The file is in the same directory structure as in the supplied connector. For example, <code>&lt;connector-name&gt;/app/dist/connectors/connector.conf.json</code>. To change the configuration, modify the <code>connector.conf.json</code> and redeploy the environment.</li>
-</ul>
-</li>
-<li><strong><code>connector.secrets.json</code></strong><ul>
-<li>After the first deployment of the connector, if a <code>connector.secrets.json</code> file is provided, the system extracts it to the <code>connector-images/&lt;connector-name&gt;/app</code> directory. The file is in the same directory structure as in the supplied connector. For example, <code>&lt;connector-name&gt;/app/dist/connectors/connector.secrets.json</code>.<br>The file contains configuration of secrets that are required for a connector. For example an API Key or user name and password that is required to access the data source that the connector queries.</li>
-</ul>
-</li>
-</ul>
+<p>i2 Connect server connectors can have specific connector configuration that is defined in the <code>settings.json</code>file. When the connector is developed, a default file can be provided by the developer. The developer should also provide you with documentation that described the required configuration for the connector.</p>
+<p>After the first deployment of the connector, if a <code>settings.json</code> file is provided, the system extracts it to the <code>connector-images/&lt;connector-name&gt;/app</code> directory.</p>
+<p>The file is in the same directory structure as in the supplied connector. For example, <code>&lt;connector-name&gt;/app/config/settings.json</code>. To change the configuration, modify the <code>settings.json</code> and redeploy the environment.</p>
+<p>You might have to provide secrets, or references to secrets, in the <code>settings.json</code> file. To provide the secrets, you can use a value from the environment. This can either be an environment variable or a value from a <code>.env</code> file in the <code>connector-image/&lt;connector-name&gt;</code> directory.</p>
+<p><strong>Note:</strong> If you use a <code>.env</code> file, it must not be checked in to source control or distributed to prevent compromising your secrets.</p>
+<p>An example <code>settings.json</code> file might look like:</p>
+<pre><code class="lang-json">{
+  &quot;data_source_url&quot;: &quot;https://data-source/data.json&quot;,
+  &quot;data_source_API_key&quot;: &quot;${env.API_KEY}&quot;
+}
+</code></pre><p>Where <code>API_KEY</code> is an environment variable or a key in a <code>.env</code> file with the value of the API Key.</p>
+<p>For more information about populating the <code>settings.json</code> file, see <a href="https://i2group.github.io/analyze-connect-node-sdk/guide/making-a-connector-configurable.html">Making a connector configurable</a>.</p>
 </article>
           </div>
           

@@ -326,6 +326,11 @@ Note: The <code>configureDbaRolesAndPermissions.sh</code> script is run during d
 <td>SELECT, UPDATE, INSERT, DELETE</td>
 <td>Required to work with Web Charts.</td>
 </tr>
+<tr>
+<td>IS_PUBLIC</td>
+<td>EXEC</td>
+<td>Grants execute permission to stored procedures in the IS_PUBLIC schema. Required to create and send Alerts.</td>
+</tr>
 </tbody>
 </table>
 <h3 id="the-database-backup-operator-role">The database backup operator role</h3>
@@ -346,32 +351,32 @@ Note: The <code>configureDbaRolesAndPermissions.sh</code> script is run during d
 <tr>
 <td><code>sa</code></td>
 <td>The system administrator user. The <code>sa</code> user has full permissions on the database instance. This user creates the Information Store database, roles, users, and logins.</td>
-<td>The password is in the <code>SA_PASSWORD</code> file, and the username is in the <code>SA_USERNAME</code> file in the <code>secrets/sqlserver</code> directory.</td>
+<td>The password is in the <code>sa_PASSWORD</code> file in the <code>dev-environment-secrets/generated-secrets/sqlserver</code> directory.</td>
 </tr>
 <tr>
 <td><code>i2analyze</code></td>
 <td>The <code>i2analyze</code> user is a member of the <code>i2analyze_Role</code>.</td>
-<td>The password is in the <code>DB_PASSWORD</code> file, and the username is in the <code>DB_USERNAME</code> file in the <code>secrets/liberty</code> directory.</td>
+<td>The password is in the <code>i2analyze_PASSWORD</code> file in the <code>dev-environment-secrets/generated-secrets/sqlserver</code> directory.</td>
 </tr>
 <tr>
 <td><code>etl</code></td>
 <td>The <code>etl</code> user is a member of <code>External_ETL_Role</code>.</td>
-<td>The password is in the <code>DB_PASSWORD</code> file, and the username is in the <code>DB_USERNAME</code> file in the <code>secrets/etl</code> directory.</td>
+<td>The password is in the <code>etl_PASSWORD</code> file in the <code>dev-environment-secrets/generated-secrets/sqlserver</code> directory.</td>
 </tr>
 <tr>
 <td><code>i2etl</code></td>
 <td>The <code>i2etl</code> user is a member of <code>i2_ETL_Role</code>.</td>
-<td>The password is in the <code>DB_PASSWORD</code> file, and the username is in the <code>DB_USERNAME</code> file in the <code>secrets/i2etl</code> directory.</td>
+<td>The password is in the <code>i2etl_PASSWORD</code> file in the <code>dev-environment-secrets/generated-secrets/sqlserver</code> directory.</td>
 </tr>
 <tr>
 <td><code>dba</code></td>
 <td>The <code>dba</code> user is a member of <code>DBA_Role</code>.</td>
-<td>The password is in the <code>DB_PASSWORD</code> file, and the username is in the <code>DB_USERNAME</code> file in the <code>secrets/dba</code> directory.</td>
+<td>The password is in the <code>dba_PASSWORD</code> file in the <code>dev-environment-secrets/generated-secrets/sqlserver</code> directory.</td>
 </tr>
 <tr>
 <td><code>dbb</code></td>
 <td>The <code>dbb</code> user is the database backup user, it is a member of the SQL Server built in role: <code>db_backupoperator</code>.</td>
-<td>The password is in the <code>DB_PASSWORD</code> file, and the username is in the <code>DB_USERNAME</code> file in the <code>secrets/dbb</code> directory.</td>
+<td>The password is in the <code>dbb_PASSWORD</code> file in the <code>dev-environment-secrets/generated-secrets/sqlserver</code> directory.</td>
 </tr>
 </tbody>
 </table>
@@ -390,11 +395,11 @@ Note: The <code>configureDbaRolesAndPermissions.sh</code> script is run during d
 <li><a href="../tools%20and%20functions/client_functions.html#runSQLServerCommandAsSA">runSQLServerCommandAsSA</a></li>
 <li><a href="https://github.com/i2group/analyze-containers/blob/main/images/sql_client/db-scripts/createDbRoles.sh">createDbRoles.sh</a></li>
 </ul>
-<p>All the secrets required at runtime by the client container are made available by providing a file path to the secret which is converted to an environment variable by the docker container.</p>
+<p>In the example, the <code>createDbRoles.sh</code> script is called in <code>deploy.sh</code>.</p>
+<p>Note: All the secrets required at runtime by the client container can be made available by providing a file path to the secret which is converted to an environment variable by the docker container.</p>
 <p>For example, to provide the <code>SA_USERNAME</code> environment variable to the client container, a file containing the secret is declared in the docker run command:</p>
 <pre><code class="lang-sh">-e &quot;SA_USERNAME_FILE=${CONTAINER_SECRETS_DIR}/SA_USERNAME_FILE&quot;
 </code></pre><p>The file name can be anything, but the environment variable is fixed. For more information see, <a href="security.html">managing container security</a></p>
-<p>In the example, the <code>createDbRoles.sh</code> script is called in <code>deploy.sh</code>.</p>
 <h2 id="create-the-login-and-user">Create the login and user</h2>
 <p>Use the <code>sa</code> user to create the login and the user on the <code>ISTORE</code>, and make the user a member of the role.</p>
 <p>You can use an ephemeral SQL Client container to create the login and the user.</p>

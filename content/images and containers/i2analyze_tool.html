@@ -85,8 +85,8 @@
 <p>The image contains the <code>i2-tools</code> &amp; <code>scripts</code> folder from the toolkit.</p>
 <h3 id="docker-build-command">Docker build command</h3>
 <p>The following <code>docker build</code> command builds the i2 Analyze Tool image:</p>
-<pre><code class="lang-bash">docker image build -t i2a_tools_redhat:4.3.5 images/i2a_tools \
-  --build-arg USER_UID=&quot;$(id -u &quot;${USER}&quot;)&quot;
+<pre><code class="lang-bash">docker image build -t &quot;i2a_tools_redhat:4.4.0&quot; &quot;images/i2a_tools&quot; \
+    --build-arg USER_UID=&quot;$(id -u &quot;${USER}&quot;)&quot;
 </code></pre><p>The <code>--build-arg</code> flag is used to provide your local user ID to the Docker image when it is built. The value of <code>$USER</code> comes from your shell.</p>
 <p>The local user ID is required so that a user is created in the Docker container with the same user ID as the local user. The user is required to ensure that the local user can access any files that are generated on the container and mounted to the host via a bind mount.</p>
 <p>For examples of the build commands, see <code>buildImages.sh</code> script.</p>
@@ -100,8 +100,8 @@
     --name &quot;i2atool&quot; \
     --network &quot;eia&quot; \
     --user &quot;$(id -u &quot;${USER}&quot;):$(id -u &quot;${USER}&quot;)&quot; \
-    -v &quot;/examples/pre-prod/configuration:/opt/configuration&quot; \
-    -v &quot;/examples/pre-prod/database-scripts/generated:/opt/databaseScripts/generated&quot; \
+    -v &quot;examples/pre-prod/configuration:/opt/configuration&quot; \
+    -v &quot;examples/pre-prod/database-scripts/generated:/opt/databaseScripts/generated&quot; \
     -e LIC_AGREEMENT=&quot;ACCEPT&quot; \
     -e ZK_HOST=&quot;zk1.eia:2281,zk2.eia:2281,zk3.eia:2281&quot; \
     -e DB_DIALECT=&quot;sqlserver&quot; \
@@ -121,12 +121,12 @@
     -e ZOO_DIGEST_PASSWORD=&quot;ZOO_DIGEST_PASSWORD&quot; \
     -e ZOO_DIGEST_READONLY_USERNAME=&quot;readonly-user&quot; \
     -e ZOO_DIGEST_READONLY_PASSWORD=&quot;ZOO_DIGEST_READONLY_PASSWORD&quot; \
-    -e DB_SSL_CONNECTION=true \
-    -e SOLR_ZOO_SSL_CONNECTION=true \
+    -e DB_SSL_CONNECTION=&quot;true&quot; \
+    -e SOLR_ZOO_SSL_CONNECTION=&quot;true&quot; \
     -e SSL_PRIVATE_KEY=&quot;SSL_PRIVATE_KEY&quot; \
     -e SSL_CERTIFICATE=&quot;SSL_CERTIFICATE&quot; \
     -e SSL_CA_CERTIFICATE=&quot;SSL_CA_CERTIFICATE&quot; \
-    &quot;i2a_tools_redhat:4.3.5&quot; &quot;$@&quot;
+    &quot;i2a_tools_redhat:4.4.0&quot; &quot;$@&quot;
 </code></pre><h3 id="bind-mounts">Bind mounts</h3>
 <ul>
 <li><p><strong>Configuration</strong>:<br>The i2 Analyze Tool container requires the i2 Analyze configuration. To access the configuration, the <code>configuration</code> directory must be mounted into the container. The <code>CONFIG_DIR</code> environment variable must specify the location where the configuration is mounted.</p>

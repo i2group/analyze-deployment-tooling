@@ -1,14 +1,10 @@
-* text=auto
+* text eol=lf
 
 *.cmd text eol=crlf
 *.bat text eol=crlf
-*.sh text eol=lf
-*.txt text eol=lf
-*.bash text eol=lf
-*.json text eol=lf
-*.csv    -text
-*.yml text
-*.png text eol=lf
-*.svg text eol=lf
-
-images/** eol=lf
+*.csv -text
+*.jpg -text
+*.png -text
+*.svg -text
+*.tgz -text
+*.jar -text

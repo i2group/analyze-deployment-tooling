@@ -1,0 +1,214 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Developing and deploying extensions for i2 Analyze </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Developing and deploying extensions for i2 Analyze ">
+    <meta name="generator" content="docfx 2.56.2.0">
+    
+    <link rel="shortcut icon" href="../../../images/favicon.png">
+    <link rel="stylesheet" href="../../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../../styles/docfx.css">
+    <link rel="stylesheet" href="../../../styles/main.css">
+    <meta property="docfx:navrel" content="../../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../../index.html">
+                i2 Analyze Containers
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+          
+          <div class="subnav navbar navbar-default">
+            <div class="container hide-when-search" id="breadcrumb">
+              <ul class="breadcrumb">
+                <li></li>
+              </ul>
+            </div>
+          </div>
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="developing-and-deploying-extensions-for-i2-analyze">Developing and deploying extensions for i2 Analyze</h1>
+
+<p>i2 Analyze Developer Essentials contains tools, libraries, and examples that enable development and deployment of custom extensions to i2 Analyze. The following information describes how you can use the config development environment to quickly deploy an extension for a config to test and develop.<br>For more information about the types of extension that are available, see <a href="https://github.com/i2group/analyze/blob/master/documentation/index.md">i2 Analyze Developer Essentials</a>.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ol>
+<li>Install the <a href="https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-pack">Java Extension Pack</a> in VS Code.</li>
+<li>Ensure to have the correct JDK configured:<ol>
+<li>Run the Java Configuration Wizard by pressing <strong>F1</strong> and typing <em>Java: Configure Java Runtime</em>.</li>
+<li>Install <a href="https://adoptium.net/installation/linux/">temurin 11 JDK</a> if it isn&#39;t already installed in your machine.</li>
+</ol>
+</li>
+<li>Install Maven. For more information about installing Maven, see <a href="https://maven.apache.org/install.html">Installing Apache Maven</a>.</li>
+<li><p>Modify the VS Code <code>settings.json</code> file:</p>
+<ol>
+<li>Open the <code>settings.json</code> file by pressing <strong>F1</strong> and typing <em>Preferences: Open Settings (JSON)</em>.</li>
+<li><p>Add the classpath information to deploy extensions.<br>In the <code>settings.json file</code>, add the following object:  </p>
+<pre><code class="lang-json">&quot;java.project.referencedLibraries&quot;: [
+    &quot;pre-reqs/i2analyze/toolkit/application/shared/lib/*.jar&quot;,
+    &quot;pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/disco-api-*.jar&quot;,
+    &quot;pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/solr-core-*.jar&quot;,
+    &quot;pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/solr-solrj-*.jar&quot;,
+    &quot;pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/Daod.jar&quot;,
+    &quot;pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/httpclient-*.jar&quot;,
+    &quot;pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/httpcore-*.jar&quot;,
+    &quot;pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/ApolloLegacy.jar&quot;
+]
+</code></pre></li>
+</ol>
+</li>
+</ol>
+<h2 id="creating-a-project-for-your-extension">Creating a project for your extension</h2>
+<p>You must create a Maven artifact to develop your extension in.</p>
+<ol>
+<li><p>Copy the template <code>templates/extension-development</code> directory to the <code>i2a-extensions</code> directory and rename it to be the name of your extension. This name is also the artifact id. For example, name the directory <code>opal-default-security-example</code>.
+ The directory structure is:</p>
+<pre><code class="lang-sh">- i2a-extensions
+    - &lt;artifact_id&gt;
+        - src
+            - main
+                - java
+            - test
+                - java
+        - pom.xml
+</code></pre></li>
+<li><p>Update the <code>pom.xml</code> file inside your new directory with information about your extension. The elements to modify are at the root of the file.<br>Update the values of the following elements:</p>
+<ul>
+<li><code>&lt;groupId&gt;</code> is the name of the Java package</li>
+<li><code>&lt;artifactId&gt;</code> matches the name of the directory for your extension</li>
+<li><p><code>&lt;version&gt;</code> is the version number for your extension</p>
+<p>For example:</p>
+<pre><code class="lang-xml">  &lt;groupId&gt;com.i2group&lt;/groupId&gt;
+  &lt;artifactId&gt;opal-default-security-example&lt;/artifactId&gt;
+  &lt;version&gt;1.0.0&lt;/version&gt;
+</code></pre></li>
+</ul>
+</li>
+</ol>
+<p>You can now start developing your extension. For examples on i2 Analyze extensions, check the examples in <a href="https://github.com/i2group/analyze/blob/master/documentation/index.md">i2 Analyze Developer Essentials</a>.</p>
+<ol>
+<li>Copy the contents of <code>src/main</code> folder of the extension into the <code>i2a-extensions/&lt;artifact_id&gt;/src/main</code> directory.</li>
+<li>Add any settings that are required by the extension to the <code>analyze-settings.properties</code> file.</li>
+<li>Add any resources that are required by the extension to the <code>/configs/&lt;config_name&gt;/configuration</code> directory. For example, the <code>group-based-default-security-dimension-values.xml</code> file.</li>
+</ol>
+<p>If your extension depends on another extension. You must add it to your <code>pom.xml</code> file under the comment: <code>&lt;!-- Extension specific dependencies --&gt;</code>.</p>
+<p>For example, the auditing extensions in Developer Essentials depend on the <code>opal-audit-example-common</code> extension. To add it as a dependency, populate the values of the <code>pom.xml</code> file as follows:</p>
+<pre><code class="lang-xml">    &lt;!-- Extension specific dependencies --&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;com.i2group&lt;/groupId&gt;
+        &lt;artifactId&gt;opal-audit-example-common&lt;/artifactId&gt;
+        &lt;version&gt;1.0.0&lt;/version&gt;
+    &lt;/dependency&gt;
+</code></pre><h2 id="adding-extensions-to-a-config">Adding extensions to a config</h2>
+<ol>
+<li><p>In the configuration you want to deploy your extension with, update the <code>/configs/&lt;config_name&gt;/configuration/extension-references.json</code> file and add the directory name for your extension in the <code>extensions</code> array.<br>For example, to add the extension in <code>i2a-extensions/opal-default-security-example</code> the <code>extension-references.json</code> file contains the following <code>extensions</code> array:  </p>
+<pre><code class="lang-json">{
+    &quot;extensions&quot;: [
+        {
+            &quot;name&quot;: &quot;opal-default-security-example&quot;,
+            &quot;version&quot;: &quot;1.0.0&quot;
+        }
+    ]
+}
+</code></pre></li>
+</ol>
+<p><strong>Note:</strong> The extensions in the <code>extension-references.json</code> file are loaded in order. If an extension depends on another extension, define the dependent extension first.</p>
+<h2 id="deploying-your-extension">Deploying your extension</h2>
+<p>Use the <code>deploy.sh</code> script with the <code>extensions</code> task to build the extensions for your configuration.</p>
+<p>For example, to build and deploy the extensions declared in <code>extension-references.json</code> for your configuration:</p>
+<pre><code class="lang-bash">./deploy.sh -c &lt;config_name&gt; -t extensions
+</code></pre><p>If you do not want to build and run all of the declared extensions, you can use the <code>-i</code> and <code>-e</code> options to include or exclude extensions from the process. For example, to build and run only the extensions named <code>opal-default-security-example</code> and <code>opal-default-security-example-2</code>:</p>
+<pre><code class="lang-bash">./deploy.sh -c &lt;config_name&gt; -t extensions -i opal-default-security-example -i opal-default-security-example-2
+</code></pre><h2 id="debugging-your-extension">Debugging your extension</h2>
+<h3 id="deploying-in-debug-mode">Deploying in debug mode</h3>
+<p>To deploy with one or more Liberty servers running in debug mode, change the local variable <code>DEBUG_LIBERTY_SERVERS</code> in <code>utils/internalHelperVariables.sh</code> to be a list of the container names of the liberty servers you wish to run in debug mode.
+For example:</p>
+<pre><code class="lang-sh">DEBUG_LIBERTY_SERVERS=(&quot;${LIBERTY1_CONTAINER_NAME}&quot;)
+</code></pre><p>Then deploy from a clean environment.</p>
+<p>When the Liberty servers start they all wait for a debugger to be attached before continuing.
+<strong>Note:</strong> Each Liberty server will open and expose a unique debug port (starting at port 7777) and wait for a debugger.
+This behavior is defined by the <code>WLP_DEBUG_SUSPEND</code> environment variable in the liberty container and could be changed if needed.</p>
+<h3 id="attaching-a-debugger">Attaching a debugger</h3>
+<p>The project is shipped with a default launch configuration which can be changed in <code>.vscode/launch.json</code>.
+Run the Java debugger by pressing <strong>F5</strong> and choose <em>Debug Extensions</em> if asked.</p>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            &copy; N. Harris Computer Corporation (2022)
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../styles/main.js"></script>
+  </body>
+</html>

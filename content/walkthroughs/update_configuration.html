@@ -82,7 +82,7 @@
 <p>This section describes an example of the process to update the configuration of a deployment in a Docker environment. After you update the configuration, rebuild the configured Liberty image. You must rebuild the image, because the configuration is part of the image.</p>
 <p>Updating the configuration includes the following high-level steps:</p>
 <ul>
-<li>Removing Liberty containers</li>
+<li>Removing the Liberty containers</li>
 <li>Updating configuration</li>
 <li>Rebuilding the configured Liberty image with the modified configuration</li>
 <li>Running the Liberty containers<ul>
@@ -98,11 +98,11 @@
 docker rm liberty1 liberty2
 </code></pre><p>See the <code>Removing the Liberty containers</code> section of the walkthrough script.</p>
 <h2 id="updating-your-configuration">Updating your configuration</h2>
-<p>In the <code>updateConfigurationWalkthrough.sh</code> script, a modified <code>geospatial-configuration.xml</code> is being copied from the <code>/walkthroughs/configuration-changes</code> directory to the <code>configuration/fragments/common/WEB-INF/classes/</code> directory.</p>
-<p>For information about modifying the configuration, see <a href="https://www.ibm.com/docs/en/i2-analyze/4.3.5?topic=analyze-configuring-i2-application">Configuring the i2 Analyze application</a>.</p>
+<p>In the <code>examples/pre-prod/walkthroughs/change-management/updateConfigurationWalkthrough.sh</code> script, a modified <code>geospatial-configuration.xml</code> is being copied from the <code>/walkthroughs/configuration-changes</code> directory to the <code>configuration/fragments/common/WEB-INF/classes/</code> directory.</p>
+<p>For information about modifying the configuration, see <a href="https://docs.i2group.com/analyze/4.4.0/eia_going_live.html">Configuring the i2 Analyze application</a>.</p>
 <p>See the <code>Updating the configuration</code> section of the walkthrough script.</p>
 <p>After you modify the configuration, build a new configured liberty image with the updated configuration.</p>
-<p>The <code>buildLibertyConfiguredImage</code> server function builds the configured Liberty image.  For more information, see <a href="../images%20and%20containers/liberty.html#building-a-configured-liberty-image">Building a configured Liberty image</a>.</p>
+<p>The <code>buildLibertyConfiguredImageForPreProd</code> server function builds the configured Liberty image.  For more information, see <a href="../images%20and%20containers/liberty.html#building-a-configured-liberty-image">Building a configured Liberty image</a>.</p>
 <h3 id="running-the-liberty-containers">Running the Liberty containers</h3>
 <p>The <code>runLiberty</code> server function runs a Liberty container. For more information about running a Liberty container, see <a href="../images%20and%20containers/liberty.html">Liberty</a>.<br>See the <code>Running the Liberty containers</code> section of the walkthrough script.</p>
 <blockquote><p>Note: You must run both Liberty containers.</p>

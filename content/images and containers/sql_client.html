@@ -85,7 +85,7 @@
 <p>The SQL Server Client image is built from the Dockerfile in <code>images/sql_client</code>.</p>
 <h3 id="docker-build-command">Docker build command</h3>
 <p>The following <code>docker build</code> command builds the SQL Server Client image:</p>
-<pre><code class="lang-bash">docker build -t &quot;sqlserver_client_redhat:4.3.5&quot; images/sql_client
+<pre><code class="lang-bash">docker build -t &quot;sqlserver_client_redhat:4.4.0&quot; images/sql_client
 </code></pre><h2 id="running-a-sql-server-client-container">Running a SQL Server Client container</h2>
 <p>An SQL Server Client container uses the SQL Server Client image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to the container. The environment variables are described in <a href="#environment-variables">environment variables</a>.</p>
 <p>For more information about the command, see <a href="https://docs.docker.com/engine/reference/run/">docker run reference</a>.</p>
@@ -96,7 +96,7 @@
     --name &quot;sqlclient&quot; \
     --network &quot;eia&quot; \
     -v &quot;pre-reqs/i2analyze/toolkit:/opt/toolkit&quot; \
-    -v &quot;/examples/pre-prod/database-scripts/generated:/opt/databaseScripts/generated&quot; \
+    -v &quot;examples/pre-prod/database-scripts/generated:/opt/databaseScripts/generated&quot; \
     -e SQLCMD=&quot;/opt/mssql-tools/bin/sqlcmd&quot; \
     -e SQLCMD_FLAGS=&quot;-N -b&quot; \
     -e DB_SERVER=&quot;sqlserver.eia&quot; \
@@ -107,7 +107,7 @@
     -e DB_PASSWORD=&quot;DBA_PASSWORD&quot; \
     -e DB_SSL_CONNECTION=true \
     -e SSL_CA_CERTIFICATE=&quot;SSL_CA_CERTIFICATE&quot; \
-    &quot;sqlserver_client_redhat:4.3.5&quot; &quot;$@&quot;
+    &quot;sqlserver_client_redhat:4.4.0&quot; &quot;$@&quot;
 </code></pre><p>For an example of the <code>docker run</code> command, see <code>runSQLServerCommandAsETL</code> function in <code>clientFunctions.sh</code> script.
 For an example of how to use <code>runSQLServerCommandAsETL</code> function, see <a href="../tools%20and%20functions/client_functions.html#runSQLServerCommandAsETL">runSQLServerCommandAsETL</a>.</p>
 <blockquote><p>Note: you can run SQL Server Client container as different users, see <a href="../tools%20and%20functions/client_functions.html#runSQLServerCommandAsDBA"><code>runSQLServerCommandAsDBA</code></a>, <a href="../tools%20and%20functions/client_functions.html#runSQLServerCommandAsSA"><code>runSQLServerCommandAsSA</code></a></p>

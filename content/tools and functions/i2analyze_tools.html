@@ -264,7 +264,7 @@ The script requires the following environment variables to be set:</p>
 <li><code>PAUSE_INDEX_POPULATION</code></li>
 <li><code>RESUME_INDEX_POPULATION</code></li>
 </ul>
-<p>For more information about the index control tasks, see <a href="https://www.ibm.com/support/knowledgecenter/SSXVTH_4.3.5/com.ibm.i2.deploy.example.doc/toolkit_commands.html">Index control toolkit tasks</a>.</p>
+<p>For more information about the index control tasks, see <a href="https://docs.i2group.com/analyze/4.4.0/toolkit_commands.html">Index control toolkit tasks</a>.</p>
 <h2 id="information-store-database-consistency-tool">Information Store database consistency tool</h2>
 <p>The <code>databaseConsistencyCheck.sh</code> script checks that the database objects in the <code>IS_DATA</code> database schema are consistent with the information in <code>IS_META</code>.</p>
 <p>The script requires connection property values to be loaded from environment variables or from the <code>Connection.properties</code> file in the configuration. For more information about the connection properties, see  <a href="#connection-properties">Loading connection properties</a>.</p>
@@ -558,7 +558,7 @@ ADDED ITEM TYPES
 </tbody>
 </table>
 <p>The <code>GENERATED_DIR</code> environment variable must be present and is not defaulted.</p>
-<p>For more information about clearing data from the Information Store, see <a href="https://www.ibm.com/support/knowledgecenter/SSXVTH_latest/com.ibm.i2.eia.go.live.doc/t_clearing_data.html">Clearing Data</a></p>
+<p>For more information about clearing data from the Information Store, see <a href="https://docs.i2group.com/analyze/4.4.0/t_clearing_data.html">Clearing Data</a></p>
 <h2 id="create-static-liberty-application-tool">Create static Liberty application tool</h2>
 <p>The <code>createLibertyStaticApp.sh</code> creates the static application to be hosted in Liberty. The tool combines the contents of various folders to create the application, in a similar way to the <code>deployLiberty</code> toolkit task.</p>
 <p>To run the tool, you must provide a location to create the application files as an argument. Alternatively if you are running the tool from outside of the toolkit/i2-tools/scripts folder the following environment variable must be set:</p>
@@ -610,7 +610,7 @@ db.database.location.dir=/opt/mssql
 </tr>
 <tr>
 <td><code>DB_DIALECT</code></td>
-<td>The dialect for the database. Can be <code>sqlserver</code> or <code>db2</code>.</td>
+<td>The dialect for the database. Can be <code>sqlserver</code>.</td>
 </tr>
 <tr>
 <td><code>DB_SERVER</code></td>

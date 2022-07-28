@@ -85,9 +85,9 @@
 <h2 id="building-an-etl-client-image">Building an ETL Client image</h2>
 <p>The ETL client image is built from the Dockerfile in <code>images/etl_client</code>.</p>
 <p>The following <code>docker run</code> command builds the configured image:</p>
-<pre><code class="lang-bash">docker build -t &quot;etl_client:4.3.5&quot; &quot;images/etl_client&quot;
+<pre><code class="lang-bash">docker build -t &quot;etl_client:4.4.0&quot; &quot;images/etl_client&quot;
 </code></pre><h2 id="add-information-store-ingestion-source">Add Information Store ingestion source</h2>
-<p>The <code>addInformationStoreIngestionSource</code> tool defines an ingestion source in the Information Store. For more information about ingestion sources in the Information Store, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=ingestion-defining-source">Defining an ingestion source</a>.</p>
+<p>The <code>addInformationStoreIngestionSource</code> tool defines an ingestion source in the Information Store. For more information about ingestion sources in the Information Store, see <a href="https://docs.i2group.com/analyze/4.4.0/define_ingestion_source.html">Defining an ingestion source</a>.</p>
 <p>You must provide the following arguments to the tool:</p>
 <table>
 <thead>
@@ -112,11 +112,11 @@
 </table>
 <p>Use the <a href="client_functions.html#runEtlToolkitToolAsi2ETL"><code>runEtlToolkitToolAsi2ETL</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">runEtlToolkitToolAsi2ETL 
-    bash -c &quot;/opt/ibm/etltoolkit/addInformationStoreIngestionSource 
+    bash -c &quot;/opt/i2/etltoolkit/addInformationStoreIngestionSource 
         -n &lt;&gt; 
         -d &lt;&gt; &quot;
 </code></pre><h2 id="create-information-store-staging-table">Create Information Store staging table</h2>
-<p>The <code>createInformationStoreStagingTable</code> tool creates the staging tables that you can use to ingest data into the Information Store. For more information about creating the tables, see <a href="https://www.ibm.com/support/knowledgecenter/SSXVTH_latest/com.ibm.i2.iap.admin.ingestion.doc/create_staging_stables.html">Creating the staging tables</a>.</p>
+<p>The <code>createInformationStoreStagingTable</code> tool creates the staging tables that you can use to ingest data into the Information Store. For more information about creating the tables, see <a href="https://docs.i2group.com/analyze/4.4.0/create_staging_stables.html">Creating the staging tables</a>.</p>
 <p>You must provide the following arguments to the tool:</p>
 <table>
 <thead>
@@ -142,12 +142,12 @@
 </table>
 <p>Use the <a href="client_functions.html#runEtlToolkitToolAsi2ETL"><code>runEtlToolkitToolAsi2ETL</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">runEtlToolkitToolAsi2ETL 
-    bash -c &quot;/opt/ibm/etltoolkit/createInformationStoreStagingTable 
+    bash -c &quot;/opt/i2/etltoolkit/createInformationStoreStagingTable 
         -stid &lt;&gt; 
         -sn &lt;&gt;
         -tn &lt;&gt; &quot;
 </code></pre><h2 id="ingest-information-store-records">Ingest Information Store records</h2>
-<p>The <code>ingestInformationStoreRecords</code> is used to ingest data into the Information Store. For more information about ingesting data into the Information Store, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=resources-ingestinformationstorerecords-task">The ingestInformationStoreRecords toolkit task</a></p>
+<p>The <code>ingestInformationStoreRecords</code> is used to ingest data into the Information Store. For more information about ingesting data into the Information Store, see <a href="https://docs.i2group.com/analyze/4.4.0/ingestion_command.html">The ingestInformationStoreRecords toolkit task</a></p>
 <p>You can use the following arguments with the tool:</p>
 <table>
 <thead>
@@ -185,7 +185,7 @@
 </table>
 <p>Use the <a href="client_functions.html#runEtlToolkitToolAsi2ETL"><code>runEtlToolkitToolAsi2ETL</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">runEtlToolkitToolAsi2ETL 
-    bash -c &quot;/opt/ibm/etltoolkit/ingestInformationStoreRecords 
+    bash -c &quot;/opt/i2/etltoolkit/ingestInformationStoreRecords 
     -imf &lt;&gt; 
     -imid &lt;&gt; 
     -im &lt;&gt;&quot;
@@ -193,12 +193,12 @@
 <p>The <code>syncInformationStoreCorrelation</code> tool is used after an error during correlation, to synchronize the data in the Information Store with the data in the Solr index so that the data returns to a usable state</p>
 <p>Use the <a href="client_functions.html#runEtlToolkitToolAsi2ETL"><code>runEtlToolkitToolAsi2ETL</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">runEtlToolkitToolAsi2ETL 
-    bash -c &quot;/opt/ibm/etltoolkit/syncInformationStoreCorrelation&quot;
+    bash -c &quot;/opt/i2/etltoolkit/syncInformationStoreCorrelation&quot;
 </code></pre><h2 id="duplicate-provenance-check">Duplicate provenance check</h2>
 <p>The <code>duplicateProvenanceCheck</code> tool can be used for identifying records in the Information Store with duplicate origin identifiers. Any provenance that has a duplicated origin identifier is added to a staging table in the Information Store.</p>
 <p>Use the <a href="client_functions.html#runEtlToolkitToolAsi2ETL"><code>runEtlToolkitToolAsi2ETL</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">runEtlToolkitTool
-    bash -c &quot;/opt/ibm/etltoolkit/syncInformationStoreCorrelation&quot;
+    bash -c &quot;/opt/i2/etltoolkit/syncInformationStoreCorrelation&quot;
 </code></pre><h2 id="duplicate-provenance-delete">Duplicate provenance delete</h2>
 <p>The <code>duplicateProvenanceDelete</code> tool deletes (entity/link) provenance from the Information Store that has duplicated origin identifiers. The provenance to delete is identified in the staging tables created by the <code>duplicateProvenanceCheck</code> tool.</p>
 <p>You can provide the following argument to the tool:</p>
@@ -219,9 +219,9 @@
 <p>If no arguments are provided, duplicate origin identifiers are deleted from all staging tables.</p>
 <p>Use the <a href="client_functions.html#runEtlToolkitToolAsi2ETL"><code>runEtlToolkitToolAsi2ETL</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">runEtlToolkitToolAsi2ETL 
-    bash -c &quot;/opt/ibm/etltoolkit/syncInformationStoreCorrelation&quot;
+    bash -c &quot;/opt/i2/etltoolkit/syncInformationStoreCorrelation&quot;
 </code></pre><h2 id="generate-information-store-index-creation-scripts">Generate Information Store index creation scripts</h2>
-<p>The <code>generateInformationStoreIndexCreationScript</code> tool generates the scripts that create the indexes for each item type in the Information Store. For more information, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=mode-database-index-management">database index management</a></p>
+<p>The <code>generateInformationStoreIndexCreationScript</code> tool generates the scripts that create the indexes for each item type in the Information Store. For more information, see <a href="https://docs.i2group.com/analyze/4.4.0/bulk_index_management.html">database index management</a></p>
 <p>You must provide the following arguments to the tool:</p>
 <table>
 <thead>
@@ -243,11 +243,11 @@
 </table>
 <p>Use the <a href="client_functions.html#runEtlToolkitToolAsi2ETL"><code>runEtlToolkitToolAsi2ETL</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">runEtlToolkitTask 
-    bash -c &quot;/opt/ibm/etltoolkit/generateInformationStoreIndexCreationScript 
+    bash -c &quot;/opt/i2/etltoolkit/generateInformationStoreIndexCreationScript 
     -op &lt;&gt;
     -stid &lt;&gt; &quot;
 </code></pre><h2 id="generate-information-store-index-drop-scripts">Generate Information Store index drop scripts</h2>
-<p>The <code>generateInformationStoreIndexDropScript</code> tool generates the scripts that drop the indexes for each item type in the Information Store. For more information, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=mode-database-index-managementl">database index management</a></p>
+<p>The <code>generateInformationStoreIndexDropScript</code> tool generates the scripts that drop the indexes for each item type in the Information Store. For more information, see <a href="https://docs.i2group.com/analyze/4.4.0/bulk_index_management.html">database index management</a></p>
 <p>You must provide the following arguments to the tool:</p>
 <table>
 <thead>
@@ -269,7 +269,7 @@
 </table>
 <p>Use the <a href="client_functions.html#runEtlToolkitToolAsi2ETL"><code>runEtlToolkitToolAsi2ETL</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">runEtlToolkitTask 
-    bash -c &quot;/opt/ibm/etltoolkit/generateInformationStoreIndexDropScript 
+    bash -c &quot;/opt/i2/etltoolkit/generateInformationStoreIndexDropScript 
     --op &lt;&gt; 
     -stid &lt;&gt; &quot;
 </code></pre><h2 id="delete-orphaned-database-objects">Delete orphaned database objects</h2>
@@ -292,7 +292,7 @@
 <p>If no item type id is provided, orphaned objects for all item types are removed</p>
 <p>Use the <a href="client_functions.html#runEtlToolkitToolAsi2ETL"><code>runEtlToolkitToolAsi2ETL</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">runEtlToolkitToolAsi2ETL 
-    bash -c &quot;/opt/ibm/etltoolkit/deleteOrphanedDatabaseObjects 
+    bash -c &quot;/opt/i2/etltoolkit/deleteOrphanedDatabaseObjects 
         -iti &lt;&gt; &quot;
 </code></pre><h2 id="disable-merged-property-values">Disable merged property values</h2>
 <p>The <code>disableMergedPropertyValues</code> tool removes the database views used to define the property values of merged i2 Analyze records.</p>
@@ -318,10 +318,10 @@
 <p>If no schema type identifier is provided, the views for all of the item types are be removed</p>
 <p>Use the <a href="client_functions.html#runEtlToolkitToolAsi2ETL"><code>runEtlToolkitToolAsi2ETL</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">runEtlToolkitToolAsi2ETL 
-    bash -c &quot;/opt/ibm/etltoolkit/disableMergedPropertyValues 
+    bash -c &quot;/opt/i2/etltoolkit/disableMergedPropertyValues 
         -etd &lt;&gt;
         -stid &lt;&gt;&quot;
-</code></pre><p>For more information about correlation, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=store-information-data-correlation">Information Store data correlation</a></p>
+</code></pre><p>For more information about correlation, see <a href="https://docs.i2group.com/analyze/4.4.0/c_correlation_intro.html">Information Store data correlation</a></p>
 <h2 id="enable-merge-property-values">Enable merge property values</h2>
 <p>The <code>enableMergedPropertyValues</code> tool creates the database views used to define the property values of merged i2 Analyze records.</p>
 <p>You can provide the following arguments to the tool:</p>
@@ -346,10 +346,10 @@
 <p>If no schema type identifier is provided, the views for all of the item types are generated. If the views already exist, they are overwritten.</p>
 <p>Use the <a href="client_functions.html#runEtlToolkitToolAsDBA"><code>runEtlToolkitToolAsDBA</code></a> client function to run the tool as the database administrator. For example:</p>
 <pre><code class="lang-bash">runEtlToolkitToolAsi2ETL 
-    bash -c &quot;/opt/ibm/etltoolkit/enableMergedPropertyValues 
+    bash -c &quot;/opt/i2/etltoolkit/enableMergedPropertyValues 
         -etd &lt;&gt; 
         -stid &lt;&gt; &quot;
-</code></pre><p>For more information about correlation, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=store-information-data-correlation">Information Store data correlation</a></p>
+</code></pre><p>For more information about correlation, see <a href="https://docs.i2group.com/analyze/4.4.0/c_correlation_intro.html">Information Store data correlation</a></p>
 </article>
           </div>
           

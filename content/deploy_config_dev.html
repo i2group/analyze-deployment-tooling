@@ -79,7 +79,7 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="configuration-development-environment">Configuration development environment</h1>
 
-<p>To create a production deployment of i2 Analyze, you must develop the i2 Analyze configuration. The production deployment process describes a process of using different development environments to produce your i2 Analyze configuration. For more information about the environments, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=deployment-phases-environments">Deployment phases and environments</a>.</p>
+<p>To create a production deployment of i2 Analyze, you must develop the i2 Analyze configuration. The production deployment process describes a process of using different development environments to produce your i2 Analyze configuration. For more information about the environments, see <a href="https://docs.i2group.com/analyze/4.4.0/c_plan_deploy.html">Deployment phases and environments</a>.</p>
 <p>The analyze-containers repository enables you to create a development environment that comprises a containerized deployment of i2 Analyze. The containerized deployment enables you to switch between deployment patterns easily and redeploy changes in a consistent manner.</p>
 <p>Process overview:</p>
 <ul>
@@ -90,7 +90,7 @@
 </ul>
 <p>If you have already run the <code>createDevEnvironment</code> script and you want to create a new custom config from the template, go to <a href="#creating-a-config">Creating a development config</a>.</p>
 <h2 id="prerequisites">Prerequisites</h2>
-<p>Before you create the configuration development environment, you must configure the analyze-containers repository.<br>For more information, see <a href="getting_started.html">Getting started with the Analyze-Containers repository</a>.</p>
+<p>Before you create the configuration development environment, you must configure the analyze-containers repository.<br>For more information, see <a href="getting_started.html">Getting started with the analyze-containers repository</a>.</p>
 <hr>
 <h2 id="creating-the-configuration-development-environment">Creating the configuration development environment</h2>
 <ol>
@@ -108,17 +108,16 @@
 </ul>
 </li>
 </ol>
-<p><strong>Note:</strong> At this release, the config development environment is supported with Microsoft SQL Server only. The <code>createDevEnvironment.sh</code> script creates a number of IBM Db2 artifacts, however they cannot be used with the config development environment.</p>
 <h3 id="accepting-the-licenses">Accepting the licenses</h3>
 <ol>
 <li><p>Before you can use i2 Analyze and the tools, you must read the license agreement and copyright notices. The license file is in the <code>pre-reqs/i2analyze/license</code> directory.  </p>
 <ol>
-<li>To accept the license agreement, change the value of the <code>LIC_AGREEMENT</code> environment variable to <code>ACCEPT</code>. The environment variable is in the <code>utils/simulatedExternalVariables.sh</code> script.</li>
+<li>To accept the license agreement, change the value of the <code>LIC_AGREEMENT</code> variable to <code>ACCEPT</code>. The variable is in the <code>licenses.conf</code> file.</li>
 </ol>
 </li>
 <li><p>Before you can use Microsoft SQL Server, you must accept the license agreement and the EULA. For more information about using the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables, see <a href="https://docs.microsoft.com/sql/linux/sql-server-linux-configure-environment-variables?view=sql-server-ver15#environment-variables">Configure SQL Server settings with environment variables on Linux</a>  </p>
 <ol>
-<li>To accept the license in this environment, change the value of the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables. The environment variables are in the <code>utils/simulatedExternalVariables.sh</code> script.</li>
+<li>To accept the license in this environment, change the value of the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables. The variables are in the <code>licenses.conf</code> file.</li>
 </ol>
 </li>
 </ol>
@@ -126,34 +125,18 @@
 <pre><code class="lang-sh">LIC_AGREEMENT=ACCEPT
 MSSQL_PID=Developer
 ACCEPT_EULA=Y
-</code></pre><h3 id="modifying-the-hosts-file">Modifying the hosts file</h3>
-<ol>
-<li><p>To enable you to connect to a deployment, the Solr Web UI, and the database, update your hosts file to include entries for the containers:</p>
-<pre><code class="lang-sh">127.0.0.1 solr1.eia
-127.0.0.1 sqlserver.eia
-127.0.0.1 i2analyze.eia
-</code></pre><ul>
-<li>On Windows, edit the hosts file in <code>C:\Windows\System32\drivers\etc</code> and the WSL hosts file in <code>/etc/hosts</code>. You can use the integrated terminal in VS Code to edit the WSL hosts file.</li>
-<li>On MacOS, edit the hosts file in <code>/etc/hosts</code>.</li>
-</ul>
-</li>
-</ol>
-<p>You must run Analyst&#39;s Notebook Premium on Windows. If you deploy on MacOS, you can use a Windows virtual machine to host Analyst&#39;s Notebook Premium. For your virtual machine to connect to i2 Analyze, complete the following:</p>
-<ol>
-<li><p>On your MacOS terminal, run <code>ifconfig</code> and identify the IP address for your virtual machine in a section such as <code>vmnet1</code>. For example, <code>172.16.100.1</code>.</p>
-</li>
-<li><p>Then, on your Windows virtual machine add the following line to the <code>C:\Windows\System32\drivers\etc\hosts</code> file:</p>
-<pre><code class="lang-sh">172.16.100.1 i2analyze.eia
-</code></pre></li>
-</ol>
-<h3 id="installing-the-certificate">Installing the certificate</h3>
+</code></pre><h3 id="installing-the-certificate">Installing the certificate</h3>
 <p>To access the system, the server that you are connecting from must trust the certificate that it receives from the deployment.</p>
 <ol>
 <li><p>To enable trust, install the <code>/dev-environment-secrets/generated-secrets/certificates/externalCA/CA.cer</code> certificate as a trusted root certificate authority in your browser and operating system&#39;s certificate store.</p>
 <p> For information about installing the certificate, see:</p>
 <ul>
-<li><a href="https://windowsreport.com/install-windows-10-root-certificates/#2">Install Certificates with the Microsoft Management Console</a></li>
-<li><a href="https://support.apple.com/guide/keychain-access/kyca2431/mac">Add certificates to a keychain using Keychain Access on Mac</a></li>
+<li>Windows: <a href="https://windowsreport.com/install-windows-10-root-certificates/#2">Install Certificates with the Microsoft Management Console</a></li>
+<li>MacOS: <a href="https://support.apple.com/guide/keychain-access/kyca2431/mac">Add certificates to a keychain using Keychain Access on Mac</a></li>
+<li>FireFox:<ul>
+<li>In the settings menu, type <strong>View Certificates</strong> and open it. Then, click <strong>Import</strong> and locate the <code>CA.cer</code> file.</li>
+</ul>
+</li>
 </ul>
 </li>
 </ol>
@@ -178,7 +161,7 @@ ACCEPT_EULA=Y
 <li><code>cstore</code> - Chart Store</li>
 <li><code>i2c_istore</code> - i2 Connect gateway and Information Store</li>
 <li><p><code>i2c_cstore</code> - i2 Connect gateway and Chart Store  </p>
-<p>For more information about the i2 Analyze deployment patterns, see: <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=analyze-components">Components</a>.</p>
+<p>For more information about the i2 Analyze deployment patterns, see: <a href="https://docs.i2group.com/analyze/4.4.0/components.html">Components</a>.</p>
 </li>
 </ul>
 </li>
@@ -187,12 +170,16 @@ ACCEPT_EULA=Y
 <li><code>HOST_PORT_SOLR</code> specifies the port that you use to connect to the Solr Web UI from the host machine. By default, <code>8983</code>.</li>
 <li><code>HOST_PORT_DB</code> specifies the port that you use to connect to the database from the host machine. By default, <code>1433</code>.</li>
 <li><code>HOST_PORT_I2ANALYZE_SERVICE</code> specifies the port that you use to connect to the deployment from the host machine. By default, <code>9443</code>.</li>
+<li><code>HOST_PORT_PROMETHEUS</code> specifies the port that you use to connect to the Prometheus UI from the host machine. By default, <code>9090</code>.</li>
+<li><code>HOST_PORT_GRAFANA</code> specifies the port that you use to connect to the Grafana UI from the host machine. By default, <code>3500</code>.</li>
 </ul>
 <p>For example, to deploy with the i2 Connect gateway only for schema development and to use the default ports:</p>
 <pre><code class="lang-sh">DEPLOYMENT_PATTERN=&quot;schema_dev&quot;
 HOST_PORT_SOLR=&quot;8983&quot;
 HOST_PORT_DB=&quot;1433&quot;
 HOST_PORT_I2ANALYZE_SERVICE=&quot;9443&quot;
+HOST_PORT_PROMETHEUS=&quot;9090&quot;
+HOST_PORT_GRAFANA=&quot;3500&quot;
 </code></pre></li>
 </ul>
 </li>
@@ -201,7 +188,7 @@ HOST_PORT_I2ANALYZE_SERVICE=&quot;9443&quot;
 <h2 id="specifying-the-schema-and-charting-schemes-files">Specifying the schema and charting schemes files</h2>
 <p>To deploy i2 Analyze, you must provide a schema and charting scheme.
 The i2 Analyze toolkit includes example files that you can use as a starting point, or you can use existing files.</p>
-<p>For more information about the example schemas, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=toolkit-example-schemas">Example schemas</a>.</p>
+<p>For more information about the example schemas, see <a href="https://docs.i2group.com/analyze/4.4.0/example_schemes.html">Example schemas</a>.</p>
 <ol>
 <li>Choose an example schema and associated charting scheme as your starting point from the <code>pre-reqs/i2analyze/toolkit/examples/schemas</code> directory.</li>
 <li>Copy the chosen schema and charting scheme to your <code>configs/&lt;config_name&gt;/configuration</code> directory.</li>
@@ -210,7 +197,7 @@ The i2 Analyze toolkit includes example files that you can use as a starting poi
 <h2 id="specifying-the-security-schema-user-registry-and-command-access-control-files">Specifying the security schema, user registry, and command access control files</h2>
 <p>To connect to an i2 Analyze deployment, you must provide a security schema and user registry. To control access to features and enable to use of the administrator endpoints, provide a command access control file.</p>
 <p>The i2 Analyze toolkit includes example files that you can use as a starting point.</p>
-<p>For more information about the example files, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=toolkit-example-schemas">Example schemas</a>.</p>
+<p>For more information about the example files, see <a href="https://docs.i2group.com/analyze/4.4.0/example_schemes.html">Example schemas</a>.</p>
 <ol>
 <li>Copy and overwrite the example <code>security-schema.xml</code>, <code>user-registry.xml</code>, and <code>command-access-control.xml</code> files from the <code>pre-reqs/i2analyze/toolkit/examples/security</code> directory to your <code>configs/&lt;config_name&gt;/configuration</code> directory.</li>
 </ol>

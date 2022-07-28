@@ -101,21 +101,15 @@
 <p>By default, the environment is created for an Information Store and i2 Connect gateway deployment.</p>
 <h3 id="accepting-the-licenses">Accepting the licenses</h3>
 <ul>
-<li><p>Before you can use i2 Analyze and the tools, you must read and accept the license agreement and copyright notices in the <code>pre-reqs/i2analyze/license</code> directory.<br>  To accept the license agreement, change the value of the <code>LIC_AGREEMENT</code> environment variable to <code>ACCEPT</code>. The environment variable is in the <code>examples/pre-prod/utils/simulatedExternalVariables.sh</code> script.</p>
+<li><p>Before you can use i2 Analyze and the tools, you must read and accept the license agreement and copyright notices in the <code>pre-reqs/i2analyze/license</code> directory.<br>  To accept the license agreement, change the value of the <code>LIC_AGREEMENT</code> variable to <code>ACCEPT</code>. The variable is in the <code>licenses.conf</code> file.</p>
 </li>
-<li><p>Before you can use Microsoft SQL Server, you must accept the license agreement and the EULA. For more information about using the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables, see <a href="https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-configure-environment-variables?view=sql-server-ver15#environment-variables">Configure SQL Server settings with environment variables on Linux</a><br>  To accept the license in this environment, change the value of the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables. The environment variable is in the <code>utils/simulatedExternalVariables.sh</code> script.</p>
+<li><p>Before you can use Microsoft SQL Server, you must accept the license agreement and the EULA. For more information about using the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables, see <a href="https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-configure-environment-variables?view=sql-server-ver15#environment-variables">Configure SQL Server settings with environment variables on Linux</a><br>  To accept the license in this environment, change the value of the <code>MSSQL_PID</code> and <code>ACCEPT_EULA</code> environment variables. The variable is in the <code>licenses.conf</code> file.</p>
 </li>
 </ul>
 <h3 id="running-the-containers-and-start-i2-analyze">Running the containers and start i2 Analyze</h3>
 <p>To deploy and start i2 Analyze, run the following command:</p>
 <pre><code class="lang-sh">./deploy.sh
 </code></pre><p>For more information about the actions that are completed, see <a href="../tools%20and%20functions/deploy.html">Deploying i2 Analyze</a>.</p>
-<h3 id="modifying-the-hosts-file">Modifying the hosts file</h3>
-<p>To enable you to connect to the deployment and the Solr Web UI, update your hosts file to include the following lines:</p>
-<pre><code class="lang-sh">127.0.0.1 solr1.eia
-127.0.0.1 i2analyze.eia
-</code></pre><blockquote><p>NOTE: On Windows, you must edit your hosts file in <code>C:\Windows\System32\drivers\etc</code> and the hosts file in <code>/etc/hosts</code> for WSL.</p>
-</blockquote>
 <hr>
 <h2 id="installing-certificate">Installing Certificate</h2>
 <p>To access the system, the server that you are connecting from must trust the certificate that it receives from the deployment. To enable trust, install the <code>/dev-environment-secrets/generated-secrets/certificates/externalCA/CA.cer</code> certificate as a trusted root certificate authority in your browser and operating system&#39;s certificate store.</p>

@@ -87,13 +87,13 @@ Updating your match rules in your deployment includes the following high-level s
 <li>Create a standby match index with the new system match rules, and wait for a response from the server to say that the standby match index is ready</li>
 <li>Switch your standby match index to live</li>
 </ul>
-<p>The <code>updateMatchRulesWalkthrough.sh</code> script is a worked example that demonstrates how to update the system match rules in a containerized environment.</p>
+<p>The <code>examples/pre-prod/walkthroughs/change-management/updateMatchRulesWalkthrough.sh</code> script is a worked example that demonstrates how to update the system match rules in a containerized environment.</p>
 <blockquote><p>Note: Before you complete this walkthrough, reset your environment to the base configuration. For more information, see <a href="reset_walkthroughs.html">Resetting your environment</a>.</p>
 </blockquote>
 <h2 id="updating-your-system-match-rules-file">Updating your system match rules file</h2>
 <p>In the <code>updateMatchRulesWalkthrough.sh</code> script, the modified <code>system-match-rules.xml</code> is copied from the <code>examples/pre-prod/walkthroughs/configuration-changes</code> directory to the <code>configuration/fragments/common/WEB-INF/classes/</code> directory.
 See the <code>Updating system-match-rules.xml</code> section of the walkthrough script.</p>
-<p>For more information about modifying the system match rules file, see <a href="https://www.ibm.com/docs/en/i2-analyze/4.3.5?topic=matching-deploying-system-match-rules">Deploying system match rules</a>.</p>
+<p>For more information about modifying the system match rules file, see <a href="https://docs.i2group.com/analyze/4.4.0/creating_smr_is.html">Deploying system match rules</a>.</p>
 <h2 id="uploading-system-match-rules-to-zookeeper">Uploading system match rules to ZooKeeper</h2>
 <p>After you modify the system match rules file, use the <code>update_match_rules</code> function of the <code>runIndexCommand.sh</code> script to upload the match rules to ZooKeeper.
 For more information, see <a href="../tools%20and%20functions/i2analyze_tools.html#manage-solr-indexes-tool">Manage Solr indexes tool</a>.</p>
@@ -116,7 +116,7 @@ For more information, see <a href="../tools%20and%20functions/i2analyze_tools.ht
 <li><p><strong>Java</strong></p>
 <ul>
 <li><p>The container must be able to run Java executables. In the example, the container uses the <code>adoptopenjdk</code> image from DockerHub.</p>
-<pre><code class="lang-bash">  adoptopenjdk/openjdk8:ubi-jre
+<pre><code class="lang-bash">  adoptopenjdk/openjdk11:ubi-jre
 </code></pre></li>
 </ul>
 </li>

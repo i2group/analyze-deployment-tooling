@@ -1,0 +1,251 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Managing container security </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Managing container security ">
+    <meta name="generator" content="docfx 2.56.2.0">
+    
+    <link rel="shortcut icon" href="../../../../images/favicon.png">
+    <link rel="stylesheet" href="../../../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../../../styles/docfx.css">
+    <link rel="stylesheet" href="../../../../styles/main.css">
+    <meta property="docfx:navrel" content="../../../../toc.html">
+    <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../../../index.html">
+                i2 Analyze Containers
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+          
+          <div class="subnav navbar navbar-default">
+            <div class="container hide-when-search" id="breadcrumb">
+              <ul class="breadcrumb">
+                <li></li>
+              </ul>
+            </div>
+          </div>
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="managing-container-security">Managing container security</h1>
+
+<h2 id="ssl-certificates-in-the-deployment">SSL certificates in the deployment</h2>
+<p>The example deployment is configured to use SSL connections for communication between clients and i2 Analyze, and between the components of i2 Analyze.</p>
+<p>To achieve this, the appropriate certificate authorities and certificates are used. The <code>generateSecrets.sh</code> script is used to simulate the process of creating the required keys and acquiring certificate authority-signed certificates.</p>
+<blockquote><p>Note: The keys and certificates used are set to expire after 90 days. To use the certificates for longer than this, you must run the <code>generateSecrets.sh</code> script again.</p>
+</blockquote>
+<h2 id="certificate-authorities-ca">Certificate Authorities (CA)</h2>
+<p>In the example, two CAs are used to provide trust:</p>
+<ul>
+<li><strong>Internal CA</strong>
+ The internal CA is to provide trust for the containers that are used for the components of i2 Analyze. Each container&#39;s certificates are signed by the internal CA.</li>
+<li><strong>External CA</strong>
+ The external CA is to provide trust for external requests to the i2 Analyze service via the load balancer. In our example, the external certificate authority is generated for you. However, in production a real certificate should be used.</li>
+</ul>
+<h2 id="container-certificates">Container certificates</h2>
+<p>To communicate securely using TLS each container requires the following certificates:</p>
+<ul>
+<li>Private key</li>
+<li>Certificate key</li>
+<li>Internal certificate authority</li>
+</ul>
+<p>The containers will generate truststores and keystores based on the keys provided to the container. For more information about how the keys are passed to the containers securely please see <a href="#secure-environment-variables">Secure Environment variables</a>.</p>
+<h2 id="secure-communication-between-containers">Secure communication between containers</h2>
+<p>When the components communicate, the <code>CA certificate</code> is used to establish trust of the <code>container certificate</code> that is received.  </p>
+<ul>
+<li><p>Each container has its own private key</p>
+</li>
+<li><p>ZooKeeper requires client authentication to initiate communication. The i2 Analyze, i2 Analyze Tool, and Solr client containers require container certificates to authenticate with ZooKeeper.</p>
+</li>
+</ul>
+<h2 id="creating-keys-and-certificates">Creating keys and certificates</h2>
+<p>The following diagram shows a simplified sequence of creating a container certificate from the certificate authority and using it to establish trust:</p>
+<ol>
+<li><p>The certificate authority&#39;s certificate is distributed to the client.</p>
+</li>
+<li><p>The private key is generated on the server.<br>In the <code>generateSecrets.sh</code> script, the key is created by:</p>
+<pre><code class="lang-bash">openssl genrsa -out server.key 4096
+</code></pre></li>
+<li><p>The public part of the private key is used in a Certificate Signing Request (CSR).<br>In the <code>generateSecrets.sh</code> script, this is completed by:</p>
+<pre><code class="lang-bash">openssl req -new -key server.key -subj &quot;/CN=solr1.eia&quot; -out key.csr
+</code></pre><p>The common name that is used for the certificate is the server&#39;s fully qualified domain name.<br>The CSR is sent to the certificate authority (CA).</p>
+</li>
+<li><p>The CA signs and returns a signed certificate for the server.<br>In the <code>generateSecrets.sh</code> script, the CA signing the certificate is completed by:</p>
+<pre><code class="lang-bash">openssl x509 -req -sha256 -CA CA.cer -CAkey CA.key -days 90 -CAcreateserial -CAserial CA.srl -extfile x509.ext -extensions &quot;solr&quot; -in key.csr -out server.cer
+</code></pre></li>
+<li><p>When communication is established, the <code>container certificate</code> is sent to the client. The client uses it&#39;s copy of the <code>CA certificate</code> to verify that the <code>container certificate</code> was signed by the same CA.</p>
+</li>
+</ol>
+<h2 id="password-generation">Password generation</h2>
+<p>The example simulates secrets management performed by various secrets managers provided by cloud vendors. The <code>generateSecrets.sh</code> generates these secrets and populates the <code>dev-environment-secrets/simulated-secret-store</code> with secrets required for each container.
+The docker desktop does not support secrets, but the example environment example simulates this by mounting the secrets folder. For more information see <a href="https://docs.docker.com/engine/swarm/secrets/">Manage sensitive data with Docker secrets</a>.</p>
+<p>After these passwords have been generated, they can be uploaded to a secrets manager. Alternatively you can use a secrets manager to generate your passwords.</p>
+<h2 id="solr-basic-authentication">Solr Basic Authentication</h2>
+<p>Solr authorization can be enabled using the BasicAuthPlugin. The basic auth plugin defines users, user roles and passwords for users. For the BasicAuthPlugin to be enabled, solr requires a <code>security.json</code> file to be uploaded. In our example the <code>security.json</code> file is created by the <code>generateSecrets.sh</code> and located in <code>dev-environment-secrets/generated-secrets/secrets/solr/security.json</code>.</p>
+<p>For more information about solr authentication see <a href="https://lucene.apache.org/solr/guide/8_3/basic-authentication-plugin.html">Basic Authentication Plugin</a></p>
+<h2 id="secure-environment-variables">Secure Environment variables</h2>
+<p>In general secrets used by a particular container can be supplied via an environment variable containing the path to a file containing the secret, or an environment variable specifying the literal secret value, for example:
+<strong>Note:</strong> Secrets can be passwords, keys or certificates.</p>
+<pre><code class="lang-bash">docker run --name solr1 -d --net eia
+  --secret source=SOLR_SSL_KEY_STORE_PASSWORD,target=SOLR_SSL_KEY_STORE_PASSWORD \
+  -e SOLR_SSL_KEY_STORE_PASSWORD_FILE=&quot;/run/secrets/SOLR_SSL_KEY_STORE_PASSWORD_FILE&quot;
+</code></pre><p>or</p>
+<pre><code class="lang-bash">docker run --name solr1 -d --net eia
+  -e SOLR_SSL_KEY_STORE_PASSWORD=&quot;jhga98u43jndfj&quot;
+</code></pre><p>The docker files in the <code>analyze-containers</code> repository have been modified to accept either. The convention is that the environment variable must match the property being set with &quot;_file&quot; appended if the secret is in a file, and without if a literal value is being used instead.</p>
+<p>In the example scripts, each container gets the relevant key stores mounted along with the correct secrets files in a secrets directory.</p>
+<p><strong>NOTE:</strong> By default this is set as <code>CONTAINER_SECRETS_DIR=&quot;/run/secrets&quot;</code> in the common variables file.</p>
+<p>All the containers use the same environment variables to define the location of certificates. These are then used to generate appropriate artifacts for the particular container. There is also a standard way of turning on and off server SSL.</p>
+<p>Security switching variables</p>
+<table>
+<thead>
+<tr>
+<th>Environment variable</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SERVER_SSL</code></td>
+<td>Can be set to <code>true</code> or <code>false</code>. If set to <code>true</code>, the container is configured to use encrypted connections.</td>
+</tr>
+<tr>
+<td><code>LIBERTY_SSL_CONNECTION</code></td>
+<td>Can be set to <code>true</code> or <code>false</code>. If set to <code>true</code>, connections to the Liberty container use an encrypted connection.</td>
+</tr>
+<tr>
+<td><code>DB_SSL_CONNECTION</code></td>
+<td>Can be set to <code>true</code> or <code>false</code>. If set to <code>true</code>, connections to the database use an encrypted connection</td>
+</tr>
+<tr>
+<td><code>SOLR_ZOO_SSL_CONNECTION</code></td>
+<td>Can be set to <code>true</code> or <code>false</code>. If set to <code>true</code>, connections to ZooKeeper and Solr use an encrypted connection.</td>
+</tr>
+<tr>
+<td><code>GATEWAY_SSL_CONNECTION</code></td>
+<td>Can be set to <code>true</code> of <code>false</code>. If set to <code>true</code>, connections to i2 Connect connectors use an encrypted connection.</td>
+</tr>
+<tr>
+<td><code>SSL_ENABLED</code></td>
+<td>Can be set to <code>true</code> or <code>false</code>. If set to <code>true</code>, the connector container communicates with the i2 Connect gateway using an encrypted connection.</td>
+</tr>
+</tbody>
+</table>
+<p>Security environment variables</p>
+<table>
+<thead>
+<tr>
+<th>Environment variable</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SSL_PRIVATE_KEY</code></td>
+<td>The private key for the container certificate.</td>
+</tr>
+<tr>
+<td><code>SSL_CERTIFICATE</code></td>
+<td>The container certificate.</td>
+</tr>
+<tr>
+<td><code>SSL_CA_CERTIFICATE</code></td>
+<td>The Certificate Authority certificate.</td>
+</tr>
+<tr>
+<td><code>SSL_OUTBOUND_PRIVATE_KEY</code></td>
+<td>The private key for the Liberty container, which is used for outbound connections.</td>
+</tr>
+<tr>
+<td><code>SSL_OUTBOUND_CERTIFICATE</code></td>
+<td>The private certificate for the Liberty container, which is used for outbound connections.</td>
+</tr>
+<tr>
+<td><code>SSL_OUTBOUND_CA_CERTIFICATE_FILE</code></td>
+<td>The certificate authority used for verifying outbound connections.</td>
+</tr>
+</tbody>
+</table>
+<p>&lt;!-- cspell:ignore jhga98u43jndfj &gt;</p>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            &copy; N. Harris Computer Corporation (2022)
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../../styles/main.js"></script>
+  </body>
+</html>

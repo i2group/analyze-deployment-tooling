@@ -90,24 +90,25 @@
 </code></pre><hr>
 <h2 id="developing-the-data-model">Developing the data model</h2>
 <ol>
-<li>In i2 Analyze Schema Designer, modify the <code>schema.xml</code> and <code>schema-charting-scheme.xml</code> files in the <code>&lt;config_name&gt;\configuration</code> directory with your changes. For more information about developing your schema, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=environment-updating-schema">Updating the schema and the charting scheme</a>.</li>
+<li>In i2 Analyze Schema Designer, modify the <code>schema.xml</code> and <code>schema-charting-scheme.xml</code> files in the <code>&lt;config_name&gt;\configuration</code> directory with your changes. For more information about developing your schema, see <a href="https://docs.i2group.com/analyze/4.4.0/t_develop_schema.html">Updating the schema and the charting scheme</a>.
+ On Windows, open the file from your mapped network drive.</li>
 <li>After you make your changes, run the <code>deploy.sh</code> script again with your config name.</li>
 <li>Test your changes in Analyst&#39;s Notebook Premium.<br><strong>Note:</strong> You might need to log out of Analyst&#39;s Notebook Premium and log back in to see your changes.</li>
 </ol>
 <hr>
 <h2 id="developing-security-model">Developing security model</h2>
 <ol>
-<li><p>Update the <code>security-schema.xml</code> file in the <code>&lt;config_name&gt;\configuration</code> directory with your changes. For more information about developing your security schema, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=application-security-schema">Configuring the security schema</a>.</p>
+<li><p>Update the <code>security-schema.xml</code> file in the <code>&lt;config_name&gt;\configuration</code> directory with your changes. For more information about developing your security schema, see <a href="https://docs.i2group.com/analyze/4.4.0/modifying_security_schema.html">Configuring the security schema</a>.</p>
 <ol>
 <li>After you make your changes, run the <code>deploy.sh</code> script again with your config name.  </li>
 </ol>
 </li>
-<li><p>Update the <code>user-registry.xml</code> file to align to your security schema changes. For more information about updating the user registry, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=application-security-schema">Configuring the Liberty user registry</a>.<br> <strong>Note:</strong> In this release, you must ensure that your user registry file contains the user <code>Jenny</code> in the <code>Administrator</code> group.</p>
+<li><p>Update the <code>user-registry.xml</code> file to align to your security schema changes. For more information about updating the user registry, see <a href="https://docs.i2group.com/analyze/4.4.0/t_wlp_security.html">Configuring the Liberty user registry</a>.<br> <strong>Note:</strong> In this release, you must ensure that your user registry file contains the user <code>Jenny</code> in the <code>Administrator</code> group.</p>
 <ol>
 <li>After you make your changes, run the <code>deploy.sh</code> script again with your config name.  </li>
 </ol>
 </li>
-<li><p>Update the <code>command-access-control.xml</code> file to align to your users and groups. For more information about controlling access to features, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=features-command-access-control-file">The command access control file</a>.</p>
+<li><p>Update the <code>command-access-control.xml</code> file to align to your users and groups. For more information about controlling access to features, see <a href="https://docs.i2group.com/analyze/4.4.0/contolling_access_permissions.html">The command access control file</a>.</p>
 <ol>
 <li>After you make your changes, run the <code>deploy.sh</code> script again with your config name.  </li>
 </ol>

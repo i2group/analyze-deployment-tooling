@@ -82,34 +82,27 @@
 <h2 id="configs">Configs</h2>
 <p>The <code>/configs</code> directory contains all of your configs. The name of the directory for each config is used to identify it when you run the <code>deploy</code> script. You can have as many different configs in the <code>configs</code> directory, however you can only have one deployed and running in the environment at any time.</p>
 <ul>
-<li>When you run the <code>deploy.sh</code> script and specify the name of a config that is already deployed, the running deployment is updated with any changes you have made to the configuration.  </li>
+<li>When you run the <code>deploy.sh</code> script and specify the name of a config that is already deployed, the running deployment is updated with any changes you have made to the configuration or the referenced connectors and extensions.  </li>
 <li>When you run the <code>deploy.sh</code> script and specify the name of a config that is not deployed, the containers in the current environment are stopped and a new environment is deployed with the specified config.</li>
 </ul>
 <hr>
 <h2 id="the-deploysh-script">The deploy.sh script</h2>
-<p>The <code>scripts/deploy.sh</code> script is used to deploy configs and manage your environment.</p>
+<p>The <code>scripts/deploy.sh</code> script is used to deploy configs, assets and manage your environment.</p>
 <p>The following usage and help is provided for the <code>deploy.sh</code> script:</p>
 <pre><code class="lang-bash">Usage:
   deploy.sh -c &lt;config_name&gt; [-t {clean}] [-v] [-y]
-  deploy.sh -c &lt;config_name&gt; [-t {connectors}] [-v] [-y]
   deploy.sh -c &lt;config_name&gt; [-t {backup|restore} [-b &lt;backup_name&gt;]] [-v] [-y]
-  deploy.sh -c &lt;config_name&gt; -a [-t {connectors}] -d &lt;deployment_name&gt; -l &lt;dependency_label&gt;] [-v] [-y]
   deploy.sh -h
 
 Options:
-  -c &lt;config_name&gt;      Name of the config to use.
-  -t {clean}            Clean the deployment. Will permanently remove all containers and data.
-  -t {connectors}       Generate the secrets and build the images for connectors. By default, it acts on all connectors in the connector-images directory.
-  -t {backup}           Backup the database.
-  -t {restore}          Restore the database.
-  -b &lt;backup_name&gt;      Name of the backup to create or restore. If not specified, the default backup is used.
-  -a                    Produce or use artifacts on AWS.
-  -d &lt;deployment_name&gt;  Name of deployment to use on AWS.
-  -l &lt;dependency_label&gt; Name of dependency image label to use on AWS.
-  -n &lt;connector_name&gt;   Name of a connector. This option is used with the connectors task to specify which connectors to act on.
-  -v                    Verbose output.
-  -y                    Answer &#39;yes&#39; to all prompts.
-  -h                    Display the help.
+  -c &lt;config_name&gt;                       Name of the config to use.
+  -t {clean}                             Clean the deployment. Will permanently remove all containers and data.
+  -t {backup}                            Backup the database.
+  -t {restore}                           Restore the database.
+  -b &lt;backup_name&gt;                       Name of the backup to create or restore. If not specified, the default backup is used.
+  -v                                     Verbose output.
+  -y                                     Answer &#39;yes&#39; to all prompts.
+  -h                                     Display the help.
 </code></pre></article>
           </div>
           

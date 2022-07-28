@@ -91,9 +91,11 @@ The i2 Analyze minimal toolkit is used to provide the artifacts that are require
 <li>Liberty</li>
 <li>Solr</li>
 <li>ZooKeeper</li>
+<li>Prometheus</li>
+<li>Grafana</li>
 <li>Optionally a database management system</li>
 </ul>
-<p>The Analyze-Containers repository contains the Dockerfiles that are used to build the images for each component. For Liberty and SQL Server, the image provided by Liberty and SQL Server is used.</p>
+<p>The Analyze-Containers repository contains the Dockerfiles that are used to build the images for each component. For Liberty, SQL Server, Prometheus and Grafana the image provided by each vendor is used.</p>
 <p>For Solr and ZooKeeper, the repository contains custom Dockerfiles that were created from the ones provided by Solr and ZooKeeper.</p>
 <p>For more information about the images and containers, see <a href="../images%20and%20containers/images.html">images and containers</a>.</p>
 <h3 id="scripts">Scripts</h3>
@@ -111,6 +113,8 @@ The i2 Analyze minimal toolkit is used to provide the artifacts that are require
 <li>A Solr cluster with two Solr containers</li>
 <li>A ZooKeeper ensemble with three ZooKeeper containers</li>
 <li>A SQL Server container</li>
+<li>A Prometheus container</li>
+<li>A Grafana container</li>
 </ul>
 <p>A number of &quot;client&quot; ephemeral containers are used to complete a single actions.</p>
 <p>The following client containers are used:</p>

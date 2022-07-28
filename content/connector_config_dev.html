@@ -92,11 +92,11 @@
 <p>Create a connector image from one of the image templates. You can deploy connectors using the following templates:</p>
 <ul>
 <li><a href="#spring-boot-based-connector-image">Spring Boot</a> for Java based connectors</li>
-<li><a href="#i2-connect-server-based-connector-image">i2 Connect server</a> for Node v14 based connectors developed using the i2 Connect server SDK</li>
-<li><a href="#nodejs-based-connector-image">NodeJS</a> for Node v14 based connectors</li>
+<li><a href="#i2-connect-server-based-connector-image">i2 Connect server</a> for Node v16 based connectors developed using the i2 Connect server SDK</li>
+<li><a href="#nodejs-based-connector-image">NodeJS</a> for Node v16 based connectors</li>
 <li><a href="#external-connector">External</a> for connectors hosted outside of the config development environment</li>
 </ul>
-<p>The connector should be secured and run on port <code>3443</code>. For more information about securing your system, see <a href="https://www.ibm.com/docs/en/i2-analyze/latest?topic=application-securing-i2-analyze">Securing i2 Analyze</a>.</p>
+<p>The connector should be secured and run on port <code>3443</code>. For more information about securing your system, see <a href="https://docs.i2group.com/analyze/4.4.0/t_configuring_security.html">Securing i2 Analyze</a>.</p>
 <h3 id="spring-boot-based-connector-image">Spring Boot based connector image</h3>
 <ol>
 <li><p>Copy the <code>/templates/springboot-connector-image</code> directory (including the sub-directories) to the <code>/connector-images</code> directory.<br> Rename the <code>springboot-connector-image</code> folder to a custom connector name. The name of the directory is used to determine which connectors to deploy. Do not use spaces or special characters in the name.<br> The directory structure is:  </p>
@@ -173,7 +173,7 @@
 </tr>
 <tr>
 <td><code>gatewaySchema</code></td>
-<td>The short name of an optional gateway schema. When no gateway schema is used, do not provide a value.</td>
+<td>The short name of an optional gateway schema. When no gateway schema is used, do not provide a value. Add the referenced schema and charting scheme to the <code>gateway-schemas</code> directory.</td>
 </tr>
 <tr>
 <td><code>type</code></td>
@@ -195,7 +195,7 @@
     &quot;name&quot;: &quot;Connector 1&quot;,
     &quot;description&quot;: &quot;First connector&quot;,
     &quot;configurationPath&quot;: &quot;/config&quot;,
-    &quot;gatewaySchema&quot;: &quot;template-schema&quot;,
+    &quot;gatewaySchema&quot;: &quot;template&quot;,
     &quot;sendSensitiveHeaders&quot;: &quot;false&quot;,
     &quot;type&quot;: &quot;i2connect-server&quot;
 }
@@ -205,7 +205,7 @@
     &quot;name&quot;: &quot;Connector 2&quot;,
     &quot;description&quot;: &quot;Second connector&quot;,
     &quot;configurationPath&quot;: &quot;/config&quot;,
-    &quot;gatewaySchema&quot;: &quot;template-schema&quot;,
+    &quot;gatewaySchema&quot;: &quot;template&quot;,
     &quot;sendSensitiveHeaders&quot;: &quot;false&quot;,
     &quot;type&quot;: &quot;external&quot;,
     &quot;baseUrl&quot;: &quot;https://example-connector:3443&quot; 
@@ -240,7 +240,7 @@
 </code></pre></li>
 </ol>
 <h2 id="defining-a-gateway-schema-optional">Defining a gateway schema (Optional)</h2>
-<p>You can develop the gateway schema and associated charting schemes by changing the deployment pattern to <code>schema-dev</code> and following the instructions in <a href="develop_schemas.html">Developing schemas in your configuration development environment</a>.
+<p>You can develop the gateway schema and associated charting schemes by following the instructions in <a href="develop_schemas.html">Developing schemas in your configuration development environment</a>.
 After you develop the schemes, complete the following steps to add deploy them with your configuration:</p>
 <ol>
 <li>Copy the schema and charting scheme files to the <code>/gateway-schemas</code> directory.<br>To define the short name of the gateway schema, the prefix of the file name is used. The convention is defined as: <code>&lt;short&gt;-&lt;name&gt;-schema.xml</code> and <code>&lt;short&gt;-&lt;name&gt;-schema-charting-scheme.xml</code>.<br>For example, files with the names <code>law-enforcement-schema.xml</code> and <code>law-enforcement-charting-schemes.xml</code> have the short name <code>law-enforcement</code>.</li>
@@ -261,8 +261,8 @@ After you develop the schemes, complete the following steps to add deploy them w
 </ol>
 <h2 id="building-the-connector-images-and-redeploying">Building the connector images and redeploying</h2>
 <ol>
-<li><p>Run the <code>./deploy.sh</code> script with your config name and the <code>connectors</code> task from the <code>/scripts</code> directory to generate the secrets for your connectors, build the connector images, and deploy your environment.  </p>
-<pre><code class="lang-sh">./deploy.sh -c &lt;config_name&gt; -t connectors
+<li><p>Run the <code>./deploy.sh</code> script with your config name from the <code>/scripts</code> directory to generate the secrets for your connectors, build the connector images, and deploy your environment.  </p>
+<pre><code class="lang-sh">./deploy.sh -c &lt;config_name&gt;
 </code></pre></li>
 </ol>
 <p>After you add connectors to your environment, you can <a href="develop_config_dev.html">configure the rest of the configuration</a>.</p>

@@ -79,13 +79,13 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="ingesting-data-into-the-information-store">Ingesting data into the Information Store</h1>
 
-<p>The <code>ingestDataWalkthrough.sh</code> script is a worked example that demonstrates how to script the process of ingesting data into the Information Store.</p>
+<p>The <code>examples/pre-prod/walkthroughs/change-management/ingestDataWalkthrough.sh</code> script is a worked example that demonstrates how to script the process of ingesting data into the Information Store.</p>
 <blockquote><p>Note: Before you complete this walkthrough, reset your environment to the base configuration. For more information, see <a href="reset_walkthroughs.html">Resetting your environment</a>.</p>
 </blockquote>
 <p>The example provides a scripted mechanism to ingest data by using ETL toolkit. The script ingests data with and without correlation identifiers using both <code>STANDARD</code> and <code>BULK</code> import modes.<br>For more information about ingestion, see:</p>
 <ul>
-<li><a href="https://www.ibm.com/docs/en/i2-analyze/4.3.5?topic=store-information-data-ingestion">Information Store data ingestion</a></li>
-<li><a href="https://www.ibm.com/docs/en/i2-analyze/4.3.5?topic=store-information-data-correlation">Information Store data correlation</a></li>
+<li><a href="https://docs.i2group.com/analyze/4.4.0/data_ingestion.html">Information Store data ingestion</a></li>
+<li><a href="https://docs.i2group.com/analyze/4.4.0/c_correlation_intro.html">Information Store data correlation</a></li>
 </ul>
 <p>To script the ingestion process, the following information is stored within the script:  </p>
 <ul>
@@ -101,7 +101,7 @@ Note the external ETL user is performing the import into the staging tables, but
 <ul>
 <li><a href="../tools%20and%20functions/client_functions.html#runEtlToolkitToolAsi2ETL">runEtlToolkitToolAsi2ETL</a></li>
 <li><a href="../tools%20and%20functions/etl_tools.html#add-information-store-ingestion-source">addInformationStoreIngestionSource</a></li>
-<li>For more information about ingestion sources in the Information Store, see <a href="https://www.ibm.com/docs/en/i2-analyze/4.3.5?topic=ingestion-defining-source">Defining an ingestion source</a></li>
+<li>For more information about ingestion sources in the Information Store, see <a href="https://docs.i2group.com/analyze/4.4.0/define_ingestion_source.html">Defining an ingestion source</a></li>
 </ul>
 <p>For an example of how to use the tool, see the <code>Create the ingestion sources</code> section in the <code>ingestDataWalkthrough.sh</code></p>
 <h2 id="creating-the-staging-tables">Creating the staging tables</h2>
@@ -109,7 +109,7 @@ Note the external ETL user is performing the import into the staging tables, but
 <ul>
 <li><a href="../tools%20and%20functions/client_functions.html#runEtlToolkitToolAsi2ETL">runEtlToolkitToolAsi2ETL</a></li>
 <li><a href="../tools%20and%20functions/etl_tools.html#create-information-store-staging-table">createInformationStoreStagingTable</a></li>
-<li>For more information about creating staging tables in the Information Store, see <a href="https://www.ibm.com/docs/en/i2-analyze/4.3.5?topic=ingestion-creating-staging-tables">Creating the staging tables</a></li>
+<li>For more information about creating staging tables in the Information Store, see <a href="https://docs.i2group.com/analyze/4.4.0/create_staging_stables.html">Creating the staging tables</a></li>
 </ul>
 <p>To create all of the staging tables in the example, schema type identifiers are mapped to staging table names. For an example of how the mappings are used, see the <code>Create the staging tables</code> section in the <code>ingestDataWalkthrough.sh</code></p>
 <blockquote><p>Note: Because there are multiple staging tables for the <code>LAC1</code> link type, a second loop is used to iterate through the staging table names of each schema type.</p>
@@ -125,7 +125,7 @@ For each type of data the staging tables and populated, the data ingestion task 
 <p>The <code>runSqlServerCommandAsETL</code> client function is used to run the sql statement that inserts the data into the staging tables.</p>
 <ul>
 <li><a href="../tools%20and%20functions/client_functions.html#runSqlServerCommandAsETL">runSqlServerCommandAsETL</a></li>
-<li><a href="https://www.ibm.com/docs/en/i2-analyze/4.3.5?topic=ingestion-populating-staging-tables">Populating the staging tables</a></li>
+<li><a href="https://docs.i2group.com/analyze/4.4.0/c_stage_data.html">Populating the staging tables</a></li>
 </ul>
 <p>The example uses CSV and format files to insert the data. The files have the same name (<code>person.csv</code> and <code>person.fmt</code>). The staging table names are mapped to the CSV and format files. There is one mapping for base data (<code>BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME</code>) and one for correlation data (<code>CORRELATED_DATA_TABLE_AND_FORMAT_FILE_NAME</code>).
 For an example of how the mappings are used, see the <code>Insert the base data into the staging tables</code> section in the <code>ingestDataWalkthrough.sh</code></p>
@@ -133,7 +133,7 @@ For an example of how the mappings are used, see the <code>Insert the base data 
 <ul>
 <li><a href="../tools%20and%20functions/client_functions.html#runEtlToolkitToolAsi2ETL">runEtlToolkitToolAsi2ETL</a></li>
 <li><a href="../tools%20and%20functions/etl_tools.html#ingest-information-store-records">ingestInformationStoreRecords</a></li>
-<li><a href="https://www.ibm.com/docs/en/i2-analyze/4.3.5?topic=resources-ingestinformationstorerecords-task">The ingestInformationStoreRecords toolkit task</a></li>
+<li><a href="https://docs.i2group.com/analyze/4.4.0/ingestion_command.html">The ingestInformationStoreRecords toolkit task</a></li>
 </ul>
 <p>The <code>ingestInformationStoreRecords</code> tool is used with <code>BULK</code> and <code>STANDARD</code> import modes. Standard import mode is used to ingest the correlation data sets.
 Bulk import mode is used to ingest the base data set.</p>

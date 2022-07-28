@@ -1,0 +1,230 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Client utilities </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Client utilities ">
+    <meta name="generator" content="docfx 2.56.2.0">
+    
+    <link rel="shortcut icon" href="../../../../images/favicon.png">
+    <link rel="stylesheet" href="../../../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../../../styles/docfx.css">
+    <link rel="stylesheet" href="../../../../styles/main.css">
+    <meta property="docfx:navrel" content="../../../../toc.html">
+    <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../../../index.html">
+                i2 Analyze Containers
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+          
+          <div class="subnav navbar navbar-default">
+            <div class="container hide-when-search" id="breadcrumb">
+              <ul class="breadcrumb">
+                <li></li>
+              </ul>
+            </div>
+          </div>
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="client-utilities">Client utilities</h1>
+
+<p>The <code>clientFunctions.sh</code> file contains functions that you can use to perform actions against the server components of i2 Analyze.</p>
+<h2 id="secrets-utilities">Secrets utilities</h2>
+<p>The <code>getSecret</code> function gets a secret such as a password for a user.</p>
+<h2 id="status-utilities">Status utilities</h2>
+<p>The status utilities report whether a component of i2 Analyze is live.</p>
+<h3 id="waitforindexestobebuilt">waitForIndexesToBeBuilt</h3>
+<p>The <code>waitForIndexesToBeBuilt</code> function sends a request to the <code>admin/indexes/status</code> endpoint. If the response indicates no indexes are still <code>BUILDING</code> the function returns and prints a message to indicate the indexes have been built.
+If the indexes are not all built after 5 retries the function will print an error and exit.</p>
+<h3 id="waitforconnectortobelive">waitForConnectorToBeLive</h3>
+<p>This function takes (1) the fully qualified domain name of a connector and (2) the port of the connector as its arguments.
+The <code>waitForConnectorToBeLive</code> function sends a request to the connector&#39;s<code>/config</code> endpoint. If the response is <code>200</code>, the connector is live. If the connector is not live after 50 tires the function will print an error and exit.</p>
+<h3 id="getasyncrequeststatus">getAsyncRequestStatus</h3>
+<p>This function takes (1) the request id of the asynchronous request to get the status of.  </p>
+<p>The <code>getAsyncRequestStatus</code> function makes a request to the Asynchronous Collection API and check the state is marked as <code>completed</code> in the JSON response returned.</p>
+<p>If the state is not marked as <code>completed</code>, the function returns the response message which contains any error messages that are reported with the asynchronous request.</p>
+<p>For more information about the Asynchronous Collection API, see <a href="https://lucene.apache.org/solr/guide/8_7/collections-api.html#requeststatus">REQUESTSTATUS: Request Status of an Async Call</a>.</p>
+<h3 id="getsolrstatus">getSolrStatus</h3>
+<p>This function takes (1) a timestamp that is used to specify the point in the logs after which the logs are monitored.  </p>
+<p>The <code>getSolrStatus</code> function used the logs from the Liberty container, and uses a grep command to find specific component availability messages. The function returns the entries in the logs that match message in the grep command.<br>If no matching message is found, the function prints the following error and exits:  </p>
+<p><code>&quot;No response was found from the component availability log (attempt: ${i}). Waiting...&quot;</code></p>
+<h2 id="database-security-utilities">Database Security Utilities</h2>
+<h3 id="changesapassword">changeSAPassword</h3>
+<p>The <code>changeSAPassword</code> function uses the generated secrets to call the <code>changeSAPassword.sh</code> with the initial (generated) sa password and the new (generated) password.</p>
+<h3 id="createdbloginanduser">createDbLoginAndUser</h3>
+<p>The <code>createDbLoginAndUser</code> function takes a <code>user</code> and a <code>role</code> as its arguments.
+The function creates a database login and user for the provided <code>user</code>, and assigns the user to the provided <code>role</code>.</p>
+<h2 id="execution-utilities">Execution utilities</h2>
+<p>The execution utilities enable you to run commands and tools from client containers against the server components of i2 Analyze.</p>
+<h3 id="runsolrclientcommand">runSolrClientCommand</h3>
+<p>The <code>runSolrClientCommand</code> function uses an ephemeral Solr client container to run commands against Solr.</p>
+<p>For more information about the environment variables and volume mounts that are required for the Solr client, see <a href="../images%20and%20containers/solr_client.html">Running a Solr client container</a>.</p>
+<p>The <code>runSolrClientCommand</code> function takes the command you want to run as an argument. For example:</p>
+<pre><code class="lang-bash">runSolrClientCommand &quot;/opt/solr/server/scripts/cloud-scripts/zkcli.sh&quot; -zkhost &quot;${ZK_HOST}&quot; -cmd clusterprop -name urlScheme -val https
+</code></pre><p>For more information about commands you can execute using the Solr <code>zkcli</code>, see <a href="https://lucene.apache.org/solr/guide/8_6/command-line-utilities.html">Solr ZK Command Line Utilities</a></p>
+<h3 id="runi2analyzetool">runi2AnalyzeTool</h3>
+<p>The <code>runi2AnalyzeTool</code> function uses an ephemeral i2 Analyze Tool container to run the i2 Analyze tools.</p>
+<p>For more information about the environment variables and volume mounts that are requires for the i2Analyze tool, see <a href="../images%20and%20containers/i2analyze_tool.html">Running an i2 Analyze Tool container</a></p>
+<p>The <code>runi2AnalyzeTool</code> function takes the i2 tool you want to run as an argument. For example:</p>
+<pre><code class="lang-bash">runi2AnalyzeTool &quot;/opt/i2-tools/scripts/updateSecuritySchema.sh&quot;
+</code></pre><h3 id="runi2analyzetoolasexternaluser">runi2AnalyzeToolAsExternalUser</h3>
+<p>The <code>runi2AnalyzeToolAsExternalUser</code> function uses an ephemeral i2 Analyze Tool container to run commands against the i2 Analyze service via the load balancer as an external user.</p>
+<p>The container contains the required secrets to communicate with the i2 Analyze service from an external container.</p>
+<p>For example, if you would like to send a Curl request to the load balancer stats endpoint, run:</p>
+<pre><code class="lang-sh">runi2AnalyzeToolAsExternalUser bash -c &quot;curl \
+        --silent \
+        --cookie-jar /tmp/cookie.txt \
+        --cacert /tmp/i2acerts/CA.cer \
+        --request POST \&quot;${FRONT_END_URI}/j_security_check\&quot; \
+        --header &#39;Origin: ${FRONT_END_URI}&#39; \
+        --header &#39;Content-Type: application/x-www-form-urlencoded&#39; \
+        --data-urlencode &#39;j_username=Jenny&#39; \
+        --data-urlencode &#39;j_password=Jenny&#39; \
+      &amp;&amp; curl \
+        --silent \
+        --cookie /tmp/cookie.txt \
+        --cacert /tmp/i2acerts/CA.cer\
+        \&quot;${FRONT_END_URI}/api/v1/admin/indexes/status\&quot;&quot;
+</code></pre><h3 id="runsqlservercommandasetl">runSQLServerCommandAsETL</h3>
+<p>The <code>runSQLServerCommandAsETL</code> function uses an ephemeral SQL Client container to run database scripts or commands against the Information Store database as the <code>etl</code> user.</p>
+<p>For more information about running a SQL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
+<p>The <code>runSQLServerCommandAsETL</code> function takes the database script or commands that you want to run as an argument. For example:</p>
+<pre><code class="lang-bash">runSQLServerCommandAsETL bash -c &quot;/opt/mssql-tools/bin/sqlcmd -N -b -S \${DB_SERVER} -U \${DB_USERNAME} -P \${DB_PASSWORD} -d \${DB_NAME} -Q 
+\&quot;BULK INSERT IS_Staging.E_Person 
+FROM &#39;/var/i2a-data/law-enforcement-data-set-2-merge/person.csv&#39; 
+WITH (FORMATFILE = &#39;/var/i2a-data/law-enforcement-data-set-2-merge/sqlserver/format-files/person.fmt&#39;, FIRSTROW = 2)\&quot;&quot;
+</code></pre><h3 id="runsqlservercommandasi2etl">runSQLServerCommandAsi2ETL</h3>
+<p>The <code>runSQLServerCommandAsi2ETL</code> function uses an ephemeral SQL Client container to run database scripts or commands against the Information Store database as the <code>i2etl</code> user, such as executing generated drop/create index scripts, created by the ETL toolkit.</p>
+<p>For more information about running a SQL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
+<p>The <code>runSQLServerCommandAsi2ETL</code> function takes the database script or commands that you want to run as an argument. For example:</p>
+<pre><code class="lang-bash">runSQLServerCommandAsi2ETL bash -c &quot;${SQLCMD} ${SQLCMD_FLAGS} \
+  -S \${DB_SERVER},${DB_PORT} -U \${DB_USERNAME} -P \${DB_PASSWORD} -d \${DB_NAME} \
+  -i /opt/database-scripts/ET5-drop-entity-indexes.sql&quot;
+</code></pre><h3 id="runsqlservercommandasfirststartsa">runSQLServerCommandAsFirstStartSA</h3>
+<p>The <code>runSQLServerCommandAsFirstStartSA</code> function uses an ephemeral SQL Client container to run database scripts or commands against the Information Store database as the <code>sa</code> user with the initial SA password.</p>
+<p>For more information about running a SQL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
+<h3 id="runsqlservercommandassa">runSQLServerCommandAsSA</h3>
+<p>The <code>runSQLServerCommandAsSA</code> function uses an ephemeral SQL Client container to run database scripts or commands against the Information Store database as the <code>sa</code> user.</p>
+<p>For more information about running a SQL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
+<p>The <code>runSQLServerCommandAsSA</code> function takes the database script or commands that you want to run as an argument. For example:</p>
+<pre><code class="lang-bash">runSQLServerCommandAsSA &quot;/opt/i2-tools/scripts/database-creation/runStaticScripts.sh&quot;
+</code></pre><h3 id="runsqlservercommandasdba">runSQLServerCommandAsDBA</h3>
+<p>The <code>runSQLServerCommandAsDBA</code> function uses an ephemeral SQL Client container to run database scripts or commands against the Information Store database as the <code>dba</code> user.</p>
+<p>For more information about running a SQL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
+<p>The <code>runSQLServerCommandAsDBA</code> function takes the database script or commands that you want to run as an argument. For example:</p>
+<pre><code class="lang-bash">runSQLServerCommandAsDBA &quot;/opt/i2-tools/scripts/clearInfoStoreData.sh&quot;
+</code></pre><h3 id="runsqlservercommandasdbb">runSQLServerCommandAsDBB</h3>
+<p>The <code>runSQLServerCommandAsDBB</code> function uses an ephemeral SQL Client container to run database scripts or commands against the Information Store database as the <code>dbb</code> (the backup operator) user.</p>
+<p>For more information about running a SQL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
+<p>The <code>runSQLServerCommandAsDBB</code> function takes the database script or commands that you want to run as an argument. For example:</p>
+<pre><code class="lang-bash">runSQLServerCommandAsDBA &quot;runSQLServerCommandAsDBB bash -c &quot; &quot;/opt/mssql-tools/bin/sqlcmd -N -b -C -S sqlserver.eia,1433 -U \&quot;\${DB_USERNAME}\&quot; -P \&quot;\${DB_PASSWORD}\&quot; \
+    -Q \&quot;USE ISTORE; 
+        BACKUP DATABASE ISTORE
+        TO DISK = &#39;/backup/istore.bak&#39;
+            WITH FORMAT;\&quot;&quot;&quot;
+</code></pre><h3 id="runetltoolkittoolasi2etl">runEtlToolkitToolAsi2ETL</h3>
+<p>The <code>runEtlToolkitToolAsi2ETL</code> function uses an ephemeral ETL toolkit container to run ETL toolkit tasks against the Information Store using the i2 ETL user credentials.</p>
+<p>For more information about running the ETL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/etl_client.html">ETL Client</a>.</p>
+<p>For more information about running the ETL toolkit container and the tasks that you can run, see <a href="etl_tools.html">ETL</a></p>
+<p>The <code>runEtlToolkitToolAsi2ETL</code> function takes command that you want to run as an argument. For example:</p>
+<pre><code class="lang-bash">runEtlToolkitToolAsi2ETL bash -c &quot;/opt/ibm/etltoolkit/addInformationStoreIngestionSource --ingestionSourceName EXAMPLE_1 --ingestionSourceDescription EXAMPLE_1&quot;
+</code></pre><h3 id="runetltoolkittoolasdba">runEtlToolkitToolAsDBA</h3>
+<p>Some ETL tasks must be performed by the DBA. The <code>runEtlToolkitToolAsDBA</code> function used the same ephemeral ETL toolkit container but uses the DBA user instead of the ETL user.</p>
+<p>For more information about running the ETL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/etl_client.html">ETL Client</a>.</p>
+<p>For more information about running the ETL toolkit container and the tasks that you can run, see <a href="etl_tools.html">ETL</a></p>
+<p>The <code>runEtlToolkitToolAsDBA</code> function takes command that you want to run as an argument. For example:</p>
+<pre><code class="lang-bash">runEtlToolkitToolAsDBA bash -c &quot;/opt/ibm/etltoolkit/enableMergedPropertyValues --schemaTypeId ET5&quot;
+</code></pre><h2 id="volume-utilities">Volume utilities</h2>
+<h3 id="getvolume">getVolume</h3>
+<p>The <code>getVolume</code> function uses an ephemeral Red Hat UBI Docker image to update a local directory with the contents of a specified volume.</p>
+<p>The <code>getVolume</code> function takes the local directory, volume name, and a directory in that volume as arguments.</p>
+<p>For example, to get the contents from the <code>run/secrets</code> directory in the <code>liberty1_secrets</code> volume into your local <code>/dev-environment-secrets/simulated-secret-store</code> directory, run:</p>
+<pre><code class="lang-sh">getVolume &quot;/dev-environment-secrets/simulated-secret-store&quot; &quot;liberty1_secrets&quot; &quot;/run/secrets&quot;
+</code></pre><h3 id="updatevolume">updateVolume</h3>
+<p>The <code>updateVolume</code> function uses an ephemeral Red Hat UBI Docker image to update a volume with the contents of a local directory.</p>
+<p>The <code>updateVolume</code> function takes the local directory, volume name, and a directory in that volume as arguments.</p>
+<p>For example, to update the the <code>run/secrets</code> directory in the <code>liberty1_secrets</code> volume with the content of the local <code>/dev-environment-secrets/simulated-secret-store</code> directory, run:</p>
+<pre><code class="lang-sh">updateVolume &quot;/dev-environment-secrets/simulated-secret-store&quot; &quot;liberty1_secrets&quot; &quot;/run/secrets&quot;
+</code></pre></article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            &copy; N. Harris Computer Corporation (2022)
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../../styles/main.js"></script>
+  </body>
+</html>
