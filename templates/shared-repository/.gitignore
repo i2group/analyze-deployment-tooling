@@ -1,0 +1,31 @@
+# Archives
+**/*.7z
+**/*.gz
+**/*.tar
+**/*.tgz
+**/*.zip
+**/*.jar
+
+# Archives
+!additional-resources/*.7z
+!additional-resources/*.gz
+!additional-resources/*.tar
+!additional-resources/*.tgz
+!additional-resources/*.zip
+!additional-resources/*.jar
+
+# Generated files
+connector-url-mappings-file.json
+i2connect-server-version.json
+extension-dependencies.json
+i2a-extensions/pom.xml
+
+# Secrets
+configs/**/configuration/**/secrets/
+
+# All Hidden Folders/Files except .gitignore .gitkeep .gitattributes .dockerignore
+.*
+!.gitignore
+!.gitattributes
+!.gitkeep
+!.dockerignore

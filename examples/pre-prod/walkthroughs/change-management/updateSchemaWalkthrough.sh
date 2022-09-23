@@ -13,17 +13,17 @@ if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
 fi
 
 # Load common functions
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/server_functions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/client_functions.sh"
 
 # Load common variables
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulated_external_variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internal_helper_variables.sh"
 
-warnRootDirNotInPath
-setDependenciesTagIfNecessary
+warn_root_dir_not_in_path
+set_dependencies_tag_if_necessary
 ###############################################################################
 # Removing the Liberty containers                                                 #
 ###############################################################################
@@ -42,19 +42,19 @@ buildLibertyConfiguredImageForPreProd
 # Validating the schema                                                       #
 ###############################################################################
 print "Validating the new i2 Analyze Schema"
-runi2AnalyzeTool "/opt/i2-tools/scripts/validateSchemaAndSecuritySchema.sh"
+run_i2_analyze_tool "/opt/i2-tools/scripts/validateSchemaAndSecuritySchema.sh"
 
 ###############################################################################
 # Generating update schema scripts                                            #
 ###############################################################################
 print "Generating update schema scripts"
-runi2AnalyzeTool "/opt/i2-tools/scripts/generateUpdateSchemaScripts.sh"
+run_i2_analyze_tool "/opt/i2-tools/scripts/generateUpdateSchemaScripts.sh"
 
 ###############################################################################
 # Running the generated scripts                                               #
 ###############################################################################
 print "Running the generated scripts"
-runSQLServerCommandAsDBA "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
+run_sql_server_command_as_dba "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
 
 ###############################################################################
 # Running the Liberty containers                                              #
@@ -67,4 +67,6 @@ waitFori2AnalyzeServiceToBeLive
 # Validating database consistency                                             #
 ###############################################################################
 print "Validating database consistency"
-runi2AnalyzeTool "/opt/i2-tools/scripts/dbConsistencyCheckScript.sh"
+run_i2_analyze_tool "/opt/i2-tools/scripts/dbConsistencyCheckScript.sh"
+
+print_success "updateSchemaWalkthrough.sh has run successfully"

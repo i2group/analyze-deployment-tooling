@@ -13,22 +13,22 @@ if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
 fi
 
 # Load common functions
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/server_functions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/client_functions.sh"
 
 # Load common variables
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulated_external_variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internal_helper_variables.sh"
 
-warnRootDirNotInPath
-setDependenciesTagIfNecessary
+warn_root_dir_not_in_path
+set_dependencies_tag_if_necessary
 ###############################################################################
 # Enabling merged property values                                             #
 ###############################################################################
 print "Enabling merged property values for Person entity type"
-runEtlToolkitToolAsDBA bash -c "/opt/i2/etltoolkit/enableMergedPropertyValues --schemaTypeId ET5"
+run_etl_toolkit_tool_as_dba bash -c "/opt/i2/etltoolkit/enableMergedPropertyValues --schemaTypeId ET5"
 
 ###############################################################################
 # Updating property value definitions                                         #
@@ -36,10 +36,12 @@ runEtlToolkitToolAsDBA bash -c "/opt/i2/etltoolkit/enableMergedPropertyValues --
 print "Updating configuration with the createAlternativeMergedPropertyValuesView.sql file from ${LOCAL_CONFIG_CHANGES_DIR}"
 cp "${LOCAL_CONFIG_CHANGES_DIR}/createAlternativeMergedPropertyValuesView.sql" "${LOCAL_GENERATED_DIR}"
 # To stop the variables being evaluated in this script, the variables are escaped using backslashes (\) and surrounded in double quotes (").
-runSQLServerCommandAsDBA bash -c "${SQLCMD} ${SQLCMD_FLAGS} -S \${DB_SERVER},\${DB_PORT} -U \${DB_USERNAME} -P \${DB_PASSWORD} -d \${DB_NAME} -i /opt/databaseScripts/generated/createAlternativeMergedPropertyValuesView.sql"
+run_sql_server_command_as_dba bash -c "${SQLCMD} ${SQLCMD_FLAGS} -S \${DB_SERVER},\${DB_PORT} -U \${DB_USERNAME} -P \${DB_PASSWORD} -d \${DB_NAME} -i /opt/databaseScripts/generated/createAlternativeMergedPropertyValuesView.sql"
 
 ###############################################################################
 # Reingesting the data                                                       #
 ###############################################################################
 print "Reingesting the data"
 "${PRE_PROD_DIR}/walkthroughs/change-management/ingestDataWalkthrough.sh"
+
+print_success "mergedPropertyValuesWalkthrough.sh has run successfully"

@@ -13,17 +13,17 @@ if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
 fi
 
 # Load common functions
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/server_functions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/client_functions.sh"
 
 # Load common variables
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulated_external_variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internal_helper_variables.sh"
 
-warnRootDirNotInPath
-setDependenciesTagIfNecessary
+warn_root_dir_not_in_path
+set_dependencies_tag_if_necessary
 # Local variable
 MAX_TRIES=30
 
@@ -50,7 +50,7 @@ function waitFori2AnalyzeServiceStatus() {
     echo "Waiting..."
     sleep 5
     if [[ "${tries}" -ge "${max_tries}" ]]; then
-      printErrorAndExit "ERROR: i2 Analyze service status: '${service_status}'"
+      print_error_and_exit "ERROR: i2 Analyze service status: '${service_status}'"
     fi
     tries=$((tries + 1))
   done
@@ -91,25 +91,24 @@ waitFori2AnalyzeServiceStatus "DEGRADED"
 print "Waiting for ${NON_LEADER_LIBERTY} to become a leader"
 TRIES=1
 while [[ "${TRIES}" -le "${MAX_TRIES}" ]]; do
-  if grep -q "We are the Liberty leader" <<<"$(docker logs "${NON_LEADER_LIBERTY}" 2>&1)"; then
+  status_message="$(docker logs "${NON_LEADER_LIBERTY}" 2>&1)"
+  if grep -q "We are the Liberty leader" <<<"${status_message}"; then
     echo "${NON_LEADER_LIBERTY} is the new leader Liberty"
-    echo "Message:"
-    grep "We are the Liberty leader" <<<"$(docker logs "${NON_LEADER_LIBERTY}" 2>&1)"
+    echo "Message: ${status_message}"
     break
   fi
   echo "Waiting..."
   sleep 5
   if [[ "${TRIES}" -ge "${MAX_TRIES}" ]]; then
-    printErrorAndExit "${NON_LEADER_LIBERTY} is NOT a new leader"
+    print_error_and_exit "${NON_LEADER_LIBERTY} is NOT a new leader"
   fi
   ((TRIES++))
 done
 
 ###############################################################################
-# Re-instating high availability                                              #
+# Reinstating high availability                                               #
 ###############################################################################
-print "Re-instating high availability"
-echo "Starting ${LEADER_LIBERTY} container"
+print "Reinstating high availability by starting ${LEADER_LIBERTY}"
 docker start "${LEADER_LIBERTY}"
 
 waitFori2AnalyzeServiceStatus "ACTIVE"
@@ -117,18 +116,18 @@ waitFori2AnalyzeServiceStatus "ACTIVE"
 print "Making sure ${LEADER_LIBERTY} is not the Liberty leader"
 TRIES=1
 while [[ "${TRIES}" -le "${MAX_TRIES}" ]]; do
-  if grep -q "We are not the Liberty leader" <<<"$(docker logs "${LEADER_LIBERTY}" 2>&1)"; then
+  status_message="$(docker logs "${LEADER_LIBERTY}" 2>&1)"
+  if grep -q "We are not the Liberty leader" <<<"${status_message}"; then
     echo "${LEADER_LIBERTY} is not the leader Liberty"
-    echo "Message:"
-    grep "We are not the Liberty leader" <<<"$(docker logs "${LEADER_LIBERTY}" 2>&1)"
+    echo "Message: ${status_message}"
     break
   fi
   echo "Waiting..."
   sleep 5
   if [[ "${TRIES}" -ge "${MAX_TRIES}" ]]; then
-    printErrorAndExit "${LEADER_LIBERTY} is NOT a new leader"
+    print_error_and_exit "${LEADER_LIBERTY} is NOT a new leader"
   fi
   ((TRIES++))
 done
 
-print "SUCCESS: libertyHadrFailureWalkthrough has run successfully"
+print_success "libertyHadrFailureWalkthrough has run successfully"

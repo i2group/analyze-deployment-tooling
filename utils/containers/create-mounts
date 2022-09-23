@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
+#
+# SPDX short identifier: MIT
+
+set -e
+
+if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
+  echo "ANALYZE_CONTAINERS_ROOT_DIR variable is not set"
+  echo "This project should be run inside a VSCode Dev Container. \
+For more information read, the Getting Started guide at \
+https://i2group.github.io/analyze-containers/content/getting_started.html"
+  exit 1
+fi
+
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
+
+USAGE="""
+Usage:
+  create-mounts -t {create|list}
+  create-mounts -h
+
+Options:
+  -t {create}             Create mounts.
+  -t {list}               List mount paths.
+  -h                      Display the help.
+"""
+
+function usage() {
+  echo "${USAGE}"
+  exit 1
+}
+
+function parse_arguments() {
+  while getopts ":t:h" flag; do
+    case "${flag}" in
+    t)
+      TASK="${OPTARG}"
+      ;;
+    h)
+      usage
+      ;;
+    \?)
+      usage
+      ;;
+    :)
+      echo "Invalid option: ${OPTARG} requires an argument"
+      ;;
+    esac
+  done
+}
+
+function validate_arguments() {
+  if [[ -z "${TASK}" ]]; then
+    TASK="create"
+  fi
+
+  if [[ "${TASK}" != "create" && "${TASK}" != "list" ]]; then
+    printf "\n\e[31mERROR: %s\n" "${TASK} is not supported" >&2
+    printf "\e[0m" >&2
+    exit 1
+  fi
+}
+
+function create_mounts_array() {
+  local shared_repository_mount upgrade_mount toolkit_configuration_mounts
+  local -r path_configuration_json="${ANALYZE_CONTAINERS_ROOT_DIR}/path-configuration.json"
+
+  shared_repository_mount=$(jq -r '.sharedConfigurations.rootDirectory // empty' <"${path_configuration_json}")
+  upgrade_mount=$(jq -r '.upgradeDirectory // empty' <"${path_configuration_json}")
+
+  readarray -t toolkit_configuration_mounts < <(jq -r '(.externalDirectories[]? | .path) // empty' <"${path_configuration_json}")
+
+  if [[ -n "${shared_repository_mount}" ]]; then
+    MOUNTS_ARRAY+=("${shared_repository_mount}")
+  fi
+  if [[ -n "${upgrade_mount}" ]]; then
+    MOUNTS_ARRAY+=("${upgrade_mount}")
+  fi
+  if [[ -n "${toolkit_configuration_mounts[*]}" && "${#toolkit_configuration_mounts[@]}" -gt 0 ]]; then
+    MOUNTS_ARRAY+=("${toolkit_configuration_mounts[@]}")
+  fi
+}
+
+function create_mounts() {
+  local -r devcontainer_json="${ANALYZE_CONTAINERS_ROOT_DIR}/.devcontainer/devcontainer.json"
+
+  # Remove all mounts
+  jq 'del(.mounts[])' "${devcontainer_json}" >"${ANALYZE_CONTAINERS_ROOT_DIR}/.devcontainer/tmp.json"
+  mv "${ANALYZE_CONTAINERS_ROOT_DIR}/.devcontainer/tmp.json" "${devcontainer_json}"
+
+  # Add default mount for the docker.sock
+  # Can't be inside the MOUNTS_ARRAY as the 'source' is not same as 'target'
+  jq --arg mount \
+    "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind" \
+    '.mounts |= . + [$mount]' "${devcontainer_json}" >"${ANALYZE_CONTAINERS_ROOT_DIR}/.devcontainer/tmp.json"
+  mv "${ANALYZE_CONTAINERS_ROOT_DIR}/.devcontainer/tmp.json" "${devcontainer_json}"
+
+  # Add mount for each path in the path-configuration.json file
+  for mount in "${MOUNTS_ARRAY[@]}"; do
+    if [[ -n "${mount}" ]]; then
+      mount_string="source=${mount},target=${mount},type=bind"
+      jq --arg mount "${mount_string}" '.mounts += [$mount]' \
+        "${devcontainer_json}" >"${ANALYZE_CONTAINERS_ROOT_DIR}/.devcontainer/tmp.json"
+      mv "${ANALYZE_CONTAINERS_ROOT_DIR}/.devcontainer/tmp.json" "${devcontainer_json}"
+    fi
+  done
+
+  print_success "Paths configured successfully"
+}
+
+function list_mounts() {
+  echo "${MOUNTS_ARRAY[*]}"
+}
+
+function main() {
+  declare -a MOUNTS_ARRAY=()
+  parse_arguments "$@"
+  validate_arguments
+  create_mounts_array
+  if [[ "${TASK}" == "create" ]]; then
+    create_mounts
+  elif [[ "${TASK}" == "list" ]]; then
+    list_mounts
+  fi
+}
+
+main "$@"

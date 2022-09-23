@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
+#
+# SPDX short identifier: MIT
+
+set -e
+
+if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
+  ANALYZE_CONTAINERS_ROOT_DIR=$(
+    pushd . 1>/dev/null
+    while [ "$(pwd)" != "/" ]; do
+      test -e .root && grep -q 'Analyze-Containers-Root-Dir' <'.root' && {
+        pwd
+        break
+      }
+      cd ..
+    done
+    popd 1>/dev/null || exit
+  )
+  export ANALYZE_CONTAINERS_ROOT_DIR
+fi
+
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
+
+if [[ "${DEVCONTAINER}" == "true" ]]; then
+  if [[ "${DEV_MODE}" == "true" ]]; then
+    printWarn "[Dev Mode] This script should run in your local shell"
+  else
+    print_error_and_exit "You must run this script from your local shell."
+  fi
+fi
+
+###############################################################################
+# Function Definitions                                                        #
+###############################################################################
+
+function source_common_variables_and_scripts() {
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/client_functions.sh"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulated_external_variables.sh"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internal_helper_variables.sh"
+
+  warn_root_dir_not_in_path
+  set_dependencies_tag_if_necessary
+}
+
+function run_dev_container_script() {
+  docker run \
+    --rm \
+    -v "${ANALYZE_CONTAINERS_ROOT_DIR}:${ANALYZE_CONTAINERS_ROOT_DIR}" \
+    -e ANALYZE_CONTAINERS_ROOT_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}" \
+    --user "vscode" \
+    i2group/i2eng-analyze-containers-dev:1.1 \
+    "$@"
+}
+
+function run_mount_task() {
+  local path_list
+
+  IFS=' ' read -ra path_list <<<"$(run_dev_container_script \
+    "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/containers/create-mounts" -t list | xargs)"
+
+  # Validate paths exist
+  for path in "${path_list[@]}"; do
+    if [[ ! -d "${path}" ]]; then
+      print_error_and_exit "NOT a valid path: ${path}"
+    fi
+  done
+
+  # Create mounts
+  run_dev_container_script "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/containers/create-mounts"
+}
+
+function main() {
+  source_common_variables_and_scripts
+  run_mount_task
+}
+
+main "$@"

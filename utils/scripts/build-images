@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
+#
+# SPDX short identifier: MIT
+
+set -e
+
+USAGE="""
+Usage:
+  build-images
+  build-images [-e {pre-prod|config-dev}]
+  build-images -h
+
+Options:
+  -e {pre-prod}   Used to generate images for pre-prod example.
+  -e {config-dev} Used to generate images for configuration development.
+  -v              Verbose output.
+  -y              Answer 'yes' to all prompts.
+  -h              Display the help.
+"""
+
+# Load common functions
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
+OPTIONS_FOR="buildImages"
+parse_arguments "$@"
+
+if [[ -z "${ENVIRONMENT}" ]]; then
+  ENVIRONMENT="config-dev"
+fi
+
+# Load common variables
+if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulated_external_variables.sh"
+elif [[ "${ENVIRONMENT}" == "config-dev" ]]; then
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulated_external_variables.sh"
+fi
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internal_helper_variables.sh"
+
+###############################################################################
+# Building load balancer image                                                #
+###############################################################################
+print "Building load balancer image"
+docker build -t "${LOAD_BALANCER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/ha_proxy"
+
+###############################################################################
+# Building Liberty base image                                                 #
+###############################################################################
+toolkit_version=$(cat "${LOCAL_TOOLKIT_DIR}/scripts/version.txt")
+print "Building Liberty base image"
+docker build -t "${LIBERTY_BASE_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/liberty_ubi_base" \
+  --build-arg I2ANALYZE_VERSION="${toolkit_version%%-*}"
+
+###############################################################################
+# Building Solr image                                                         #
+###############################################################################
+print "Building Solr image"
+docker build -t "${SOLR_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/solr_redhat" \
+  --build-arg I2ANALYZE_VERSION="${toolkit_version%%-*}"
+
+###############################################################################
+# Building Db2 Server image                                                   #
+###############################################################################
+# print "Building Db2 Server image"
+# docker build -t "${DB2_SERVER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/db2_server"
+
+###############################################################################
+# Building Db2 Client image                                                   #
+###############################################################################
+# print "Building Db2 Client image"
+# docker build -t "${DB2_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/db2_client"
+
+###############################################################################
+# Building SQL Server image                                                   #
+###############################################################################
+print "Building SQL Server image"
+docker build -t "${SQL_SERVER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/sql_server"
+
+###############################################################################
+# Building SQL Client image                                                   #
+###############################################################################
+print "Building SQL Client image"
+docker build -t "${SQL_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/sql_client"
+
+###############################################################################
+# Building i2 Analyze Tool image                                              #
+###############################################################################
+print "Building i2 Analyze Tool image"
+docker image build -t "${I2A_TOOLS_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/i2a_tools" \
+  --build-arg USER_UID="$(id -u "${USER}")" \
+  --build-arg I2ANALYZE_VERSION="${toolkit_version%%-*}" \
+  --build-arg BASE_IMAGE="${REDHAT_UBI_IMAGE_NAME}:${REDHAT_UBI_IMAGE_VERSION}" \
+  --build-arg JAVA_BASE_IMAGE="${JAVA_IMAGE_NAME}:${JAVA_IMAGE_VERSION}"
+
+###############################################################################
+# Building ETL Client image                                                   #
+###############################################################################
+print "Building ETL Client image"
+if [[ -d "${IMAGES_DIR}/etl_client/etltoolkit/classes" ]]; then
+  echo "Clearing down etltoolkit classes folder"
+  rm -rf "${IMAGES_DIR}/etl_client/etltoolkit/classes"
+fi
+echo "Populating etltoolkit classes folder"
+mkdir "${IMAGES_DIR}/etl_client/etltoolkit/classes"
+cp "${LOCAL_CONFIG_I2_TOOLS_DIR}/"* "${IMAGES_DIR}/etl_client/etltoolkit/classes"
+cp "${LOCAL_ISTORE_NAMES_SQL_SERVER_PROPERTIES_FILE}" "${IMAGES_DIR}/etl_client/etltoolkit/classes"
+cp "${LOCAL_ISTORE_NAMES_DB2_PROPERTIES_FILE}" "${IMAGES_DIR}/etl_client/etltoolkit/classes"
+docker build -t "${ETL_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/etl_client" \
+  --build-arg BASE_IMAGE="${I2A_TOOLS_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}"
+
+###############################################################################
+# Building Example connector image                                            #
+###############################################################################
+docker build -t "${CONNECTOR_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/example_connector"

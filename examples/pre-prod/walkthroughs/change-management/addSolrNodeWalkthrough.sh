@@ -13,17 +13,17 @@ if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
 fi
 
 # Load common functions
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/server_functions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/client_functions.sh"
 
 # Load common variables
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulated_external_variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internal_helper_variables.sh"
 
-warnRootDirNotInPath
-setDependenciesTagIfNecessary
+warn_root_dir_not_in_path
+set_dependencies_tag_if_necessary
 ###############################################################################
 # Running a new Solr container                                                #
 ###############################################################################
@@ -39,4 +39,6 @@ print "Adding a Solr replica"
 # The curl command uses the container's local environment variables to obtain the SOLR_ADMIN_DIGEST_USERNAME and SOLR_ADMIN_DIGEST_PASSWORD.
 # To stop the variables being evaluated in this script, the variables are escaped using backslashes (\) and surrounded in double quotes (").
 # Any double quotes in the curl command are also escaped by a leading backslash.
-runSolrClientCommand bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=ADDREPLICA&collection=main_index&shard=shard1&node=${SOLR3_FQDN}:8983_solr\""
+run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=ADDREPLICA&collection=main_index&shard=shard1&node=${SOLR3_FQDN}:8983_solr\""
+
+print_success "addSolrNodeWalkthrough.sh has run successfully"

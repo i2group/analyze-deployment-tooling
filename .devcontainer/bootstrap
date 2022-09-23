@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
+#
+# SPDX short identifier: MIT
+
+set -e
+
+function run_task() {
+  local task="$1"
+  case "${task}" in
+  "init")
+    init
+    ;;
+  "create")
+    create
+    ;;
+  "start")
+    post_start
+    ;;
+  *)
+    echo "Unknown task: ${task}"
+    exit 1
+    ;;
+  esac
+}
+
+function init() {
+  docker pull i2group/i2eng-analyze-containers-dev:1.1
+}
+
+function create() {
+  if [[ -z $(docker network ls -q --filter name="^eia$") ]]; then
+    docker network create eia
+  fi
+  docker network connect eia "${HOSTNAME}"
+
+  if [[ "${DEV_MODE}" == "true" ]]; then
+    # Only execute the following in dev mode
+
+    # To update this file execute the opsite command:
+    # git update-index --no-assume-unchanged .devcontainer/devcontainer.json
+    git update-index --assume-unchanged ./.devcontainer/devcontainer.json
+  fi
+  echo "VSCode dev container connected to docker network: eia"
+
+  export ANALYZE_CONTAINERS_ROOT_DIR="${WORKSPACE}"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulated_external_variables.sh"
+  if [[ -d "${LOCAL_TOOLKIT_DIR}" ]]; then
+    # Ensure to install the maven dependencies
+    source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
+    setupI2AnalyzeMavenLocal
+  fi
+  echo "Done"
+}
+
+function post_start() {
+  export ANALYZE_CONTAINERS_ROOT_DIR="${WORKSPACE}"
+  export CONTINUE_ON_ERROR="true"
+  "${WORKSPACE}/scripts/manage-environment" -t link
+
+  echo "Dev Container is ready"
+}
+
+run_task "$1"

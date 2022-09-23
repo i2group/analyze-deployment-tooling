@@ -2,7 +2,6 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://i2group.github.io/analyze-containers/schemas/extension-references-schema.json",
   "title": "JSON schema for the Analyze Containers extension references file",
-
   "type": "object",
   "properties": {
     "extensions": {
@@ -10,7 +9,10 @@
       "description": "List of connector objects.",
       "items": {
         "type": "object",
-        "default": { "name": "", "version": "" },
+        "default": {
+          "name": "",
+          "version": ""
+        },
         "properties": {
           "name": {
             "type": "string",
@@ -21,9 +23,16 @@
             "description": "The version number of the extension (pom.xml)."
           }
         },
-        "required": ["name", "version"]
+        "required": [
+          "name",
+          "version"
+        ],
+        "additionalProperties": false
       }
     }
   },
-  "required": ["extensions"]
+  "required": [
+    "extensions"
+  ],
+  "additionalProperties": false
 }

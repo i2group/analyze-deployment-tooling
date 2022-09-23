@@ -13,25 +13,27 @@ if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
 fi
 
 # Load common functions
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/server_functions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/client_functions.sh"
 
 # Load common variables
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulated_external_variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internal_helper_variables.sh"
 
-warnRootDirNotInPath
-setDependenciesTagIfNecessary
+warn_root_dir_not_in_path
+set_dependencies_tag_if_necessary
 ###############################################################################
 # Reset the configuration                                                     #
 ###############################################################################
-print "Running createConfiguration.sh"
-"${ANALYZE_CONTAINERS_ROOT_DIR}/utils/createConfiguration.sh" -e "${ENVIRONMENT}"
+print "Running create-configuration"
+"${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/create-configuration" -e "${ENVIRONMENT}"
 
 ###############################################################################
 # Reset the deployment                                                        #
 ###############################################################################
-print "Rerunning deploy.sh"
-"${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/deploy.sh"
+print "Rerunning deploy-pre-prod"
+"${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/deploy-pre-prod"
+
+print_success "resetWalkthroughs.sh has run successfully"

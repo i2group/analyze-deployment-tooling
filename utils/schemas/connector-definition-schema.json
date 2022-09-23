@@ -2,7 +2,6 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://i2group.github.io/analyze-containers/schemas/connector-definition-schema.json",
   "title": "JSON schema for the Analyze Containers connector definition file",
-
   "type": "object",
   "properties": {
     "id": {
@@ -25,7 +24,10 @@
     "sendSensitiveHeaders": {
       "type": "string",
       "description": "This setting effectively disables connectors that employ user-specific configuration.",
-      "enum": ["true", "false"]
+      "enum": [
+        "true",
+        "false"
+      ]
     },
     "gatewaySchema": {
       "default": "",
@@ -39,7 +41,10 @@
     },
     "type": {
       "type": "string",
-      "enum": ["i2connect-server", "external"],
+      "enum": [
+        "i2connect-server",
+        "external"
+      ],
       "description": "Used to identify the type of connector. For i2 Connect server connectors, set to `i2connect-server`. For external connectors, set to `external`. For any other connectors, the `type` key is not required."
     }
   },
@@ -49,12 +54,28 @@
         "const": "external"
       }
     },
-    "required": ["type"]
+    "required": [
+      "type"
+    ]
   },
   "then": {
-    "required": ["id", "name", "description", "configurationPath", "gatewaySchema", "baseUrl"]
+    "required": [
+      "id",
+      "name",
+      "description",
+      "configurationPath",
+      "gatewaySchema",
+      "baseUrl"
+    ]
   },
   "else": {
-    "required": ["id", "name", "description", "configurationPath", "gatewaySchema"]
-  }
+    "required": [
+      "id",
+      "name",
+      "description",
+      "configurationPath",
+      "gatewaySchema"
+    ]
+  },
+  "additionalProperties": false
 }

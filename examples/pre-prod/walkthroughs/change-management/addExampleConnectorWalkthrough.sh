@@ -13,17 +13,17 @@ if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
 fi
 
 # Load common functions
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/server_functions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/client_functions.sh"
 
 # Load common variables
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulated_external_variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internal_helper_variables.sh"
 
-warnRootDirNotInPath
-setDependenciesTagIfNecessary
+warn_root_dir_not_in_path
+set_dependencies_tag_if_necessary
 ###############################################################################
 # Stop and remove Liberty                                                     #
 ###############################################################################
@@ -42,7 +42,7 @@ cp "${LOCAL_CONFIG_CHANGES_DIR}/connectors.json" "${LOCAL_CONFIG_OPAL_SERVICES_D
 # Run example Connector to connectors.json                                    #
 ###############################################################################
 runExampleConnector "${CONNECTOR2_CONTAINER_NAME}" "${CONNECTOR2_FQDN}" "${CONNECTOR2_CONTAINER_NAME}" "${CONNECTOR2_SECRETS_VOLUME_NAME}"
-waitForConnectorToBeLive "${CONNECTOR2_FQDN}"
+wait_for_connector_to_be_live "${CONNECTOR2_FQDN}"
 
 ###############################################################################
 # Updating the configuration                                                  #
@@ -57,5 +57,7 @@ buildLibertyConfiguredImageForPreProd
 runLiberty "${LIBERTY1_CONTAINER_NAME}" "${LIBERTY1_FQDN}" "${LIBERTY1_VOLUME_NAME}" "${LIBERTY1_SECRETS_VOLUME_NAME}" "${LIBERTY1_PORT}" "${LIBERTY1_CONTAINER_NAME}"
 runLiberty "${LIBERTY2_CONTAINER_NAME}" "${LIBERTY2_FQDN}" "${LIBERTY2_VOLUME_NAME}" "${LIBERTY2_SECRETS_VOLUME_NAME}" "${LIBERTY2_PORT}" "${LIBERTY2_CONTAINER_NAME}"
 
-# Wait for i2analyze service to be live
+# Wait for i2 Analyze service to be live
 waitFori2AnalyzeServiceToBeLive
+
+print_success "addExampleConnectorWalkthrough.sh has run successfully"

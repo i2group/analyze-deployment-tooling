@@ -13,17 +13,17 @@ if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
 fi
 
 # Load common functions
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/server_functions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/client_functions.sh"
 
 # Load common variables
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulated_external_variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internal_helper_variables.sh"
 
-warnRootDirNotInPath
-setDependenciesTagIfNecessary
+warn_root_dir_not_in_path
+set_dependencies_tag_if_necessary
 ###############################################################################
 # Removing the Liberty containers                                                 #
 ###############################################################################
@@ -34,7 +34,7 @@ docker rm "${LIBERTY1_CONTAINER_NAME}" "${LIBERTY2_CONTAINER_NAME}"
 ###############################################################################
 # Modifying the security schema file                                          #
 ###############################################################################
-print "Making changes to the i2Analyze security schema file"
+print "Making changes to the i2 Analyze security schema file"
 cp "${LOCAL_CONFIG_CHANGES_DIR}/security-schema.xml" "${LOCAL_CONFIG_COMMON_DIR}"
 buildLibertyConfiguredImageForPreProd
 
@@ -42,13 +42,13 @@ buildLibertyConfiguredImageForPreProd
 # Validating the security schema                                              #
 ###############################################################################
 print "Validating the new security schema"
-runi2AnalyzeTool "/opt/i2-tools/scripts/validateSchemaAndSecuritySchema.sh"
+run_i2_analyze_tool "/opt/i2-tools/scripts/validateSchemaAndSecuritySchema.sh"
 
 ###############################################################################
 # Updating the Information Store                                              #
 ###############################################################################
 print "Updating the Information Store"
-runi2AnalyzeTool "/opt/i2-tools/scripts/updateSecuritySchema.sh"
+run_i2_analyze_tool "/opt/i2-tools/scripts/updateSecuritySchema.sh"
 
 ###############################################################################
 # Running the Liberty containers                                              #
@@ -61,4 +61,6 @@ waitFori2AnalyzeServiceToBeLive
 # Validating database consistency                                             #
 ###############################################################################
 print "Validating database consistency"
-runi2AnalyzeTool "/opt/i2-tools/scripts/dbConsistencyCheckScript.sh"
+run_i2_analyze_tool "/opt/i2-tools/scripts/dbConsistencyCheckScript.sh"
+
+print_success "updateSecuritySchemaWalkthrough.sh has run successfully"

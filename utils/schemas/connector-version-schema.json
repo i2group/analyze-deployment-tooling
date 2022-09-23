@@ -13,5 +13,9 @@
       "description": "The tag to use for the connector image."
     }
   },
-  "required": ["version", "tag"]
+  "required": [
+    "version",
+    "tag"
+  ],
+  "additionalProperties": false
 }

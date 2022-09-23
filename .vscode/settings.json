@@ -10,14 +10,20 @@
   "files.exclude": {
     "**/.{config*}*": true,
     "**/.{connector-images*}": true,
+    "**/connector-images/connector-url-mappings-file.json": true,
     "**/.{i2a-extensions*}": true,
+    "**/i2a-extensions/pom.xml": true,
+    "**/i2a-extensions/*/target": true,
+    "**/.{i2a-plugins*}": true,
     "**/.": true,
     "**/.{github*}*": true,
     "**/.{vscode*}*": true,
-    "**/configs/*/.*":true,
-    "**/.root":true,
-    "**/.gitattributes":true,
-    "**/.gitkeep":true
+    "**/.{devcontainer*}*": true,
+    "**/configs/*/.*": true,
+    "**/configs/*/configuration/*.bak": true,
+    "**/.root": true,
+    "**/.gitattributes": true,
+    "**/.gitkeep": true
   },
   "terminal.integrated.defaultProfile.windows": "C:\\WINDOWS\\System32\\wsl.exe",
   "java.project.referencedLibraries": [
@@ -45,6 +51,14 @@
   {
     "fileMatch": ["*extension-references.json"],
     "url": "./utils/schemas/extension-references-schema.json"
+  },
+  {
+    "fileMatch": ["*plugin-references.json"],
+    "url": "./utils/schemas/plugin-references-schema.json"
+  },
+  {
+    "fileMatch": ["*path-configuration.json"],
+    "url": "./utils/schemas/path-configuration-schema.json"
   }],
   "json.validate.enable": true,
 }

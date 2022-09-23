@@ -40,10 +40,10 @@ for schema_type_id in $(map_keys "$SCHEMA_TYPE_ID_TO_TABLE_NAME"); do
     sql_query="DROP TABLE ${STAGING_SCHEMA}.${table_name}"
     case "${DB_DIALECT}" in
     db2)
-      runDb2ServerCommandAsDb2inst1 runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+      run_db2_server_command_as_db2inst1 run-sql-query-for-db "${sql_query}" "${DB_NAME}"
       ;;
     sqlserver)
-      runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+      run_sql_server_command_as_etl run-sql-query-for-db "${sql_query}" "${DB_NAME}"
       ;;
     esac
   done

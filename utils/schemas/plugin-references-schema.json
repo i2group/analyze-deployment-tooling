@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://i2group.github.io/analyze-containers/schemas/plugin-references-schema.json",
+  "title": "JSON schema for the Analyze Containers plugin references file",
+  "type": "object",
+  "properties": {
+    "plugins": {
+      "type": "array",
+      "description": "List of plugin objects.",
+      "items": {
+        "type": "object",
+        "default": {
+          "name": ""
+        },
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the plugin (folder structure)."
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "plugins"
+  ],
+  "additionalProperties": false
+}

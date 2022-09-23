@@ -3,10 +3,16 @@
 # © N.Harris Computer Corporation (2022)
 #
 # SPDX short identifier: MIT
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.6
+
+ARG BASE_IMAGE="registry.access.redhat.com/ubi8/ubi-minimal:8.6"
+# The following is to allow to copy from an image passed as arg 
+ARG JAVA_BASE_IMAGE="adoptopenjdk/openjdk11:ubi-jre"
+FROM ${JAVA_BASE_IMAGE} as java
+
+FROM ${BASE_IMAGE}
 ARG I2ANALYZE_VERSION
 
-COPY --from=adoptopenjdk/openjdk11:ubi-jre "/opt/java/openjdk" "/opt/java/openjdk"
+COPY --from=java "/opt/java/openjdk" "/opt/java/openjdk"
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ARG I2ANALYZE_VERSION
@@ -17,13 +23,13 @@ LABEL maintainer="i2 Group" \
 # Install required packages
 RUN set -eux; \
   microdnf -y install \
-    shadow-utils \
-    findutils \
-    tar \
-    gzip \
-    ca-certificates \
-    gnupg \
-    openssl; \
+  shadow-utils \
+  findutils \
+  tar \
+  gzip \
+  ca-certificates \
+  gnupg \
+  openssl; \
   microdnf clean all;
 
 ENV JAVA_HOME="/opt/java/openjdk" \

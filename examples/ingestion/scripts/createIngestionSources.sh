@@ -25,7 +25,7 @@ print "Adding Information Store Ingestion Source(s)"
 for ingestion_source_description in "${!INGESTION_SOURCES[@]}"; do
   ingestion_source_name="${INGESTION_SOURCES["${ingestion_source_description}"]}"
 
-  runEtlToolkitToolAsi2ETL bash -c "/opt/i2/etltoolkit/addInformationStoreIngestionSource \
+  run_etl_toolkit_tool_as_i2_etl bash -c "/opt/i2/etltoolkit/addInformationStoreIngestionSource \
         --ingestionSourceDescription ${ingestion_source_description} \
         --ingestionSourceName ${ingestion_source_name}"
 done

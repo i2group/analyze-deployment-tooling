@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog], and this project adheres to
-[Semantic Versioning]:
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [semantic versioning](https://i2group.github.io/analyze-containers/guidetoc/index.html#support-policy):
 
 * `Added` for new features.
 * `Changed` for changes in existing functionality.
@@ -11,6 +10,28 @@ The format is based on [Keep a Changelog], and this project adheres to
 * `Removed` for now removed features.
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
+
+## 2.4.0 - 23/09/2022
+
+### Added
+
+* Support for sharing configurations between users and environments
+* Support for deploying i2 Notebook plugins
+* Support for stopping all running containers
+
+### Changed
+
+* Scripts have been converted to commands
+  * For example, `deploy.sh` is now called using `deploy`
+* The client functions in `client_functions.sh` are renamed
+
+### Deprecated
+
+* The top-level `.sh` scripts. Start using the commands instead.
+* The client functions with the previous names. Start using the renamed functions.
+
+
+[2.4.0]: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.4.0><!-- markdown-link-check-enable -->
 
 ## 2.3.0 - 22/07/2022
 
@@ -24,7 +45,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 * The environment must be run inside a VS Code development container
 * The base Docker images are no longer built locally. The images are pulled from [docker hub - i2group](https://hub.docker.com/u/i2group)
 
-[2.3.0]: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.3.0><!-- markdown-link-check-enable -->
+[2.3.0]: <https://github.com/i2group/analyze-containers/tree/v2.3.0>
 
 ## 2.2.0 - 06/05/2022
 

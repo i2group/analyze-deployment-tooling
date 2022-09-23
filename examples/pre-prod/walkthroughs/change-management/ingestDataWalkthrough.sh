@@ -15,17 +15,17 @@ fi
 # cspell:ignore organisation acessto
 
 # Load common functions
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/server_functions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/client_functions.sh"
 
 # Load common variables
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulated_external_variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internal_helper_variables.sh"
 
-warnRootDirNotInPath
-setDependenciesTagIfNecessary
+warn_root_dir_not_in_path
+set_dependencies_tag_if_necessary
 ###############################################################################
 # Etl variables                                                               #
 ###############################################################################
@@ -95,11 +95,11 @@ BULK_IMPORT_MAPPING_IDS=("Event" "Address" "Organisation" "telephone" "Communica
 # Creating the ingestion sources                                              #
 ###############################################################################
 print "Adding Information Store Ingestion Source(s)"
-runEtlToolkitToolAsi2ETL bash -c "/opt/i2/etltoolkit/addInformationStoreIngestionSource \
+run_etl_toolkit_tool_as_i2_etl bash -c "/opt/i2/etltoolkit/addInformationStoreIngestionSource \
 --ingestionSourceDescription ${INGESTION_SOURCE_DESCRIPTION} \
 --ingestionSourceName ${INGESTION_SOURCE_NAME_1}"
 
-runEtlToolkitToolAsi2ETL bash -c "/opt/i2/etltoolkit/addInformationStoreIngestionSource \
+run_etl_toolkit_tool_as_i2_etl bash -c "/opt/i2/etltoolkit/addInformationStoreIngestionSource \
 --ingestionSourceDescription ${INGESTION_SOURCE_DESCRIPTION} \
 --ingestionSourceName ${INGESTION_SOURCE_NAME_2}"
 
@@ -109,7 +109,7 @@ runEtlToolkitToolAsi2ETL bash -c "/opt/i2/etltoolkit/addInformationStoreIngestio
 print "Creating Information Store Staging Table(s)"
 for schema_type_id in $(map_keys "${SCHEMA_TYPE_ID_TO_TABLE_NAME}"); do
   for table_name in $(map_get "${SCHEMA_TYPE_ID_TO_TABLE_NAME}" "${schema_type_id}"); do
-    runEtlToolkitToolAsi2ETL bash -c "/opt/i2/etltoolkit/createInformationStoreStagingTable \
+    run_etl_toolkit_tool_as_i2_etl bash -c "/opt/i2/etltoolkit/createInformationStoreStagingTable \
       --schemaTypeId ${schema_type_id} \
       --tableName ${table_name}  \
       --databaseSchemaName ${STAGING_SCHEMA}"
@@ -128,11 +128,11 @@ for table_name in $(map_keys "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}"); 
     BULK INSERT ${STAGING_SCHEMA}.${table_name} \
     FROM '/var/i2a-data/${BASE_DATA}/${csv_and_format_file_name}.csv' \
     WITH (FORMATFILE = '/var/i2a-data/${BASE_DATA}/sqlserver/format-files/${csv_and_format_file_name}.fmt', FIRSTROW = 2)"
-  runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+  run_sql_server_command_as_etl run-sql-query-for-db "${sql_query}" "${DB_NAME}"
 done
 
 for import_id in "${BULK_IMPORT_MAPPING_IDS[@]}"; do
-  runEtlToolkitToolAsi2ETL bash -c "/opt/i2/etltoolkit/ingestInformationStoreRecords \
+  run_etl_toolkit_tool_as_i2_etl bash -c "/opt/i2/etltoolkit/ingestInformationStoreRecords \
     --importMappingsFile ${IMPORT_MAPPING_FILE} \
     --importMappingId ${import_id} \
     -importMode BULK"
@@ -148,12 +148,12 @@ for table_name in $(map_keys "${CORRELATED_DATA_TABLE_AND_FORMAT_FILE_NAME}"); d
     BULK INSERT ${STAGING_SCHEMA}.${table_name} \
     FROM '/var/i2a-data/${CORRELATION_BASE_DATA}/${csv_and_format_file_name}.csv' \
     WITH (FORMATFILE = '/var/i2a-data/${CORRELATION_BASE_DATA}/sqlserver/format-files/${csv_and_format_file_name}.fmt', FIRSTROW = 2)"
-  runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+  run_sql_server_command_as_etl run-sql-query-for-db "${sql_query}" "${DB_NAME}"
 done
 
 print "Ingesting the CORRELATED data"
 for import_id in "${IMPORT_MAPPING_IDS[@]}"; do
-  runEtlToolkitToolAsi2ETL bash -c "/opt/i2/etltoolkit/ingestInformationStoreRecords \
+  run_etl_toolkit_tool_as_i2_etl bash -c "/opt/i2/etltoolkit/ingestInformationStoreRecords \
     --importMappingsFile ${IMPORT_MAPPING_FILE} \
     --importMappingId ${import_id} \
     -importMode STANDARD"
@@ -164,7 +164,7 @@ for table_name in $(map_keys "${CORRELATED_DATA_TABLE_AND_FORMAT_FILE_NAME}"); d
   csv_and_format_file_name=$(map_get "${CORRELATED_DATA_TABLE_AND_FORMAT_FILE_NAME}" "${table_name}")
   sql_query="\
     TRUNCATE Table ${STAGING_SCHEMA}.${table_name}"
-  runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+  run_sql_server_command_as_etl run-sql-query-for-db "${sql_query}" "${DB_NAME}"
 done
 
 ###############################################################################
@@ -181,12 +181,12 @@ for table_name in $(map_keys "${CORRELATED_DATA_TABLE_AND_FORMAT_FILE_NAME}"); d
     BULK INSERT ${STAGING_SCHEMA}.${table_name} \
     FROM '/var/i2a-data/${CORRELATION_MERGE_DATA}/${csv_and_format_file_name}.csv' \
     WITH (FORMATFILE = '/var/i2a-data/${CORRELATION_MERGE_DATA}/sqlserver/format-files/${csv_and_format_file_name}.fmt', FIRSTROW = 2)"
-  runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+  run_sql_server_command_as_etl run-sql-query-for-db "${sql_query}" "${DB_NAME}"
 done
 
 print "Ingesting the merge correlation data"
 for import_id in "${IMPORT_MAPPING_IDS[@]}"; do
-  runEtlToolkitToolAsi2ETL bash -c "/opt/i2/etltoolkit/ingestInformationStoreRecords \
+  run_etl_toolkit_tool_as_i2_etl bash -c "/opt/i2/etltoolkit/ingestInformationStoreRecords \
     --importMappingsFile ${IMPORT_MAPPING_FILE} \
     --importMappingId ${import_id} \
     -importMode STANDARD"
@@ -200,8 +200,10 @@ for schema_type_id in $(map_keys "$SCHEMA_TYPE_ID_TO_TABLE_NAME"); do
   for table_name in $(map_get "$SCHEMA_TYPE_ID_TO_TABLE_NAME" "$schema_type_id"); do
     sql_query="\
       DROP TABLE ${STAGING_SCHEMA}.${table_name}"
-    runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+    run_sql_server_command_as_etl run-sql-query-for-db "${sql_query}" "${DB_NAME}"
   done
 done
 
 set +e
+
+print_success "ingestDataWalkthrough.sh has run successfully"

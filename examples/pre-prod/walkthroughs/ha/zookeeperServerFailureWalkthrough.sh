@@ -13,17 +13,17 @@ if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
 fi
 
 # Load common functions
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonFunctions.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/serverFunctions.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/clientFunctions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/server_functions.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/client_functions.sh"
 
 # Load common variables
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulatedExternalVariables.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/commonVariables.sh"
-source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internalHelperVariables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulated_external_variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internal_helper_variables.sh"
 
-warnRootDirNotInPath
-setDependenciesTagIfNecessary
+warn_root_dir_not_in_path
+set_dependencies_tag_if_necessary
 # Local variables
 TRIES=1
 MAX_TRIES=30
@@ -41,13 +41,15 @@ docker stop "${ZK1_CONTAINER_NAME}"
 print "Waiting for the ZooKeeper quorum status to be DEGRADED"
 TRIES=1
 while [[ "${TRIES}" -le "${MAX_TRIES}" ]]; do
-  if grep -q "DEGRADED" <<<"$(getZkQuorumEnsembleStatus)"; then
+  status_message="$(getZkQuorumEnsembleStatus)"
+  if grep -q "DEGRADED" <<<"${status_message}"; then
     echo "The Zookeeper ensemble is DEGRADED, a server is missing"
+    echo "Message: ${status_message}"
     break
   fi
 
   if [[ "${TRIES}" -ge "${MAX_TRIES}" ]]; then
-    printErrorAndExit "The ZooKeeper ensemble did not report any degradation"
+    print_error_and_exit "The ZooKeeper ensemble did not report any degradation"
   fi
   echo "Waiting..."
   sleep 5
@@ -55,26 +57,27 @@ while [[ "${TRIES}" -le "${MAX_TRIES}" ]]; do
 done
 
 ###############################################################################
-# Reinstating high availability                                              #
+# Reinstating high availability                                               #
 ###############################################################################
-print "Re-instating high availability"
-echo "Starting up ZooKeeper container (${ZK1_CONTAINER_NAME})"
+print "Reinstating high availability by starting ${ZK1_CONTAINER_NAME}"
 docker start "${ZK1_CONTAINER_NAME}"
 
 print "Waiting for the ZooKeeper ensemble status to be ACTIVE"
 TRIES=1
 while [[ "${TRIES}" -le "${MAX_TRIES}" ]]; do
-  if grep -q "ACTIVE" <<<"$(getZkQuorumEnsembleStatus)"; then
+  status_message="$(getZkQuorumEnsembleStatus)"
+  if grep -q "ACTIVE" <<<"${status_message}"; then
     echo "The ZooKeeper quorum is ACTIVE, all servers are running"
+    echo "Message: ${status_message}"
     break
   fi
 
   if [[ "${TRIES}" -ge "${MAX_TRIES}" ]]; then
-    printErrorAndExit "ZooKeeper ensemble did come back correctly"
+    print_error_and_exit "ZooKeeper ensemble did come back correctly"
   fi
   echo "Waiting..."
   sleep 5
   ((TRIES++))
 done
 
-print "SUCCESS: zookeeperServerFailureWalkthrough has run successfully"
+print_success "zookeeperServerFailureWalkthrough has run successfully"

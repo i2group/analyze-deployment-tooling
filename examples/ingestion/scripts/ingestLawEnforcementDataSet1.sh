@@ -71,20 +71,20 @@ for table_name in $(map_keys "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}"); 
       echo "${columns[*]}"
     )) \
         USING (DELIMITER ',' SKIP_ROWS 1 TIMESTAMP_FORMAT 'YYYY-MM-DD HH:MI:SS' DATE_FORMAT 'YYYY-MM-DD' NULLVALUE '')"
-    runDb2ServerCommandAsDb2inst1 runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+    run_db2_server_command_as_db2inst1 run-sql-query-for-db "${sql_query}" "${DB_NAME}"
     ;;
   sqlserver)
     sql_query="\
         BULK INSERT ${STAGING_SCHEMA}.${table_name} \
         FROM '/var/i2a-data/${BASE_DATA}/${csv_and_format_file_name}.csv' \
         WITH (FORMATFILE = '/var/i2a-data/${BASE_DATA}/sqlserver/format-files/${csv_and_format_file_name}.fmt', FIRSTROW = 2)"
-    runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+    run_sql_server_command_as_etl run-sql-query-for-db "${sql_query}" "${DB_NAME}"
     ;;
   esac
 done
 
 for import_id in "${BULK_IMPORT_MAPPING_IDS[@]}"; do
-  runEtlToolkitToolAsi2ETL bash -c "/opt/i2/etltoolkit/ingestInformationStoreRecords \
+  run_etl_toolkit_tool_as_i2_etl bash -c "/opt/i2/etltoolkit/ingestInformationStoreRecords \
     --importMappingsFile ${IMPORT_MAPPING_FILE} \
     --importMappingId ${import_id} \
     -importMode BULK"
@@ -100,10 +100,10 @@ for table_name in $(map_keys "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}"); 
   case "${DB_DIALECT}" in
   db2)
     sql_query+=" IMMEDIATE;"
-    runDb2ServerCommandAsDb2inst1 runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+    run_db2_server_command_as_db2inst1 run-sql-query-for-db "${sql_query}" "${DB_NAME}"
     ;;
   sqlserver)
-    runSQLServerCommandAsETL runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+    run_sql_server_command_as_etl run-sql-query-for-db "${sql_query}" "${DB_NAME}"
     ;;
   esac
 done

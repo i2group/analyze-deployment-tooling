@@ -37,7 +37,7 @@ map_put "$SCHEMA_TYPE_ID_TO_TABLE_NAME" "LTR1" "L_Transaction"
 print "Creating Information Store Staging Table(s)"
 for schema_type_id in $(map_keys "${SCHEMA_TYPE_ID_TO_TABLE_NAME}"); do
   for table_name in $(map_get "${SCHEMA_TYPE_ID_TO_TABLE_NAME}" "${schema_type_id}"); do
-    runEtlToolkitToolAsi2ETL bash -c "/opt/i2/etltoolkit/createInformationStoreStagingTable \
+    run_etl_toolkit_tool_as_i2_etl bash -c "/opt/i2/etltoolkit/createInformationStoreStagingTable \
       --schemaTypeId ${schema_type_id} \
       --tableName ${table_name}  \
       --databaseSchemaName ${STAGING_SCHEMA}"

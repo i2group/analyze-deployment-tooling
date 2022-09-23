@@ -15,5 +15,8 @@ COPY --chown=1001:0 application/web-app-files/ /opt/ibm/wlp/usr/servers/defaultS
 # Copy libs into liberty image
 COPY --chown=1001:0 lib/ /opt/ibm/wlp/usr/servers/defaultServer/apps/opal-services.war/WEB-INF/lib/
 
+# Copy plugins into liberty image
+COPY --chown=1001:0 plugins/ /opt/ibm/wlp/usr/servers/defaultServer/apps/opal-services.war/plugins/
+
 # Copy extra files into liberty image
 COPY --chown=1001:0 privacyagreement.html /opt/ibm/wlp/usr/servers/defaultServer/apps/opal-services.war/privacyagreement.html
