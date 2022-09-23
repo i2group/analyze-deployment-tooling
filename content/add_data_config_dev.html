@@ -80,7 +80,7 @@
 <h1 id="add-data-to-your-config-development-environment">Add data to your config development environment</h1>
 
 <p>Developing the configuration is separated into two parts: enabling i2 Analyze to work with your data, and defining how analysts interact with your data.</p>
-<p>First, update the <code>DEPLOYMENT_PATTERN</code> variable in your <code>&lt;config_name&gt;/utils/variables.sh</code> file to your intended deployment pattern.<br>For example, to deploy with the i2 Connect gateway and the Information Store set the following value:  </p>
+<p>First, update the <code>DEPLOYMENT_PATTERN</code> variable in your <code>&lt;config_name&gt;/utils/variables.conf</code> file to your intended deployment pattern.<br>For example, to deploy with the i2 Connect gateway and the Information Store set the following value:  </p>
 <pre><code class="lang-sh">DEPLOYMENT_PATTERN=&quot;i2c_istore&quot;
 </code></pre><p>Depending on the composition of your deployment, there are three methods that you can use to get your data into i2 Analyze for analysis.</p>
 <ul>
@@ -89,7 +89,7 @@
 <li>Ensure that analysts can import and create representative records in Analyst&#39;s Notebook Premium. Then, if required, upload records to the Information Store. For more information, see <a href="https://docs.i2group.com/anb/9.3.1/import_data.html">Import data</a> and <a href="https://docs.i2group.com/anb/9.3.1/info_store_schema_aligned.html">Create i2 Analyze chart items</a>.</li>
 </ul>
 <p>When you develop the process to get your data into i2 Analyze, you might realize that your schema or security schema are not correct for your data. You can update the deployed schemas to better represent your data and security model.
-If you need to make destructive changes, change the <code>DEPLOYMENT_PATTERN</code> variable in your <code>&lt;config_name&gt;/utils/variables.sh</code> file to <code>schema_dev</code> and redeploy. Then complete the process of <a href="develop_schemas.html">developing schemas</a>.</p>
+If you need to make destructive changes, change the <code>DEPLOYMENT_PATTERN</code> variable in your <code>&lt;config_name&gt;/utils/variables.conf</code> file to <code>schema_dev</code> and redeploy. Then complete the process of <a href="develop_schemas.html">developing schemas</a>.</p>
 <p>After you add data to your environment, you can <a href="develop_config_dev.html">configure the rest of the configuration</a>.</p>
 </article>
           </div>

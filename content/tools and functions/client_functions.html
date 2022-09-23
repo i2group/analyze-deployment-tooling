@@ -5,9 +5,9 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Client utilities </title>
+    <title>client_functions.sh </title>
     <meta name="viewport" content="width=device-width">
-    <meta name="title" content="Client utilities ">
+    <meta name="title" content="client_functions.sh ">
     <meta name="generator" content="docfx 2.56.2.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
@@ -77,127 +77,346 @@
             </div>
           </div>
             <article class="content wrap" id="_content" data-uid="">
-<h1 id="client-utilities">Client utilities</h1>
+<h1 id="clientfunctionssh">client_functions.sh</h1>
 
-<p>The <code>clientFunctions.sh</code> file contains functions that you can use to perform actions against the server components of i2 Analyze.</p>
-<h2 id="secrets-utilities">Secrets utilities</h2>
-<p>The <code>getSecret</code> function gets a secret such as a password for a user.</p>
+<p>A set of client functions that you can use to perform actions against the server components of i2 Analyze.</p>
+<h2 id="overview">Overview</h2>
+<p>The list of client functions groups:</p>
+<ul>
+<li><a href="#environment-utilities">Environment Utilities</a></li>
+<li><a href="#secret-utilities">Secret Utilities</a></li>
+<li><a href="#status-utilities">Status Utilities</a></li>
+<li><a href="#database-security-utilities">Database Security Utilities</a></li>
+<li><a href="#execution-utilities">Execution Utilities</a></li>
+<li><a href="#volume-utilities">Volume Utilities</a></li>
+</ul>
+<h2 id="index">Index</h2>
+<ul>
+<li><a href="#check_env_vars_are_set">check_env_vars_are_set</a></li>
+<li><a href="#get_secret">get_secret</a></li>
+<li><a href="#get_solr_status">get_solr_status</a></li>
+<li><a href="#get_async_request_status">get_async_request_status</a></li>
+<li><a href="#wait_for_indexes_to_be_built">wait_for_indexes_to_be_built</a></li>
+<li><a href="#wait_for_connector_to_be_live">wait_for_connector_to_be_live</a></li>
+<li><a href="#change_sa_password">change_sa_password</a></li>
+<li><a href="#create_db_login_and_user">create_db_login_and_user</a></li>
+<li><a href="#run_solr_client_command">run_solr_client_command</a></li>
+<li><a href="#run_i2_analyze_tool">run_i2_analyze_tool</a></li>
+<li><a href="#run_i2_analyze_tool_as_external_user">run_i2_analyze_tool_as_external_user</a></li>
+<li><a href="#run_sql_server_command_as_etl">run_sql_server_command_as_etl</a></li>
+<li><a href="#run_sql_server_command_as_i2_etl">run_sql_server_command_as_i2_etl</a></li>
+<li><a href="#run_sql_server_command_as_first_start_sa">run_sql_server_command_as_first_start_sa</a></li>
+<li><a href="#run_sql_server_command_as_sa">run_sql_server_command_as_sa</a></li>
+<li><a href="#run_sql_server_command_as_dba">run_sql_server_command_as_dba</a></li>
+<li><a href="#run_sql_server_command_as_dbb">run_sql_server_command_as_dbb</a></li>
+<li><a href="#run_etl_toolkit_tool_as_i2_etl">run_etl_toolkit_tool_as_i2_etl</a></li>
+<li><a href="#run_etl_toolkit_tool_as_dba">run_etl_toolkit_tool_as_dba</a></li>
+<li><a href="#update_volume">update_volume</a></li>
+<li><a href="#get_volume">get_volume</a></li>
+</ul>
+<h2 id="environment-utilities">Environment utilities</h2>
+<h3 id="checkenvvarsareset">check_env_vars_are_set</h3>
+<p>Checks if all required environment variables are set.</p>
+<p><em>Function has no arguments.</em></p>
+<h2 id="secret-utilities">Secret utilities</h2>
+<h3 id="getsecret">get_secret</h3>
+<p>Gets a secret such as a password for a user.</p>
+<h4 id="example">Example</h4>
+<pre><code class="lang-bash">get_secret &quot;solr/ZK_DIGEST_PASSWORD&quot;
+</code></pre><h4 id="arguments">Arguments</h4>
+<ul>
+<li><strong>$1</strong> (string): The partial path to secret</li>
+</ul>
 <h2 id="status-utilities">Status utilities</h2>
-<p>The status utilities report whether a component of i2 Analyze is live.</p>
-<h3 id="waitforindexestobebuilt">waitForIndexesToBeBuilt</h3>
-<p>The <code>waitForIndexesToBeBuilt</code> function sends a request to the <code>admin/indexes/status</code> endpoint. If the response indicates no indexes are still <code>BUILDING</code> the function returns and prints a message to indicate the indexes have been built.
-If the indexes are not all built after 5 retries the function will print an error and exit.</p>
-<h3 id="waitforconnectortobelive">waitForConnectorToBeLive</h3>
-<p>This function takes (1) the fully qualified domain name of a connector and (2) the port of the connector as its arguments.
-The <code>waitForConnectorToBeLive</code> function sends a request to the connector&#39;s<code>/config</code> endpoint. If the response is <code>200</code>, the connector is live. If the connector is not live after 50 tires the function will print an error and exit.</p>
-<h3 id="getasyncrequeststatus">getAsyncRequestStatus</h3>
-<p>This function takes (1) the request id of the asynchronous request to get the status of.  </p>
-<p>The <code>getAsyncRequestStatus</code> function makes a request to the Asynchronous Collection API and check the state is marked as <code>completed</code> in the JSON response returned.</p>
-<p>If the state is not marked as <code>completed</code>, the function returns the response message which contains any error messages that are reported with the asynchronous request.</p>
-<p>For more information about the Asynchronous Collection API, see <a href="https://lucene.apache.org/solr/guide/8_7/collections-api.html#requeststatus">REQUESTSTATUS: Request Status of an Async Call</a>.</p>
-<h3 id="getsolrstatus">getSolrStatus</h3>
-<p>This function takes (1) a timestamp that is used to specify the point in the logs after which the logs are monitored.  </p>
-<p>The <code>getSolrStatus</code> function used the logs from the Liberty container, and uses a grep command to find specific component availability messages. The function returns the entries in the logs that match message in the grep command.<br>If no matching message is found, the function prints the following error and exits:  </p>
-<p><code>&quot;No response was found from the component availability log (attempt: ${i}). Waiting...&quot;</code></p>
+<h3 id="getsolrstatus">get_solr_status</h3>
+<p>Get Solr component status from a certain point in time.</p>
+<h4 id="example-1">Example</h4>
+<pre><code class="lang-bash">status_message=&quot;$(get_solr_status &quot;${SINCE_TIMESTAMP}&quot;)&quot;
+</code></pre><h4 id="arguments-1">Arguments</h4>
+<ul>
+<li><strong>$1</strong> (string): &quot;since&quot; timestamp for docker logs commands</li>
+</ul>
+<h4 id="output-on-stdout">Output on stdout</h4>
+<ul>
+<li>The status of the Solr component.</li>
+</ul>
+<h3 id="getasyncrequeststatus">get_async_request_status</h3>
+<p>Takes a request to the Asynchronous Collection API and check the state is marked as completed
+in the JSON response returned.
+If the state is not marked as completed, the function returns the response message which contains
+any error messages that are reported with the asynchronous request.
+For more information about the Asynchronous Collection API, see <a href="https://lucene.apache.org/solr/guide/8_7/collections-api.html#requeststatus">REQUESTSTATUS: Request Status of an Async Call</a>.</p>
+<h4 id="arguments-2">Arguments</h4>
+<ul>
+<li><strong>$1</strong> (string): The request id of the asynchronous request to get the status of.</li>
+</ul>
+<h4 id="output-on-stdout-1">Output on stdout</h4>
+<ul>
+<li>The JSON response or error messages.</li>
+</ul>
+<h3 id="waitforindexestobebuilt">wait_for_indexes_to_be_built</h3>
+<p>Wait for the index to be build by running an admin request
+against Solr API and checking the index is in the &quot;Ready&quot; state.</p>
+<h4 id="example-2">Example</h4>
+<pre><code class="lang-bash">wait_for_indexes_to_be_built &quot;match_index1&quot;
+</code></pre><h4 id="arguments-3">Arguments</h4>
+<ul>
+<li><strong>$1</strong> (string): Index Name</li>
+</ul>
+<h4 id="exit-codes">Exit codes</h4>
+<ul>
+<li><strong>0</strong>: If index was built in 75 seconds.</li>
+<li><strong>1</strong>: If index was NOT built in 75 seconds.</li>
+</ul>
+<h3 id="waitforconnectortobelive">wait_for_connector_to_be_live</h3>
+<p>Sends a request to the connector&#39;s/config endpoint.
+If the response is 200, the connector is live.
+If the connector is not live after 10 retries the function will print an error and exit.</p>
+<h4 id="arguments-4">Arguments</h4>
+<ul>
+<li><strong>$1</strong> (string): The fully qualified domain name of a connector</li>
+<li><strong>$2</strong> (string): The configuration path of the connector</li>
+</ul>
+<h4 id="exit-codes-1">Exit codes</h4>
+<ul>
+<li><strong>0</strong>: If the connector is live.</li>
+<li><strong>1</strong>: If the connector is not live after 10 retries.</li>
+</ul>
+<h4 id="output-on-stdout-2">Output on stdout</h4>
+<ul>
+<li>Retry attempts, error messages or success message.</li>
+</ul>
 <h2 id="database-security-utilities">Database Security Utilities</h2>
-<h3 id="changesapassword">changeSAPassword</h3>
-<p>The <code>changeSAPassword</code> function uses the generated secrets to call the <code>changeSAPassword.sh</code> with the initial (generated) sa password and the new (generated) password.
-For more information, see <a href="../security%20and%20users/db_users.html#changing-sa-password">changeSAPassword</a>.</p>
-<h3 id="createdbloginanduser">createDbLoginAndUser</h3>
-<p>The <code>createDbLoginAndUser</code> function takes a <code>user</code> and a <code>role</code> as its arguments.
-The function creates a database login and user for the provided <code>user</code>, and assigns the user to the provided <code>role</code>.</p>
-<h2 id="execution-utilities">Execution utilities</h2>
-<p>The execution utilities enable you to run commands and tools from client containers against the server components of i2 Analyze.</p>
-<h3 id="runsolrclientcommand">runSolrClientCommand</h3>
-<p>The <code>runSolrClientCommand</code> function uses an ephemeral Solr client container to run commands against Solr.</p>
-<p>For more information about the environment variables and volume mounts that are required for the Solr client, see <a href="../images%20and%20containers/solr_client.html">Running a Solr client container</a>.</p>
-<p>The <code>runSolrClientCommand</code> function takes the command you want to run as an argument. For example:</p>
-<pre><code class="lang-bash">runSolrClientCommand &quot;/opt/solr/server/scripts/cloud-scripts/zkcli.sh&quot; -zkhost &quot;${ZK_HOST}&quot; -cmd clusterprop -name urlScheme -val https
-</code></pre><p>For more information about commands you can execute using the Solr <code>zkcli</code>, see <a href="https://lucene.apache.org/solr/guide/8_6/command-line-utilities.html">Solr ZK Command Line Utilities</a></p>
-<h3 id="runi2analyzetool">runi2AnalyzeTool</h3>
-<p>The <code>runi2AnalyzeTool</code> function uses an ephemeral i2 Analyze Tool container to run the i2 Analyze tools.</p>
-<p>For more information about the environment variables and volume mounts that are requires for the i2Analyze tool, see <a href="../images%20and%20containers/i2analyze_tool.html">Running an i2 Analyze Tool container</a></p>
-<p>The <code>runi2AnalyzeTool</code> function takes the i2 tool you want to run as an argument. For example:</p>
-<pre><code class="lang-bash">runi2AnalyzeTool &quot;/opt/i2-tools/scripts/updateSecuritySchema.sh&quot;
-</code></pre><h3 id="runi2analyzetoolasexternaluser">runi2AnalyzeToolAsExternalUser</h3>
-<p>The <code>runi2AnalyzeToolAsExternalUser</code> function uses an ephemeral i2 Analyze Tool container to run commands against the i2 Analyze service via the load balancer as an external user.</p>
-<p>The container contains the required secrets to communicate with the i2 Analyze service from an external container.</p>
-<p>For example, if you would like to send a Curl request to the load balancer stats endpoint, run:</p>
-<pre><code class="lang-sh">runi2AnalyzeToolAsExternalUser bash -c &quot;curl \
-        --silent \
-        --cookie-jar /tmp/cookie.txt \
-        --cacert /tmp/i2acerts/CA.cer \
-        --request POST \&quot;${FRONT_END_URI}/j_security_check\&quot; \
-        --header &#39;Origin: ${FRONT_END_URI}&#39; \
-        --header &#39;Content-Type: application/x-www-form-urlencoded&#39; \
-        --data-urlencode &#39;j_username=Jenny&#39; \
-        --data-urlencode &#39;j_password=Jenny&#39; \
-      &amp;&amp; curl \
-        --silent \
-        --cookie /tmp/cookie.txt \
-        --cacert /tmp/i2acerts/CA.cer\
-        \&quot;${FRONT_END_URI}/api/v1/admin/indexes/status\&quot;&quot;
-</code></pre><h3 id="runsqlservercommandasetl">runSQLServerCommandAsETL</h3>
-<p>The <code>runSQLServerCommandAsETL</code> function uses an ephemeral SQL Client container to run database scripts or commands against the Information Store database as the <code>etl</code> user.</p>
-<p>For more information about running a SQL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
-<p>The <code>runSQLServerCommandAsETL</code> function takes the database script or commands that you want to run as an argument. For example:</p>
-<pre><code class="lang-bash">runSQLServerCommandAsETL bash -c &quot;/opt/mssql-tools/bin/sqlcmd -N -b -S \${DB_SERVER} -U \${DB_USERNAME} -P \${DB_PASSWORD} -d \${DB_NAME} -Q 
-\&quot;BULK INSERT IS_Staging.E_Person 
-FROM &#39;/var/i2a-data/law-enforcement-data-set-2-merge/person.csv&#39; 
+<h3 id="changesapassword">change_sa_password</h3>
+<p>Change the initial password for the SA user.
+Uses the generated secrets to call the change_sa_password.sh with the initial (generated)
+sa password and the new (generated) password.
+For more information, see <a href="../security%20and%20users/db_users.html#the-changesapassword-function">change_sa_password</a>.</p>
+<p><em>Function has no arguments.</em></p>
+<h3 id="createdbloginanduser">create_db_login_and_user</h3>
+<p>Creates a database login and user for the provided user, and assigns the user to the provided role.
+For more information, see <a href="../security%20and%20users/db_users.html#the-createdbloginanduser-function">create_db_login_and_user</a>.</p>
+<h4 id="arguments-5">Arguments</h4>
+<ul>
+<li><strong>$1</strong> (string): The database user name</li>
+<li><strong>$2</strong> (string): The database role name</li>
+</ul>
+<h2 id="execution-utilities">Execution Utilities</h2>
+<h3 id="runsolrclientcommand">run_solr_client_command</h3>
+<p>Use an ephemeral Solr client container to run commands against Solr.
+For more information about the environment variables and volume mounts that are required for the Solr client, see <a href="../images%20and%20containers/solr_client.html">Running a Solr client container</a>.
+The run_solr_client_command function takes the command you want to run as an argument.
+For more information about commands you can execute using the Solr zkcli, see <a href="https://lucene.apache.org/solr/guide/8_6/command-line-utilities.html">Solr ZK Command Line Utilities</a></p>
+<h4 id="example-3">Example</h4>
+<pre><code class="lang-bash">run_solr_client_command &quot;/opt/solr/server/scripts/cloud-scripts/zkcli.sh&quot; -zkhost &quot;${ZK_HOST}&quot; -cmd clusterprop -name urlScheme -val https
+</code></pre><h4 id="arguments-6">Arguments</h4>
+<ul>
+<li><strong>...</strong> (string): The command you want to run on the Solr client container</li>
+</ul>
+<h4 id="exit-codes-2">Exit codes</h4>
+<ul>
+<li><strong>0</strong>: If command was executed successfully.</li>
+<li><strong>1</strong>: If command was NOT executed successfully.</li>
+</ul>
+<h3 id="runi2analyzetool">run_i2_analyze_tool</h3>
+<p>Run an ephemeral i2 Analyze Tool container to run the i2 Analyze tools.</p>
+<h4 id="example-4">Example</h4>
+<pre><code class="lang-bash">run_i2_analyze_tool &quot;/opt/i2-tools/scripts/updateSecuritySchema.sh&quot;
+</code></pre><h4 id="arguments-7">Arguments</h4>
+<ul>
+<li><strong>...</strong> (string): Command you want to run on the i2 Analyze Tool container</li>
+</ul>
+<h4 id="exit-codes-3">Exit codes</h4>
+<ul>
+<li><strong>0</strong>: If command was executed successfully.</li>
+<li><strong>1</strong>: If command was NOT executed successfully.</li>
+</ul>
+<h3 id="runi2analyzetoolasexternaluser">run_i2_analyze_tool_as_external_user</h3>
+<p>Use an ephemeral i2 Analyze Tool container to run commands against the i2 Analyze service via the load balancer as an external user.
+The container contains the required secrets to communicate with the i2 Analyze service from an external container.
+For example, if you would like to send a Curl request to the load balancer stats endpoint, run:</p>
+<h4 id="example-5">Example</h4>
+<pre><code class="lang-bash">run_i2_analyze_tool_as_external_user bash -c &quot;curl \
+      --silent \
+      --cookie-jar /tmp/cookie.txt \
+      --cacert /tmp/i2acerts/CA.cer \
+      --request POST \&quot;${FRONT_END_URI}/j_security_check\&quot; \
+      --header &#39;Origin: ${FRONT_END_URI}&#39; \
+      --header &#39;Content-Type: application/x-www-form-urlencoded&#39; \
+      --data-urlencode &#39;j_username=Jenny&#39; \
+      --data-urlencode &#39;j_password=Jenny&#39; \
+    &amp;&amp; curl \
+      --silent \
+      --cookie /tmp/cookie.txt \
+      --cacert /tmp/i2acerts/CA.cer\
+      \&quot;${FRONT_END_URI}/api/v1/admin/indexes/status\&quot;&quot;
+</code></pre><h4 id="arguments-8">Arguments</h4>
+<ul>
+<li><strong>...</strong> (string): Command you want to run on the i2 Analyze Tool container</li>
+</ul>
+<h4 id="exit-codes-4">Exit codes</h4>
+<ul>
+<li><strong>0</strong>: If command was executed successfully.</li>
+<li><strong>1</strong>: If command was NOT executed successfully.</li>
+</ul>
+<h3 id="runsqlservercommandasetl">run_sql_server_command_as_etl</h3>
+<p>Uses an ephemeral SQL Client container to run database scripts or commands against the Information Store database as the etl user.
+For more information about running a SQL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
+<h4 id="example-6">Example</h4>
+<pre><code class="lang-bash">run_sql_server_command_as_etl bash -c &quot;/opt/mssql-tools/bin/sqlcmd -N -b -S \${DB_SERVER} -U \${DB_USERNAME} -P \${DB_PASSWORD} -d \${DB_NAME} -Q
+\&quot;BULK INSERT IS_Staging.E_Person
+FROM &#39;/var/i2a-data/law-enforcement-data-set-2-merge/person.csv&#39;
 WITH (FORMATFILE = &#39;/var/i2a-data/law-enforcement-data-set-2-merge/sqlserver/format-files/person.fmt&#39;, FIRSTROW = 2)\&quot;&quot;
-</code></pre><h3 id="runsqlservercommandasi2etl">runSQLServerCommandAsi2ETL</h3>
-<p>The <code>runSQLServerCommandAsi2ETL</code> function uses an ephemeral SQL Client container to run database scripts or commands against the Information Store database as the <code>i2etl</code> user, such as executing generated drop/create index scripts, created by the ETL toolkit.</p>
-<p>For more information about running a SQL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
-<p>The <code>runSQLServerCommandAsi2ETL</code> function takes the database script or commands that you want to run as an argument. For example:</p>
-<pre><code class="lang-bash">runSQLServerCommandAsi2ETL bash -c &quot;${SQLCMD} ${SQLCMD_FLAGS} \
+</code></pre><h4 id="arguments-9">Arguments</h4>
+<ul>
+<li><strong>...</strong> (string): Command you want to run on the SQL Client container</li>
+</ul>
+<h4 id="exit-codes-5">Exit codes</h4>
+<ul>
+<li><strong>0</strong>: If command was executed successfully.</li>
+<li><strong>1</strong>: If command was NOT executed successfully.</li>
+</ul>
+<h3 id="runsqlservercommandasi2etl">run_sql_server_command_as_i2_etl</h3>
+<p>Uses an ephemeral SQL Client container to run database scripts or commands against the
+Information Store database as the i2etl user, such as executing generated drop/create index scripts,
+created by the ETL toolkit.
+For more information about running a SQL Client container and the environment variables required for the
+container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
+<h4 id="example-7">Example</h4>
+<pre><code class="lang-bash">run_sql_server_command_as_i2_etl bash -c &quot;${SQLCMD} ${SQLCMD_FLAGS} \
   -S \${DB_SERVER},${DB_PORT} -U \${DB_USERNAME} -P \${DB_PASSWORD} -d \${DB_NAME} \
   -i /opt/database-scripts/ET5-drop-entity-indexes.sql&quot;
-</code></pre><h3 id="runsqlservercommandasfirststartsa">runSQLServerCommandAsFirstStartSA</h3>
-<p>The <code>runSQLServerCommandAsFirstStartSA</code> function uses an ephemeral SQL Client container to run database scripts or commands against the Information Store database as the <code>sa</code> user with the initial SA password.</p>
-<p>For more information about running a SQL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
-<h3 id="runsqlservercommandassa">runSQLServerCommandAsSA</h3>
-<p>The <code>runSQLServerCommandAsSA</code> function uses an ephemeral SQL Client container to run database scripts or commands against the Information Store database as the <code>sa</code> user.</p>
-<p>For more information about running a SQL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
-<p>The <code>runSQLServerCommandAsSA</code> function takes the database script or commands that you want to run as an argument. For example:</p>
-<pre><code class="lang-bash">runSQLServerCommandAsSA &quot;/opt/i2-tools/scripts/database-creation/runStaticScripts.sh&quot;
-</code></pre><h3 id="runsqlservercommandasdba">runSQLServerCommandAsDBA</h3>
-<p>The <code>runSQLServerCommandAsDBA</code> function uses an ephemeral SQL Client container to run database scripts or commands against the Information Store database as the <code>dba</code> user.</p>
-<p>For more information about running a SQL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
-<p>The <code>runSQLServerCommandAsDBA</code> function takes the database script or commands that you want to run as an argument. For example:</p>
-<pre><code class="lang-bash">runSQLServerCommandAsDBA &quot;/opt/i2-tools/scripts/clearInfoStoreData.sh&quot;
-</code></pre><h3 id="runsqlservercommandasdbb">runSQLServerCommandAsDBB</h3>
-<p>The <code>runSQLServerCommandAsDBB</code> function uses an ephemeral SQL Client container to run database scripts or commands against the Information Store database as the <code>dbb</code> (the backup operator) user.</p>
-<p>For more information about running a SQL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
-<p>The <code>runSQLServerCommandAsDBB</code> function takes the database script or commands that you want to run as an argument. For example:</p>
-<pre><code class="lang-bash">runSQLServerCommandAsDBA &quot;runSQLServerCommandAsDBB bash -c &quot; &quot;/opt/mssql-tools/bin/sqlcmd -N -b -C -S sqlserver.eia,1433 -U \&quot;\${DB_USERNAME}\&quot; -P \&quot;\${DB_PASSWORD}\&quot; \
-    -Q \&quot;USE ISTORE; 
-        BACKUP DATABASE ISTORE
-        TO DISK = &#39;/backup/istore.bak&#39;
-            WITH FORMAT;\&quot;&quot;&quot;
-</code></pre><h3 id="runetltoolkittoolasi2etl">runEtlToolkitToolAsi2ETL</h3>
-<p>The <code>runEtlToolkitToolAsi2ETL</code> function uses an ephemeral ETL toolkit container to run ETL toolkit tasks against the Information Store using the i2 ETL user credentials.</p>
-<p>For more information about running the ETL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/etl_client.html">ETL Client</a>.</p>
-<p>For more information about running the ETL toolkit container and the tasks that you can run, see <a href="etl_tools.html">ETL</a></p>
-<p>The <code>runEtlToolkitToolAsi2ETL</code> function takes command that you want to run as an argument. For example:</p>
-<pre><code class="lang-bash">runEtlToolkitToolAsi2ETL bash -c &quot;/opt/i2/etltoolkit/addInformationStoreIngestionSource --ingestionSourceName EXAMPLE_1 --ingestionSourceDescription EXAMPLE_1&quot;
-</code></pre><h3 id="runetltoolkittoolasdba">runEtlToolkitToolAsDBA</h3>
-<p>Some ETL tasks must be performed by the DBA. The <code>runEtlToolkitToolAsDBA</code> function used the same ephemeral ETL toolkit container but uses the DBA user instead of the ETL user.</p>
-<p>For more information about running the ETL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/etl_client.html">ETL Client</a>.</p>
-<p>For more information about running the ETL toolkit container and the tasks that you can run, see <a href="etl_tools.html">ETL</a></p>
-<p>The <code>runEtlToolkitToolAsDBA</code> function takes command that you want to run as an argument. For example:</p>
-<pre><code class="lang-bash">runEtlToolkitToolAsDBA bash -c &quot;/opt/i2/etltoolkit/enableMergedPropertyValues --schemaTypeId ET5&quot;
-</code></pre><h2 id="volume-utilities">Volume utilities</h2>
-<h3 id="getvolume">getVolume</h3>
-<p>The <code>getVolume</code> function uses an ephemeral Red Hat UBI Docker image to update a local directory with the contents of a specified volume.</p>
-<p>The <code>getVolume</code> function takes the local directory, volume name, and a directory in that volume as arguments.</p>
-<p>For example, to get the contents from the <code>run/secrets</code> directory in the <code>liberty1_secrets</code> volume into your local <code>/dev-environment-secrets/simulated-secret-store</code> directory, run:</p>
-<pre><code class="lang-sh">getVolume &quot;/dev-environment-secrets/simulated-secret-store&quot; &quot;liberty1_secrets&quot; &quot;/run/secrets&quot;
-</code></pre><h3 id="updatevolume">updateVolume</h3>
-<p>The <code>updateVolume</code> function uses an ephemeral Red Hat UBI Docker image to update a volume with the contents of a local directory.</p>
-<p>The <code>updateVolume</code> function takes the local directory, volume name, and a directory in that volume as arguments.</p>
-<p>For example, to update the the <code>run/secrets</code> directory in the <code>liberty1_secrets</code> volume with the content of the local <code>/dev-environment-secrets/simulated-secret-store</code> directory, run:</p>
-<pre><code class="lang-sh">updateVolume &quot;/dev-environment-secrets/simulated-secret-store&quot; &quot;liberty1_secrets&quot; &quot;/run/secrets&quot;
-</code></pre></article>
+</code></pre><h4 id="arguments-10">Arguments</h4>
+<ul>
+<li><strong>...</strong> (string): Command you want to run on the SQL Client container</li>
+</ul>
+<h4 id="exit-codes-6">Exit codes</h4>
+<ul>
+<li><strong>0</strong>: If command was executed successfully.</li>
+<li><strong>1</strong>: If command was NOT executed successfully.</li>
+</ul>
+<h3 id="runsqlservercommandasfirststartsa">run_sql_server_command_as_first_start_sa</h3>
+<p>Uses an ephemeral SQL Client container to run database scripts or commands against the
+Information Store database as the sa user with the initial SA password.
+For more information about running a SQL Client container and the environment variables required for the
+container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
+<h4 id="arguments-11">Arguments</h4>
+<ul>
+<li><strong>...</strong> (string): Command you want to run on the SQL Client container</li>
+</ul>
+<h4 id="exit-codes-7">Exit codes</h4>
+<ul>
+<li><strong>0</strong>: If command was executed successfully.</li>
+<li><strong>1</strong>: If command was NOT executed successfully.</li>
+</ul>
+<h3 id="runsqlservercommandassa">run_sql_server_command_as_sa</h3>
+<p>Uses an ephemeral SQL Client container to run database scripts or commands against the
+Information Store database as the SA user.
+For more information about running a SQL Client container and the environment variables required for the
+container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
+<h4 id="example-8">Example</h4>
+<pre><code class="lang-bash">run_sql_server_command_as_sa &quot;/opt/i2-tools/scripts/database-creation/runStaticScripts.sh&quot;
+</code></pre><h4 id="arguments-12">Arguments</h4>
+<ul>
+<li><strong>...</strong> (string): Command you want to run on the SQL Client container</li>
+</ul>
+<h4 id="exit-codes-8">Exit codes</h4>
+<ul>
+<li><strong>0</strong>: If command was executed successfully.</li>
+<li><strong>1</strong>: If command was NOT executed successfully.</li>
+</ul>
+<h3 id="runsqlservercommandasdba">run_sql_server_command_as_dba</h3>
+<p>Uses an ephemeral SQL Client container to run database scripts or commands against the
+Information Store database as the dba user.
+For more information about running a SQL Client container and the environment variables required for the
+container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
+<h4 id="example-9">Example</h4>
+<pre><code class="lang-bash">run_sql_server_command_as_dba &quot;/opt/i2-tools/scripts/clearInfoStoreData.sh&quot;
+</code></pre><h4 id="arguments-13">Arguments</h4>
+<ul>
+<li><strong>...</strong> (string): Command you want to run on the SQL Client container</li>
+</ul>
+<h4 id="exit-codes-9">Exit codes</h4>
+<ul>
+<li><strong>0</strong>: If command was executed successfully.</li>
+<li><strong>1</strong>: If command was NOT executed successfully.</li>
+</ul>
+<h3 id="runsqlservercommandasdbb">run_sql_server_command_as_dbb</h3>
+<p>Uses an ephemeral SQL Client container to run database scripts or commands against the
+Information Store database as the dbb (the backup operator) user.
+For more information about running a SQL Client container and the environment variables required for the
+container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
+<h4 id="example-10">Example</h4>
+<pre><code class="lang-bash">run_sql_server_command_as_dbb bash -c &quot;/opt/mssql-tools/bin/sqlcmd -N -b -C -S sqlserver.eia,1433 -U \&quot;\${DB_USERNAME}\&quot; -P \&quot;\${DB_PASSWORD}\&quot; \
+  -Q \&quot;USE ISTORE;
+  BACKUP DATABASE ISTORE
+  TO DISK = &#39;/backup/istore.bak&#39;
+     WITH FORMAT;\&quot;&quot;
+</code></pre><h4 id="arguments-14">Arguments</h4>
+<ul>
+<li><strong>...</strong> (string): Command you want to run on the SQL Client container</li>
+</ul>
+<h4 id="exit-codes-10">Exit codes</h4>
+<ul>
+<li><strong>0</strong>: If command was executed successfully.</li>
+<li><strong>1</strong>: If command was NOT executed successfully.</li>
+</ul>
+<h3 id="runetltoolkittoolasi2etl">run_etl_toolkit_tool_as_i2_etl</h3>
+<p>Uses an ephemeral ETL toolkit container to run ETL toolkit tasks against the
+Information Store using the i2 ETL user credentials.
+For more information about running the ETL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/etl_client.html">ETL Client</a>.
+For more information about running the ETL toolkit container and the tasks that you can run, see <a href="../tools%20and%20functions/etl_tools.html">ETL Tools</a></p>
+<h4 id="example-11">Example</h4>
+<pre><code class="lang-bash">run_etl_toolkit_tool_as_i2_etl bash -c &quot;/opt/i2/etltoolkit/addInformationStoreIngestionSource --ingestionSourceName EXAMPLE_1 --ingestionSourceDescription EXAMPLE_1&quot;
+</code></pre><h4 id="arguments-15">Arguments</h4>
+<ul>
+<li><strong>...</strong> (string): Command you want to run on the ETL Toolkit container</li>
+</ul>
+<h4 id="exit-codes-11">Exit codes</h4>
+<ul>
+<li><strong>0</strong>: If command was executed successfully.</li>
+<li><strong>1</strong>: If command was NOT executed successfully.</li>
+</ul>
+<h3 id="runetltoolkittoolasdba">run_etl_toolkit_tool_as_dba</h3>
+<p>Uses an ephemeral ETL toolkit container to run ETL toolkit tasks against the
+Information Store using the DBA user credentials.
+For more information about running the ETL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/etl_client.html">ETL Client</a>.
+For more information about running the ETL toolkit container and the tasks that you can run, see <a href="../tools%20and%20functions/etl_tools.html">ETL Tools</a></p>
+<h4 id="example-12">Example</h4>
+<pre><code class="lang-bash">run_etl_toolkit_tool_as_dba bash -c &quot;/opt/i2/etltoolkit/addInformationStoreIngestionSource --ingestionSourceName EXAMPLE_1 --ingestionSourceDescription EXAMPLE_1&quot;
+</code></pre><h4 id="arguments-16">Arguments</h4>
+<ul>
+<li><strong>...</strong> (string): Command you want to run on the ETL Toolkit container</li>
+</ul>
+<h4 id="exit-codes-12">Exit codes</h4>
+<ul>
+<li><strong>0</strong>: If command was executed successfully.</li>
+<li><strong>1</strong>: If command was NOT executed successfully.</li>
+</ul>
+<h2 id="volume-utilities">Volume utilities</h2>
+<h3 id="updatevolume">update_volume</h3>
+<p>Uses an ephemeral Red Hat UBI Docker image to update a volume with the contents of a local directory.
+For example, to update the the run/secrets directory in the liberty1_secrets volume with the content of the local /dev-environment-secrets/simulated-secret-store directory, run:</p>
+<h4 id="example-13">Example</h4>
+<pre><code class="lang-bash">update_volume &quot;/dev-environment-secrets/simulated-secret-store&quot; &quot;liberty1_secrets&quot; &quot;/run/secrets&quot;
+</code></pre><h4 id="arguments-17">Arguments</h4>
+<ul>
+<li><strong>$1</strong> (string): The local directory on your machine.</li>
+<li><strong>$2</strong> (string): The volume name.</li>
+<li><strong>$3</strong> (string): The directory inside the volume.</li>
+</ul>
+<h3 id="getvolume">get_volume</h3>
+<p>Uses an ephemeral Red Hat UBI Docker image to update a local directory with the contents of a specified volume.
+For example, to get the contents from the run/secrets directory in the liberty1_secrets volume into your local /dev-environment-secrets/simulated-secret-store directory, run:</p>
+<h4 id="example-14">Example</h4>
+<pre><code class="lang-bash">get_volume &quot;/dev-environment-secrets/simulated-secret-store&quot; &quot;liberty1_secrets&quot; &quot;/run/secrets&quot;
+</code></pre><h4 id="arguments-18">Arguments</h4>
+<ul>
+<li><strong>$1</strong> (string): The local directory on your machine.</li>
+<li><strong>$2</strong> (string): The volume name.</li>
+<li><strong>$3</strong> (string): The directory inside the volume.</li>
+</ul>
+<!-- markdownlint-configure-file { "MD024": false } --></article>
           </div>
           
           <div class="hidden-sm col-md-2" role="complementary">

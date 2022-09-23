@@ -88,15 +88,14 @@
 <li>Create a custom config that you can deploy into a development environment</li>
 <li>Use the environment to develop the i2 Analyze configuration</li>
 </ul>
-<p>If you have already run the <code>createDevEnvironment</code> script and you want to create a new custom config from the template, go to <a href="#creating-a-config">Creating a development config</a>.</p>
+<p>If you have already run the <code>create-dev-environment</code> script and you want to create a new custom config from the template, go to <a href="#creating-a-config">Creating a development config</a>.</p>
 <h2 id="prerequisites">Prerequisites</h2>
 <p>Before you create the configuration development environment, you must configure the analyze-containers repository.<br>For more information, see <a href="getting_started.html">Getting started with the analyze-containers repository</a>.</p>
 <hr>
 <h2 id="creating-the-configuration-development-environment">Creating the configuration development environment</h2>
 <ol>
-<li><p>To create the configuration development environment and template config, in the <code>/scripts</code> directory run:</p>
-<pre><code class="lang-sh">./createDevEnvironment.sh
-</code></pre><p> The script performs the following actions:</p>
+<li><p>To create the configuration development environment and template config, run <code>create-dev-environment</code> command.</p>
+<p> The script performs the following actions:</p>
 <ul>
 <li>Extracts the required files from the i2 Analyze deployment toolkit</li>
 <li>Builds the required Docker images for the development environment</li>
@@ -151,7 +150,7 @@ ACCEPT_EULA=Y
         - database-scripts
         - utils
 </code></pre></li>
-<li><p>The <code>/configs/&lt;config_name&gt;/utils/variables.sh</code> file contains variables that are used when you deploy the environment with this config. You can specify values for the following variables:  </p>
+<li><p>The <code>/configs/&lt;config_name&gt;/utils/variables.conf</code> file contains variables that are used when you deploy the environment with this config. You can specify values for the following variables:  </p>
 <ul>
 <li><p>The <code>DEPLOYMENT_PATTERN</code> variable specifies the deployment pattern for the deployment of i2 Analyze in the environment. You can specify:</p>
 <ul>
@@ -204,11 +203,11 @@ The i2 Analyze toolkit includes example files that you can use as a starting poi
 <hr>
 <h2 id="deploying-your-config-in-the-environment">Deploying your config in the environment</h2>
 <ol>
-<li><p>Run the <code>./deploy.sh</code> script from the <code>/scripts</code> directory to deploy and start your environment. Provide the name of the config to deploy with by using the <code>-c</code> parameter and specify the name of the config directory. For example:</p>
-<pre><code class="lang-sh">./deploy.sh -c config-development
+<li><p>Run the <code>deploy</code> command to deploy and start your environment. Provide the name of the config to deploy with by using the <code>-c</code> parameter and specify the name of the config directory. For example:</p>
+<pre><code class="lang-sh">deploy -c config-development
 </code></pre></li>
 </ol>
-<p>You can run only one environment at a time. When you run the <code>deploy.sh</code> script, it stops any containers on the Docker network. If you are deploying with the same config, it update the images and recreates the containers to update the environment with any configuration changes. For more information, see <a href="managing_config_dev.html">Managing configs</a>.</p>
+<p>You can run only one environment at a time. When you run the <code>deploy</code> command, it stops any containers on the Docker network. If you are deploying with the same config, it update the images and recreates the containers to update the environment with any configuration changes. For more information, see <a href="managing_config_dev.html">Managing configs</a>.</p>
 <h2 id="accessing-the-system">Accessing the system</h2>
 <p>To connect to the deployment, the URL to use is: <code>https://i2analyze.eia:9443/opal</code></p>
 <p><strong>Note:</strong> If you are using the <code>schema_dev</code> or <code>i2c</code> deployment patterns, you must connect using Analyst&#39;s Notebook Premium.</p>

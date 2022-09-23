@@ -105,15 +105,15 @@ docker rm liberty1 liberty2
 <p>To clear the search index, run a Solr delete query against your indexes via the Solr API.
 You can run the delete query by using a curl command. In Solr, data is stored as documents.
 You must remove every document from each collection in your deployment.
-The <code>runSolrClientCommand</code> client function is used to run the curl commands that remove the documents from each collection.
-For more information about the function, see <a href="../tools%20and%20functions/client_functions.html#runSolrClientCommand">runSolrClientCommand</a>.</p>
+The <code>run_solr_client_command</code> client function is used to run the curl commands that remove the documents from each collection.
+For more information about the function, see <a href="../tools%20and%20functions/client_functions.html#runsolrclientcommand">run_solr_client_command</a>.</p>
 <p>The following curl command removes every document from a the <code>main_index</code>:</p>
 <pre><code class="lang-bash">curl -u &quot;${SOLR_ADMIN_DIGEST_USERNAME}:${SOLR_ADMIN_DIGEST_PASSWORD}&quot; --cacert ${CONTAINER_SECRETS_DIR}/CA.cer &quot;${SOLR1_BASE_URL}/solr/main_index/update?commit=true&quot; -H Content-Type:&quot;text/xml&quot; --data-binary &quot;&lt;delete&gt;&lt;query&gt;*:*&lt;/query&gt;&lt;/delete&gt;&quot;
 </code></pre><p>See the <code>Clearing the search index</code> section of the walkthrough script.</p>
 <p>For more information about command parsing, see <a href="../images%20and%20containers/solr_client.html#command-parsing">Command parsing</a></p>
 <h3 id="removing-the-collection-properties">Removing the collection properties</h3>
-<p>The <code>runSolrClientCommand</code> client function is used to remove the file from ZooKeeper.
-For more information about the function, see <a href="../tools%20and%20functions/client_functions.html#runSolrClientCommand">runSolrClientCommand</a>.</p>
+<p>The <code>run_solr_client_command</code> client function is used to remove the file from ZooKeeper.
+For more information about the function, see <a href="../tools%20and%20functions/client_functions.html#runsolrclientcommand">run_solr_client_command</a>.</p>
 <p>The following <code>zkcli</code> call removes the collection properties for the <code>main_index</code>.</p>
 <pre><code class="lang-bash">zkcli.sh -zkhost &quot;${ZK_HOST}&quot; -cmd clear &quot;/collections/main_index/collectionprops.json&quot;
 </code></pre><p>See the <code>Clearing the search index</code> section of the walkthrough script.</p>
@@ -121,9 +121,9 @@ For more information about the function, see <a href="../tools%20and%20functions
 <p>The <code>collectionprops.json</code> file is recreated when the i2 Analyze application is started.</p>
 <h2 id="clearing-data-from-the-information-store">Clearing data from the Information Store</h2>
 <p>See the <code>Clearing the Information Store database</code> section of the walkthrough script.</p>
-<p>The <code>runSQLServerCommandAsDBA</code> client function is used to run the <code>clearInfoStoreData.sh</code> tool to remove the data from the Information Store.  </p>
+<p>The <code>run_sql_server_command_as_dba</code> client function is used to run the <code>clearInfoStoreData.sh</code> tool to remove the data from the Information Store.  </p>
 <ul>
-<li><a href="../tools%20and%20functions/client_functions.html#runSQLServerCommandAsDBA">runSQLServerCommandAsDBA</a></li>
+<li><a href="../tools%20and%20functions/client_functions.html#runsqlservercommandasdba">run_sql_server_command_as_dba</a></li>
 <li><a href="../tools%20and%20functions/i2analyze_tools.html#remove-data-from-the-information-store-tool">clearInfoStoreData</a></li>
 </ul>
 <h2 id="running-the-liberty-containers">Running the Liberty containers</h2>

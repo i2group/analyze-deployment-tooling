@@ -106,6 +106,9 @@
 </code></pre></li>
 </ul>
 </li>
+<li><p>Run <code>manage-environment -t extensions</code> command to install the necessary dependencies.
+ Note: If you can&#39;t see your new extension in the Java Projects explorer, press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS), type <code>Java: Import Java Projects into Workspace</code> and select it. It might take a minute before refreshing.</p>
+</li>
 </ol>
 <p>You can now start developing your extension. For examples on i2 Analyze extensions, check the examples in <a href="https://github.com/i2group/analyze/blob/master/documentation/index.md">i2 Analyze Developer Essentials</a>.</p>
 <ol>
@@ -113,7 +116,8 @@
 <li>Add any settings that are required by the extension to the <code>analyze-settings.properties</code> file.</li>
 <li>Add any resources that are required by the extension to the <code>/configs/&lt;config_name&gt;/configuration</code> directory. For example, the <code>group-based-default-security-dimension-values.xml</code> file.</li>
 </ol>
-<p>If your extension depends on another extension. You must add it to your <code>pom.xml</code> file under the comment: <code>&lt;!-- Extension specific dependencies --&gt;</code>.</p>
+<p>If your extension depends on <em>external</em> dependencies you need to add them to your project. For information on how to add external dependencies from Maven Central, check <a href="https://code.visualstudio.com/docs/java/java-project#_add-a-maven-dependency">Add a Maven dependency</a></p>
+<p>If your extension depends on other extensions (not in Maven Central), you must add them to your <code>pom.xml</code> file manually under the comment: <code>&lt;!-- Extension specific dependencies --&gt;</code>.</p>
 <p>For example, the auditing extensions in Developer Essentials depend on the <code>opal-audit-example-common</code> extension. To add it as a dependency, populate the values of the <code>pom.xml</code> file as follows:</p>
 <pre><code class="lang-xml">    &lt;!-- Extension specific dependencies --&gt;
     &lt;dependency&gt;
@@ -121,7 +125,7 @@
         &lt;artifactId&gt;opal-audit-example-common&lt;/artifactId&gt;
         &lt;version&gt;1.0.0&lt;/version&gt;
     &lt;/dependency&gt;
-</code></pre><p>You will also need to populate the <code>i2a-extensions/extension-dependencies.json</code> file, for example:</p>
+</code></pre><p>You will also need to populate the <code>i2a-extensions/extension-dependencies.json</code> file with the extensions that you depend on, for example:</p>
 <pre><code class="lang-json">[
   {
     &quot;name&quot;: &quot;opal-audit-file-example&quot;,
@@ -145,12 +149,12 @@
 </ol>
 <p><strong>Note:</strong> The extensions in the <code>extension-references.json</code> file are loaded in order. If an extension depends on another extension, define the dependent extension first.</p>
 <h2 id="deploying-your-extension">Deploying your extension</h2>
-<p>Use the <code>deploy.sh</code> script to build the extensions for your configuration.</p>
+<p>Use the <code>deploy</code> command to build the extensions for your configuration.</p>
 <p>For example, to build and deploy the extensions declared in <code>extension-references.json</code> for your configuration:</p>
-<pre><code class="lang-bash">./deploy.sh -c &lt;config_name&gt;
+<pre><code class="lang-bash">deploy -c &lt;config_name&gt;
 </code></pre><h2 id="debugging-your-extension">Debugging your extension</h2>
 <h3 id="deploying-in-debug-mode">Deploying in debug mode</h3>
-<p>To deploy with one or more Liberty servers running in debug mode, change the local variable <code>DEBUG_LIBERTY_SERVERS</code> in <code>utils/internalHelperVariables.sh</code> to be a list of the container names of the liberty servers you wish to run in debug mode.
+<p>To deploy with one or more Liberty servers running in debug mode, change the local variable <code>DEBUG_LIBERTY_SERVERS</code> in <code>utils/internal_helper_variables.sh</code> to be a list of the container names of the liberty servers you wish to run in debug mode.
 For example:</p>
 <pre><code class="lang-sh">DEBUG_LIBERTY_SERVERS=(&quot;${LIBERTY1_CONTAINER_NAME}&quot;)
 </code></pre><p>Then deploy from a clean environment.</p>

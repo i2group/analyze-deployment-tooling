@@ -87,7 +87,7 @@
 <li>That the load balancer is used to monitor the status of the i2 Analyze service.</li>
 <li>In a containerized deployment, all log messages are also displayed in the console. You can use the <code>docker logs</code> command to view the console log.</li>
 </ul>
-<p>The <code>libertyHadrFailureWalkthrough.sh</code> script simulates the Liberty leader failure.</p>
+<p>The <code>examples/pre-prod/walkthroughs/ha/libertyHadrFailureWalkthrough.sh</code> script simulates the Liberty leader failure.</p>
 <h2 id="identifying-the-leader-liberty">Identifying the leader Liberty</h2>
 <p>To simulate a failure of the leader Liberty, first identify which server hosts the leader instance.</p>
 <p>To identify which container is running the leader Liberty, check the logs of the Liberty servers for the message: <code>We are the Liberty leader</code>.</p>

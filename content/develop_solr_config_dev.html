@@ -86,18 +86,18 @@
 <li>If the deployment contains data, the process requires you to back up and restore the database</li>
 </ul>
 <h2 id="updating-a-deployment-without-data">Updating a deployment without data</h2>
-<p>After you change the Solr configuration, clean the deployment by running the <code>deploy.sh</code> script with the <code>clean</code> task.<br>For example:</p>
-<pre><code class="lang-sh">./deploy.sh -c &lt;config_name&gt; -t clean
-</code></pre><p>For more information about the script, see <a href="managing_config_dev.html#the-deploysh-script">The deploy.sh script</a>.</p>
+<p>After you change the Solr configuration, clean the deployment by running the <code>deploy</code> command with the <code>clean</code> task.<br>For example:</p>
+<pre><code class="lang-sh">deploy -c &lt;config_name&gt; -t clean
+</code></pre><p>For more information about the script, see <a href="managing_config_dev.html#the-deploy-script">The deploy command</a>.</p>
 <p>Then, re-deploy in the usual way.<br>For example:</p>
-<pre><code class="lang-sh">./deploy.sh -c &lt;config_name&gt;
+<pre><code class="lang-sh">deploy -c &lt;config_name&gt;
 </code></pre><p>Your deployment is running with the updated Solr configuration.</p>
 <h2 id="updating-a-deployment-with-data">Updating a deployment with data</h2>
-<p>When data is present in the system you must use the <code>backup</code> and <code>restore</code> tasks of the <code>deploy</code> script to update the deployment. For more information about these tasks, refer to refer to <a href="manage_backup_restore.html">Back up and restore a development database</a>.</p>
+<p>When data is present in the system you must use the <code>backup</code> and <code>restore</code> tasks of the <code>deploy</code> command to update the deployment. For more information about these tasks, refer to refer to <a href="manage_backup_restore.html">Back up and restore a development database</a>.</p>
 <p>After you change the Solr configuration, backup the deployment. For example:</p>
-<pre><code class="lang-sh">./deploy.sh -c &lt;config_name&gt; -t backup -b &lt;backup_name&gt;
+<pre><code class="lang-sh">deploy -c &lt;config_name&gt; -t backup -b &lt;backup_name&gt;
 </code></pre><p>Then, restore from the backup that you created. For example:  </p>
-<pre><code class="lang-sh">./deploy.sh -c &lt;config_name&gt; -t restore -b &lt;backup_name&gt;
+<pre><code class="lang-sh">deploy -c &lt;config_name&gt; -t restore -b &lt;backup_name&gt;
 </code></pre><p>Solr is updated with your configuration, and the data in the database is reindexed when the system starts.</p>
 </article>
           </div>

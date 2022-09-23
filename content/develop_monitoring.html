@@ -85,15 +85,15 @@
 <p>For more information about what you can configure, see <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/">Prometheus Docs</a>.</p>
 <p>To modify the Prometheus configuration, edit the <code>configs/&lt;config-name&gt;/configuration/prometheus/prometheus.yml</code> file.</p>
 <p>To update the deployment with the configuration, run the following command from the <code>scripts</code> directory:</p>
-<pre><code class="lang-sh">./deploy.sh -c &lt;config_name&gt;
+<pre><code class="lang-sh">deploy -c &lt;config_name&gt;
 </code></pre><p>To view the Prometheus UI, connect to <code>https://prometheus.eia:9090</code>. Log in using the user name <code>prometheus</code> and the password from the <code>dev-environment-secrets/generated-secrets/prometheus/admin_PASSWORD</code> file.</p>
 <h2 id="configuring-grafana-dashboards">Configuring Grafana dashboards</h2>
 <p>In the config dev environment, Prometheus is already configured as a data source in Grafana. This allows you to focus on configuring the Grafana dashboards.</p>
 <p>To view the Grafana UI, connect to <code>https://grafana.eia:3500/dashboards</code>. Log in using the user name <code>grafana</code> and the password from the <code>dev-environment-secrets/generated-secrets/grafana/admin_PASSWORD</code> file.</p>
 <p>In the UI you can create or modify dashboards. For more information about Grafana dashboards, see <a href="https://grafana.com/docs/grafana/latest/dashboards/">About Grafana dashboards</a>.</p>
 <p>After you create or modify a dashboard, export it and copy the JSON file into the <code>configs/&lt;config-name&gt;/configuration/grafana/dashboards</code> folder. For more information, see <a href="https://grafana.com/docs/grafana/latest/dashboards/export-import/#exporting-a-dashboard">Exporting a dashboard</a></p>
-<p>To update the deployment with the modified dashboards, run the following command from the <code>scripts</code> directory:</p>
-<pre><code class="lang-sh">./deploy.sh -c &lt;config_name&gt;
+<p>To update the deployment with the modified dashboards, run the following command:</p>
+<pre><code class="lang-sh">deploy -c &lt;config_name&gt;
 </code></pre></article>
           </div>
           

@@ -86,7 +86,7 @@
 <li>How the Solr status is reported in the component availability log in Liberty. For more information, see <a href="https://docs.i2group.com/analyze/4.4.0/ha_monitoring.html">Monitor the system availability</a>.</li>
 <li>In a containerized deployment, all log messages are also displayed in the console. You can use the <code>docker logs</code> command to view the console log.</li>
 </ul>
-<p>The <code>solrClusterFailureWalkthrough.sh</code> scripts simulates a Solr cluster failure and recovery.</p>
+<p>The <code>examples/pre-prod/walkthroughs/ha/solrClusterFailureWalkthrough.sh</code> scripts simulates a Solr cluster failure and recovery.</p>
 <h2 id="simulating-solr-cluster-failure">Simulating Solr Cluster failure</h2>
 <p>To simulate the cluster failure, remove all the Solr containers. For example, run:</p>
 <pre><code class="lang-DOCKER">docker stop solr2 solr1
@@ -94,14 +94,14 @@
 <h2 id="detecting-failure">Detecting failure</h2>
 <p>The component availability log in Liberty is used to monitor and determine the status of the Solr cluster.</p>
 <p>When the Solr cluster is unavailable, the status is reported as <code>DOWN</code>.</p>
-<p>The <code>detecting failure</code> section of the walkthrough script runs a loop around the <code>getSolrStatus</code> client function that reports the status of Solr. For more information about the function, see <a href="../tools%20and%20functions/client_functions.html#getsolrstatus"><code>getSolrStatus</code></a>.</p>
+<p>The <code>Detecting failure</code> section of the walkthrough script runs a loop around the <code>get_solr_status</code> client function that reports the status of Solr. For more information about the function, see <a href="../tools%20and%20functions/client_functions.html#get_solr_status"><code>get_solr_status</code></a>.</p>
 <p>The function uses a grep command for the following message that indicates Solr is down:</p>
 <pre><code class="lang-Bash">grep  &quot;^.*\[I2AVAILABILITY] .*  SolrHealthStatusLogger         - &#39;.*&#39;, .*&#39;DOWN&#39;&quot;
 </code></pre><h2 id="reinstating-high-availability">Reinstating high availability</h2>
 <p>To reinstate high availability, restart the failed Solr containers. In this example, restart both Solr containers by running the following command:</p>
 <pre><code class="lang-DOCKER">docker start solr2 solr1
 </code></pre><p>After the failed nodes recover, Liberty reports the changes to the cluster status. To ensure the collections recover, monitor the Liberty logs for healthy collections.</p>
-<p>The <code>reinstating high availability</code> section of the walkthrough script runs a loop around the <code>getSolrStatus</code> client function that reports the status of Solr. For more information about the function, see <a href="../tools%20and%20functions/client_functions.html#getsolrstatus"><code>getSolrStatus</code></a>.</p>
+<p>The <code>Reinstating high availability</code> section of the walkthrough script runs a loop around the <code>get_solr_status</code> client function that reports the status of Solr. For more information about the function, see <a href="../tools%20and%20functions/client_functions.html#get_solr_status"><code>get_solr_status</code></a>.</p>
 <p>The function uses a grep command for the following message that indicates Solr is active:</p>
 <pre><code class="lang-Bash">grep  &quot;^.*\[I2AVAILABILITY] .*  SolrHealthStatusLogger         - &#39;.*&#39;, .*&#39;ALL_REPLICAS_ACTIVE&#39;&quot;
 </code></pre></article>

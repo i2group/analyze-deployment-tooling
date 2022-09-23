@@ -95,9 +95,9 @@ Updating the configuration includes the following high-level steps:</p>
 <h2 id="creating-sql-server-backups">Creating SQL Server backups</h2>
 <p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Backing up SQL Server</code> section demonstrates the commands that are used to back up the SQL Server Information Store database. For more information about backing up the database, see <a href="../backup%20and%20restore/backup.html#BackingUpTheInformationStoreDatabase">Backing up the Information Store database</a>.</p>
 <h2 id="rebuilding-the-images">Rebuilding the images</h2>
-<p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Rebuilding images</code> section demonstrates running the <code>buildImages.sh</code> script to build images with for the new version of i2 Analyze.</p>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Rebuilding images</code> section demonstrates running the <code>build-images</code> script to build images with for the new version of i2 Analyze.</p>
 <h2 id="creating-the-change-set">Creating the change set</h2>
-<p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Create change set</code> section demonstrates running the <code>createChangeSet.sh</code> script that creates the upgrade change set. The change set is created in <code>examples/pre-prod/change-sets</code> and contains the database scripts that are required to upgrade the Information Store database.</p>
+<p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Create change set</code> section demonstrates running the <code>create-change-set</code> script that creates the upgrade change set. The change set is created in <code>examples/pre-prod/change-sets</code> and contains the database scripts that are required to upgrade the Information Store database.</p>
 <h2 id="removing-the-previous-containers">Removing the previous containers</h2>
 <p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Removing the previous containers</code> section demonstrates the commands to delete the previous containers and remove any Docker volumes.</p>
 <h2 id="upgrading-solr">Upgrading Solr</h2>

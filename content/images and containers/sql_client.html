@@ -108,9 +108,9 @@
     -e DB_SSL_CONNECTION=true \
     -e SSL_CA_CERTIFICATE=&quot;SSL_CA_CERTIFICATE&quot; \
     &quot;sqlserver_client_redhat:4.4.0&quot; &quot;$@&quot;
-</code></pre><p>For an example of the <code>docker run</code> command, see <code>runSQLServerCommandAsETL</code> function in <code>clientFunctions.sh</code> script.
-For an example of how to use <code>runSQLServerCommandAsETL</code> function, see <a href="../tools%20and%20functions/client_functions.html#runSQLServerCommandAsETL">runSQLServerCommandAsETL</a>.</p>
-<blockquote><p>Note: you can run SQL Server Client container as different users, see <a href="../tools%20and%20functions/client_functions.html#runSQLServerCommandAsDBA"><code>runSQLServerCommandAsDBA</code></a>, <a href="../tools%20and%20functions/client_functions.html#runSQLServerCommandAsSA"><code>runSQLServerCommandAsSA</code></a></p>
+</code></pre><p>For an example of the <code>docker run</code> command, see <code>run_sql_server_command_as_etl</code> function in <code>client_functions.sh</code> script.
+For an example of how to use <code>run_sql_server_command_as_etl</code> function, see <a href="../tools%20and%20functions/client_functions.html#runsqlservercommandasetl">run_sql_server_command_as_etl</a>.</p>
+<blockquote><p>Note: you can run SQL Server Client container as different users, see <a href="../tools%20and%20functions/client_functions.html#runsqlservercommandasdba"><code>run_sql_server_command_as_dba</code></a>, <a href="../tools%20and%20functions/client_functions.html#runsqlservercommandassa"><code>run_sql_server_command_as_sa</code></a></p>
 </blockquote>
 <h2 id="bind-mounts">Bind mounts</h2>
 <ul>
@@ -180,7 +180,7 @@ the toolkit must be mounted into the container.<br>In the example scripts, this 
 <h2 id="command-parsing">Command parsing</h2>
 <p>When commands are passed to the Solr client by using the <code>&quot;$@&quot;</code> notation, the command that is passed to the container must be escaped correctly. On the container, the command is run using <code>docker exec &quot;$@&quot;</code>. Because the command is passed to the <code>docker run</code> command using <code>bash -c</code>, the command must be maintained as a double quoted string.</p>
 <p>For example:</p>
-<pre><code class="lang-bash">    runSQLServerCommandAsETL 
+<pre><code class="lang-bash">    run_sql_server_command_as_etl 
     bash -c 
     &quot;/opt/mssql-tools/bin/sqlcmd -N -b
     -S \${DB_SERVER},${DB_PORT} -U \${DB_USERNAME} -P \${DB_PASSWORD} -d \${DB_NAME} 

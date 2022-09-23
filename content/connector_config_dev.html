@@ -80,7 +80,7 @@
 <h1 id="adding-connectors-to-your-development-environment">Adding connectors to your development environment</h1>
 
 <p>To add a connector to your deployment of i2 Analyze, you must develop an i2 Connect connector. For more information about developing connectors, see <a href="https://i2group.github.io/analyze-connect/index.html">i2 Connect gateway connector development</a>.</p>
-<p>Ensure that the <code>DEPLOYMENT_PATTERN</code> variable in the <code>&lt;config_name&gt;/utils/variables.sh</code> file is set to a pattern that includes the i2 Connect gateway.<br>For example:  </p>
+<p>Ensure that the <code>DEPLOYMENT_PATTERN</code> variable in the <code>&lt;config_name&gt;/utils/variables.conf</code> file is set to a pattern that includes the i2 Connect gateway.<br>For example:  </p>
 <pre><code class="lang-sh">DEPLOYMENT_PATTERN=&quot;i2c_istore&quot;
 </code></pre><p>Process overview:</p>
 <ul>
@@ -211,10 +211,10 @@
     &quot;baseUrl&quot;: &quot;https://example-connector:3443&quot; 
 }
 </code></pre><p> <strong>Note:</strong></p>
-<ol>
+<ul>
 <li>If your external connector is hosted in a Docker container on a different network to your config development environment, connect the Liberty container to the same network as your external connector container. For example, run <code>docker network connect &lt;connector-network-name&gt; liberty1.&lt;config-name&gt;</code>.</li>
-<li>If your connector is running on your host machine, use the IP address of your host machine in the <code>baseUrl</code> value.</li>
-</ol>
+<li>If your connector is running on your host machine, use the <code>host.docker.internal</code> as the host in the <code>baseUrl</code> value. E.g. &quot;<a href="http://host.docker.internal:3000">http://host.docker.internal:3000</a>&quot;</li>
+</ul>
 </li>
 <li><p>Provide the version of the connector in the <code>&lt;connector_name&gt;/connector-version.json</code> file. For external connectors, this file is not required.
  The <code>version</code> value specifies the version of the connector.</p>
@@ -261,8 +261,8 @@ After you develop the schemes, complete the following steps to add deploy them w
 </ol>
 <h2 id="building-the-connector-images-and-redeploying">Building the connector images and redeploying</h2>
 <ol>
-<li><p>Run the <code>./deploy.sh</code> script with your config name from the <code>/scripts</code> directory to generate the secrets for your connectors, build the connector images, and deploy your environment.  </p>
-<pre><code class="lang-sh">./deploy.sh -c &lt;config_name&gt;
+<li><p>Run the <code>deploy</code> command with your config name, to generate the secrets for your connectors, build the connector images, and deploy your environment.  </p>
+<pre><code class="lang-sh">deploy -c &lt;config_name&gt;
 </code></pre></li>
 </ol>
 <p>After you add connectors to your environment, you can <a href="develop_config_dev.html">configure the rest of the configuration</a>.</p>

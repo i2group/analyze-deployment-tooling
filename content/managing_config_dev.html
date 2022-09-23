@@ -80,19 +80,19 @@
 <h1 id="managing-configurations">Managing configurations</h1>
 
 <h2 id="configs">Configs</h2>
-<p>The <code>/configs</code> directory contains all of your configs. The name of the directory for each config is used to identify it when you run the <code>deploy</code> script. You can have as many different configs in the <code>configs</code> directory, however you can only have one deployed and running in the environment at any time.</p>
+<p>The <code>/configs</code> directory contains all of your configs. The name of the directory for each config is used to identify it when you run the <code>deploy</code> command. You can have as many different configs in the <code>configs</code> directory, however you can only have one deployed and running in the environment at any time.</p>
 <ul>
-<li>When you run the <code>deploy.sh</code> script and specify the name of a config that is already deployed, the running deployment is updated with any changes you have made to the configuration or the referenced connectors and extensions.  </li>
-<li>When you run the <code>deploy.sh</code> script and specify the name of a config that is not deployed, the containers in the current environment are stopped and a new environment is deployed with the specified config.</li>
+<li>When you run the <code>deploy</code> command and specify the name of a config that is already deployed, the running deployment is updated with any changes you have made to the configuration or the referenced connectors, extensions and plugins.  </li>
+<li>When you run the <code>deploy</code> command and specify the name of a config that is not deployed, the containers in the current environment are stopped and a new environment is deployed with the specified config.</li>
 </ul>
 <hr>
-<h2 id="the-deploysh-script">The deploy.sh script</h2>
-<p>The <code>scripts/deploy.sh</code> script is used to deploy configs, assets and manage your environment.</p>
-<p>The following usage and help is provided for the <code>deploy.sh</code> script:</p>
+<h2 id="the-deploy-script">The deploy script</h2>
+<p>The <code>deploy</code> command is used to deploy configs, assets and manage your environment.</p>
+<p>The following usage and help is provided for the <code>deploy</code> command:</p>
 <pre><code class="lang-bash">Usage:
-  deploy.sh -c &lt;config_name&gt; [-t {clean}] [-v] [-y]
-  deploy.sh -c &lt;config_name&gt; [-t {backup|restore} [-b &lt;backup_name&gt;]] [-v] [-y]
-  deploy.sh -h
+  deploy -c &lt;config_name&gt; [-t {clean}] [-v] [-y]
+  deploy -c &lt;config_name&gt; [-t {backup|restore} [-b &lt;backup_name&gt;]] [-v] [-y]
+  deploy -h
 
 Options:
   -c &lt;config_name&gt;                       Name of the config to use.

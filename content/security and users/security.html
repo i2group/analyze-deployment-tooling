@@ -81,8 +81,8 @@
 
 <h2 id="ssl-certificates-in-the-deployment">SSL certificates in the deployment</h2>
 <p>The example deployment is configured to use SSL connections for communication between clients and i2 Analyze, and between the components of i2 Analyze.</p>
-<p>To achieve this, the appropriate certificate authorities and certificates are used. The <code>generateSecrets.sh</code> script is used to simulate the process of creating the required keys and acquiring certificate authority-signed certificates.</p>
-<blockquote><p>Note: The keys and certificates used are set to expire after 90 days. To use the certificates for longer than this, you must run the <code>generateSecrets.sh</code> script again.</p>
+<p>To achieve this, the appropriate certificate authorities and certificates are used. The <code>generate-secrets</code> script is used to simulate the process of creating the required keys and acquiring certificate authority-signed certificates.</p>
+<blockquote><p>Note: The keys and certificates used are set to expire after 90 days. To use the certificates for longer than this, you must run the <code>generate-secrets</code> script again.</p>
 </blockquote>
 <h2 id="certificate-authorities-ca">Certificate Authorities (CA)</h2>
 <p>In the example, two CAs are used to provide trust:</p>
@@ -113,30 +113,30 @@
 <ol>
 <li><p>The certificate authority&#39;s certificate is distributed to the client.</p>
 </li>
-<li><p>The private key is generated on the server.<br>In the <code>generateSecrets.sh</code> script, the key is created by:</p>
+<li><p>The private key is generated on the server.<br>In the <code>generate-secrets</code> script, the key is created by:</p>
 <pre><code class="lang-bash">openssl genrsa -out server.key 4096
 </code></pre></li>
-<li><p>The public part of the private key is used in a Certificate Signing Request (CSR).<br>In the <code>generateSecrets.sh</code> script, this is completed by:</p>
+<li><p>The public part of the private key is used in a Certificate Signing Request (CSR).<br>In the <code>generate-secrets</code> script, this is completed by:</p>
 <pre><code class="lang-bash">openssl req -new -key server.key -subj &quot;/CN=solr1.eia&quot; -out key.csr
 </code></pre><p>The common name that is used for the certificate is the server&#39;s fully qualified domain name.<br>The CSR is sent to the certificate authority (CA).</p>
 </li>
-<li><p>The CA signs and returns a signed certificate for the server.<br>In the <code>generateSecrets.sh</code> script, the CA signing the certificate is completed by:</p>
+<li><p>The CA signs and returns a signed certificate for the server.<br>In the <code>generate-secrets</code> script, the CA signing the certificate is completed by:</p>
 <pre><code class="lang-bash">openssl x509 -req -sha256 -CA CA.cer -CAkey CA.key -days 90 -CAcreateserial -CAserial CA.srl -extfile x509.ext -extensions &quot;solr&quot; -in key.csr -out server.cer
 </code></pre></li>
 <li><p>When communication is established, the <code>container certificate</code> is sent to the client. The client uses it&#39;s copy of the <code>CA certificate</code> to verify that the <code>container certificate</code> was signed by the same CA.</p>
 </li>
 </ol>
 <h2 id="password-generation">Password generation</h2>
-<p>The example simulates secrets management performed by various secrets managers provided by cloud vendors. The <code>generateSecrets.sh</code> generates these secrets and populates the <code>dev-environment-secrets/simulated-secret-store</code> with secrets required for each container.
+<p>The example simulates secrets management performed by various secrets managers provided by cloud vendors. The <code>generate-secrets</code> generates these secrets and populates the <code>dev-environment-secrets/simulated-secret-store</code> with secrets required for each container.
 The docker desktop does not support secrets, but the example environment example simulates this by mounting the secrets folder. For more information see <a href="https://docs.docker.com/engine/swarm/secrets/">Manage sensitive data with Docker secrets</a>.</p>
 <p>After these passwords have been generated, they can be uploaded to a secrets manager. Alternatively you can use a secrets manager to generate your passwords.</p>
 <h2 id="solr-basic-authentication">Solr Basic Authentication</h2>
-<p>Solr authentication can be enabled using the BasicAuthPlugin. The basic auth plugin defines users, user roles and passwords for users. For the BasicAuthPlugin to be enabled, solr requires a <code>security.json</code> file to be uploaded. In our example the <code>security.json</code> file is created by the <code>generateSecrets.sh</code> and located in <code>dev-environment-secrets/generated-secrets/solr/security.json</code>.</p>
+<p>Solr authentication can be enabled using the BasicAuthPlugin. The basic auth plugin defines users, user roles and passwords for users. For the BasicAuthPlugin to be enabled, solr requires a <code>security.json</code> file to be uploaded. In our example the <code>security.json</code> file is created by the <code>generate-secrets</code> and located in <code>dev-environment-secrets/generated-secrets/solr/security.json</code>.</p>
 <p>For more information about solr authentication see <a href="https://lucene.apache.org/solr/guide/8_3/basic-authentication-plugin.html">Basic Authentication Plugin</a></p>
 <h2 id="prometheus-basic-authentication">Prometheus Basic Authentication</h2>
 <p>Prometheus authentication can be enabled using the web-config.yml. The YAML file defines users and passwords for users. In our example the password is the same as the username.</p>
 <h2 id="grafana-basic-authentication">Grafana Basic Authentication</h2>
-<p>Grafana authentication can be enabled by passing <code>GF_SECURITY_ADMIN_USER</code> and <code>GF_SECURITY_ADMIN_PASSWORD</code> environment variables to the container. In our example the password is created by <code>generateSecrets.sh</code> and located in <code>dev-environment-secrets/generated-secrets/grafana/admin_PASSWORD</code>.</p>
+<p>Grafana authentication can be enabled by passing <code>GF_SECURITY_ADMIN_USER</code> and <code>GF_SECURITY_ADMIN_PASSWORD</code> environment variables to the container. In our example the password is created by <code>generate-secrets</code> and located in <code>dev-environment-secrets/generated-secrets/grafana/admin_PASSWORD</code>.</p>
 <h2 id="secure-environment-variables">Secure Environment variables</h2>
 <p>In general secrets used by a particular container can be supplied via an environment variable containing the path to a file containing the secret, or an environment variable specifying the literal secret value, for example:
 <strong>Note:</strong> Secrets can be passwords, keys or certificates.</p>

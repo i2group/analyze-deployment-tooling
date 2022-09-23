@@ -80,13 +80,13 @@
 <h1 id="developing-the-rest-of-the-configuration">Developing the rest of the configuration</h1>
 
 <p>After you enable i2 Analyze to work with your data, you can define how analysts interact with your data. To do this, use the following information to modify the i2 Analyze configuration to meet your requirements.</p>
-<p>Ensure that the <code>DEPLOYMENT_PATTERN</code> variable in the <code>&lt;config_name&gt;/utils/variables.sh</code> file is set to your intended deployment pattern.<br>For example, to deploy with the i2 Connect gateway and the Information Store set the following value:  </p>
+<p>Ensure that the <code>DEPLOYMENT_PATTERN</code> variable in the <code>&lt;config_name&gt;/utils/variables.conf</code> file is set to your intended deployment pattern.<br>For example, to deploy with the i2 Connect gateway and the Information Store set the following value:  </p>
 <pre><code class="lang-sh">DEPLOYMENT_PATTERN=&quot;i2c_istore&quot;
 </code></pre><hr>
 <p><strong>Note:</strong></p>
 <ul>
 <li>In the analyze-containers repository, the structure of the configuration directory is modified. The configuration files are in the top level <code>configs/&lt;config_name&gt;/configuration</code> directory.</li>
-<li>You cannot run any toolkit tasks described in the linked documentation in this environment. Instead, after you modify any configuration files, run the <code>deploy.sh</code> script with your config name as you did when you created your deployment.</li>
+<li>You cannot run any toolkit tasks described in the linked documentation in this environment. Instead, after you modify any configuration files, run the <code>deploy</code> command with your config name as you did when you created your deployment.</li>
 </ul>
 <p>The list of things that you can configure includes:</p>
 <ul>

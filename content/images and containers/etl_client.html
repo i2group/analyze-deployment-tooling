@@ -87,7 +87,7 @@
 <pre><code class="lang-bash">docker build -t &quot;etlclient_redhat:4.4.0&quot; &quot;images/etl_client&quot; \
     --build-arg BASE_IMAGE=&quot;i2a_tools_redhat:4.4.0&quot;
 </code></pre><p>The <code>--build-arg</code> flag is used to provide your local user ID to the Docker image when it is built. The value of <code>$USER</code> comes from your shell.</p>
-<p>For examples of the build commands, see the <a href="https://github.com/i2group/analyze-containers/blob/main/utils/buildImages.sh">buildImages.sh</a> script.</p>
+<p>For examples of the build commands, see the <a href="https://github.com/i2group/analyze-containers/blob/main/utils/scripts/build-images">build-images</a> script.</p>
 <h2 id="running-an-etl-client-container">Running an ETL Client container</h2>
 <p>A ETL Client container uses the ETL Client image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to the container. The environment variables are described in <a href="#environment-variables">environment variables</a></p>
 <p>For more information about the command, see <a href="https://docs.docker.com/engine/reference/run/">docker run reference</a>.</p>
@@ -111,8 +111,8 @@
     -e DB_SSL_CONNECTION=&quot;true&quot; \
     -e SSL_CA_CERTIFICATE=&quot;SSL_CA_CERTIFICATE&quot; \
     &quot;etlclient_redhat:4.4.0&quot; &quot;$@&quot;
-</code></pre><p>For an example of the <code>docker run</code> command, see <code>runEtlToolkitToolAsi2ETL</code> function in the <a href="https://github.com/i2group/analyze-containers/blob/main/utils/clientFunctions.sh">clientFunctions.sh</a> script.
-For an example of how to use <code>runEtlToolkitToolAsi2ETL</code> function, see <a href="../tools%20and%20functions/client_functions.html#runEtlToolkitToolAsi2ETL">runEtlToolkitToolAsi2ETL</a>.</p>
+</code></pre><p>For an example of the <code>docker run</code> command, see <code>run_etl_toolkit_tool_as_i2_etl</code> function in the <a href="https://github.com/i2group/analyze-containers/blob/main/utils/client_functions.sh">client_functions.sh</a> script.
+For an example of how to use <code>run_etl_toolkit_tool_as_i2_etl</code> function, see <a href="../tools%20and%20functions/client_functions.html#run_etl_toolkit_tool_as_i2_etl">run_etl_toolkit_tool_as_i2_etl</a>.</p>
 <h3 id="bind-mounts">Bind mounts</h3>
 <ul>
 <li><p><strong>Logs</strong>:<br>The ETL Client container generates logs when running ingestion commands. To make these logs easily accessible, the directory where they are generated must be mounted into the container. In the example, the logs can be accessed in the <code>examples/pre-prod/configuration/logs</code> directory.</p>

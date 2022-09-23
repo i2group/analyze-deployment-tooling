@@ -109,25 +109,25 @@ See the <code>Modifying the schema</code> section of the walkthrough script.</p>
 <h2 id="validating-your-schema">Validating your schema</h2>
 <p>After you modify the schema, you can use the <code>validateSchemaAndSecuritySchema.sh</code> tool to validate it. If the schema is invalid, errors are reported.
 See the <code>Validating the schema</code> section of the walkthrough script.</p>
-<p>The <code>runi2AnalyzeTool</code> client function is used to run the <code>validateSchemaAndSecuritySchema.sh</code> tool.  </p>
+<p>The <code>run_i2_analyze_tool</code> client function is used to run the <code>validateSchemaAndSecuritySchema.sh</code> tool.  </p>
 <ul>
-<li><a href="../tools%20and%20functions/client_functions.html#runi2AnalyzeTool">runi2AnalyzeTool</a></li>
+<li><a href="../tools%20and%20functions/client_functions.html#runi2analyzetool">run_i2_analyze_tool</a></li>
 <li><a href="../tools%20and%20functions/i2analyze_tools.html#schema-validation-tool">validateSchemaAndSecuritySchema</a></li>
 </ul>
 <h2 id="generating-the-database-scripts">Generating the database scripts</h2>
 <p>After you modify and validate the schema, generate the database scripts that are used to update the Information Store database to reflect the change.
 See the <code>Generating update schema scripts</code> section of the walkthrough script.</p>
-<p>The <code>runi2AnalyzeTool</code> client function is used to run the <code>generateUpdateSchemaScripts.sh</code> tool.  </p>
+<p>The <code>run_i2_analyze_tool</code> client function is used to run the <code>generateUpdateSchemaScripts.sh</code> tool.  </p>
 <ul>
-<li><a href="../tools%20and%20functions/client_functions.html#runi2AnalyzeTool">runi2AnalyzeTool</a></li>
+<li><a href="../tools%20and%20functions/client_functions.html#runi2analyzetool">run_i2_analyze_tool</a></li>
 <li><a href="../tools%20and%20functions/i2analyze_tools.html#schema-update-tool">generateUpdateSchemaScripts</a></li>
 </ul>
 <h2 id="running-the-generated-scripts">Running the generated scripts</h2>
 <p>After you generate the scripts, run them against the Information Store database to update the database objects to represent the changes to the schema.
 See the <code>Running the generated scripts</code> section of the walkthrough script.</p>
-<p>The <code>runSQLServerCommandAsDBA</code> client function is used to run the <code>runDatabaseScripts.sh</code> tool.  </p>
+<p>The <code>run_sql_server_command_as_dba</code> client function is used to run the <code>runDatabaseScripts.sh</code> tool.  </p>
 <ul>
-<li><a href="../tools%20and%20functions/client_functions.html#runSQLServerCommandAsDBA">runSQLServerCommandAsDBA</a></li>
+<li><a href="../tools%20and%20functions/client_functions.html#runsqlservercommandasdba">run_sql_server_command_as_dba</a></li>
 <li><a href="../tools%20and%20functions/i2analyze_tools.html#run-database-scripts-tool">runDatabaseScripts</a></li>
 </ul>
 <p>After the database scripts are run, the Information Store database is updated with any changes to the schema.</p>
@@ -139,9 +139,9 @@ See the <code>Running the generated scripts</code> section of the walkthrough sc
 <h2 id="validating-database-consistency">Validating database consistency</h2>
 <p>After the system has started, the <code>dbConsistencyCheckScript.sh</code> tool is used to check the state of the database after the Information Store tables are modified.
 See the <code>Validating database consistency</code> section of the walkthrough script.</p>
-<p>The <code>runi2AnalyzeTool</code> client function is used to run the <code>dbConsistencyCheckScript.sh</code> tool.  </p>
+<p>The <code>run_i2_analyze_tool</code> client function is used to run the <code>dbConsistencyCheckScript.sh</code> tool.  </p>
 <ul>
-<li><a href="../tools%20and%20functions/client_functions.html#runi2AnalyzeTool">runi2AnalyzeTool</a></li>
+<li><a href="../tools%20and%20functions/client_functions.html#runi2analyzetool">run_i2_analyze_tool</a></li>
 <li><a href="../tools%20and%20functions/i2analyze_tools.html#information-store-database-consistency-tool">dbConsistencyCheckScript</a></li>
 </ul>
 </article>

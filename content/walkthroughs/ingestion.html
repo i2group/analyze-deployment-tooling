@@ -93,21 +93,21 @@
 <li>The mapping of staging tables to CSV files and format files.</li>
 <li>A list of import mapping identifiers from the mapping file.</li>
 </ul>
-<p>The script uses the <code>runSqlServerCommandAsETL</code> client function to import the data into the staging tables, and <code>runEtlToolkitToolAsi2ETL</code> to run the ingestion commands.
+<p>The script uses the <code>run_sql_server_command_as_etl</code> client function to import the data into the staging tables, and <code>run_etl_toolkit_tool_as_i2_etl</code> to run the ingestion commands.
 Note the external ETL user is performing the import into the staging tables, but the i2 Internal ETL user is executing ETL tasks such as creating the ingestion source or performing the import from the staging tables.</p>
 <p>The data and ingestion artifacts that are used in the example are in the <code>examples/data</code> directory of the minimal toolkit.</p>
 <h2 id="creating-the-ingestion-sources">Creating the ingestion sources</h2>
-<p>The <code>runEtlToolkitToolAsi2ETL</code> client function is used to run <code>addInformationStoreIngestionSource</code> ETL toolkit tool to create the ingestion sources.</p>
+<p>The <code>run_etl_toolkit_tool_as_i2_etl</code> client function is used to run <code>addInformationStoreIngestionSource</code> ETL toolkit tool to create the ingestion sources.</p>
 <ul>
-<li><a href="../tools%20and%20functions/client_functions.html#runEtlToolkitToolAsi2ETL">runEtlToolkitToolAsi2ETL</a></li>
+<li><a href="../tools%20and%20functions/client_functions.html#run_etl_toolkit_tool_as_i2_etl">run_etl_toolkit_tool_as_i2_etl</a></li>
 <li><a href="../tools%20and%20functions/etl_tools.html#add-information-store-ingestion-source">addInformationStoreIngestionSource</a></li>
 <li>For more information about ingestion sources in the Information Store, see <a href="https://docs.i2group.com/analyze/4.4.0/define_ingestion_source.html">Defining an ingestion source</a></li>
 </ul>
 <p>For an example of how to use the tool, see the <code>Create the ingestion sources</code> section in the <code>ingestDataWalkthrough.sh</code></p>
 <h2 id="creating-the-staging-tables">Creating the staging tables</h2>
-<p>The <code>runEtlToolkitToolAsi2ETL</code> client function is used to run <code>createInformationStoreStagingTable</code> ETL toolkit tool to create the staging tables.</p>
+<p>The <code>run_etl_toolkit_tool_as_i2_etl</code> client function is used to run <code>createInformationStoreStagingTable</code> ETL toolkit tool to create the staging tables.</p>
 <ul>
-<li><a href="../tools%20and%20functions/client_functions.html#runEtlToolkitToolAsi2ETL">runEtlToolkitToolAsi2ETL</a></li>
+<li><a href="../tools%20and%20functions/client_functions.html#run_etl_toolkit_tool_as_i2_etl">run_etl_toolkit_tool_as_i2_etl</a></li>
 <li><a href="../tools%20and%20functions/etl_tools.html#create-information-store-staging-table">createInformationStoreStagingTable</a></li>
 <li>For more information about creating staging tables in the Information Store, see <a href="https://docs.i2group.com/analyze/4.4.0/create_staging_stables.html">Creating the staging tables</a></li>
 </ul>
@@ -122,16 +122,16 @@ For each type of data the staging tables and populated, the data ingestion task 
 <h3 id="ingesting-correlated-data">Ingesting correlated data</h3>
 <p>See the <code>Ingesting correlated data</code> section of the walkthrough script.</p>
 <h3 id="the-ingestion-procedure">The ingestion procedure</h3>
-<p>The <code>runSqlServerCommandAsETL</code> client function is used to run the sql statement that inserts the data into the staging tables.</p>
+<p>The <code>run_sql_server_command_as_etl</code> client function is used to run the sql statement that inserts the data into the staging tables.</p>
 <ul>
-<li><a href="../tools%20and%20functions/client_functions.html#runSqlServerCommandAsETL">runSqlServerCommandAsETL</a></li>
+<li><a href="../tools%20and%20functions/client_functions.html#runsqlservercommandasetl">run_sql_server_command_as_etl</a></li>
 <li><a href="https://docs.i2group.com/analyze/4.4.0/c_stage_data.html">Populating the staging tables</a></li>
 </ul>
 <p>The example uses CSV and format files to insert the data. The files have the same name (<code>person.csv</code> and <code>person.fmt</code>). The staging table names are mapped to the CSV and format files. There is one mapping for base data (<code>BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME</code>) and one for correlation data (<code>CORRELATED_DATA_TABLE_AND_FORMAT_FILE_NAME</code>).
 For an example of how the mappings are used, see the <code>Insert the base data into the staging tables</code> section in the <code>ingestDataWalkthrough.sh</code></p>
-<p>The <code>runEtlToolkitToolAsi2ETL</code> client function is used to run <code>ingestInformationStoreRecords</code> ETL toolkit tool to ingest the data into the Information Store from the staging tables.</p>
+<p>The <code>run_etl_toolkit_tool_as_i2_etl</code> client function is used to run <code>ingestInformationStoreRecords</code> ETL toolkit tool to ingest the data into the Information Store from the staging tables.</p>
 <ul>
-<li><a href="../tools%20and%20functions/client_functions.html#runEtlToolkitToolAsi2ETL">runEtlToolkitToolAsi2ETL</a></li>
+<li><a href="../tools%20and%20functions/client_functions.html#run_etl_toolkit_tool_as_i2_etl">run_etl_toolkit_tool_as_i2_etl</a></li>
 <li><a href="../tools%20and%20functions/etl_tools.html#ingest-information-store-records">ingestInformationStoreRecords</a></li>
 <li><a href="https://docs.i2group.com/analyze/4.4.0/ingestion_command.html">The ingestInformationStoreRecords toolkit task</a></li>
 </ul>

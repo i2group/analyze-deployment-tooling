@@ -80,18 +80,18 @@
 <h1 id="creating-the-environment">Creating the environment</h1>
 
 <p>Before you can deploy i2 Analyze in a containerized environment, the local environment must be created. The local environment requires the prerequisites to be in the correct locations, and copies some artifacts and tools from the i2 Analyze toolkit.</p>
-<p>You can create the local environment by running the <code>utils/createEnvironment.sh</code> script.</p>
-<p>The following descriptions explain what the <code>createEnvironment.sh</code> script does in more detail.</p>
+<p>You can create the local environment by running the <code>create-environment</code> script.</p>
+<p>The following descriptions explain what the <code>create-environment</code> script does in more detail.</p>
 <h2 id="extracts-the-i2-analyze-minimal-toolkit">Extracts the i2 Analyze minimal toolkit</h2>
 <p>The script extracts the toolkit <code>tar.gz</code> located in the <code>pre-reqs</code> directory into the the <code>pre-reqs/i2Analyze</code> directory.</p>
 <h2 id="populate-image-clients">Populate image clients</h2>
-<p>The <code>createEnvironment.sh</code> script creates populate client images with the contents of the <code>i2-tools</code> &amp; <code>scripts</code> folder of the toolkit.</p>
+<p>The <code>create-environment</code> script creates populate client images with the contents of the <code>i2-tools</code> &amp; <code>scripts</code> folder of the toolkit.</p>
 <h2 id="etl-toolkit">ETL toolkit</h2>
-<p>The <code>createEnvironment.sh</code> script creates the ETL toolkit that is built into the etl toolkit image. The etl toolkit is created in <code>images/etl_client/etltoolkit</code>.</p>
+<p>The <code>create-environment</code> script creates the ETL toolkit that is built into the etl toolkit image. The etl toolkit is created in <code>images/etl_client/etltoolkit</code>.</p>
 <h2 id="example-connector-application">Example connector application</h2>
-<p>The <code>createEnvironment.sh</code> script creates the example connector that is built into the connector image. The application consists of the contents of <code>i2analyze/toolkit/examples/connectors/example-connector</code>. The connector application is created in <code>images/example_connector/app</code>.</p>
+<p>The <code>create-environment</code> script creates the example connector that is built into the connector image. The application consists of the contents of <code>i2analyze/toolkit/examples/connectors/example-connector</code>. The connector application is created in <code>images/example_connector/app</code>.</p>
 <h2 id="liberty-application">Liberty application</h2>
-<p>The <code>createEnvironment.sh</code> script creates the i2 Analyze liberty application that is built into the Liberty base image. The application consists of files that do not change based on the configuration. After the application is created, you do not need to modify it. The application is created in <code>images/liberty_ubi_base/application</code>.</p>
+<p>The <code>create-environment</code> script creates the i2 Analyze liberty application that is built into the Liberty base image. The application consists of files that do not change based on the configuration. After the application is created, you do not need to modify it. The application is created in <code>images/liberty_ubi_base/application</code>.</p>
 </article>
           </div>
           

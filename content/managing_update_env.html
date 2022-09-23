@@ -101,9 +101,8 @@
 </li>
 <li><p>Update the command line tools in your environment. The latest version of the analyze-containers repository requires XMLStarlet. For more information about installing XMLStarlet, see <a href="getting_started.html#command-line-tools">Command line tools</a>.</p>
 </li>
-<li><p>To update the images and secrets, run the <code>createDevEnvironment.sh</code> script from the <code>scripts</code> directory.</p>
-<pre><code class="lang-sh">./createDevEnvironment.sh
-</code></pre></li>
+<li><p>To update the images and secrets, run the <code>create-dev-environment</code> command.</p>
+</li>
 <li><p>Before you can use i2 Analyze and the tools, you must read the license agreement and copyright notices. The license file is in the <code>pre-reqs/i2analyze/license</code> directory.  </p>
 <ol>
 <li>To accept the license agreement, change the value of the <code>LIC_AGREEMENT</code> variable to <code>ACCEPT</code>. The variable is in the <code>licenses.conf</code> file.</li>
@@ -120,9 +119,9 @@
 MSSQL_PID=Developer
 ACCEPT_EULA=Y
 </code></pre><ol>
-<li><p>To update any deployed configs, run the <code>deploy.sh</code> script from the <code>scripts</code> directory with your config name. You must run the script twice, once with the <code>clean</code> task.<br> For example:</p>
-<pre><code class="lang-sh">./deploy.sh -c &lt;config_name&gt; -t clean
-./deploy.sh -c &lt;config_name&gt;
+<li><p>To update any deployed configs, run the <code>deploy</code> command with your config name. You must run the script twice, once with the <code>clean</code> task.<br> For example:</p>
+<pre><code class="lang-sh">deploy -c &lt;config_name&gt; -t clean
+deploy -c &lt;config_name&gt;
 </code></pre></li>
 </ol>
 </article>

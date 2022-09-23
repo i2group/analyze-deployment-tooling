@@ -80,15 +80,15 @@
 <h1 id="creating-the-configuration">Creating the configuration</h1>
 
 <p>Before you can deploy i2 Analyze, the configuration for the deployment must exist.</p>
-<p>You can create the configuration by running the <code>utils/createConfiguration.sh</code> script.</p>
-<p>The following descriptions explain what the <code>createConfiguration.sh</code> script does in more detail.</p>
+<p>You can create the configuration by running the <code>create-configuration</code> script.</p>
+<p>The following descriptions explain what the <code>create-configuration</code> script does in more detail.</p>
 <h2 id="creates-the-base-configuration">Creates the base configuration</h2>
 <p>The configuration is created in <code>examples/pre-prod/</code>. The configuration is created from the <code>all-patterns</code> base configuration in the minimal toolkit.</p>
 <p>The base configuration can be used for any of the deployment patterns, however some properties are for specific patterns. By default, a schema and security schema are specified. The schemas that are used are based on the <code>law-enforcement-schema.xml</code>.</p>
 <h2 id="copies-the-jdbc-drivers">Copies the JDBC drivers</h2>
 <p>The JDBC drivers are copied from the <code>pre-reqs/jdbc-drivers</code> directory to the <code>configuration/environment/common/jdbc-drivers</code> directory in your configuration.</p>
 <h2 id="configures-form-based-authentication">Configures Form Based Authentication</h2>
-<p>The <code>createConfiguration.sh</code> scripts configures form based authentication in the <code>examples/pre-prod/configuration/fragments/common/WEB-INF/classes/server.extensions.xml</code>.</p>
+<p>The <code>create-configuration</code> scripts configures form based authentication in the <code>examples/pre-prod/configuration/liberty/server.extensions.xml</code>.</p>
 </article>
           </div>
           

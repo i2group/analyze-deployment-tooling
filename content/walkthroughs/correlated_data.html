@@ -105,9 +105,9 @@ The process includes the following high-level steps:</p>
 <p>To inform i2 Analyze that you intend to define the property values of merged records, run the <code>enableMergedPropertyValues.sh</code> tool. You can take control of the property values for records of specific item types, or all item types in the i2 Analyze schema.
 Note that this operation must be performed by the database administrator.</p>
 <p>See the <code>Enabling merged property values</code> section of the walkthrough script.</p>
-<p>The <code>runEtlToolkitToolAsDBA</code> client function is used to run the <code>enableMergedPropertyValues.sh</code> tool.</p>
+<p>The <code>run_etl_toolkit_tool_as_dba</code> client function is used to run the <code>enableMergedPropertyValues.sh</code> tool.</p>
 <ul>
-<li><a href="../tools%20and%20functions/client_functions.html#runEtlToolkitToolAsDBA">runEtlToolkitToolAsDBA</a></li>
+<li><a href="../tools%20and%20functions/client_functions.html#run_etl_toolkit_tool_as_dba">run_etl_toolkit_tool_as_dba</a></li>
 <li><a href="../tools%20and%20functions/etl_tools.html#enable-merge-property-values">enableMergedPropertyValues</a></li>
 <li><a href="https://docs.i2group.com/analyze/4.4.0/c_merged_properties.html">Defining the property values of merged i2 Analyze records</a></li>
 </ul>
@@ -117,9 +117,9 @@ Note that this operation must be performed by the database administrator.</p>
 <p>After the views are enabled, the merged property values definition view (<code>Person_MPVDV</code>) is modified to change how the property values of correlated records are calculated.
 Note, this step is also performed by the database administrator.</p>
 <p>See the <code>Updating property value definitions</code> section of the walkthrough script.</p>
-<p>The <code>runSQLServerCommandAsDBA</code> client functions in used to run the <code>createAlternativeMergedPropertyValuesView.sql</code> script.</p>
+<p>The <code>run_sql_server_command_as_dba</code> client functions in used to run the <code>createAlternativeMergedPropertyValuesView.sql</code> script.</p>
 <ul>
-<li><a href="../tools%20and%20functions/client_functions.html#runSQLServerCommandAsDBA">runSQLServerCommandAsDBA</a></li>
+<li><a href="../tools%20and%20functions/client_functions.html#runsqlservercommandasdba">run_sql_server_command_as_dba</a></li>
 <li><a href="https://docs.i2group.com/analyze/4.4.0/c_view_definition.html">The merged property values definition view</a></li>
 </ul>
 <h2 id="reingesting-the-data">Reingesting the data</h2>

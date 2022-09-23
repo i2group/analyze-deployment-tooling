@@ -89,7 +89,7 @@
     --build-arg USER_UID=&quot;$(id -u &quot;${USER}&quot;)&quot;
 </code></pre><p>The <code>--build-arg</code> flag is used to provide your local user ID to the Docker image when it is built. The value of <code>$USER</code> comes from your shell.</p>
 <p>The local user ID is required so that a user is created in the Docker container with the same user ID as the local user. The user is required to ensure that the local user can access any files that are generated on the container and mounted to the host via a bind mount.</p>
-<p>For examples of the build commands, see <code>buildImages.sh</code> script.</p>
+<p>For examples of the build commands, see <code>build-images</code> script.</p>
 <h2 id="running-an-i2-analyze-tool-container">Running an i2 Analyze Tool container</h2>
 <p>An i2 Analyze Tool container uses the i2 Analyze Tool image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to the container. The environment variables are described in <a href="#environment-variables">environment variables</a></p>
 <p>For more information about the command, see <a href="https://docs.docker.com/engine/reference/run/">docker run reference</a>.</p>
@@ -148,7 +148,7 @@
 <tbody>
 <tr>
 <td><code>LIC_AGREEMENT</code></td>
-<td>The license agreement for use the i2Analyze tools.</td>
+<td>The license agreement for use the i2 Analyze tools.</td>
 </tr>
 <tr>
 <td><code>ZK_HOST</code></td>

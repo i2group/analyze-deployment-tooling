@@ -85,7 +85,7 @@
 <li>How ZooKeeper is deployed for high availability. For more information, see <a href="https://zookeeper.apache.org/doc/r3.6.2/zookeeperAdmin.html#sc_zkMulitServerSetup">Multi-server setup</a>.</li>
 <li>The ZooKeeper AdminServer is used to monitor the status of the ZooKeeper ensemble <a href="https://zookeeper.apache.org/doc/r3.6.2/zookeeperAdmin.html#sc_adminserver">The AdminServer</a>.</li>
 </ul>
-<p>In the <code>zookeeperServerFailureWalkthrough.sh</code> script demonstrates stopping one of the ZooKeeper containers, monitoring the status, and reinstating high availability.</p>
+<p>The <code>examples/pre-prod/walkthroughs/ha/zookeeperServerFailureWalkthrough.sh</code> script demonstrates stopping one of the ZooKeeper containers, monitoring the status, and reinstating high availability.</p>
 <h2 id="simulating-a-server-failure">Simulating a server failure</h2>
 <p>To simulate a server failure in the ensemble, one of the ZooKeeper servers is stopped. For example, to stop <code>zk1</code>, run:</p>
 <pre><code class="lang-sh">docker stop zk1

@@ -82,23 +82,23 @@
 <p>The <code>update</code> task pulls the latest images from Docker Hub and rebuilds the local images. Use this task to update the images in your environments. Images on Docker Hub are updated with security fixes and other updates.</p>
 <p>To ensure that you are up-to-date with the latest images, run the update task on a regular basis. For example, once every two weeks or once a month.</p>
 <p>Run the following command to update the images:</p>
-<pre><code class="lang-sh">./manageEnvironment.sh -t update
+<pre><code class="lang-sh">manage-environment -t update
 </code></pre><p>If your images are already up-to-date, a message is displayed and you do not need to update your configs. You do not need to complete the following steps.</p>
 <p>If your images are updated, complete the following steps to update your configs to use the latest images, clean and recreate your deployments.</p>
 <ol>
-<li><p>Before you clean your deployments, ensure that you have backed up any data. To back up all of the configs in your environment, use the <code>manageEnvironment.sh</code> script.<br>For example:</p>
-<pre><code class="lang-bash">./manageEnvironment.sh -t backup -b update-20220623
+<li><p>Before you clean your deployments, ensure that you have backed up any data. To back up all of the configs in your environment, use the <code>manage-environment</code> command.<br>For example:</p>
+<pre><code class="lang-bash">manage-environment -t backup -b update-20220623
 </code></pre><p> This creates a backup named <code>update-20220623</code> for all configs in the environment.</p>
 </li>
 <li><p>Clean all of the configs by running the following command:</p>
-<pre><code class="lang-sh">./manageEnvironment.sh -t clean
+<pre><code class="lang-sh">manage-environment -t clean
 </code></pre></li>
 <li><p>Redeploy each config by running the following command:</p>
-<pre><code class="lang-sh">./deploy.sh -c &lt;config_name&gt;
+<pre><code class="lang-sh">deploy -c &lt;config_name&gt;
 </code></pre></li>
 <li><p>Restore any data to each config.</p>
 <p> For example, to restore data from the <code>update-20220623</code> backup, run:</p>
-<pre><code class="lang-sh">./deploy.sh -c &lt;config_name&gt; -t restore -b update-20220623
+<pre><code class="lang-sh">deploy -c &lt;config_name&gt; -t restore -b update-20220623
 </code></pre><p> For more information, see <a href="manage_backup_restore.html">Back up and restore a development database</a>.</p>
 </li>
 </ol>

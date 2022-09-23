@@ -104,7 +104,7 @@ This ensures all the core images are labeled in AWS ECR for that version of the 
 <p>The <code>createSecrets</code> function generates all the secrets and passwords that are required for the deployment and pushes them to the secret store (TODO - any doc/reference for this) and shreds the local copy of these secrets.</p>
 <h3 id="creates-the-images">Creates the images</h3>
 <p>The <code>createImages</code> function builds the Docker images that are required for the deployment and tags them with the <code>I2ANALYZE_VERSION</code> defined in the <code>version</code> file. The built images are uploaded to your AWS Elastic Container Registry. To see your AWS ECR, go to <a href="https://eu-west-2.console.aws.amazon.com/ecr/">ECR console</a></p>
-<p>The function uses the <code>utils/buildImages.sh</code> script to build the images, and the <code>examples/aws/utils/push-images.sh</code> script to push the images to AWS.</p>
+<p>The function uses the <code>utils/scripts/build-images</code> script to build the images, and the <code>examples/aws/utils/push-images.sh</code> script to push the images to AWS.</p>
 <h3 id="upload-artifacts">Upload artifacts</h3>
 <p>The <code>uploadArtifacts</code> function is used to upload the configuration to the <code>analyze-containers-aws-ref-arch-config</code> S3 bucket. The function also uploads the CloudFormation templates and i2a-scripts to the <code>analyze-containers-aws-ref-arch-resources</code> bucket.</p>
 <h3 id="create-runbooks">Create runbooks</h3>

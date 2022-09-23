@@ -85,7 +85,7 @@
 <h2 id="creating-a-containerized-deployment">Creating a containerized deployment</h2>
 <p>After you have all of the prerequisites in place, use the example scripts and artifacts in the <code>examples/pre-prod</code> directory to create the reference pre-production containerized deployment.</p>
 <h3 id="creating-the-environment-and-configuration">Creating the environment and configuration</h3>
-<p>The <code>createEnvironment.sh</code> script performs a number of actions that ensure all of the artifacts for a deployment are created and in the correct locations. These actions include:</p>
+<p>The <code>create-environment</code> script performs a number of actions that ensure all of the artifacts for a deployment are created and in the correct locations. These actions include:</p>
 <ul>
 <li>Extracting the i2 Analyze minimal toolkit to the <code>pre-reqs/i2analyze</code> directory.</li>
 <li>Creating the i2 Analyze Liberty application</li>
@@ -96,7 +96,7 @@
 <li><a href="../tools%20and%20functions/create_environment.html">Create environment</a></li>
 </ul>
 <p>To create the environment and configuration, run the following commands:</p>
-<pre><code class="lang-sh">./createPreProdEnvironment.sh
+<pre><code class="lang-sh">create-pre-prod-environment
 </code></pre><p>The <code>configuration</code> directory is created in the <code>examples/pre-prod</code> directory.</p>
 <p>By default, the environment is created for an Information Store and i2 Connect gateway deployment.</p>
 <h3 id="accepting-the-licenses">Accepting the licenses</h3>
@@ -108,7 +108,7 @@
 </ul>
 <h3 id="running-the-containers-and-start-i2-analyze">Running the containers and start i2 Analyze</h3>
 <p>To deploy and start i2 Analyze, run the following command:</p>
-<pre><code class="lang-sh">./deploy.sh
+<pre><code class="lang-sh">deploy-pre-prod
 </code></pre><p>For more information about the actions that are completed, see <a href="../tools%20and%20functions/deploy.html">Deploying i2 Analyze</a>.</p>
 <hr>
 <h2 id="installing-certificate">Installing Certificate</h2>

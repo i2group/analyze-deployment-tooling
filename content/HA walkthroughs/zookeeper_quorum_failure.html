@@ -87,13 +87,14 @@ servers fail. For more information, see <a href="https://docs.i2group.com/analyz
 <li>When the ZooKeeper quorum is lost, the Solr cluster also fails. To monitor that whether the ZooKeeper quorum is met or not the component availability log in Liberty is used. The status of Solr is used to determine the status of ZooKeeper.</li>
 <li>In a containerized deployment, all log messages are also displayed in the console. You can use the <code>docker logs</code> command to view the console log.</li>
 </ul>
+<p>The <code>examples/pre-prod/walkthroughs/ha/zookeeperQuorumFailureWalkthrough.sh</code> script demonstrates losing more than 50% of the ZooKeeper servers from an ensemble, monitoring the status, and reinstating high availability.</p>
 <h2 id="simulating-loss-of-quorum">Simulating loss of quorum</h2>
 <p>To simulate a loss of quorum, more than 50% of the ZooKeeper servers must be stopped. For example, to stop <code>zk1</code> and <code>zk2</code>, run:</p>
 <pre><code class="lang-sh">docker stop zk1 zk2
 </code></pre><p>See the <code>Simulating Zookeeper Quorum failure</code> section of the walkthrough script.</p>
 <h2 id="detecting-failure">Detecting failure</h2>
 <p>When the ZooKeeper quorum is lost, the Solr cluster also fails. The Solr status is reported as <code>DOWN</code>. For more information about losing Solr, see <a href="solr_cluster_failure.html">Failure of the Solr cluster</a>.</p>
-<p>The <code>detecting failure</code> section of the walkthrough script runs a loop around the <code>getSolrStatus</code> client function that reports the status of Solr. For more information about the function, see <a href="../tools%20and%20functions/client_functions.html#getsolrstatus"><code>getSolrStatus</code></a>.</p>
+<p>The <code>Detecting failure</code> section of the walkthrough script runs a loop around the <code>get_solr_status</code> client function that reports the status of Solr. For more information about the function, see <a href="../tools%20and%20functions/client_functions.html#get_solr_status"><code>get_solr_status</code></a>.</p>
 <p>The function uses a grep command for the following message that indicates Solr is down:</p>
 <pre><code class="lang-Bash">grep -q &quot;^.*[com.i2group.apollo.common.toolkit.internal.ConsoleLogger] - (opal-services) - &#39;.*&#39;, .*&#39;DOWN&#39;&quot;
 </code></pre><p>For more information see the <code>Detecting failure</code> section of the walkthrough script.</p>

@@ -123,7 +123,7 @@ For more information, see <a href="../tools%20and%20functions/i2analyze_tools.ht
 </ul>
 <h2 id="checking-the-standby-match-index-status">Checking the standby match index status</h2>
 <p>When uploading match rules, the <code>runIndexCommand.sh</code> will wait for 5 minutes for a response from the server. If however, it takes longer to create the new match index a curl command can be run against liberty.</p>
-<p>The <code>waitForIndexesToBeBuilt</code> client function makes a request to the <code>api/v1/admin/indexes/status</code> endpoint and inspects the JSON response to see if the match index is built.</p>
+<p>The <code>wait_for_indexes_to_be_built</code> client function makes a request to the <code>api/v1/admin/indexes/status</code> endpoint and inspects the JSON response to see if the match index is built.</p>
 <h2 id="switching-the-standby-match-index-to-live">Switching the standby match index to live</h2>
 <p>After the standby index is ready, you can switch the standby index to live for resolving matches. Use the <code>switch_standby_match_index_to_live</code> function of the <code>runIndexCommand.sh</code> script to switch the indexes.</p>
 <p>The <code>runIndexCommand</code> function with the <code>switch_standby_match_index_to_live</code> argument in the <code>updateMatchRulesWalkthrough.sh</code> script contains the <code>docker run</code> command that uses an ephemeral Solr client container to switch the match indexes.</p>
