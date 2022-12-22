@@ -30,27 +30,27 @@ backup_version=upgrade
 ###############################################################################
 # Restart Pre-Prod Container                                                  #
 ###############################################################################
-startContainer "${ZK1_CONTAINER_NAME}"
-startContainer "${ZK2_CONTAINER_NAME}"
-startContainer "${ZK3_CONTAINER_NAME}"
-startContainer "${SOLR1_CONTAINER_NAME}"
-startContainer "${SOLR2_CONTAINER_NAME}"
-waitForSolrToBeLive "${SOLR1_FQDN}"
-startContainer "${SQL_SERVER_CONTAINER_NAME}"
-waitForSQLServerToBeLive
-startContainer "${CONNECTOR1_CONTAINER_NAME}"
-startContainer "${LIBERTY1_CONTAINER_NAME}"
-startContainer "${LIBERTY2_CONTAINER_NAME}"
-startContainer "${LOAD_BALANCER_CONTAINER_NAME}"
-waitFori2AnalyzeServiceToBeLive
+start_container "${ZK1_CONTAINER_NAME}"
+start_container "${ZK2_CONTAINER_NAME}"
+start_container "${ZK3_CONTAINER_NAME}"
+start_container "${SOLR1_CONTAINER_NAME}"
+start_container "${SOLR2_CONTAINER_NAME}"
+wait_for_solr_to_be_live "${SOLR1_FQDN}"
+start_container "${SQL_SERVER_CONTAINER_NAME}"
+wait_for_sql_server_to_be_live
+start_container "${CONNECTOR1_CONTAINER_NAME}"
+start_container "${LIBERTY1_CONTAINER_NAME}"
+start_container "${LIBERTY2_CONTAINER_NAME}"
+start_container "${LOAD_BALANCER_CONTAINER_NAME}"
+wait_for_i2_analyze_service_to_be_live
 
 ###############################################################################
 # Backing up Solr                                                             #
 ###############################################################################
 print "Backing up Solr"
 # Set up backup permission
-runSolrContainerWithBackupVolume mkdir "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}"
-runSolrContainerWithBackupVolume chown -R solr:0 "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}"
+run_solr_container_with_backup_volume mkdir "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}"
+run_solr_container_with_backup_volume chown -R solr:0 "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}"
 
 # Backing up Solr
 run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=BACKUP&async=${MAIN_INDEX_BACKUP_NAME}&name=${MAIN_INDEX_BACKUP_NAME}&collection=main_index&location=${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}\""
@@ -58,9 +58,9 @@ run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOL
 run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=BACKUP&async=${CHART_INDEX_BACKUP_NAME}&name=${CHART_INDEX_BACKUP_NAME}&collection=chart_index&location=${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}\""
 
 # Monitoring backup status
-waitForAsynchronousRequestStatusToBeCompleted "${MATCH_INDEX_BACKUP_NAME}"
-waitForAsynchronousRequestStatusToBeCompleted "${CHART_INDEX_BACKUP_NAME}"
-waitForAsynchronousRequestStatusToBeCompleted "${MAIN_INDEX_BACKUP_NAME}"
+wait_for_asynchronous_request_status_to_be_completed "${MATCH_INDEX_BACKUP_NAME}"
+wait_for_asynchronous_request_status_to_be_completed "${CHART_INDEX_BACKUP_NAME}"
+wait_for_asynchronous_request_status_to_be_completed "${MAIN_INDEX_BACKUP_NAME}"
 
 # Backup system-match-rules status
 run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd getfile /configs/match_index1/match_index1/app/match-rules.xml "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}/system-match-rules.xml"
@@ -93,39 +93,39 @@ print "Running create-change-set"
 # Removing the previous containers                                            #
 ###############################################################################
 print "Removing the previous containers"
-deleteContainer "${SOLR1_CONTAINER_NAME}"
-deleteContainer "${SOLR2_CONTAINER_NAME}"
-deleteContainer "${ZK1_CONTAINER_NAME}"
-deleteContainer "${ZK2_CONTAINER_NAME}"
-deleteContainer "${ZK3_CONTAINER_NAME}"
-deleteContainer "${SQL_SERVER_CONTAINER_NAME}"
-deleteContainer "${LIBERTY1_CONTAINER_NAME}"
-deleteContainer "${LIBERTY2_CONTAINER_NAME}"
-deleteContainer "${LOAD_BALANCER_CONTAINER_NAME}"
-deleteContainer "${CONNECTOR1_CONTAINER_NAME}"
-deleteContainer "${PROMETHEUS_CONTAINER_NAME}"
-deleteContainer "${GRAFANA_CONTAINER_NAME}"
+delete_container "${SOLR1_CONTAINER_NAME}"
+delete_container "${SOLR2_CONTAINER_NAME}"
+delete_container "${ZK1_CONTAINER_NAME}"
+delete_container "${ZK2_CONTAINER_NAME}"
+delete_container "${ZK3_CONTAINER_NAME}"
+delete_container "${SQL_SERVER_CONTAINER_NAME}"
+delete_container "${LIBERTY1_CONTAINER_NAME}"
+delete_container "${LIBERTY2_CONTAINER_NAME}"
+delete_container "${LOAD_BALANCER_CONTAINER_NAME}"
+delete_container "${CONNECTOR1_CONTAINER_NAME}"
+delete_container "${PROMETHEUS_CONTAINER_NAME}"
+delete_container "${GRAFANA_CONTAINER_NAME}"
 
-quietlyRemoveDockerVolume "${SOLR1_VOLUME_NAME}"
-quietlyRemoveDockerVolume "${SOLR2_VOLUME_NAME}"
-quietlyRemoveDockerVolume "${ZK1_DATA_VOLUME_NAME}"
-quietlyRemoveDockerVolume "${ZK2_DATA_VOLUME_NAME}"
-quietlyRemoveDockerVolume "${ZK3_DATA_VOLUME_NAME}"
-quietlyRemoveDockerVolume "${ZK1_DATALOG_VOLUME_NAME}"
-quietlyRemoveDockerVolume "${ZK2_DATALOG_VOLUME_NAME}"
-quietlyRemoveDockerVolume "${ZK3_DATALOG_VOLUME_NAME}"
-quietlyRemoveDockerVolume "${SQL_SERVER_VOLUME_NAME}"
-quietlyRemoveDockerVolume "${LOAD_BALANCER_VOLUME_NAME}"
-quietlyRemoveDockerVolume "${GRAFANA_DATA_VOLUME_NAME}"
+quietly_remove_docker_volume "${SOLR1_VOLUME_NAME}"
+quietly_remove_docker_volume "${SOLR2_VOLUME_NAME}"
+quietly_remove_docker_volume "${ZK1_DATA_VOLUME_NAME}"
+quietly_remove_docker_volume "${ZK2_DATA_VOLUME_NAME}"
+quietly_remove_docker_volume "${ZK3_DATA_VOLUME_NAME}"
+quietly_remove_docker_volume "${ZK1_DATALOG_VOLUME_NAME}"
+quietly_remove_docker_volume "${ZK2_DATALOG_VOLUME_NAME}"
+quietly_remove_docker_volume "${ZK3_DATALOG_VOLUME_NAME}"
+quietly_remove_docker_volume "${SQL_SERVER_VOLUME_NAME}"
+quietly_remove_docker_volume "${LOAD_BALANCER_VOLUME_NAME}"
+quietly_remove_docker_volume "${GRAFANA_DATA_VOLUME_NAME}"
 
 ###############################################################################
 # Upgrading Solr                                                              #
 ###############################################################################
 # Deploying new Solr and ZooKeeper
 print "Running Zookeeper containers"
-runZK "${ZK1_CONTAINER_NAME}" "${ZK1_FQDN}" "${ZK1_DATA_VOLUME_NAME}" "${ZK1_DATALOG_VOLUME_NAME}" "${ZK1_LOG_VOLUME_NAME}" "1" "zk1" "${ZK1_SECRETS_VOLUME_NAME}"
-runZK "${ZK2_CONTAINER_NAME}" "${ZK2_FQDN}" "${ZK2_DATA_VOLUME_NAME}" "${ZK2_DATALOG_VOLUME_NAME}" "${ZK2_LOG_VOLUME_NAME}" "2" "zk2" "${ZK2_SECRETS_VOLUME_NAME}"
-runZK "${ZK3_CONTAINER_NAME}" "${ZK3_FQDN}" "${ZK3_DATA_VOLUME_NAME}" "${ZK3_DATALOG_VOLUME_NAME}" "${ZK3_LOG_VOLUME_NAME}" "3" "zk3" "${ZK3_SECRETS_VOLUME_NAME}"
+run_zk "${ZK1_CONTAINER_NAME}" "${ZK1_FQDN}" "${ZK1_DATA_VOLUME_NAME}" "${ZK1_DATALOG_VOLUME_NAME}" "${ZK1_LOG_VOLUME_NAME}" 1 "zk1" "${ZK1_SECRETS_VOLUME_NAME}"
+run_zk "${ZK2_CONTAINER_NAME}" "${ZK2_FQDN}" "${ZK2_DATA_VOLUME_NAME}" "${ZK2_DATALOG_VOLUME_NAME}" "${ZK2_LOG_VOLUME_NAME}" 2 "zk2" "${ZK2_SECRETS_VOLUME_NAME}"
+run_zk "${ZK3_CONTAINER_NAME}" "${ZK3_FQDN}" "${ZK3_DATA_VOLUME_NAME}" "${ZK3_DATALOG_VOLUME_NAME}" "${ZK3_LOG_VOLUME_NAME}" 3 "zk3" "${ZK3_SECRETS_VOLUME_NAME}"
 
 print "Configuring ZK Cluster for Solr"
 run_solr_client_command solr zk mkroot "/${SOLR_CLUSTER_ID}" -z "${ZK_MEMBERS}"
@@ -144,9 +144,9 @@ run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n match_index2 -d /
 run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n vq_index -d /opt/configuration/solr/generated_config/vq_index
 
 print "Running secure Solr containers"
-runSolr "${SOLR1_CONTAINER_NAME}" "${SOLR1_FQDN}" "${SOLR1_VOLUME_NAME}" "8983" "solr1" "${SOLR1_SECRETS_VOLUME_NAME}"
-runSolr "${SOLR2_CONTAINER_NAME}" "${SOLR2_FQDN}" "${SOLR2_VOLUME_NAME}" "8984" "solr2" "${SOLR2_SECRETS_VOLUME_NAME}"
-waitForSolrToBeLive "${SOLR1_FQDN}"
+run_solr "${SOLR1_CONTAINER_NAME}" "${SOLR1_FQDN}" "${SOLR1_VOLUME_NAME}" 8983 "solr1" "${SOLR1_SECRETS_VOLUME_NAME}"
+run_solr "${SOLR2_CONTAINER_NAME}" "${SOLR2_FQDN}" "${SOLR2_VOLUME_NAME}" 8984 "solr2" "${SOLR2_SECRETS_VOLUME_NAME}"
+wait_for_solr_to_be_live "${SOLR1_FQDN}"
 
 ###############################################################################
 # Restoring Solr                                                              #
@@ -158,9 +158,9 @@ run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOL
 run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=RESTORE&async=${CHART_INDEX_BACKUP_NAME}&name=${CHART_INDEX_BACKUP_NAME}&collection=chart_index&location=${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}\""
 
 # Monitoring Solr restore process
-waitForAsynchronousRequestStatusToBeCompleted "${MATCH_INDEX_BACKUP_NAME}"
-waitForAsynchronousRequestStatusToBeCompleted "${CHART_INDEX_BACKUP_NAME}"
-waitForAsynchronousRequestStatusToBeCompleted "${MAIN_INDEX_BACKUP_NAME}"
+wait_for_asynchronous_request_status_to_be_completed "${MATCH_INDEX_BACKUP_NAME}"
+wait_for_asynchronous_request_status_to_be_completed "${CHART_INDEX_BACKUP_NAME}"
+wait_for_asynchronous_request_status_to_be_completed "${MAIN_INDEX_BACKUP_NAME}"
 
 # Recreating transient Solr collections
 run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=daod_index&collection.configName=daod_index&numShards=1&maxShardsPerNode=4&replicationFactor=2\""
@@ -178,8 +178,8 @@ run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhos
 print "Upgrading Information Store"
 
 print "Running a new SQL Server"
-runSQLServer
-waitForSQLServerToBeLive "true"
+run_sql_server
+wait_for_sql_server_to_be_live "true"
 change_sa_password
 
 print "Restoring the Information Store database"
@@ -216,7 +216,7 @@ run_sql_server_command_as_dba "/opt/databaseScripts/generated/runDatabaseScripts
 ###############################################################################
 # Upgrading Example Connector                                                 #
 ###############################################################################
-runExampleConnector "${CONNECTOR1_CONTAINER_NAME}" "${CONNECTOR1_FQDN}" "${CONNECTOR1_CONTAINER_NAME}" "${CONNECTOR1_SECRETS_VOLUME_NAME}"
+run_example_connector "${CONNECTOR1_CONTAINER_NAME}" "${CONNECTOR1_FQDN}" "${CONNECTOR1_CONTAINER_NAME}" "${CONNECTOR1_SECRETS_VOLUME_NAME}"
 wait_for_connector_to_be_live "${CONNECTOR1_FQDN}"
 
 ###############################################################################
@@ -224,27 +224,27 @@ wait_for_connector_to_be_live "${CONNECTOR1_FQDN}"
 ###############################################################################
 print "Upgrading Liberty"
 
-buildLibertyConfiguredImageForPreProd
-runLiberty "${LIBERTY1_CONTAINER_NAME}" "${LIBERTY1_FQDN}" "${LIBERTY1_VOLUME_NAME}" "${LIBERTY1_SECRETS_VOLUME_NAME}" "${LIBERTY1_PORT}" "${LIBERTY1_CONTAINER_NAME}" "${LIBERTY1_DEBUG_PORT}"
-runLiberty "${LIBERTY2_CONTAINER_NAME}" "${LIBERTY2_FQDN}" "${LIBERTY2_VOLUME_NAME}" "${LIBERTY2_SECRETS_VOLUME_NAME}" "${LIBERTY2_PORT}" "${LIBERTY2_CONTAINER_NAME}" "${LIBERTY2_DEBUG_PORT}"
-runLoadBalancer
-waitFori2AnalyzeServiceToBeLive
+build_liberty_configured_image_for_pre_prod
+run_liberty "${LIBERTY1_CONTAINER_NAME}" "${LIBERTY1_FQDN}" "${LIBERTY1_VOLUME_NAME}" "${LIBERTY1_SECRETS_VOLUME_NAME}" "${LIBERTY1_PORT}" "${LIBERTY1_CONTAINER_NAME}" "${LIBERTY1_DEBUG_PORT}"
+run_liberty "${LIBERTY2_CONTAINER_NAME}" "${LIBERTY2_FQDN}" "${LIBERTY2_VOLUME_NAME}" "${LIBERTY2_SECRETS_VOLUME_NAME}" "${LIBERTY2_PORT}" "${LIBERTY2_CONTAINER_NAME}" "${LIBERTY2_DEBUG_PORT}"
+run_load_balancer
+wait_for_i2_analyze_service_to_be_live
 
 ###############################################################################
 # Upgrading Prometheus                                                        #
 ###############################################################################
 print "Upgrading Prometheus"
-configurePrometheusForPreProd
-runPrometheus
-waitForPrometheusServerToBeLive
+configure_prometheus_for_pre_prod
+run_prometheus
+wait_for_prometheus_server_to_be_live
 
 ###############################################################################
 # Upgrading Grafana                                                           #
 ###############################################################################
 print "Upgrading Grafana"
 
-runGrafana
-waitForGrafanaServerToBeLive
+run_grafana
+wait_for_grafana_server_to_be_live
 
 ###############################################################################
 # Updating version file                                                       #

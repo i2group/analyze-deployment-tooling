@@ -32,7 +32,7 @@ MAX_TRIES=30
 # Simulating ZooKeeper quorum failure                                         #
 ###############################################################################
 print "Simulating a ZooKeeper quorum failure"
-SINCE_TIMESTAMP="$(getTimestamp)"
+SINCE_TIMESTAMP="$(get_time_stamp)"
 echo "Stopping 2 ZooKeeper Servers (>50% of the quorum members)"
 docker stop "${ZK1_CONTAINER_NAME}" "${ZK2_CONTAINER_NAME}"
 
@@ -63,7 +63,7 @@ done
 # Reinstating high availability                                               #
 ###############################################################################
 print "Reinstating high availability by starting zookeeper's"
-SINCE_TIMESTAMP="$(getTimestamp)"
+SINCE_TIMESTAMP="$(get_time_stamp)"
 docker start "${ZK1_CONTAINER_NAME}" "${ZK2_CONTAINER_NAME}"
 
 print "Waiting for Liberty to mark the Solr collection as healthy"

@@ -18,7 +18,7 @@ set -e
 if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
   file_env 'SSL_CA_CERTIFICATE'
   if [[ -z "${SSL_CA_CERTIFICATE}" ]]; then
-    echo "Missing security environment variables. Please check SSL_CA_CERTIFICATE"
+    echo "Missing security environment variables. Please check SSL_CA_CERTIFICATE" >&2
     exit 1
   fi
   TMP_SECRETS="/tmp/i2acerts"

@@ -4,15 +4,11 @@
 #
 # SPDX short identifier: MIT
 
-ARG BASE_IMAGE="registry.access.redhat.com/ubi8/ubi-minimal:8.6"
-# The following is to allow to copy from an image passed as arg 
-ARG JAVA_BASE_IMAGE="adoptopenjdk/openjdk11:ubi-jre"
-FROM ${JAVA_BASE_IMAGE} as java
+ARG BASE_IMAGE="eclipse-temurin:11-ubi9-minimal"
 
 FROM ${BASE_IMAGE}
 ARG I2ANALYZE_VERSION
 
-COPY --from=java "/opt/java/openjdk" "/opt/java/openjdk"
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ARG I2ANALYZE_VERSION
@@ -32,32 +28,35 @@ RUN set -eux; \
   openssl; \
   microdnf clean all;
 
-ENV JAVA_HOME="/opt/java/openjdk" \
-  PATH="/opt/java/openjdk/bin:$PATH"
-
 ARG USERNAME=i2analyze
-ARG USER_UID=1001
+ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-RUN useradd $USERNAME
+ARG GOSU_VERSION=1.14
 
-RUN groupmod --gid $USER_GID $USERNAME \
-  && usermod --uid $USER_UID --gid $USER_GID $USERNAME \
-  && chown -R $USER_UID:$USER_GID /home/$USERNAME
+RUN curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-amd64" \
+  && chmod +x /usr/local/bin/gosu \
+  # Verify that the binary works
+  && gosu nobody true
 
-COPY --chown=$USER_UID:$USER_GID docker-entrypoint.sh /opt/docker-entrypoint.sh
-COPY --chown=$USER_UID:$USER_GID environment.sh /opt/environment.sh
-COPY --chown=$USER_UID:$USER_GID tools/ /opt/
+RUN useradd "$USERNAME" \
+  && groupmod --gid "$USER_GID" "$USERNAME" \
+  && usermod --uid "$USER_UID" --gid $USER_GID "$USERNAME" \
+  && chown -R "$USER_UID:$USER_GID" "/home/$USERNAME"
 
-RUN mkdir -p /opt/configuration /opt/databaseScripts/generated /var/i2a-data /simulatedKeyStore \
-  && chown -R $USER_UID:$USER_GID /opt/configuration \
+COPY --chown=$USERNAME docker-entrypoint.sh /opt/docker-entrypoint.sh
+COPY --chown=$USERNAME environment.sh /opt/environment.sh
+COPY --chown=$USERNAME tools/ /opt/
+
+RUN mkdir -p /opt/configuration /opt/databaseScripts/generated /var/i2a-data /tmp/i2acerts \
+  && chown -R $USERNAME /opt/configuration \
   /opt/databaseScripts/generated \
   /var/i2a-data \
-  /simulatedKeyStore
+  /tmp/i2acerts
 
 ENV TOOLKIT_DIR=/opt \
   USER="${USERNAME}"
 
-USER $USERNAME
+VOLUME [ "/simulatedKeyStore", "/opt/configuration", "/opt/databaseScripts/generated", "/var/i2a-data" ]
 
 ENTRYPOINT ["/opt/docker-entrypoint.sh"]

@@ -27,14 +27,7 @@
   },
   "terminal.integrated.defaultProfile.windows": "C:\\WINDOWS\\System32\\wsl.exe",
   "java.project.referencedLibraries": [
-    "pre-reqs/i2analyze/toolkit/application/shared/lib/*.jar",
-    "pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/disco-api-*.jar",
-    "pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/solr-core-*.jar",
-    "pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/solr-solrj-*.jar",
-    "pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/Daod.jar",
-    "pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/httpclient-*.jar",
-    "pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/httpcore-*.jar",
-    "pre-reqs/i2analyze/toolkit/application/targets/opal-services/WEB-INF/lib/ApolloLegacy.jar"
+    "pre-reqs/i2analyze/toolkit/application/shared/lib/*.jar"
   ],
   "json.schemas": [{
     "fileMatch": ["*connector-definition.json"],

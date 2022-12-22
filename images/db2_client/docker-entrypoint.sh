@@ -18,7 +18,7 @@ set -e
 if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
   file_env 'SSL_CA_CERTIFICATE'
   if [[ -z "${SSL_CA_CERTIFICATE}" ]]; then
-    echo "Missing security environment variables. Please check SSL_CA_CERTIFICATE"
+    echo "Missing security environment variables. Please check SSL_CA_CERTIFICATE" >&2
     exit 1
   fi
   TMP_SECRETS="/tmp/i2acerts"
@@ -32,18 +32,18 @@ fi
 
 case "$1" in
 "runSQLQuery")
-  printWarn "runSQLQuery has been deprecated. Please use run-sql-query instead."
+  print_warn "runSQLQuery has been deprecated. Please use run-sql-query instead."
   ;&
   # Fallthrough
 "run-sql-query")
-  su -p db2inst1 -c "set -e; . /opt/db-scripts/common_functions.sh && runSQLQuery \"$2\""
+  su -p db2inst1 -c "set -e; . /opt/db-scripts/common_functions.sh && run_sql_query \"$2\""
   ;;
 "runSQLQueryForDB")
-  printWarn "runSQLQueryForDB has been deprecated. Please use run-sql-query-for-db instead."
+  print_warn "runSQLQueryForDB has been deprecated. Please use run-sql-query-for-db instead."
   ;&
   # Fallthrough
 "run-sql-query-for-db")
-  su -p db2inst1 -c "set -e; . /opt/db-scripts/common_functions.sh && runSQLQueryForDB \"$2\" \"$3\""
+  su -p db2inst1 -c "set -e; . /opt/db-scripts/common_functions.sh && run_sql_query_for_db \"$2\" \"$3\""
   ;;
 *)
   set +e

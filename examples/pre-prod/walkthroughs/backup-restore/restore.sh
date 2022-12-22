@@ -36,15 +36,15 @@ docker container stop "${SOLR1_CONTAINER_NAME}" "${SOLR2_CONTAINER_NAME}" "${ZK1
 docker container rm "${SOLR1_CONTAINER_NAME}" "${SOLR2_CONTAINER_NAME}" "${ZK1_CONTAINER_NAME}" "${ZK2_CONTAINER_NAME}" "${ZK3_CONTAINER_NAME}" "${SQL_SERVER_CONTAINER_NAME}"
 
 print "Removing Solr, ZooKeeper, and SQL Server volumes"
-quietlyRemoveDockerVolume "${SOLR1_VOLUME_NAME}"
-quietlyRemoveDockerVolume "${SOLR2_VOLUME_NAME}"
-quietlyRemoveDockerVolume "${ZK1_DATA_VOLUME_NAME}"
-quietlyRemoveDockerVolume "${ZK2_DATA_VOLUME_NAME}"
-quietlyRemoveDockerVolume "${ZK3_DATA_VOLUME_NAME}"
-quietlyRemoveDockerVolume "${ZK1_DATALOG_VOLUME_NAME}"
-quietlyRemoveDockerVolume "${ZK2_DATALOG_VOLUME_NAME}"
-quietlyRemoveDockerVolume "${ZK3_DATALOG_VOLUME_NAME}"
-quietlyRemoveDockerVolume "${SQL_SERVER_VOLUME_NAME}"
+quietly_remove_docker_volume "${SOLR1_VOLUME_NAME}"
+quietly_remove_docker_volume "${SOLR2_VOLUME_NAME}"
+quietly_remove_docker_volume "${ZK1_DATA_VOLUME_NAME}"
+quietly_remove_docker_volume "${ZK2_DATA_VOLUME_NAME}"
+quietly_remove_docker_volume "${ZK3_DATA_VOLUME_NAME}"
+quietly_remove_docker_volume "${ZK1_DATALOG_VOLUME_NAME}"
+quietly_remove_docker_volume "${ZK2_DATALOG_VOLUME_NAME}"
+quietly_remove_docker_volume "${ZK3_DATALOG_VOLUME_NAME}"
+quietly_remove_docker_volume "${SQL_SERVER_VOLUME_NAME}"
 
 ###############################################################################
 # Stop the Liberty containers                                                 #
@@ -56,8 +56,8 @@ docker container stop "${LIBERTY1_CONTAINER_NAME}" "${LIBERTY2_CONTAINER_NAME}"
 # Running SQL Server                                                          #
 ###############################################################################
 print "Running a new SQL Server"
-runSQLServer
-waitForSQLServerToBeLive "true"
+run_sql_server
+wait_for_sql_server_to_be_live "true"
 change_sa_password
 
 ###############################################################################
@@ -100,9 +100,9 @@ run_sql_server_command_as_sa "/opt/db-scripts/add_etl_user_to_sys_admin_role.sh"
 # Deploying new Solr and ZooKeeper                                            #
 ###############################################################################
 print "Running Zookeeper containers"
-runZK "${ZK1_CONTAINER_NAME}" "${ZK1_FQDN}" "${ZK1_DATA_VOLUME_NAME}" "${ZK1_DATALOG_VOLUME_NAME}" "${ZK1_LOG_VOLUME_NAME}" "1" "zk1" "${ZK1_SECRETS_VOLUME_NAME}"
-runZK "${ZK2_CONTAINER_NAME}" "${ZK2_FQDN}" "${ZK2_DATA_VOLUME_NAME}" "${ZK2_DATALOG_VOLUME_NAME}" "${ZK2_LOG_VOLUME_NAME}" "2" "zk2" "${ZK2_SECRETS_VOLUME_NAME}"
-runZK "${ZK3_CONTAINER_NAME}" "${ZK3_FQDN}" "${ZK3_DATA_VOLUME_NAME}" "${ZK3_DATALOG_VOLUME_NAME}" "${ZK3_LOG_VOLUME_NAME}" "3" "zk3" "${ZK3_SECRETS_VOLUME_NAME}"
+run_zk "${ZK1_CONTAINER_NAME}" "${ZK1_FQDN}" "${ZK1_DATA_VOLUME_NAME}" "${ZK1_DATALOG_VOLUME_NAME}" "${ZK1_LOG_VOLUME_NAME}" 1 "zk1" "${ZK1_SECRETS_VOLUME_NAME}"
+run_zk "${ZK2_CONTAINER_NAME}" "${ZK2_FQDN}" "${ZK2_DATA_VOLUME_NAME}" "${ZK2_DATALOG_VOLUME_NAME}" "${ZK2_LOG_VOLUME_NAME}" 2 "zk2" "${ZK2_SECRETS_VOLUME_NAME}"
+run_zk "${ZK3_CONTAINER_NAME}" "${ZK3_FQDN}" "${ZK3_DATA_VOLUME_NAME}" "${ZK3_DATALOG_VOLUME_NAME}" "${ZK3_LOG_VOLUME_NAME}" 3 "zk3" "${ZK3_SECRETS_VOLUME_NAME}"
 
 print "Configuring ZK Cluster for Solr"
 run_solr_client_command solr zk mkroot "/${SOLR_CLUSTER_ID}" -z "${ZK_MEMBERS}"
@@ -121,9 +121,9 @@ run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n match_index2 -d /
 run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n vq_index -d /opt/configuration/solr/generated_config/vq_index
 
 print "Running secure Solr containers"
-runSolr "${SOLR1_CONTAINER_NAME}" "${SOLR1_FQDN}" "${SOLR1_VOLUME_NAME}" "8983" "solr1" "${SOLR1_SECRETS_VOLUME_NAME}"
-runSolr "${SOLR2_CONTAINER_NAME}" "${SOLR2_FQDN}" "${SOLR2_VOLUME_NAME}" "8984" "solr2" "${SOLR2_SECRETS_VOLUME_NAME}"
-waitForSolrToBeLive "${SOLR1_FQDN}"
+run_solr "${SOLR1_CONTAINER_NAME}" "${SOLR1_FQDN}" "${SOLR1_VOLUME_NAME}" 8983 "solr1" "${SOLR1_SECRETS_VOLUME_NAME}"
+run_solr "${SOLR2_CONTAINER_NAME}" "${SOLR2_FQDN}" "${SOLR2_VOLUME_NAME}" 8984 "solr2" "${SOLR2_SECRETS_VOLUME_NAME}"
+wait_for_solr_to_be_live "${SOLR1_FQDN}"
 
 ###############################################################################
 # Restoring non-transient Solr collections                                    #
@@ -136,9 +136,9 @@ run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOL
 ###############################################################################
 # Monitoring Solr restore status                                              #
 ###############################################################################
-waitForAsynchronousRequestStatusToBeCompleted "${MATCH_INDEX_BACKUP_NAME}"
-waitForAsynchronousRequestStatusToBeCompleted "${CHART_INDEX_BACKUP_NAME}"
-waitForAsynchronousRequestStatusToBeCompleted "${MAIN_INDEX_BACKUP_NAME}"
+wait_for_asynchronous_request_status_to_be_completed "${MATCH_INDEX_BACKUP_NAME}"
+wait_for_asynchronous_request_status_to_be_completed "${CHART_INDEX_BACKUP_NAME}"
+wait_for_asynchronous_request_status_to_be_completed "${MAIN_INDEX_BACKUP_NAME}"
 
 ###############################################################################
 # Recreating transient Solr collections                                       #
@@ -160,6 +160,6 @@ run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhos
 ###############################################################################
 print "Starting Liberty containers"
 docker container start "${LIBERTY1_CONTAINER_NAME}" "${LIBERTY2_CONTAINER_NAME}"
-waitFori2AnalyzeServiceToBeLive
+wait_for_i2_analyze_service_to_be_live
 
 print_success "restore.sh has run successfully"

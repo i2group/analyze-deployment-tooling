@@ -19,7 +19,7 @@ function run_task() {
     post_start
     ;;
   *)
-    echo "Unknown task: ${task}"
+    echo "Unknown task: ${task}" >&2
     exit 1
     ;;
   esac
@@ -35,13 +35,6 @@ function create() {
   fi
   docker network connect eia "${HOSTNAME}"
 
-  if [[ "${DEV_MODE}" == "true" ]]; then
-    # Only execute the following in dev mode
-
-    # To update this file execute the opsite command:
-    # git update-index --no-assume-unchanged .devcontainer/devcontainer.json
-    git update-index --assume-unchanged ./.devcontainer/devcontainer.json
-  fi
   echo "VSCode dev container connected to docker network: eia"
 
   export ANALYZE_CONTAINERS_ROOT_DIR="${WORKSPACE}"
@@ -50,7 +43,7 @@ function create() {
   if [[ -d "${LOCAL_TOOLKIT_DIR}" ]]; then
     # Ensure to install the maven dependencies
     source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
-    setupI2AnalyzeMavenLocal
+    setup_i2_analyze_maven_local
   fi
   echo "Done"
 }

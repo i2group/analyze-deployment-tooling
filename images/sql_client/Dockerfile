@@ -4,7 +4,8 @@
 #
 # SPDX short identifier: MIT
 
-FROM mcr.microsoft.com/mssql/rhel/server:2019-CU16-rhel-8.5
+ARG BASE_IMAGE="mcr.microsoft.com/mssql/rhel/server:2019-CU18-rhel-8.5"
+FROM "${BASE_IMAGE}"
 
 # Change to root to install necessary packages
 USER root

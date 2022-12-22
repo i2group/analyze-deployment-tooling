@@ -6,7 +6,7 @@
   "properties": {
     "extensions": {
       "type": "array",
-      "description": "List of connector objects.",
+      "description": "List of extension objects.",
       "items": {
         "type": "object",
         "default": {

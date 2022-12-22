@@ -3,9 +3,10 @@
 # © N.Harris Computer Corporation (2022)
 #
 # SPDX short identifier: MIT
+ARG NODEJS_BASE_IMAGE="registry.access.redhat.com/ubi9/nodejs-16"
+FROM ${NODEJS_BASE_IMAGE}
 
-FROM registry.access.redhat.com/ubi8/nodejs-16:1
-
+LABEL maintainer="i2 Group"
 USER 0
 
 WORKDIR ${HOME}
@@ -14,9 +15,8 @@ COPY --chown=1001:0 docker-entrypoint.sh /opt/docker-entrypoint.sh
 COPY --chown=1001:0 environment.sh /opt/environment.sh
 
 # Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-# where available
-COPY app/package*.json ./
+# npm install will install the dependencies defined in npm-shrinkwrap.json if it exists, otherwise in package-lock.json if it exists or if neither the latest dependencies
+COPY app/package*.json app/npm-shrinkwrap.json* ./
 
 # Install our dependencies
 RUN npm install

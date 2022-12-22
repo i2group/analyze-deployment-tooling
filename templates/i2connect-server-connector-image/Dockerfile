@@ -3,8 +3,8 @@
 # © N.Harris Computer Corporation (2022)
 #
 # SPDX short identifier: MIT
-
-FROM registry.access.redhat.com/ubi8/nodejs-16:1
+ARG NODEJS_BASE_IMAGE="registry.access.redhat.com/ubi9/nodejs-16"
+FROM ${NODEJS_BASE_IMAGE}
 
 LABEL maintainer="i2 Group"
 USER 0
@@ -15,9 +15,8 @@ ENV NODE_ENV=production
 EXPOSE 3000 3443
 
 # Install app dependencies
-# We want to install all the latest dependencies at the time of building the image
-# This requires that the package-lock.json file is not present.
-COPY app/package.json ./
+# npm install will install the dependencies defined in npm-shrinkwrap.json if it exists, otherwise in package-lock.json if it exists or if neither the latest dependencies
+COPY app/package*.json app/npm-shrinkwrap.json* ./
 
 # Install our dependencies
 RUN npm install

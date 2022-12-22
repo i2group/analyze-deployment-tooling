@@ -16,7 +16,7 @@ if [[ ${SERVER_SSL} == true ]]; then
   file_env 'SSL_PRIVATE_KEY'
   file_env 'SSL_CERTIFICATE'
   if [[ -z ${SSL_PRIVATE_KEY} || -z ${SSL_CERTIFICATE} ]]; then
-    echo "Missing security environment variables. Please check SSL_PRIVATE_KEY SSL_CERTIFICATE"
+    echo "Missing security environment variables. Please check SSL_PRIVATE_KEY SSL_CERTIFICATE" >&2
     exit 1
   fi
 

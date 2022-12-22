@@ -4,12 +4,11 @@
 #
 # SPDX short identifier: MIT
 
-echo "BASH_VERSION: $BASH_VERSION"
 set -e
 
 if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
-  echo "ANALYZE_CONTAINERS_ROOT_DIR variable is not set"
-  echo "This project should be run inside a VSCode Dev Container. For more information read, the Getting Started guide at https://i2group.github.io/analyze-containers/content/getting_started.html"
+  echo "ANALYZE_CONTAINERS_ROOT_DIR variable is not set" >&2
+  echo "This project should be run inside a VSCode Dev Container. For more information read, the Getting Started guide at https://i2group.github.io/analyze-containers/content/getting_started.html" >&2
   exit 1
 fi
 
@@ -24,7 +23,7 @@ Options:
   -c <config_name>             Name of the config to use.
   -t {delete|ingest|sources}   The task to run. Either delete or ingest data, or add ingestion sources. Delete permanently removes all data from the database.
   -d <data_set>                Name of the data set to ingest.
-  -s <script_name>             Name of the ingestion script file. If running the 'sources' task, this will default to 'createIngestionSources.sh'
+  -s <script_name>             Name of the ingestion script file. If running the 'sources' task, this will default to 'create-ingestion-sources'
   -y                           Answer 'yes' to all prompts.
   -v                           Verbose output.
   -h                           Display the help.
@@ -36,15 +35,15 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
 OPTIONS_FOR="manageData"
 parse_arguments "$@"
 
-[[ "${TASK}" == "ingest" || "${TASK}" == "delete" || "${TASK}" == "sources" ]] || printUsage "1"
+[[ "${TASK}" == "ingest" || "${TASK}" == "delete" || "${TASK}" == "sources" ]] || print_usage 1
 
 if [[ -z "${CONFIG_NAME}" ]]; then
-  printUsage "1"
+  print_usage 1
 fi
 
 if [[ "${TASK}" == "ingest" ]]; then
   if [[ -z "${DATA_SET}" ]] || [[ -z "${SCRIPT_NAME}" ]]; then
-    printUsage "1"
+    print_usage 1
   fi
 fi
 
@@ -61,7 +60,7 @@ warn_root_dir_not_in_path
 check_docker_is_running
 set_dependencies_tag_if_necessary
 
-function runScript() {
+function run_script() {
   local script_path="$1"
 
   if [[ ! -f "${script_path}" ]]; then
@@ -72,14 +71,14 @@ function runScript() {
   . "${script_path}"
 }
 
-function runIngestionScript() {
+function run_ingestion_script() {
   local script_path="${ANALYZE_CONTAINERS_ROOT_DIR}/i2a-data/${DATA_SET}/scripts/${SCRIPT_NAME}"
-  runScript "${script_path}"
+  run_script "${script_path}"
 }
 
-function createIngestionSources() {
+function create_ingestion_sources() {
   local script_name="$1"
-  local default_script_name="createIngestionSources.sh"
+  local default_script_name="create-ingestion-sources"
   local script_path
 
   if [[ -z "${script_name}" ]]; then
@@ -88,78 +87,66 @@ function createIngestionSources() {
     script_path="${LOCAL_USER_CONFIG_DIR}/ingestion/scripts/${script_name}"
   fi
 
-  runScript "${script_path}"
+  run_script "${script_path}"
 }
 
-function clearSearchIndex() {
-  print "Clearing the search index"
-  # The curl command uses the container's local environment variables to obtain the SOLR_ADMIN_DIGEST_USERNAME and SOLR_ADMIN_DIGEST_PASSWORD.
-  # To stop the variables being evaluated in this script, the variables are escaped using backslashes (\) and surrounded in double quotes (").
-  # Any double quotes in the curl command are also escaped by a leading backslash.
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/main_index/update?commit=true\" -H Content-Type:text/xml --data-binary \"<delete><query>*:*</query></delete>\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/match_index1/update?commit=true\" -H Content-Type:text/xml --data-binary \"<delete><query>*:*</query></delete>\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/match_index2/update?commit=true\" -H Content-Type:text/xml --data-binary \"<delete><query>*:*</query></delete>\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/chart_index/update?commit=true\" -H Content-Type:text/xml --data-binary \"<delete><query>*:*</query></delete>\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/daod_index/update?commit=true\" -H Content-Type:text/xml --data-binary \"<delete><query>*:*</query></delete>\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/highlight_index/update?commit=true\" -H Content-Type:text/xml --data-binary \"<delete><query>*:*</query></delete>\""
-
-  # Remove the collection properties from ZooKeeper
-  run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/main_index/collectionprops.json"
-  run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/match_index1/collectionprops.json"
-  run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/match_index2/collectionprops.json"
-  run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/chart_index/collectionprops.json"
-}
-
-function clearInfoStore() {
+function clear_info_store() {
   print "Clearing the InfoStore database"
   case "${DB_DIALECT}" in
   db2)
-    run_db2_server_command_as_db2inst1inst1 "/opt/databaseScripts/generated/runClearInfoStoreData.sh"
+    run_db2_server_command_as_db2inst1 "/opt/databaseScripts/generated/runClearInfoStoreData.sh"
     ;;
   sqlserver)
     run_sql_server_command_as_dba "/opt/databaseScripts/generated/runClearInfoStoreData.sh"
     ;;
+  postgres)
+    run_postgres_server_command_as_dba "/opt/databaseScripts/generated/runClearInfoStoreData.sh"
+    ;;
   esac
 }
 
-function runClearData() {
+function run_clear_data() {
   print "Clearing Data"
-  clearSearchIndex
-  clearInfoStore
+  clear_search_index
+  clear_info_store
 }
 
-function removeLibertyContainer() {
-  printInfo "Removing existing Liberty container"
-  deleteContainer "${LIBERTY1_CONTAINER_NAME}"
+function remove_liberty_container() {
+  print_info "Removing existing Liberty container"
+  delete_container "${LIBERTY1_CONTAINER_NAME}"
 }
 
-function startLibertyContainer() {
-  printInfo "Starting up new Liberty container"
-  runLiberty "${LIBERTY1_CONTAINER_NAME}" "${I2_ANALYZE_FQDN}" "${LIBERTY1_VOLUME_NAME}" "${LIBERTY1_SECRETS_VOLUME_NAME}" "${HOST_PORT_I2ANALYZE_SERVICE}" "${I2_ANALYZE_CERT_FOLDER_NAME}" "${LIBERTY1_DEBUG_PORT}"
-  updateLog4jFile
-  addConfigAdmin
-  checkLibertyStatus
+function start_liberty_container() {
+  print_info "Starting up new Liberty container"
+  run_liberty "${LIBERTY1_CONTAINER_NAME}" "${I2_ANALYZE_FQDN}" "${LIBERTY1_VOLUME_NAME}" "${LIBERTY1_SECRETS_VOLUME_NAME}" "${HOST_PORT_I2ANALYZE_SERVICE}" "${I2_ANALYZE_CERT_FOLDER_NAME}" "${LIBERTY1_DEBUG_PORT}"
+  update_log4j_file
+  add_config_admin
+  check_liberty_status
 }
 
-function checkDataSetExists() {
-  printInfo "Checking the data set ${DATA_SET} exists"
+function check_data_set_exists() {
+  print_info "Checking the data set ${DATA_SET} exists"
   local data_set_folder_path="${ANALYZE_CONTAINERS_ROOT_DIR}/i2a-data/${DATA_SET}"
   if [[ ! -d "${data_set_folder_path}" ]]; then
     print_error_and_exit "${data_set_folder_path} does NOT exist"
   else
-    printInfo "${data_set_folder_path} exist"
+    print_info "${data_set_folder_path} exist"
   fi
 }
 
-checkDeploymentIsLive "${CONFIG_NAME}"
+function main() {
+  check_deployment_is_live "${CONFIG_NAME}"
 
-if [[ "${TASK}" == "ingest" ]]; then
-  checkDataSetExists
-  runIngestionScript
-elif [[ "${TASK}" == "delete" ]]; then
-  removeLibertyContainer
-  runClearData
-  startLibertyContainer
-elif [[ "${TASK}" == "sources" ]]; then
-  createIngestionSources "${SCRIPT_NAME}"
-fi
+  if [[ "${TASK}" == "ingest" ]]; then
+    check_data_set_exists
+    run_ingestion_script
+  elif [[ "${TASK}" == "delete" ]]; then
+    remove_liberty_container
+    run_clear_data
+    start_liberty_container
+  elif [[ "${TASK}" == "sources" ]]; then
+    create_ingestion_sources "${SCRIPT_NAME}"
+  fi
+}
+
+main "$@"

@@ -8,19 +8,19 @@ set -e
 
 source "/opt/utils/common_functions.sh"
 
-function printUsage() {
+function print_usage() {
   echo "Usage:"
   echo "    validate-i2-connect-versions" 1>&2
   echo "    validate-i2-connect-versions -h" 1>&2
 }
 
 function usage() {
-  printUsage
+  print_usage
   exit 1
 }
 
 function help() {
-  printUsage
+  print_usage
   echo "Options:"
   echo "    -h Display the help." 1>&2
   echo "Required Environment Variables:" 1>&2
@@ -31,11 +31,11 @@ function help() {
   exit 1
 }
 
-function validateEnvVarsAreSet() {
-  checkVariableIsSet "${CONFIG_I2CONNECT_SERVER_VERSION}" "The expected i2 Connect Server version could NOT be determined from i2connect-server-version.json"
-  checkVariableIsSet "${DECLARED_I2CONNECT_SERVER_VERSION}" "The declared i2 Connect Server version could NOT be determined from package.json"
-  checkVariableIsSet "${CONFIG_CONNECTOR_VERSION}" "The expected connector version could NOT be determined from connector-version.json"
-  checkVariableIsSet "${DECLARED_CONNECTOR_VERSION}" "The declared connector version could NOT be determined from package.json"
+function validate_env_vars_are_set() {
+  check_variable_is_set "${CONFIG_I2CONNECT_SERVER_VERSION}" "The expected i2 Connect Server version could NOT be determined from i2connect-server-version.json"
+  check_variable_is_set "${DECLARED_I2CONNECT_SERVER_VERSION}" "The declared i2 Connect Server version could NOT be determined from package.json"
+  check_variable_is_set "${CONFIG_CONNECTOR_VERSION}" "The expected connector version could NOT be determined from connector-version.json"
+  check_variable_is_set "${DECLARED_CONNECTOR_VERSION}" "The declared connector version could NOT be determined from package.json"
 }
 
 #######################################
@@ -46,7 +46,7 @@ function validateEnvVarsAreSet() {
 # Arguments:
 #   The desired semantic version
 #######################################
-function geti2ConnectServerVersion() {
+function get_i2_connect_server_version() {
   local semantic_version="${1}"
   local npm_output
   local version
@@ -65,27 +65,27 @@ function geti2ConnectServerVersion() {
   echo "${version}"
 }
 
-function validateNodeSDKVersion() {
+function validate_node_sdk_version() {
   local latest_config_i2connect_server_version
   local latest_declared_i2connect_server_version
 
   print "Validating i2 Connect Server version"
   echo "Expected i2 Connect Server version: ${CONFIG_I2CONNECT_SERVER_VERSION}"
   echo "Declared i2 Connect Server version: ${DECLARED_I2CONNECT_SERVER_VERSION}"
-  latest_config_i2connect_server_version="$(geti2ConnectServerVersion "${CONFIG_I2CONNECT_SERVER_VERSION}")"
-  latest_declared_i2connect_server_version="$(geti2ConnectServerVersion "${DECLARED_I2CONNECT_SERVER_VERSION}")"
+  latest_config_i2connect_server_version="$(get_i2_connect_server_version "${CONFIG_I2CONNECT_SERVER_VERSION}")"
+  latest_declared_i2connect_server_version="$(get_i2_connect_server_version "${DECLARED_I2CONNECT_SERVER_VERSION}")"
 
   if [[ "${latest_config_i2connect_server_version}" != "${latest_declared_i2connect_server_version}" ]]; then
-    waitForUserReply "The expected and declared i2 Connect Server versions (from i2connect-server-version.json and package.json) are not the compatible. Would you like to continue?"
+    wait_for_user_reply "The expected and declared i2 Connect Server versions (from i2connect-server-version.json and package.json) are not the compatible. Would you like to continue?"
   fi
 }
 
-function validateConnectorVersion() {
+function validate_connector_version() {
   print "Validating connector version"
   echo "Expected connector version: ${CONFIG_CONNECTOR_VERSION}"
   echo "Declared connector version: ${DECLARED_CONNECTOR_VERSION}"
   if [[ "${DECLARED_CONNECTOR_VERSION}" != "${CONFIG_CONNECTOR_VERSION}"* ]]; then
-    waitForUserReply "The expected and declared connector versions (from connector-version.json and package.json) are not the compatible. Would you like to continue?"
+    wait_for_user_reply "The expected and declared connector versions (from connector-version.json and package.json) are not the compatible. Would you like to continue?"
   fi
 }
 
@@ -104,6 +104,6 @@ while getopts ":h" flag; do
 done
 
 print "Validating versions for the connector: ${CONNECTOR_NAME}"
-validateEnvVarsAreSet
-validateNodeSDKVersion
-validateConnectorVersion
+validate_env_vars_are_set
+validate_node_sdk_version
+validate_connector_version

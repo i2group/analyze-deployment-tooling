@@ -36,14 +36,14 @@ docker rm "$LIBERTY1_CONTAINER_NAME" "$LIBERTY2_CONTAINER_NAME"
 ###############################################################################
 print "Updating configuration with the geospatial-configuration.json file from $LOCAL_CONFIG_CHANGES_DIR"
 cp "$LOCAL_CONFIG_CHANGES_DIR/geospatial-configuration.json" "$LOCAL_CONFIG_LIVE_DIR"
-buildLibertyConfiguredImageForPreProd
+build_liberty_configured_image_for_pre_prod
 
 ###############################################################################
 # Running the Liberty containers                                              #
 ###############################################################################
 print "Running the newly configured Liberty"
-runLiberty "$LIBERTY1_CONTAINER_NAME" "$LIBERTY1_FQDN" "$LIBERTY1_VOLUME_NAME" "$LIBERTY1_SECRETS_VOLUME_NAME" "$LIBERTY1_PORT" "$LIBERTY1_CONTAINER_NAME"
-runLiberty "$LIBERTY2_CONTAINER_NAME" "$LIBERTY2_FQDN" "$LIBERTY2_VOLUME_NAME" "$LIBERTY1_SECRETS_VOLUME_NAME" "$LIBERTY2_PORT" "$LIBERTY2_CONTAINER_NAME"
-waitFori2AnalyzeServiceToBeLive
+run_liberty "$LIBERTY1_CONTAINER_NAME" "$LIBERTY1_FQDN" "$LIBERTY1_VOLUME_NAME" "$LIBERTY1_SECRETS_VOLUME_NAME" "$LIBERTY1_PORT" "$LIBERTY1_CONTAINER_NAME"
+run_liberty "$LIBERTY2_CONTAINER_NAME" "$LIBERTY2_FQDN" "$LIBERTY2_VOLUME_NAME" "$LIBERTY1_SECRETS_VOLUME_NAME" "$LIBERTY2_PORT" "$LIBERTY2_CONTAINER_NAME"
+wait_for_i2_analyze_service_to_be_live
 
 print_success "updateConfigurationWalkthrough.sh has run successfully"

@@ -31,7 +31,7 @@ MAX_TRIES=30
 # Simulating the cluster failure                                              #
 ###############################################################################
 print "Simulating Cluster failure"
-SINCE_TIMESTAMP="$(getTimestamp)"
+SINCE_TIMESTAMP="$(get_time_stamp)"
 docker stop "${SOLR2_CONTAINER_NAME}" "${SOLR1_CONTAINER_NAME}"
 
 ###############################################################################
@@ -62,7 +62,7 @@ done
 # Reinstating high availability                                               #
 ###############################################################################
 print "Reinstating high availability by starting solr's"
-SINCE_TIMESTAMP="$(getTimestamp)"
+SINCE_TIMESTAMP="$(get_time_stamp)"
 docker start "${SOLR2_CONTAINER_NAME}" "${SOLR1_CONTAINER_NAME}"
 
 print "Waiting for Liberty to mark the collection as healthy"

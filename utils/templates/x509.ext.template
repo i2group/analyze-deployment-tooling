@@ -13,6 +13,10 @@ authorityKeyIdentifier  = keyid,issuer:always
 subjectKeyIdentifier    = hash
 authorityKeyIdentifier  = keyid,issuer:always
 
+[ postgres ]
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid,issuer:always
+
 [ zk ]
 # X509 extensions for a server
 keyUsage                = critical,digitalSignature,keyEncipherment

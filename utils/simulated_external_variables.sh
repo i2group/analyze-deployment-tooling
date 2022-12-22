@@ -31,6 +31,8 @@ SOLR2_HOST_NAME="solr2"
 SOLR3_HOST_NAME="solr3"
 SQL_CLIENT_HOST_NAME="sqlclient"
 SQL_SERVER_HOST_NAME="sqlserver"
+POSTGRES_CLIENT_HOST_NAME="postgresClient"
+POSTGRES_SERVER_HOST_NAME="postgres"
 DB2_CLIENT_HOST_NAME="db2client"
 DB2_SERVER_HOST_NAME="db2server"
 LIBERTY1_HOST_NAME="liberty1"
@@ -55,6 +57,8 @@ SOLR2_FQDN="${SOLR2_HOST_NAME}.${DOMAIN_NAME}"
 SOLR3_FQDN="${SOLR3_HOST_NAME}.${DOMAIN_NAME}"
 SQL_CLIENT_FQDN="${SQL_CLIENT_HOST_NAME}.${DOMAIN_NAME}"
 SQL_SERVER_FQDN="${SQL_SERVER_HOST_NAME}.${DOMAIN_NAME}"
+POSTGRES_CLIENT_FQDN="${POSTGRES_CLIENT_HOST_NAME}.${DOMAIN_NAME}"
+POSTGRES_SERVER_FQDN="${POSTGRES_SERVER_HOST_NAME}.${DOMAIN_NAME}"
 DB2_CLIENT_FQDN="${DB2_CLIENT_HOST_NAME}.${DOMAIN_NAME}"
 DB2_SERVER_FQDN="${DB2_SERVER_HOST_NAME}.${DOMAIN_NAME}"
 LIBERTY1_FQDN="${LIBERTY1_HOST_NAME}.${DOMAIN_NAME}"
@@ -67,8 +71,10 @@ CONNECTOR2_FQDN="${CONNECTOR2_HOST_NAME}.${DOMAIN_NAME}"
 PROMETHEUS_FQDN="${PROMETHEUS_HOST_NAME}.${DOMAIN_NAME}"
 GRAFANA_FQDN="${GRAFANA_HOST_NAME}.${DOMAIN_NAME}"
 EXTRA_ARGS=()
-EXTRA_ARGS+=("--net")
-EXTRA_ARGS+=("${DOMAIN_NAME}")
+EXTRA_ARGS+=("--net" "${DOMAIN_NAME}")
+EXTRA_ARGS+=("-a" "stderr")
+EXTRA_ARGS+=("-a" "stdout")
+EXTRA_ARGS+=("-a" "stdin")
 
 ###############################################################################
 # Network Security Variables                                                  #
@@ -82,17 +88,17 @@ PROMETHEUS_SSL_CONNECTION="true"
 ###############################################################################
 # Ports                                                                       #
 ###############################################################################
-ZK_CLIENT_PORT="2181"
-ZK_SECURE_CLIENT_PORT="2281"
-I2_ANALYZE_PORT="9046"
-LIBERTY1_PORT="9045"
-LIBERTY1_DEBUG_PORT="7777"
-LIBERTY2_PORT="9044"
-LIBERTY2_DEBUG_PORT="7778"
-SOLR_PORT="8983"
-ZK_PORT="8080"
-CONNECTOR1_APP_PORT="3443"
-CONNECTOR2_APP_PORT="3443"
+ZK_CLIENT_PORT=2181
+ZK_SECURE_CLIENT_PORT=2281
+I2_ANALYZE_PORT=9046
+LIBERTY1_PORT=9045
+LIBERTY1_DEBUG_PORT=7777
+LIBERTY2_PORT=9044
+LIBERTY2_DEBUG_PORT=7778
+SOLR_PORT=8983
+ZK_PORT=8080
+CONNECTOR1_APP_PORT=3443
+CONNECTOR2_APP_PORT=3443
 
 if [[ -z "${DB_DIALECT}" ]]; then
   # Default to sqlserver
@@ -101,13 +107,16 @@ fi
 
 case "${DB_DIALECT}" in
 db2)
-  DB_PORT="50000"
+  DB_PORT=50000
   ;;
 sqlserver)
-  DB_PORT="1433"
+  DB_PORT=1433
+  ;;
+postgres)
+  DB_PORT=5432
   ;;
 \?)
-  echo "Invalid option: ${DB_DIALECT}"
+  echo "Invalid option: ${DB_DIALECT}" >&2
   exit 1
   ;;
 esac
@@ -153,8 +162,20 @@ sqlserver)
     SQLCMD_FLAGS="-b"
   fi
   ;;
+postgres)
+  DB_INSTALL_DIR="/usr/lib/postgresql"
+  DB_LOCATION_DIR="/var/lib/postgresql/data"
+  DB_BACKUP_FILE_NAME="ISTORE.pgb"
+  SQLCMD="${DB_INSTALL_DIR}/bin/psql"
+  SQLCMD_FLAGS="-w -X -q --set=client_min_messages=warning"
+  if [[ "$DB_SSL_CONNECTION" == true ]]; then
+    SQLCMD_FLAGS+=" --set=sslmode=require"
+  else
+    SQLCMD_FLAGS+=" --set=sslmode=disable"
+  fi
+  ;;
 \?)
-  echo "Invalid option: ${DB_DIALECT}"
+  echo "Invalid option: ${DB_DIALECT}" >&2
   exit 1
   ;;
 esac

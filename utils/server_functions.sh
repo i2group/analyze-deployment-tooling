@@ -20,8 +20,8 @@
 #   7. ZK secret location
 #   8. ZK secret volume
 #######################################
-function runZK() {
-  validateParameters "8" "$@"
+function run_zk() {
+  validate_parameters 8 "$@"
 
   local CONTAINER="$1"
   local FQDN="$2"
@@ -71,8 +71,8 @@ function runZK() {
 #   5. Solr secret location
 #   6. Solr secret volume
 #######################################
-function runSolr() {
-  validateParameters "6" "$@"
+function run_solr() {
+  validate_parameters 6 "$@"
 
   local CONTAINER="$1"
   local FQDN="$2"
@@ -123,7 +123,7 @@ function runSolr() {
 # Arguments:
 #   None
 #######################################
-function runSQLServer() {
+function run_sql_server() {
   local ssl_private_key
   ssl_private_key=$(get_secret "certificates/sqlserver/server.key")
   local ssl_certificate
@@ -158,11 +158,48 @@ function runSQLServer() {
 }
 
 #######################################
+# Run a Postgres Server container.
+# Arguments:
+#   None
+#######################################
+function run_postgres_server() {
+  local ssl_private_key
+  ssl_private_key=$(get_secret "certificates/postgres/server.key")
+  local ssl_certificate
+  ssl_certificate=$(get_secret "certificates/postgres/server.cer")
+  local ssl_ca_certificate
+  ssl_ca_certificate=$(get_secret "certificates/CA/CA.cer")
+
+  local postgres_initial_password
+  postgres_initial_password=$(get_secret "postgres/postgres_INITIAL_PASSWORD")
+
+  local container_data_dir="/var/i2a-data"
+  update_volume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
+
+  print "Postgres Server container ${POSTGRES_SERVER_CONTAINER_NAME} is starting"
+  docker run -d \
+    --name "${POSTGRES_SERVER_CONTAINER_NAME}" \
+    --network "${DOMAIN_NAME}" \
+    --net-alias "${POSTGRES_SERVER_FQDN}" \
+    -p "${HOST_PORT_DB}:5432" \
+    -v "${POSTGRES_SERVER_VOLUME_NAME}:/var/lib/postgresql" \
+    -v "${POSTGRES_SERVER_BACKUP_VOLUME_NAME}:${DB_CONTAINER_BACKUP_DIR}" \
+    -v "${POSTGRES_SERVER_SECRETS_VOLUME_NAME}:${CONTAINER_SECRETS_DIR}" \
+    -v "${I2A_DATA_SERVER_VOLUME_NAME}:${container_data_dir}" \
+    -e "POSTGRES_USER=${POSTGRES_USER}" \
+    -e "POSTGRES_PASSWORD=${postgres_initial_password}" \
+    -e "SERVER_SSL=${DB_SSL_CONNECTION}" \
+    -e "SSL_PRIVATE_KEY=${ssl_private_key}" \
+    -e "SSL_CERTIFICATE=${ssl_certificate}" \
+    "i2group/i2eng-postgres:${POSTGRES_IMAGE_VERSION}"
+}
+
+#######################################
 # Run a Db2 Server container.
 # Arguments:
 #   None
 #######################################
-function runDb2Server() {
+function run_db2_server() {
   local ssl_private_key
   ssl_private_key=$(get_secret "certificates/db2server/server.key")
   local ssl_certificate
@@ -207,8 +244,8 @@ function runDb2Server() {
 #   6. Liberty key folder
 #   7. (Optional) Liberty debug port (will be exposed as the same port)
 #######################################
-function runLiberty() {
-  validateParameters "6" "$@"
+function run_liberty() {
+  validate_parameters 6 "$@"
 
   local CONTAINER="$1"
   local FQDN="$2"
@@ -274,7 +311,11 @@ function runLiberty() {
   sqlserver)
     db_password=$(get_secret "sqlserver/i2analyze_PASSWORD")
     dbEnvironment+=("-e" "DB_SERVER=${SQL_SERVER_FQDN}")
-    dbEnvironment+=("-e" "DB_NODE=${DB_NODE}")
+    dbEnvironment+=("-e" "DB_USERNAME=${I2_ANALYZE_USERNAME}")
+    ;;
+  postgres)
+    db_password=$(get_secret "postgres/i2analyze_PASSWORD")
+    dbEnvironment+=("-e" "DB_SERVER=${POSTGRES_SERVER_FQDN}")
     dbEnvironment+=("-e" "DB_USERNAME=${I2_ANALYZE_USERNAME}")
     ;;
   esac
@@ -286,7 +327,7 @@ function runLiberty() {
   else
     print "Liberty container ${CONTAINER} is starting in debug mode"
     if [ -z "$6" ]; then
-      echo "No Debug port provided to runLiberty. Debug port must be set if running a container in debug mode!"
+      echo "No Debug port provided to run_liberty. Debug port must be set if running a container in debug mode!" >&2
       exit 1
     fi
 
@@ -297,7 +338,7 @@ function runLiberty() {
     libertyStartCommand+=("-e")
     libertyStartCommand+=("WLP_DEBUG_SUSPEND=y")
     libertyStartCommand+=("${LIBERTY_CONFIGURED_IMAGE_NAME}:${I2A_LIBERTY_CONFIGURED_IMAGE_TAG}")
-    libertyStartCommand+=("/opt/ibm/wlp/bin/server")
+    libertyStartCommand+=("/liberty/bin/server")
     libertyStartCommand+=("debug")
     libertyStartCommand+=("defaultServer")
   fi
@@ -308,9 +349,9 @@ function runLiberty() {
   fi
 
   if [[ "${LIBERTY_SSL_CONNECTION}" == "true" ]]; then
-    CONTAINER_PORT="9443"
+    CONTAINER_PORT=9443
   else
-    CONTAINER_PORT="9080"
+    CONTAINER_PORT=9080
   fi
 
   docker run -m 2g -d \
@@ -346,16 +387,15 @@ function runLiberty() {
 
   if [[ "${runInDebug}" == true ]]; then
     # Wait until debugger is attached
-    waitForUserReply "You need to attach the debugger now before continuing. Ready?"
+    wait_for_user_reply "You need to attach the debugger now before continuing. Ready?"
   fi
 }
 
-function createDataSourceProperties() {
+function create_data_source_properties() {
   local folder_path="$1"
   local datasource_properties_file_path="${folder_path}/DataSource.properties"
   local dsid_properties_file_path
   local topology_id
-  local datasource_name
 
   if [[ "${DEPLOYMENT_PATTERN}" != "i2c" ]]; then
     topology_id="infostore"
@@ -365,16 +405,16 @@ function createDataSourceProperties() {
   dsid_properties_file_path="${LOCAL_CONFIG_DIR}/environment/dsid/dsid.${topology_id}.properties"
   cp "${dsid_properties_file_path}" "${datasource_properties_file_path}"
 
-  addDataSourcePropertiesIfNecessary "${datasource_properties_file_path}"
+  add_data_source_properties_if_necessary "${datasource_properties_file_path}"
 
   if [[ "${DEPLOYMENT_PATTERN}" != "i2c" ]] && [[ "${DEPLOYMENT_PATTERN}" != "schema_dev" ]]; then
     sed -i.bak -e '/DataSourceId.*/d' "${datasource_properties_file_path}"
   fi
   if ! grep -xq "IsMonitored=.*" "${datasource_properties_file_path}"; then
-    addToPropertiesFile "IsMonitored=true" "${datasource_properties_file_path}"
+    add_to_properties_file "IsMonitored=true" "${datasource_properties_file_path}"
   fi
 
-  addToPropertiesFile "AppName=opal-services" "${datasource_properties_file_path}"
+  add_to_properties_file "AppName=opal-services" "${datasource_properties_file_path}"
 }
 
 #######################################
@@ -382,24 +422,24 @@ function createDataSourceProperties() {
 # Arguments:
 #   None
 #######################################
-function buildLibertyConfiguredImage() {
+function build_liberty_configured_image() {
   local liberty_configured_path="${IMAGES_DIR}/liberty_ubi_combined"
   local liberty_configured_classes_folder_path="${liberty_configured_path}/classes"
   local liberty_configured_lib_folder_path="${liberty_configured_path}/lib"
   local liberty_configured_plugins_folder_path="${liberty_configured_path}/plugins"
-  local liberty_configured_web_app_files_fodler_path="${liberty_configured_path}/application/web-app-files"
+  local liberty_configured_web_app_files_folder_path="${liberty_configured_path}/application/web-app-files"
   local extension_references_file="${LOCAL_USER_CONFIG_DIR}/extension-references.json"
   local extension_dependencies_path="${EXTENSIONS_DIR}/extension-dependencies.json"
   local plugin_references_file="${LOCAL_USER_CONFIG_DIR}/plugin-references.json"
 
   print "Building Liberty image"
 
-  deleteFolderIfExistsAndCreate "${liberty_configured_classes_folder_path}"
-  deleteFolderIfExistsAndCreate "${liberty_configured_lib_folder_path}"
-  deleteFolderIfExistsAndCreate "${liberty_configured_plugins_folder_path}"
-  deleteFolderIfExistsAndCreate "${liberty_configured_web_app_files_fodler_path}"
+  delete_folder_if_exists_and_create "${liberty_configured_classes_folder_path}"
+  delete_folder_if_exists_and_create "${liberty_configured_lib_folder_path}"
+  delete_folder_if_exists_and_create "${liberty_configured_plugins_folder_path}"
+  delete_folder_if_exists_and_create "${liberty_configured_web_app_files_folder_path}"
 
-  createDataSourceProperties "${liberty_configured_classes_folder_path}"
+  create_data_source_properties "${liberty_configured_classes_folder_path}"
 
   cp -r "${LOCAL_CONFIG_DIR}/fragments/common/WEB-INF/classes/." "${liberty_configured_classes_folder_path}"
   cp -r "${LOCAL_CONFIG_DIR}/fragments/opal-services/WEB-INF/classes/." "${liberty_configured_classes_folder_path}"
@@ -408,10 +448,23 @@ function buildLibertyConfiguredImage() {
   cp -r "${LOCAL_CONFIG_DIR}/liberty/user.registry.xml" "${liberty_configured_path}/"
   cp -r "${LOCAL_CONFIG_DIR}/fragments/common/privacyagreement.html" "${liberty_configured_path}/"
 
+  # Copy extra configuration files into the classes directory
+  find "${LOCAL_CONFIG_DIR}" -maxdepth 1 -type f \
+    ! -name privacyagreement.html \
+    ! -name user.registry.xml \
+    ! -name extension-references.json \
+    ! -name plugin-references.json \
+    ! -name connector-references.json \
+    ! -name server.extensions.xml \
+    ! -name server.extensions.dev.xml \
+    ! -name '*.bak' \
+    ! -name '*.xsd' \
+    -exec cp -t "${liberty_configured_classes_folder_path}" {} \;
+
   # Copy extensions to the liberty image
-  deleteFolderIfExistsAndCreate "${liberty_configured_lib_folder_path}"
+  delete_folder_if_exists_and_create "${liberty_configured_lib_folder_path}"
   readarray -t extension_files < <(jq -r '.extensions[] | .name + "-" + .version' <"${extension_references_file}")
-  createFolder "${PREVIOUS_CONFIGURATION_DIR}/lib"
+  create_folder "${PREVIOUS_CONFIGURATION_DIR}/lib"
   for extension in "${extension_files[@]}"; do
     # shellcheck disable=SC2001
     extension_name=$(echo "${extension}" | sed 's|\(.*\)-.*|\1|')
@@ -434,7 +487,7 @@ function buildLibertyConfiguredImage() {
 
   # Copy plugins to the liberty image
   readarray -t plugin_files < <(jq -r '.plugins[] | .name' <"${plugin_references_file}")
-  createFolder "${PREVIOUS_CONFIGURATION_DIR}/plugins"
+  create_folder "${PREVIOUS_CONFIGURATION_DIR}/plugins"
   for plugin in "${plugin_files[@]}"; do
     # shellcheck disable=SC2001
     if [[ ! -f "${PLUGINS_DIR}/${plugin}/entrypoint.js" ]]; then
@@ -445,7 +498,7 @@ function buildLibertyConfiguredImage() {
       echo "Plugin manifest does NOT exist: ${PLUGINS_DIR}/${plugin}/plugin.json"
       continue
     fi
-    createFolder "${liberty_configured_plugins_folder_path}/${plugin}"
+    create_folder "${liberty_configured_plugins_folder_path}/${plugin}"
     cp -r "${PLUGINS_DIR}/${plugin}/." "${liberty_configured_plugins_folder_path}/${plugin}"
     cp -p "${PREVIOUS_PLUGINS_DIR}/${plugin}.sha512" "${PREVIOUS_CONFIGURATION_DIR}/plugins"
   done
@@ -464,11 +517,11 @@ function buildLibertyConfiguredImage() {
 
   # Copy catalog.json & web.xml specific to the DEPLOYMENT_PATTERN
   cp -r "${TOOLKIT_APPLICATION_DIR}/target-mods/${CATALOGUE_TYPE}/catalog.json" "${liberty_configured_classes_folder_path}"
-  cp -r "${TOOLKIT_APPLICATION_DIR}/fragment-mods/${APPLICATION_BASE_TYPE}/WEB-INF/web.xml" "${liberty_configured_web_app_files_fodler_path}/web.xml"
+  cp -r "${TOOLKIT_APPLICATION_DIR}/fragment-mods/${APPLICATION_BASE_TYPE}/WEB-INF/web.xml" "${liberty_configured_web_app_files_folder_path}/web.xml"
 
   sed -i.bak -e '1s/^/<?xml version="1.0" encoding="UTF-8"?><web-app xmlns="http:\/\/java.sun.com\/xml\/ns\/javaee" xmlns:xsi="http:\/\/www.w3.org\/2001\/XMLSchema-instance" xsi:schemaLocation="http:\/\/java.sun.com\/xml\/ns\/javaee http:\/\/java.sun.com\/xml\/ns\/javaee\/web-app_3_0.xsd" id="WebApp_ID" version="3.0"> <display-name>opal<\/display-name>/' \
-    "${liberty_configured_web_app_files_fodler_path}/web.xml"
-  echo '</web-app>' >>"${liberty_configured_web_app_files_fodler_path}/web.xml"
+    "${liberty_configured_web_app_files_folder_path}/web.xml"
+  echo '</web-app>' >>"${liberty_configured_web_app_files_folder_path}/web.xml"
 
   # In the schema_dev deployment point Gateway schemes to the ISTORE schemes
   if [[ "${DEPLOYMENT_PATTERN}" == "schema_dev" ]]; then
@@ -487,21 +540,21 @@ function buildLibertyConfiguredImage() {
 # Arguments:
 #   None
 #######################################
-function buildLibertyConfiguredImageForPreProd() {
+function build_liberty_configured_image_for_pre_prod() {
   local liberty_configured_path="${IMAGES_DIR}/liberty_ubi_combined"
   local liberty_configured_classes_folder_path="${liberty_configured_path}/classes"
   local liberty_configured_lib_folder_path="${liberty_configured_path}/lib"
   local liberty_configured_plugins_folder_path="${liberty_configured_path}/plugins"
-  local liberty_configured_web_app_files_fodler_path="${liberty_configured_path}/application/web-app-files"
+  local liberty_configured_web_app_files_folder_path="${liberty_configured_path}/application/web-app-files"
 
   print "Building Liberty image"
 
-  deleteFolderIfExistsAndCreate "${liberty_configured_classes_folder_path}"
-  deleteFolderIfExistsAndCreate "${liberty_configured_lib_folder_path}"
-  deleteFolderIfExistsAndCreate "${liberty_configured_plugins_folder_path}"
-  deleteFolderIfExistsAndCreate "${liberty_configured_web_app_files_fodler_path}"
+  delete_folder_if_exists_and_create "${liberty_configured_classes_folder_path}"
+  delete_folder_if_exists_and_create "${liberty_configured_lib_folder_path}"
+  delete_folder_if_exists_and_create "${liberty_configured_plugins_folder_path}"
+  delete_folder_if_exists_and_create "${liberty_configured_web_app_files_folder_path}"
 
-  createDataSourceProperties "${liberty_configured_classes_folder_path}"
+  create_data_source_properties "${liberty_configured_classes_folder_path}"
 
   # Updating mpMetrics authentication value
   xmlstarlet edit -L --update "/server/mpMetrics/@authentication" \
@@ -518,11 +571,11 @@ function buildLibertyConfiguredImageForPreProd() {
 
   # Copy catalog.json & web.xml specific to the DEPLOYMENT_PATTERN
   cp -pr "${TOOLKIT_APPLICATION_DIR}/target-mods/${CATALOGUE_TYPE}/catalog.json" "${liberty_configured_classes_folder_path}"
-  cp -pr "${TOOLKIT_APPLICATION_DIR}/fragment-mods/${APPLICATION_BASE_TYPE}/WEB-INF/web.xml" "${liberty_configured_web_app_files_fodler_path}/web.xml"
+  cp -pr "${TOOLKIT_APPLICATION_DIR}/fragment-mods/${APPLICATION_BASE_TYPE}/WEB-INF/web.xml" "${liberty_configured_web_app_files_folder_path}/web.xml"
 
   sed -i.bak -e '1s/^/<?xml version="1.0" encoding="UTF-8"?><web-app xmlns="http:\/\/java.sun.com\/xml\/ns\/javaee" xmlns:xsi="http:\/\/www.w3.org\/2001\/XMLSchema-instance" xsi:schemaLocation="http:\/\/java.sun.com\/xml\/ns\/javaee http:\/\/java.sun.com\/xml\/ns\/javaee\/web-app_3_0.xsd" id="WebApp_ID" version="3.0"> <display-name>opal<\/display-name>/' \
-    "${liberty_configured_web_app_files_fodler_path}/web.xml"
-  echo '</web-app>' >>"${liberty_configured_web_app_files_fodler_path}/web.xml"
+    "${liberty_configured_web_app_files_folder_path}/web.xml"
+  echo '</web-app>' >>"${liberty_configured_web_app_files_folder_path}/web.xml"
 
   echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?><server>
     <featureManager>
@@ -544,7 +597,7 @@ function buildLibertyConfiguredImageForPreProd() {
 # Arguments:
 #   None
 #######################################
-function runLoadBalancer() {
+function run_load_balancer() {
   local ssl_private_key
   ssl_private_key=$(get_secret "certificates/i2analyze/server.key")
   local ssl_certificate
@@ -574,8 +627,8 @@ function runLoadBalancer() {
     "${LOAD_BALANCER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}"
 }
 
-function runExampleConnector() {
-  validateParameters "4" "$@"
+function run_example_connector() {
+  validate_parameters 4 "$@"
 
   local CONTAINER="$1"
   local FQDN="$2"
@@ -602,13 +655,14 @@ function runExampleConnector() {
     "${CONNECTOR_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}"
 }
 
-function runConnector() {
-  validateParameters "4" "$@"
+function run_connector() {
+  validate_parameters 4 "$@"
 
   local CONTAINER="$1"
   local FQDN="$2"
   local connector_name="$3"
   local connector_tag="$4"
+  local connector_id="$5"
   local connector_path="${connector_name}"
 
   local ssl_private_key
@@ -624,7 +678,7 @@ function runConnector() {
     --network "${DOMAIN_NAME}" \
     --net-alias "${FQDN}" \
     -v "${connector_name}_secrets:${CONTAINER_SECRETS_DIR}" \
-    -e "CONNECTOR_ID=${connector_name}" \
+    -e "CONNECTOR_ID=${connector_id}" \
     -e "SSL_ENABLED=${GATEWAY_SSL_CONNECTION}" \
     -e "SSL_PRIVATE_KEY=${ssl_private_key}" \
     -e "SSL_CERTIFICATE=${ssl_certificate}" \
@@ -634,15 +688,14 @@ function runConnector() {
     "${CONNECTOR_IMAGE_BASE_NAME}${connector_name}:${connector_tag}"
 }
 
-function runPrometheus() {
-  local prometheus_config_dir="/etc/prometheus"
+function run_prometheus() {
   local prometheus_tmp_config_dir="/tmp/prometheus"
   local prometheus_start_command=()
 
   local prometheus_password
-  prometheus_password=$(getPrometheusAdminPassword)
+  prometheus_password=$(get_prometheus_admin_password)
   local liberty_admin_password
-  liberty_admin_password=$(getApplicationAdminPassword)
+  liberty_admin_password=$(get_application_admin_password)
 
   local ssl_private_key
   ssl_private_key=$(get_secret "certificates/prometheus/server.key")
@@ -673,7 +726,7 @@ function runPrometheus() {
     prometheus_start_command+=("-e" "SSL_OUTBOUND_CA_CERTIFICATE=${ssl_outbound_ca_certificate}")
   fi
 
-  checkFileExists "${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml"
+  check_file_exists "${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml"
   update_volume "${LOCAL_PROMETHEUS_CONFIG_DIR}" "${PROMETHEUS_CONFIG_VOLUME_NAME}" "${prometheus_tmp_config_dir}"
 
   print "Prometheus container ${PROMETHEUS_CONTAINER_NAME} is starting"
@@ -689,9 +742,8 @@ function runPrometheus() {
     "${PROMETHEUS_IMAGE_NAME}:${PROMETHEUS_VERSION}"
 }
 
-function runGrafana() {
+function run_grafana() {
   local grafana_provisioning_dir="/etc/grafana/provisioning"
-  local grafana_provisioning_datasources_dir="/etc/grafana/provisioning/datasources"
   local grafana_dashboards_dir="/etc/grafana/dashboards"
   update_volume "${LOCAL_GRAFANA_CONFIG_DIR}/provisioning" "${GRAFANA_PROVISIONING_VOLUME_NAME}" "${grafana_provisioning_dir}"
   update_grafana_dashboard_volume
@@ -700,7 +752,7 @@ function runGrafana() {
   grafana_password=$(get_secret "grafana/admin_PASSWORD")
 
   local prometheus_password
-  prometheus_password=$(getPrometheusAdminPassword)
+  prometheus_password=$(get_prometheus_admin_password)
 
   local ssl_ca_certificate
   ssl_ca_certificate=$(get_secret "certificates/externalCA/CA.cer")

@@ -64,8 +64,10 @@ PROMETHEUS_FQDN="${PROMETHEUS_HOST_NAME}.${DOMAIN_NAME}"
 GRAFANA_FQDN="${GRAFANA_HOST_NAME}.${DOMAIN_NAME}"
 
 EXTRA_ARGS=()
-EXTRA_ARGS+=("--net")
-EXTRA_ARGS+=("${DOMAIN_NAME}")
+EXTRA_ARGS+=("--net" "${DOMAIN_NAME}")
+EXTRA_ARGS+=("-a" "stderr")
+EXTRA_ARGS+=("-a" "stdout")
+EXTRA_ARGS+=("-a" "stdin")
 
 ###############################################################################
 # Network Security Variables                                                  #
@@ -126,7 +128,7 @@ fi
 ###############################################################################
 # Database variables                                                          #
 ###############################################################################
-HOST_PORT_DB="1433"
+HOST_PORT_DB=1433
 DB_DIALECT="sqlserver"
 DB_INSTALL_DIR="/opt/mssql-tools"
 DB_LOCATION_DIR="/var/opt/mssql/data"
@@ -145,12 +147,12 @@ fi
 ###############################################################################
 # Prometheus variables                                                        #
 ###############################################################################
-HOST_PORT_PROMETHEUS="9090"
+HOST_PORT_PROMETHEUS=9090
 
 ###############################################################################
 # Grafana variables                                                           #
 ###############################################################################
-HOST_PORT_GRAFANA="3500"
+HOST_PORT_GRAFANA=3500
 
 ###############################################################################
 # URIs                                                                        #

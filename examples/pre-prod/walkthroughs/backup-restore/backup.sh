@@ -31,8 +31,8 @@ backup_version=1
 ###############################################################################
 # Set up backup permission                                                    #
 ###############################################################################
-runSolrContainerWithBackupVolume mkdir "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}"
-runSolrContainerWithBackupVolume chown -R solr:0 "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}"
+run_solr_container_with_backup_volume mkdir "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}"
+run_solr_container_with_backup_volume chown -R solr:0 "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}"
 
 ###############################################################################
 # Backing up Solr                                                             #
@@ -44,9 +44,9 @@ run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOL
 ###############################################################################
 # Monitoring Solr backup status                                               #
 ###############################################################################
-waitForAsynchronousRequestStatusToBeCompleted "${MATCH_INDEX_BACKUP_NAME}"
-waitForAsynchronousRequestStatusToBeCompleted "${CHART_INDEX_BACKUP_NAME}"
-waitForAsynchronousRequestStatusToBeCompleted "${MAIN_INDEX_BACKUP_NAME}"
+wait_for_asynchronous_request_status_to_be_completed "${MATCH_INDEX_BACKUP_NAME}"
+wait_for_asynchronous_request_status_to_be_completed "${CHART_INDEX_BACKUP_NAME}"
+wait_for_asynchronous_request_status_to_be_completed "${MAIN_INDEX_BACKUP_NAME}"
 
 ###############################################################################
 # Backing up system match rules file                                          #

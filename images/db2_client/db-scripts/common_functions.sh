@@ -8,6 +8,16 @@
 # shellcheck disable=SC2086
 
 #######################################
+# Prints an error message to the console
+# Arguments:
+#   1: The message
+#######################################
+function print_warn() {
+  printf "\n\e[33mWARN: %s\n" "$1" >&2
+  printf "\e[0m" >&2
+}
+
+#######################################
 # Identify correct credentials from env var's defined for SQL
 # Client container.
 #
@@ -18,47 +28,47 @@
 # Example:
 #   N/A
 #######################################
-function identifyCredentials() {
-  if [[ -n "${SA_USERNAME}" && -n "${SA_PASSWORD}" ]]; then
-    USERNAME="${SA_USERNAME}"
-    PASSWORD="${SA_PASSWORD}"
+function identify_credentials() {
+  if [[ -n "${ADMIN_USERNAME}" && -n "${ADMIN_PASSWORD}" ]]; then
+    USERNAME="${ADMIN_USERNAME}"
+    PASSWORD="${ADMIN_PASSWORD}"
   else
     USERNAME="${DB_USERNAME}"
     PASSWORD="${DB_PASSWORD}"
   fi
 }
 
-function runSQLCMD() {
+function run_sql_cmd() {
   local command="${1}"
 
   ${SQLCMD} "${command}"
 }
 
-function attachToRemote() {
-  runSQLCMD "ATTACH TO \"${DB_NODE}\" USER \"${DB_USERNAME}\" USING \"${DB_PASSWORD}\""
+function attach_to_remote() {
+  run_sql_cmd "ATTACH TO \"${DB_NODE}\" USER \"${DB_USERNAME}\" USING \"${DB_PASSWORD}\""
 }
 
-function catalogRemoteNode() {
-  runSQLCMD "CATALOG TCPIP NODE \"${DB_NODE}\" REMOTE \"${DB_SERVER}\" SERVER \"${DB_PORT}\""
+function catalog_remote_node() {
+  run_sql_cmd "CATALOG TCPIP NODE \"${DB_NODE}\" REMOTE \"${DB_SERVER}\" SERVER \"${DB_PORT}\""
 }
 
-function catalogRemoteDatabase() {
+function catalog_remote_database() {
   local db_name="${1}"
-  runSQLCMD "CATALOG DATABASE \"${db_name}\" AT NODE \"${DB_NODE}\""
+  run_sql_cmd "CATALOG DATABASE \"${db_name}\" AT NODE \"${DB_NODE}\""
 }
 
-function connectToDatabase() {
+function connect_to_database() {
   local db_name="${1}"
-  runSQLCMD "CONNECT TO \"${db_name}\" USER \"${USERNAME}\" USING \"${PASSWORD}\""
+  run_sql_cmd "CONNECT TO \"${db_name}\" USER \"${USERNAME}\" USING \"${PASSWORD}\""
 }
 
-function connectToRemoteDatabase() {
+function connect_to_remote_database() {
   local db_name="${1}"
-  identifyCredentials
+  identify_credentials
 
-  catalogRemoteNode
-  catalogRemoteDatabase "${db_name}"
-  connectToDatabase "${db_name}"
+  catalog_remote_node
+  catalog_remote_database "${db_name}"
+  connect_to_database "${db_name}"
 }
 
 #######################################
@@ -70,15 +80,15 @@ function connectToRemoteDatabase() {
 # Output:
 #   Return code for SQL Query
 # Example:
-#    source /opt/db-scripts/common_functions.sh && runSQLQuery 'SELECT 1'
+#    source /opt/db-scripts/common_functions.sh && run_sql_query 'SELECT 1'
 #######################################
-function runSQLQuery() {
+function run_sql_query() {
   local sql_query="$1"
 
-  catalogRemoteNode
-  attachToRemote
+  catalog_remote_node
+  attach_to_remote
 
-  runSQLCMD "${sql_query}"
+  run_sql_cmd "${sql_query}"
 
   return "${?}"
 }
@@ -93,16 +103,16 @@ function runSQLQuery() {
 # Output:
 #   Return code for SQL Query
 # Example:
-#    source /opt/db-scripts/common_functions.sh && runSQLQueryForDB 'SELECT 1' 'master'
+#    source /opt/db-scripts/common_functions.sh && run_sql_query_for_db 'SELECT 1' 'master'
 #######################################
-function runSQLQueryForDB() {
+function run_sql_query_for_db() {
   local sql_query="$1"
   shift
   local sql_db_name="$1"
 
-  connectToRemoteDatabase "${sql_db_name}"
+  connect_to_remote_database "${sql_db_name}"
 
-  runSQLCMD "${sql_query}"
+  run_sql_cmd "${sql_query}"
 
   return "${?}"
 }
@@ -116,9 +126,9 @@ function runSQLQueryForDB() {
 # Output:
 #   Return code for SQL Query
 # Example:
-#    source /opt/db-scripts/common_functions.sh && runSQLFile <filepath>
+#    source /opt/db-scripts/common_functions.sh && run_sql_file <filepath>
 #######################################
-function runSQLFile() {
+function run_sql_file() {
   local file="$1"
 
   ${SQLCMD} ${SQLCMD_FLAGS} ${file}

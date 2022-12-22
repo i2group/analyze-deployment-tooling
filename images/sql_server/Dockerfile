@@ -3,8 +3,8 @@
 # © N.Harris Computer Corporation (2022)
 #
 # SPDX short identifier: MIT
-
-FROM mcr.microsoft.com/mssql/rhel/server:2019-CU11-rhel-8.3
+ARG BASE_IMAGE="mcr.microsoft.com/mssql/rhel/server:2019-CU18-rhel-8.5"
+FROM "${BASE_IMAGE}"
 
 USER root
 # User mssql is created by the base image

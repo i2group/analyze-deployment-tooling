@@ -28,8 +28,8 @@ set_dependencies_tag_if_necessary
 # Running a new Solr container                                                #
 ###############################################################################
 print "Running a new Solr container"
-runSolr "${SOLR3_CONTAINER_NAME}" "${SOLR3_FQDN}" "${SOLR3_VOLUME_NAME}" "8985" "solr3" "${SOLR3_SECRETS_VOLUME_NAME}"
-waitForSolrToBeLive "${SOLR3_FQDN}"
+run_solr "${SOLR3_CONTAINER_NAME}" "${SOLR3_FQDN}" "${SOLR3_VOLUME_NAME}" 8985 "solr3" "${SOLR3_SECRETS_VOLUME_NAME}"
+wait_for_solr_to_be_live "${SOLR3_FQDN}"
 
 ###############################################################################
 # Adding a Solr replica                                                       #

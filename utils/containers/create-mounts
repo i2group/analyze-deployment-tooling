@@ -7,10 +7,10 @@
 set -e
 
 if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
-  echo "ANALYZE_CONTAINERS_ROOT_DIR variable is not set"
+  echo "ANALYZE_CONTAINERS_ROOT_DIR variable is not set" >&2
   echo "This project should be run inside a VSCode Dev Container. \
 For more information read, the Getting Started guide at \
-https://i2group.github.io/analyze-containers/content/getting_started.html"
+https://i2group.github.io/analyze-containers/content/getting_started.html" >&2
   exit 1
 fi
 
@@ -28,7 +28,7 @@ Options:
 """
 
 function usage() {
-  echo "${USAGE}"
+  echo "${USAGE}" >&2
   exit 1
 }
 
@@ -57,9 +57,7 @@ function validate_arguments() {
   fi
 
   if [[ "${TASK}" != "create" && "${TASK}" != "list" ]]; then
-    printf "\n\e[31mERROR: %s\n" "${TASK} is not supported" >&2
-    printf "\e[0m" >&2
-    exit 1
+    print_error_and_exit "${TASK} is not supported"
   fi
 }
 
@@ -90,11 +88,13 @@ function create_mounts() {
   jq 'del(.mounts[])' "${devcontainer_json}" >"${ANALYZE_CONTAINERS_ROOT_DIR}/.devcontainer/tmp.json"
   mv "${ANALYZE_CONTAINERS_ROOT_DIR}/.devcontainer/tmp.json" "${devcontainer_json}"
 
-  # Add default mount for the docker.sock
+  # Add default mounts
   # Can't be inside the MOUNTS_ARRAY as the 'source' is not same as 'target'
-  jq --arg mount \
+  jq --arg docker_mount \
     "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind" \
-    '.mounts |= . + [$mount]' "${devcontainer_json}" >"${ANALYZE_CONTAINERS_ROOT_DIR}/.devcontainer/tmp.json"
+    --arg history_mount \
+    "source=analyze-containers,target=/commandhistory,type=volume" \
+    '.mounts |= . + [$docker_mount, $history_mount]' "${devcontainer_json}" >"${ANALYZE_CONTAINERS_ROOT_DIR}/.devcontainer/tmp.json"
   mv "${ANALYZE_CONTAINERS_ROOT_DIR}/.devcontainer/tmp.json" "${devcontainer_json}"
 
   # Add mount for each path in the path-configuration.json file

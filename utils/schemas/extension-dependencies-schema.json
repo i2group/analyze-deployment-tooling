@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://i2group.github.io/analyze-containers/schemas/extension-dependencies-schema.json",
+  "title": "JSON schema for the Analyze Containers extension dependencies file",
+  "type": "array",
+  "description": "List of extension objects.",
+  "items": {
+    "type": "object",
+    "default": {
+      "name": "",
+      "dependencies": []
+    },
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "The name of the extension (folder structure)."
+      },
+      "dependencies": {
+        "type": "array",
+        "description": "The list of other extensions which this extension is dependent on.",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": [
+      "name",
+      "dependencies"
+    ],
+    "additionalProperties": false
+  }
+}

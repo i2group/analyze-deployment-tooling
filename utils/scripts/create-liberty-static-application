@@ -14,7 +14,7 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/server_functions.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/client_functions.sh"
 
 # Load common variables
-checkEnvironmentIsValid
+check_environment_is_valid
 if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulated_external_variables.sh"
 elif [[ "${ENVIRONMENT}" == "config-dev" ]]; then
@@ -29,26 +29,26 @@ THIRD_PARTY_DIR="$TARGET_DIR/third-party-dependencies"
 ###############################################################################
 # Function definitions                                                        #
 ###############################################################################
-function addDevConfigFragment() {
+function add_dev_config_fragment() {
   sed -i 's/<include location="server.extensions.xml"\/>/<include location="server.extensions.xml"\/>\n  <include location="server.extensions.dev.xml"\/>/' "$TARGET_DIR/server-config/server.xml"
 }
 
-function addContextRootFragment() {
+function add_context_root_fragment() {
   # We want this to output ${CONTEXT_ROOT} without expansion
   # shellcheck disable=SC2016
   sed -i 's/<application context-root="opal"/<variable name="CONTEXT_ROOT" defaultValue="opal" \/>\n  <application context-root="${CONTEXT_ROOT}"/' "$TARGET_DIR/server-config/server.xml"
 }
 
-function populateLibertyApplication() {
+function populate_liberty_application() {
   print "Populating static liberty application folder"
   cp -pr "$TOOLKIT_APPLICATION_DIR/targets/opal-services" "$TARGET_DIR"
   cp -pr "$TOOLKIT_APPLICATION_DIR/dependencies/icons" "$TARGET_DIR/opal-services"
-  cp -pr "$TOOLKIT_APPLICATION_DIR/shared/lib" "$THIRD_PARTY_DIR/resources/i2-common"
+  cp -pr "$TOOLKIT_APPLICATION_DIR/shared/lib" "$TARGET_DIR/opal-services/WEB-INF/lib"
   cp -pr "$TOOLKIT_APPLICATION_DIR/dependencies/tai" "$THIRD_PARTY_DIR/resources/security"
   cp -pr "$TOOLKIT_APPLICATION_DIR/server/." "$TARGET_DIR/"
 }
 
-function createJvmOptions() {
+function create_jvm_options() {
   # This should be removed when we move to Groovy 3.x
   print "Creating jvm.options file"
   {
@@ -73,33 +73,37 @@ function createJvmOptions() {
   } >>"${TARGET_DIR}/jvm.options"
 }
 
-###############################################################################
-# Create required directories                                                 #
-###############################################################################
-mkdir -p "$TARGET_DIR"
-mkdir -p "$THIRD_PARTY_DIR/resources"
-mkdir -p "$THIRD_PARTY_DIR/resources/i2-common"
-mkdir -p "$THIRD_PARTY_DIR/resources/security"
-mkdir -p "$THIRD_PARTY_DIR/resources/jdbc"
+function main() {
+  ###############################################################################
+  # Create required directories                                                 #
+  ###############################################################################
+  mkdir -p "$TARGET_DIR"
+  mkdir -p "$THIRD_PARTY_DIR/resources"
+  mkdir -p "$THIRD_PARTY_DIR/resources/i2-common"
+  mkdir -p "$THIRD_PARTY_DIR/resources/security"
+  mkdir -p "$THIRD_PARTY_DIR/resources/jdbc"
 
-###############################################################################
-# Populate liberty application                                                #
-###############################################################################
-populateLibertyApplication
+  ###############################################################################
+  # Populate liberty application                                                #
+  ###############################################################################
+  populate_liberty_application
 
-###############################################################################
-# Create jvm.options file                                                     #
-###############################################################################
-createJvmOptions
+  ###############################################################################
+  # Create jvm.options file                                                     #
+  ###############################################################################
+  create_jvm_options
 
-###############################################################################
-# Add config fragments used in development                                    #
-###############################################################################
-addDevConfigFragment
+  ###############################################################################
+  # Add config fragments used in development                                    #
+  ###############################################################################
+  add_dev_config_fragment
 
-###############################################################################
-# Make context root configurable                                              #
-###############################################################################
-addContextRootFragment
+  ###############################################################################
+  # Make context root configurable                                              #
+  ###############################################################################
+  add_context_root_fragment
 
-set +e
+  set +e
+}
+
+main "$@"

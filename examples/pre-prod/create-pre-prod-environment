@@ -19,7 +19,7 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulated_external_variables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/version.conf"
 
-createLicenseConfiguration
+create_license_configuration
 
 print "Running create-environment script"
 "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/create-environment" -e "${ENVIRONMENT}"

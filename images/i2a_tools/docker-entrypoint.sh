@@ -23,7 +23,7 @@ if [[ ${SOLR_ZOO_SSL_CONNECTION} == true ]]; then
   file_env 'SSL_CERTIFICATE'
   file_env 'SSL_CA_CERTIFICATE'
   if [[ -z ${SSL_PRIVATE_KEY} || -z ${SSL_CERTIFICATE} || -z ${SSL_CA_CERTIFICATE} ]]; then
-    echo "Missing security environment variables. Please check SSL_PRIVATE_KEY SSL_CERTIFICATE SSL_CA_CERTIFICATE"
+    echo "Missing security environment variables. Please check SSL_PRIVATE_KEY SSL_CERTIFICATE SSL_CA_CERTIFICATE" >&2
     exit 1
   fi
   KEY=${TMP_SECRETS}/server.key
@@ -34,7 +34,6 @@ if [[ ${SOLR_ZOO_SSL_CONNECTION} == true ]]; then
   KEYSTORE_PASS=$(openssl rand -base64 16)
   export KEYSTORE_PASS
 
-  mkdir ${TMP_SECRETS}
   echo "${SSL_PRIVATE_KEY}" >"${KEY}"
   echo "${SSL_CERTIFICATE}" >"${CER}"
   echo "${SSL_CA_CERTIFICATE}" >"${CA_CER}"
@@ -42,7 +41,7 @@ if [[ ${SOLR_ZOO_SSL_CONNECTION} == true ]]; then
   openssl pkcs12 -export -in ${CER} -inkey "${KEY}" -certfile ${CA_CER} -passout env:KEYSTORE_PASS -out "${KEYSTORE}"
   OUTPUT=$(keytool -importcert -noprompt -alias ca -keystore "${TRUSTSTORE}" -file ${CA_CER} -storepass:env KEYSTORE_PASS -storetype PKCS12 2>&1)
   if [[ "$OUTPUT" != "Certificate was added to keystore" ]]; then
-    echo "$OUTPUT"
+    echo "$OUTPUT" >&2
     exit 1
   fi
 
@@ -59,7 +58,7 @@ if [[ ${SOLR_ZOO_SSL_CONNECTION} == true ]]; then
 elif [[ ${DB_SSL_CONNECTION} == true ]]; then
   file_env 'SSL_CA_CERTIFICATE'
   if [[ -z ${SSL_CA_CERTIFICATE} ]]; then
-    echo "Missing security environment variables. Please check SSL_CA_CERTIFICATE"
+    echo "Missing security environment variables. Please check SSL_CA_CERTIFICATE" >&2
     exit 1
   fi
   CA_CER=${TMP_SECRETS}/CA.cer
@@ -67,7 +66,10 @@ elif [[ ${DB_SSL_CONNECTION} == true ]]; then
   KEYSTORE_PASS=$(openssl rand -base64 16)
   export KEYSTORE_PASS
 
-  mkdir ${TMP_SECRETS}
+  # Create a directory if it doesn't exist
+  if [[ ! -d "${TMP_SECRETS}" ]]; then
+    mkdir -p "${TMP_SECRETS}"
+  fi
   echo "${SSL_CA_CERTIFICATE}" >"${CA_CER}"
 
   keytool -importcert -noprompt -alias ca -keystore "${TRUSTSTORE}" -file ${CA_CER} -storepass:env KEYSTORE_PASS -storetype PKCS12
@@ -77,7 +79,7 @@ elif [[ "${SERVER_SSL}" == "true" ]]; then
   CA_CER="${TMP_SECRETS}/CA.cer"
   # Create a directory if it doesn't exist
   if [[ ! -d "${TMP_SECRETS}" ]]; then
-    mkdir "${TMP_SECRETS}"
+    mkdir -p "${TMP_SECRETS}"
   fi
   echo "${SSL_CA_CERTIFICATE}" >"${CA_CER}"
 fi
@@ -96,7 +98,7 @@ if [[ "${GATEWAY_SSL_CONNECTION}" == "true" ]]; then
   file_env 'SSL_CA_CERTIFICATE'
 
   if [[ -z "${SSL_OUTBOUND_PRIVATE_KEY}" || -z "${SSL_OUTBOUND_CERTIFICATE}" || -z "${SSL_CA_CERTIFICATE}" ]]; then
-    echo "Missing security environment variables. Please check SSL_OUTBOUND_PRIVATE_KEY SSL_OUTBOUND_CERTIFICATE SSL_CA_CERTIFICATE"
+    echo "Missing security environment variables. Please check SSL_OUTBOUND_PRIVATE_KEY SSL_OUTBOUND_CERTIFICATE SSL_CA_CERTIFICATE" >&2
     exit 1
   fi
 
@@ -105,12 +107,23 @@ if [[ "${GATEWAY_SSL_CONNECTION}" == "true" ]]; then
 
   # Create a directory if it doesn't exist
   if [[ ! -d "${TMP_SECRETS}" ]]; then
-    mkdir "${TMP_SECRETS}"
+    mkdir -p "${TMP_SECRETS}"
   fi
   echo "${SSL_OUTBOUND_PRIVATE_KEY}" >>"${GATEWAY_CER}"
   echo "${SSL_OUTBOUND_CERTIFICATE}" >>"${GATEWAY_CER}"
   echo "${SSL_CA_CERTIFICATE}" >"${CA_CER}"
 fi
 
+# If user not root ensure to give correct permissions before start
+if [ -n "$GROUP_ID" ] && [ "$GROUP_ID" != "0" ]; then
+  groupmod -g "$GROUP_ID" "${USER}" >/dev/null
+  usermod -u "$USER_ID" -g "$GROUP_ID" "${USER}" >/dev/null
+  chown -R "${USER_ID}:${GROUP_ID}" "/simulatedKeyStore" \
+    "/opt/configuration" \
+    "/opt/databaseScripts/generated" \
+    "/var/i2a-data" \
+    "${TMP_SECRETS}"
+fi
+
 set +e
-exec "$@"
+exec /usr/local/bin/gosu "${USER}" "$@"

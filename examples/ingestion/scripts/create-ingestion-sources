@@ -22,6 +22,9 @@ INGESTION_SOURCES=(
 ###############################################################################
 print "Adding Information Store Ingestion Source(s)"
 
+# Ensure server has up-to-date data
+update_volume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "/var/i2a-data"
+
 for ingestion_source_description in "${!INGESTION_SOURCES[@]}"; do
   ingestion_source_name="${INGESTION_SOURCES["${ingestion_source_description}"]}"
 

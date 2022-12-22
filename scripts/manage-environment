@@ -4,12 +4,11 @@
 #
 # SPDX short identifier: MIT
 
-echo "BASH_VERSION: $BASH_VERSION"
 set -e
 
 if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
-  echo "ANALYZE_CONTAINERS_ROOT_DIR variable is not set"
-  echo "This project should be run inside a VSCode Dev Container. For more information read, the Getting Started guide at https://i2group.github.io/analyze-containers/content/getting_started.html"
+  echo "ANALYZE_CONTAINERS_ROOT_DIR variable is not set" >&2
+  echo "This project should be run inside a VSCode Dev Container. For more information read, the Getting Started guide at https://i2group.github.io/analyze-containers/content/getting_started.html" >&2
   exit 1
 fi
 
@@ -17,7 +16,7 @@ USAGE="""
 Usage:
   manage-environment -t backup [-p <path>] [-i <config_name>] [-e <config_name>] [-b <backup_name>] [-y]
   manage-environment -t copy -p <path> [-i <config_name>] [-e <config_name>] [-y]
-  manage-environment -t upgrade -p <path> [-y]
+  manage-environment -t upgrade [-y]
   manage-environment -t update [-y]
   manage-environment -t link [-y]
   manage-environment -t stop [-y]
@@ -39,7 +38,7 @@ Options:
   -i <config_name|extension_name|connector_name>                Name of the config, connector or extension to include for the task. To specify multiple values, add additional -i options.
   -e <config_name|extension_name|connector_name>                Name of the config, connector or extension to exclude for the task. To specify multiple values, add additional -e options.
   -b <backup_name>                                              Name of the backup to create or restore. If not specified, the default backup is used.
-  -p <path>                                                     Path to the root of an analyze-containers project. Defaults to the current project path.
+  -p <path>                                                     Path to the root of an analyze-containers project. Defaults to the current project path. Or $HOME/analyze-containers in upgrade.
   -y                                                            Answer 'yes' to all prompts.
   -v                                                            Verbose output.
   -h                                                            Display the help.
@@ -50,25 +49,32 @@ OPTIONS_FOR="manageEnv"
 
 function validate_arguments() {
   if [[ -z "${TASK}" ]]; then
-    printErrorAndUsage "Task is not set."
+    print_error_and_usage "Task is not set."
   fi
 
   [[ "${TASK}" == "backup" || "${TASK}" == "copy" || "${TASK}" == "upgrade" || "${TASK}" == "update" ||
     "${TASK}" == "connectors" || "${TASK}" == "extensions" || "${TASK}" == "clean" ||
-    "${TASK}" == "stop" || "${TASK}" == "link" ]] || printErrorAndUsage "${TASK} is not supported."
+    "${TASK}" == "stop" || "${TASK}" == "link" ]] || print_error_and_usage "${TASK} is not supported."
+
+  if [[ "${TASK}" == "upgrade" ]]; then
+    PREVIOUS_PROJECT_PATH="$(jq -r '.upgradeDirectory?' "${ANALYZE_CONTAINERS_ROOT_DIR}/path-configuration.json")"
+    if [[ -z "${PREVIOUS_PROJECT_PATH}" || "${PREVIOUS_PROJECT_PATH}" == "null" ]]; then
+      print_error_and_usage "upgradeDirectory not set in path-configuration.json"
+    fi
+  fi
 
   if [[ -z "${PREVIOUS_PROJECT_PATH}" ]]; then
-    if [[ "${TASK}" == "copy" || "${TASK}" == "upgrade" ]]; then
-      printErrorAndUsage "The path to an analyze-containers project must be set."
+    if [[ "${TASK}" == "copy" ]]; then
+      print_error_and_usage "The path to an analyze-containers project must be set."
     fi
     PREVIOUS_PROJECT_PATH="${ANALYZE_CONTAINERS_ROOT_DIR}"
   elif [[ ! -d "${PREVIOUS_PROJECT_PATH}" ]]; then
-    printErrorAndUsage "Directory doesn't exist: ${PREVIOUS_PROJECT_PATH}"
+    print_error_and_usage "Directory doesn't exist: ${PREVIOUS_PROJECT_PATH}"
   fi
   CURRENT_PROJECT_PATH="${ANALYZE_CONTAINERS_ROOT_DIR}"
 
   if [[ "${INCLUDED_ASSETS[*]}" && "${EXCLUDED_ASSETS[*]}" ]]; then
-    printErrorAndUsage "Incompatible options: Both (-i) and (-e) were specified."
+    print_error_and_usage "Incompatible options: Both (-i) and (-e) were specified."
   fi
 }
 
@@ -105,8 +111,7 @@ function source_common_variables_and_scripts() {
 function create_backup() {
   CONFIG_NAME="$1"
 
-  printInfo "Setting prerequisites to backup: ${CONFIG_NAME}"
-  export ANALYZE_CONTAINERS_ROOT_DIR="${PREVIOUS_PROJECT_PATH}"
+  print_info "Setting prerequisites to backup: ${CONFIG_NAME}"
   unset I2A_DEPENDENCIES_IMAGES_TAG
 
   AWS_DEPLOY="false"
@@ -126,6 +131,8 @@ function create_backup() {
   source_file_or_next simulated_variables_paths
   source_file_or_next common_variables_paths
   source_file_or_next internal_variables_paths
+
+  # TODO: Remove on major version
   if [[ "${VERSION}" > "2.3.0" || "${VERSION}" == "2.3.0" ]]; then
     set_dependencies_tag_if_necessary
   fi
@@ -151,19 +158,17 @@ function create_backup() {
   fi
 
   # Restart Docker containers
-  print "Restarting container: ${SQL_SERVER_CONTAINER_NAME}"
-  docker start "${SQL_SERVER_CONTAINER_NAME}"
-  waitForSQLServerToBeLive
+  start_db_server
 
   if [[ -d "${PREVIOUS_PROJECT_PATH}/backups/${CONFIG_NAME}/${BACKUP_NAME}" ]]; then
     echo "There is already a backup for ${CONFIG_NAME} config with the name ${BACKUP_NAME}."
     if [[ "${TASK}" == "backup" ]]; then
       echo "You can run the command again and specify a different backup name by using the -b argument."
     fi
-    waitForUserReply "Do you want to override the existing backup?"
+    wait_for_user_reply "Do you want to override the existing backup?"
   fi
 
-  deleteFolderIfExistsAndCreate "${PREVIOUS_PROJECT_PATH}/backups/${CONFIG_NAME}/${BACKUP_NAME}"
+  delete_folder_if_exists_and_create "${PREVIOUS_PROJECT_PATH}/backups/${CONFIG_NAME}/${BACKUP_NAME}"
 
   # Create the back up
   print "Backing up the ISTORE database for container: ${SQL_SERVER_CONTAINER_NAME}"
@@ -175,6 +180,7 @@ function create_backup() {
   		TO DISK = '${backup_file_path}'
   		WITH FORMAT;"
 
+  # TODO: Remove on major version
   if [[ "${VERSION}" < "2.4.0" ]]; then
     runSQLServerCommandAsDBB runSQLQuery "${sql_query}"
     getVolume "${BACKUP_DIR}" "${SQL_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
@@ -183,8 +189,7 @@ function create_backup() {
     get_volume "${BACKUP_DIR}" "${SQL_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
   fi
 
-  print "Stopping container: ${SQL_SERVER_CONTAINER_NAME}"
-  stopContainer "${SQL_SERVER_CONTAINER_NAME}"
+  stop_db_server
 }
 
 function create_backups() {
@@ -193,13 +198,27 @@ function create_backups() {
   done
 }
 
+function build_plugins_array() {
+  build_asset_array "plugin" "i2a-plugins"
+}
+
 function build_config_array() {
-  buildAssetArray "config" "configs"
+  build_asset_array "config" "configs"
+}
+
+function build_connectors_array() {
+  build_asset_array "connector" "connector-images"
+}
+
+function build_extensions_array() {
+  build_asset_array "extension" "i2a-extensions" "target"
 }
 
 function run_backup_task() {
-  stopConfigDevContainers
-  stopConnectorContainers
+  stop_config_dev_containers
+  stop_connector_containers
+
+  export ANALYZE_CONTAINERS_ROOT_DIR="${PREVIOUS_PROJECT_PATH}"
   build_config_array
   create_backups
 }
@@ -222,11 +241,13 @@ function copy_configurations() {
     local prev_config_path="${PREVIOUS_PROJECT_PATH}/configs/${config_name}"
     local current_config_path="${CURRENT_PROJECT_PATH}/configs/${config_name}"
     [[ ! -d "${prev_config_path}" ]] && continue
-    if [[ -d "${current_config_path}" ]]; then
+    if [[ -d "${current_config_path}" && ! -L "${current_config_path}" ]]; then
       print_error_and_exit "Config folder already exists: ${current_config_path}"
     else
-      cp -pr "${prev_config_path}" "${CURRENT_PROJECT_PATH}/configs"
-
+      # Do not copy if the directory is a symlink
+      if [[ ! -d "${current_config_path}" || ! -L "${prev_config_path}" ]]; then
+        cp -pr "${prev_config_path}" "${CURRENT_PROJECT_PATH}/configs"
+      fi
       # Rename to version.conf if required
       if [[ -f "${current_config_path}/version" && ! -f "${current_config_path}/version.conf" ]]; then
         mv "${current_config_path}/version" "${current_config_path}/version.conf"
@@ -235,6 +256,7 @@ function copy_configurations() {
       # Ensure the version file is present and upgraded
       if [[ ! -f "${current_config_path}/version.conf" ]]; then
         cp "${CURRENT_PROJECT_PATH}/utils/templates/version.conf" "${current_config_path}"
+        # TODO: Remove on major version
         if [[ "${VERSION}" < "2.3.0" ]]; then
           sed -i "s/^SUPPORTED_I2ANALYZE_VERSION=.*/SUPPORTED_I2ANALYZE_VERSION=${I2ANALYZE_VERSION}/g" "${current_config_path}/version.conf"
         else
@@ -250,19 +272,23 @@ function copy_configurations() {
       fi
       # Add prometheus config
       if [[ ! -d "${current_config_path}/configuration/prometheus" ]]; then
-        createFolder "${current_config_path}/configuration/prometheus"
+        create_folder "${current_config_path}/configuration/prometheus"
         cp -pr "${CURRENT_PROJECT_PATH}/templates/config-development/configuration/prometheus/"* "${current_config_path}/configuration/prometheus"
       fi
       # Add grafana config
       if [[ ! -d "${current_config_path}/configuration/grafana" ]]; then
-        createFolder "${current_config_path}/configuration/grafana"
+        create_folder "${current_config_path}/configuration/grafana"
         cp -pr "${CURRENT_PROJECT_PATH}/templates/config-development/configuration/grafana/"* "${current_config_path}/configuration/grafana"
       fi
       # Add privacy agreement
       if [[ ! -f "${current_config_path}/configuration/privacyagreement.html" ]]; then
         cp -p "${CURRENT_PROJECT_PATH}/templates/config-development/configuration/privacyagreement.html" "${current_config_path}/configuration/privacyagreement.html"
       fi
-      # TODO: remove after 2.3.0 is not supported (only source variables.conf)
+      # Add properties file
+      if [[ ! -f "${current_config_path}/configuration/InfoStoreNamesPostgres.properties" ]]; then
+        cp -p "${CURRENT_PROJECT_PATH}/templates/config-development/configuration/InfoStoreNamesPostgres.properties" "${current_config_path}/configuration/InfoStoreNamesPostgres.properties"
+      fi
+      # TODO: Remove on major version
       # Rename variables.sh to variables.conf
       if [[ ! -f "${current_config_path}/utils/variables.conf" ]]; then
         if [[ -f "${current_config_path}/utils/variables.sh" ]]; then
@@ -285,6 +311,7 @@ function copy_configurations() {
   if [[ -d "${PREVIOUS_PROJECT_PATH}/examples/pre-prod/configuration" ]]; then
     if [[ ! -f "${PREVIOUS_PROJECT_PATH}/examples/pre-prod/configuration/version.conf" ]]; then
       cp "${CURRENT_PROJECT_PATH}/utils/templates/version.conf" "${PREVIOUS_PROJECT_PATH}/examples/pre-prod/configuration"
+      # TODO: Remove on major version
       if [[ "${VERSION}" < "2.3.0" ]]; then
         sed -i "s/^SUPPORTED_I2ANALYZE_VERSION=.*/SUPPORTED_I2ANALYZE_VERSION=${I2ANALYZE_VERSION}/g" "${PREVIOUS_PROJECT_PATH}/examples/pre-prod/configuration/version.conf"
       else
@@ -300,20 +327,23 @@ function copy_configurations() {
     local previous_pre_prod_config_path="${PREVIOUS_PROJECT_PATH}/examples/pre-prod/configuration"
     local current_pre_prod_config_path="${CURRENT_PROJECT_PATH}/examples/pre-prod/configuration"
     if [[ -d "${previous_pre_prod_config_path}" ]]; then
-      deleteFolderIfExistsAndCreate "${current_pre_prod_config_path}"
+      delete_folder_if_exists_and_create "${current_pre_prod_config_path}"
       cp -pr "${previous_pre_prod_config_path}/"* "${current_pre_prod_config_path}"
       if [[ ! -f "${previous_pre_prod_config_path}/fragments/common/privacyagreement.html" ]]; then
         cp -p "${CURRENT_PROJECT_PATH}/pre-reqs/i2analyze/toolkit/examples/configurations/all-patterns/configuration/fragments/common/privacyagreement.html" "${current_pre_prod_config_path}/fragments/common/privacyagreement.html"
       fi
+      if [[ ! -f "${previous_pre_prod_config_path}/fragments/opal-services-is/WEB-INF/classes/InfoStoreNamesPostgres.properties" ]]; then
+        cp -p "${CURRENT_PROJECT_PATH}/pre-reqs/i2analyze/toolkit/examples/configurations/all-patterns/configuration/fragments/opal-services-is/WEB-INF/classes/InfoStoreNamesPostgres.properties" "${current_pre_prod_config_path}/fragments/opal-services-is/WEB-INF/classes/InfoStoreNamesPostgres.properties"
+      fi
       if [[ -f "${current_pre_prod_config_path}/fragments/common/WEB-INF/classes/server.extensions.xml" ]]; then
-        createFolder "${current_pre_prod_config_path}/liberty"
+        create_folder "${current_pre_prod_config_path}/liberty"
         mv "${current_pre_prod_config_path}/fragments/common/WEB-INF/classes/server.extensions.xml" "${current_pre_prod_config_path}/liberty/server.extensions.xml"
       fi
     fi
     local previous_pre_prod_generated_path="${PREVIOUS_PROJECT_PATH}/examples/pre-prod/database-scripts"
     local current_pre_prod_generated_path="${CURRENT_PROJECT_PATH}/examples/pre-prod/database-scripts"
     if [[ -d "${previous_pre_prod_generated_path}" ]]; then
-      deleteFolderIfExistsAndCreate "${current_pre_prod_generated_path}"
+      delete_folder_if_exists_and_create "${current_pre_prod_generated_path}"
       cp -pr "${previous_pre_prod_generated_path}/"* "${current_pre_prod_generated_path}"
     fi
   fi
@@ -327,7 +357,7 @@ function copy_backups() {
 
   for backup_name in "${CONFIGS_ARRAY[@]}"; do
     backup_path="${PREVIOUS_PROJECT_PATH}/backups/${backup_name}"
-    [[ ! -d "${backup_path}" ]] && continue
+    [[ ! -d "${backup_path}" || -L "${backup_path}" ]] && continue
     if [[ -d "${CURRENT_PROJECT_PATH}/backups/${backup_name}" ]]; then
       print_error_and_exit "Backup folder already exists: ${CURRENT_PROJECT_PATH}/backups/${backup_name}"
     else
@@ -344,7 +374,7 @@ function copy_extensions() {
 
   for extension in "${PREVIOUS_PROJECT_PATH}"/i2a-extensions/*; do
     extension_name="$(basename "${extension}")"
-    [[ ! -d "${extension}" || "${extension_name}" == "target" ]] && continue
+    [[ ! -d "${extension}" || "${extension_name}" == "target" || -L "${extension}" ]] && continue
     if [[ -d "${CURRENT_PROJECT_PATH}/i2a-extensions/${extension_name}" ]]; then
       print_error_and_exit "Extension already exists: ${CURRENT_PROJECT_PATH}/i2a-extensions/${extension_name}"
     else
@@ -362,7 +392,7 @@ function copy_plugins() {
   print "Copying all plugins"
 
   for plugin in "${PREVIOUS_PROJECT_PATH}"/i2a-plugins/*; do
-    [[ ! -d "${plugin}" ]] && continue
+    [[ ! -d "${plugin}" || -L "${plugin}" ]] && continue
     plugin_name=$(basename "${plugin}")
     if [[ -d "${CURRENT_PROJECT_PATH}/i2a-plugins/${plugin_name}" ]]; then
       print_error_and_exit "Plugin already exists: ${CURRENT_PROJECT_PATH}/i2a-plugins/${plugin_name}"
@@ -376,19 +406,23 @@ function copy_secrets() {
   local secret_name
   print "Copying all secrets"
 
+  sudo chown -R "$USER" "${CURRENT_PROJECT_PATH}/dev-environment-secrets"
+
   for secret in "${PREVIOUS_PROJECT_PATH}"/dev-environment-secrets/*; do
     [[ ! -d "${secret}" ]] && continue
     secret_name=$(basename "${secret}")
+
     if [[ -d "${CURRENT_PROJECT_PATH}/dev-environment-secrets/${secret_name}" ]]; then
       rm -r "${CURRENT_PROJECT_PATH}/dev-environment-secrets/${secret_name}"
     fi
-    cp -pr "${secret}" "${CURRENT_PROJECT_PATH}/dev-environment-secrets"
+    cp -r "${secret}" "${CURRENT_PROJECT_PATH}/dev-environment-secrets"
   done
 
-  printInfo "Generating missing secrets"
+  print_info "Generating missing secrets"
+  export ANALYZE_CONTAINERS_ROOT_DIR="${CURRENT_PROJECT_PATH}"
   "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/generate-secrets"
 
-  updateCoreSecretsVolumes
+  update_core_secrets_volumes
 }
 
 function copy_connectors() {
@@ -396,7 +430,7 @@ function copy_connectors() {
   print "Copying all connector images"
 
   for connector in "${PREVIOUS_PROJECT_PATH}"/connector-images/*; do
-    [[ ! -d "${connector}" ]] && continue
+    [[ ! -d "${connector}" || -L "${connector}" ]] && continue
     connector_name=$(basename "${connector}")
     if [[ -d "${CURRENT_PROJECT_PATH}/connector-images/${connector_name}" ]]; then
       print_error_and_exit "Connector image folder already exists: ${CURRENT_PROJECT_PATH}/connector-images/${connector_name}"
@@ -414,7 +448,7 @@ function copy_data() {
   print "Copying all data sets"
 
   for data_set in "${PREVIOUS_PROJECT_PATH}"/i2a-data/*; do
-    [[ ! -d "${data_set}" ]] && continue
+    [[ ! -d "${data_set}" || -L "${data_set}" ]] && continue
     data_set_name=$(basename "${data_set}")
     if [[ -d "${CURRENT_PROJECT_PATH}/i2a-data/${data_set_name}" ]]; then
       print_error_and_exit "Data set folder already exists: ${CURRENT_PROJECT_PATH}/i2a-data/${data_set_name}"
@@ -429,7 +463,7 @@ function copy_gateway_schemas() {
   print "Copying all gateway schemas"
 
   for gateway_schema in "${PREVIOUS_PROJECT_PATH}"/gateway-schemas/*; do
-    [[ ! -f "${gateway_schema}" ]] && continue
+    [[ ! -f "${gateway_schema}" || -L "${gateway_schema}" ]] && continue
     gateway_schema_name=$(basename "${gateway_schema}")
     if [[ -f "${CURRENT_PROJECT_PATH}/gateway-schemas/${gateway_schema_name}" ]]; then
       print_error_and_exit "Gateway Schema already exists: ${CURRENT_PROJECT_PATH}/gateway-schemas/${gateway_schema_name}"
@@ -443,7 +477,7 @@ function copy_additional_resources() {
   print "Copying all additional resources"
 
   for additional_resource in "${PREVIOUS_PROJECT_PATH}"/additional-resources/*; do
-    [[ ! -d "${additional_resource}" ]] && continue
+    [[ ! -d "${additional_resource}" || -L "${additional_resource}" ]] && continue
     additional_resource_name=$(basename "${additional_resource}")
     if [[ -d "${CURRENT_PROJECT_PATH}/additional-resources/${additional_resource_name}" ]]; then
       print_error_and_exit "Additional resource folder already exists: ${CURRENT_PROJECT_PATH}/additional-resources/${additional_resource_name}"
@@ -454,6 +488,7 @@ function copy_additional_resources() {
 }
 
 function run_copy_task() {
+  export ANALYZE_CONTAINERS_ROOT_DIR="${PREVIOUS_PROJECT_PATH}"
   build_config_array
   copy_configurations
   copy_backups
@@ -468,6 +503,7 @@ function run_copy_task() {
 
 function run_upgrade_task() {
   local same_version="false"
+  export ANALYZE_CONTAINERS_ROOT_DIR="${PREVIOUS_PROJECT_PATH}"
   unset SUPPORTED_I2ANALYZE_VERSION
   local version_paths=("${PREVIOUS_PROJECT_PATH}/version.conf" "${PREVIOUS_PROJECT_PATH}/version")
   source_file_or_next version_paths
@@ -480,12 +516,12 @@ function run_upgrade_task() {
 
   if [[ "${OLD_SUPPORTED_I2ANALYZE_VERSION}" == "${SUPPORTED_I2ANALYZE_VERSION}" ]]; then
     same_version="true"
-    waitForUserReply "This upgrade uses the same version of i2 Analyze. The process will upgrade your environment in ${PREVIOUS_PROJECT_PATH}. Do you want to continue?"
+    wait_for_user_reply "This upgrade uses the same version of i2 Analyze. The process will upgrade your environment in ${PREVIOUS_PROJECT_PATH}. Do you want to continue?"
   fi
 
   # Prepare
-  stopConfigDevContainers
-  stopConnectorContainers
+  stop_config_dev_containers
+  stop_connector_containers
   build_config_array
 
   # Backup all
@@ -518,56 +554,61 @@ function run_upgrade_task() {
     extra_args+=("-v")
   fi
   for config_name in "${CONFIGS_ARRAY[@]}"; do
-    stopConfigDevContainers
-    stopConnectorContainers
+    stop_config_dev_containers
+    stop_connector_containers
     "${ANALYZE_CONTAINERS_ROOT_DIR}/scripts/deploy" -c "${config_name}" "${extra_args[@]}"
   done
 
+  "${ANALYZE_CONTAINERS_ROOT_DIR}/scripts/configure-paths" -t upgrade -d
+
   print "All configurations have been upgraded"
   if [[ "${same_version}" == "false" ]]; then
-    waitForUserReply "To replace the contents of ${PREVIOUS_PROJECT_PATH} with the upgraded version, enter 'y'. To continue working with ${PREVIOUS_PROJECT_PATH} and ${CURRENT_PROJECT_PATH} at the same time, enter 'n'."
+    wait_for_user_reply "To replace the contents of ${PREVIOUS_PROJECT_PATH} with the upgraded version, enter 'y'. To continue working with ${PREVIOUS_PROJECT_PATH} and ${CURRENT_PROJECT_PATH} at the same time, enter 'n' and rebuild the Dev Container."
   fi
 
   # Delete all secrets first
-  deleteFolderIfExists "${PREVIOUS_PROJECT_PATH}/dev-environment-secrets"
-  # cspell:ignore aqprkl
-  rsync -aqprkl --exclude='dev' --delete "${ANALYZE_CONTAINERS_ROOT_DIR}/" "${PREVIOUS_PROJECT_PATH}"
+  delete_folder_if_exists "${PREVIOUS_PROJECT_PATH}/dev-environment-secrets"
+  # cspell:ignore aqprKl
+  rsync -aqprKl --exclude='dev' --delete "${ANALYZE_CONTAINERS_ROOT_DIR}/" "${PREVIOUS_PROJECT_PATH}"
 
   echo "Done"
   echo "Please delete ${CURRENT_PROJECT_PATH} and open ${PREVIOUS_PROJECT_PATH} in a new VSCode window."
 }
 
-function getImageId() {
+function get_image_id() {
   local image_name_and_version="$1"
 
   docker inspect --format "{{.Id}}" "${image_name_and_version}"
 }
 
-function getBaseImageIds() {
+function get_base_image_ids() {
   local image_ids
 
-  image_ids+=$(getImageId "${JAVA_IMAGE_NAME}:${JAVA_IMAGE_VERSION}")
-  image_ids+=$(getImageId "${REDHAT_UBI_IMAGE_NAME}:${REDHAT_UBI_IMAGE_VERSION}")
-  image_ids+=$(getImageId "haproxy:${HA_PROXY_IMAGE_VERSION}")
-  image_ids+=$(getImageId "i2group/i2eng-liberty:${LIBERTY_VERSION}")
-  image_ids+=$(getImageId "i2group/i2eng-solr:${SOLR_VERSION}")
-  image_ids+=$(getImageId "i2group/i2eng-zookeeper:${ZOOKEEPER_VERSION}")
-  image_ids+=$(getImageId "i2group/i2eng-prometheus:${PROMETHEUS_VERSION}")
-  image_ids+=$(getImageId "grafana/grafana-oss:${GRAFANA_VERSION}")
-  image_ids+=$(getImageId "mcr.microsoft.com/mssql/rhel/server:${SQL_SERVER_IMAGE_VERSION}")
+  image_ids+=$(get_image_id "${JAVA_IMAGE_NAME}:${JAVA_IMAGE_VERSION}")
+  image_ids+=$(get_image_id "${REDHAT_UBI_IMAGE_NAME}:${REDHAT_UBI_IMAGE_VERSION}")
+  image_ids+=$(get_image_id "haproxy:${HA_PROXY_IMAGE_VERSION}")
+  image_ids+=$(get_image_id "i2group/i2eng-liberty:${LIBERTY_VERSION}")
+  image_ids+=$(get_image_id "i2group/i2eng-solr:${SOLR_VERSION}")
+  image_ids+=$(get_image_id "i2group/i2eng-zookeeper:${ZOOKEEPER_VERSION}")
+  image_ids+=$(get_image_id "i2group/i2eng-prometheus:${PROMETHEUS_VERSION}")
+  image_ids+=$(get_image_id "grafana/grafana-oss:${GRAFANA_VERSION}")
+  image_ids+=$(get_image_id "mcr.microsoft.com/mssql/rhel/server:${SQL_SERVER_IMAGE_VERSION}")
+  image_ids+=$(get_image_id "i2group/i2eng-postgres:${POSTGRES_IMAGE_VERSION}")
+  image_ids+=$(get_image_id "${NODEJS_IMAGE_NAME}:${NODEJS_IMAGE_VERSION}")
+  image_ids+=$(get_image_id "${SPRINGBOOT_IMAGE_NAME}:${SPRINGBOOT_IMAGE_VERSION}")
 
   echo "${image_ids}"
 }
 
-function getImageIds() {
+function get_image_ids() {
   local image_ids
 
-  image_ids+=$(getImageId "${LOAD_BALANCER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
-  image_ids+=$(getImageId "${LIBERTY_BASE_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
-  image_ids+=$(getImageId "${SOLR_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
-  image_ids+=$(getImageId "${SQL_SERVER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
-  image_ids+=$(getImageId "${SQL_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
-  image_ids+=$(getImageId "${I2A_TOOLS_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
+  image_ids+=$(get_image_id "${LOAD_BALANCER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
+  image_ids+=$(get_image_id "${LIBERTY_BASE_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
+  image_ids+=$(get_image_id "${SOLR_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
+  image_ids+=$(get_image_id "${SQL_SERVER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
+  image_ids+=$(get_image_id "${SQL_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
+  image_ids+=$(get_image_id "${I2A_TOOLS_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
 
   echo "${image_ids}"
 }
@@ -577,23 +618,23 @@ function run_update_task() {
   set_dependencies_tag_if_necessary
 
   # Check base images first
-  previous_image_ids=$(getBaseImageIds)
-  pullBaseImages
-  current_image_ids=$(getBaseImageIds)
-  printInfo "PREVIOUS_IMAGE_IDS: ${previous_image_ids}"
-  printInfo "CURRENT_IMAGE_IDS: ${current_image_ids}"
+  previous_image_ids=$(get_base_image_ids)
+  pull_base_images
+  current_image_ids=$(get_base_image_ids)
+  print_info "PREVIOUS_IMAGE_IDS: ${previous_image_ids}"
+  print_info "CURRENT_IMAGE_IDS: ${current_image_ids}"
   if [[ "${previous_image_ids}" == "${current_image_ids}" ]]; then
     print "Your images are already up-to-date. You do NOT need to clean and redeploy your configs."
     return
   fi
 
   # Check next images
-  previous_image_ids=$(getImageIds)
+  previous_image_ids=$(get_image_ids)
   print "Running build-images"
   "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/build-images"
-  current_image_ids=$(getImageIds)
-  printInfo "PREVIOUS_IMAGE_IDS: ${previous_image_ids}"
-  printInfo "CURRENT_IMAGE_IDS: ${current_image_ids}"
+  current_image_ids=$(get_image_ids)
+  print_info "PREVIOUS_IMAGE_IDS: ${previous_image_ids}"
+  print_info "CURRENT_IMAGE_IDS: ${current_image_ids}"
   if [[ "${previous_image_ids}" == "${current_image_ids}" ]]; then
     print "Your images are already up-to-date. You do NOT need to clean and redeploy your configs."
   else
@@ -601,7 +642,7 @@ function run_update_task() {
   fi
 }
 
-function cleanDeployment() {
+function clean_deployment() {
   CONFIG_NAME="$1"
 
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/version.conf"
@@ -610,47 +651,62 @@ function cleanDeployment() {
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internal_helper_variables.sh"
 
   local all_container_ids
-  IFS=' ' read -ra all_container_ids <<<"$(docker ps -aq -f network="${DOMAIN_NAME}" -f name=".${CONFIG_NAME}_${CONTAINER_VERSION_SUFFIX}$" | xargs)"
+  IFS=' ' read -ra all_container_ids <<<"$(docker ps -aq -f network="${DOMAIN_NAME}" -f name="\.${CONFIG_NAME}_${CONTAINER_VERSION_SUFFIX}$" | xargs)"
   print "Deleting all containers for ${CONFIG_NAME} deployment"
   for container_id in "${all_container_ids[@]}"; do
-    printInfo "Deleting container ${container_id}"
-    deleteContainer "${container_id}"
+    print_info "Deleting container ${container_id}"
+    delete_container "${container_id}"
   done
 
-  removeDockerVolumes
+  remove_docker_volumes
 
-  printInfo "Deleting previous configuration folder: ${PREVIOUS_CONFIGURATION_DIR}"
-  deleteFolderIfExists "${PREVIOUS_CONFIGURATION_DIR}"
+  print_info "Deleting previous configuration folder: ${PREVIOUS_CONFIGURATION_DIR}"
+  delete_folder_if_exists "${PREVIOUS_CONFIGURATION_DIR}"
 }
 
 function run_clean_task() {
-  waitForUserReply "Are you sure you want to run the 'clean' task? This will permanently remove data from the deployment."
-  build_config_array
+  wait_for_user_reply "Are you sure you want to run the 'clean' task? This will permanently remove data from the deployment."
 
+  build_config_array
   for config_name in "${CONFIGS_ARRAY[@]}"; do
-    cleanDeployment "${config_name}"
+    clean_deployment "${config_name}"
+  done
+
+  build_connectors_array
+  for connector in "${CONNECTORS_ARRAY[@]}"; do
+    delete_file_if_exists "${PREVIOUS_CONNECTOR_IMAGES_DIR}/${connector}.sha512"
+  done
+
+  build_extensions_array
+  for extension in "${EXTENSIONS_ARRAY[@]}"; do
+    delete_file_if_exists "${PREVIOUS_EXTENSIONS_DIR}/${extension}.sha512"
+  done
+
+  build_plugins_array
+  for plugin_name in "${PLUGINS_ARRAY[@]}"; do
+    delete_file_if_exists "${PREVIOUS_PLUGINS_DIR}/${plugin_name}.sha512"
   done
 
   echo "Done"
 }
 
 function run_stop_task() {
-  waitForUserReply "Are you sure you want to run the 'stop' task? This will stop all containers running in the ${DOMAIN_NAME} network."
+  wait_for_user_reply "Are you sure you want to run the 'stop' task? This will stop all containers running in the ${DOMAIN_NAME} network."
 
   local all_container_ids container_id
   IFS=' ' read -ra all_container_ids <<<"$(docker ps -q -f network="${DOMAIN_NAME}" | xargs)"
   print "Stopping all containers in the ${DOMAIN_NAME} network"
   for container_id in "${all_container_ids[@]}"; do
     [[ "${container_id}" == "${HOSTNAME}" ]] && continue # Skip dev container
-    printInfo "Stopping container ${container_id}"
-    stopContainer "${container_id}"
+    print_info "Stopping container ${container_id}"
+    stop_container "${container_id}"
   done
 
   echo "Done"
 }
 
-function runPruneTask() {
-  waitForUserReply "Are you sure you want to run the 'prune' task? This will permanently remove data and images from the deployment."
+function run_prune_task() {
+  wait_for_user_reply "Are you sure you want to run the 'prune' task? This will permanently remove data and images from the deployment."
 
   for config in "${PREVIOUS_PROJECT_PATH}"/configs/*; do
     if [[ ! -d "${config}" ]]; then
@@ -660,11 +716,11 @@ function runPruneTask() {
     CONFIG_NAME=$(basename "${config}")
     source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internal_helper_variables.sh"
 
-    printInfo "Deleting previous configuration folder: ${PREVIOUS_CONFIGURATION_DIR}"
-    deleteFolderIfExists "${PREVIOUS_CONFIGURATION_DIR}"
+    print_info "Deleting previous configuration folder: ${PREVIOUS_CONFIGURATION_DIR}"
+    delete_folder_if_exists "${PREVIOUS_CONFIGURATION_DIR}"
   done
 
-  deleteAllContainers
+  delete_all_containers
 
   print "Removing all volumes"
   VOLUME_NAME_PREFIX=("zk" "solr" "sqlserver" "db2server" "liberty" "i2a_data" "load_balancer")
@@ -690,11 +746,11 @@ function runPruneTask() {
 function run_build_connectors_task() {
   local connector_args=()
 
-  buildAssetArray "connector" "connector-images"
+  build_connectors_array
 
   for connector in "${CONNECTORS_ARRAY[@]}"; do
     connector_args+=(-i "${connector}")
-    deleteFileIfExists "${PREVIOUS_CONNECTOR_IMAGES_DIR}/${connector}.sha512"
+    delete_file_if_exists "${PREVIOUS_CONNECTOR_IMAGES_DIR}/${connector}.sha512"
   done
 
   if [[ "${YES_FLAG}" == "true" ]]; then
@@ -714,11 +770,11 @@ function run_build_connectors_task() {
 function run_build_extensions_task() {
   local extension_args=()
 
-  buildAssetArray "extension" "i2a-extensions" "target"
+  build_extensions_array
 
   for extension in "${EXTENSIONS_ARRAY[@]}"; do
     extension_args+=(-i "${extension}")
-    deleteFileIfExists "${PREVIOUS_EXTENSIONS_DIR}/${extension}.sha512"
+    delete_file_if_exists "${PREVIOUS_EXTENSIONS_DIR}/${extension}.sha512"
   done
 
   if [[ "${YES_FLAG}" == "true" ]]; then
@@ -769,7 +825,7 @@ function jq_assets_query() {
     ;;
   esac
 
-  echo ".sharedConfigurations.rootDirectory as \$root | .sharedConfigurations.repositories | map(.path as \$path | \
+  echo ".sharedConfigurations.rootDirectory as \$root | .sharedConfigurations.repositories // [] | map(.path as \$path | \
 select(has(\"${asset_type}\")) | .${asset_type} | \
 map(\"\(\$root)/\"+\"\(\$path)/${dir_name}/\"+.)) | .[][]"
 }
@@ -782,7 +838,7 @@ function search_assets_dir_if_exists() {
     echo "${array[*]}"
     return
   fi
-  readarray -t tmp_array < <(find "${path}" -maxdepth 1 -mindepth 1 -type d)
+  readarray -t tmp_array < <(find "${path}" -maxdepth 1 -mindepth 1 -type d | sort)
   array+=("${tmp_array[@]}")
   echo "${array[*]}"
 }
@@ -798,7 +854,7 @@ function search_assets_files_if_exists() {
     return
   fi
   readarray -t tmp_array < <(find "${path}" -maxdepth 1 -mindepth 1 -type f \
-    -not -name '.*')
+    -not -name '.*' | sort)
   array+=("${tmp_array[@]}")
   echo "${array[*]}"
 }
@@ -816,7 +872,7 @@ function create_backup_dir_if_not_exists() {
   local -n array_of_dirs="$1"
 
   for dir in "${array_of_dirs[@]}"; do
-    createFolder "${dir}"
+    create_folder "${dir}"
   done
 }
 
@@ -840,10 +896,10 @@ function ensure_not_duplicated_assets() {
   # Handle gateway schemas specially since they are files
   if [[ "$(basename "${local_asset_folder}")" == "gateway-schemas" ]]; then
     readarray -t reviewed_assets < <(find "${local_asset_folder}" -maxdepth 1 \
-      -mindepth 1 -type f -not -name '.*' -exec basename {} \;)
+      -mindepth 1 -type f -not -name '.*' -exec basename {} \; | sort)
   else
     readarray -t reviewed_assets < <(find "${local_asset_folder}" -maxdepth 1 \
-      -mindepth 1 -type d -exec basename {} \;)
+      -mindepth 1 -type d -exec basename {} \; | sort)
   fi
   for asset in "${array_of_assets[@]}"; do
     name=$(basename "${asset}")
@@ -904,16 +960,16 @@ function run_link_task() {
   path_configuration_file="${ANALYZE_CONTAINERS_ROOT_DIR}/path-configuration.json"
 
   if [[ ! -f "${path_configuration_file}" ]]; then
-    printWarn "File ${path_configuration_file} does not exists. Skipping."
+    print_warn "File ${path_configuration_file} does not exist. Skipping."
     exit 0
   fi
   if [[ -z $(jq -r '.sharedConfigurations // empty' <"${path_configuration_file}") ]]; then
-    printWarn "File ${path_configuration_file} does not contain shared configurations. Skipping."
+    print_warn "File ${path_configuration_file} does not contain shared configurations. Skipping."
     exit 0
   fi
 
   print "Update linked configurations"
-  printInfo "Remove all current links"
+  print_info "Remove all current links"
   find "${ANALYZE_CONTAINERS_ROOT_DIR}/connector-images" -type l -delete
   find "${ANALYZE_CONTAINERS_ROOT_DIR}/i2a-extensions" -type l -delete
   find "${ANALYZE_CONTAINERS_ROOT_DIR}/i2a-data" -type l -delete
@@ -923,14 +979,14 @@ function run_link_task() {
   find "${ANALYZE_CONTAINERS_ROOT_DIR}/gateway-schemas" -type l -delete
   find "${ANALYZE_CONTAINERS_ROOT_DIR}/additional-resources" -type l -delete
 
-  printInfo "Ensure all configurations are accessible"
+  print_info "Ensure all configurations are accessible"
   # Check root is accessible
   root_dir=$(jq -r '.sharedConfigurations.rootDirectory' <"${path_configuration_file}")
   if [[ -z "${root_dir}" || ! -d "${root_dir}" ]]; then
     print_error_and_exit "The shared configuration root directory cannot be accessed. \
 Ensure that the directory is specified correctly and run the configure-paths command."
   fi
-  readarray -t referenced_all < <(jq -r '.sharedConfigurations.rootDirectory as $root | .sharedConfigurations.repositories | 
+  readarray -t referenced_all < <(jq -r '.sharedConfigurations.rootDirectory as $root | .sharedConfigurations.repositories // [] | 
 map(.path as $path | select(has("connectors") or has("extensions") or has("additionalResources") or
 has("dataSets") or has("configs") or has("plugins") or has("gatewaySchemas") | 
 not) | "\($root)/" + "\($path)") | .[]' <"${path_configuration_file}")
@@ -1005,7 +1061,7 @@ not) | "\($root)/" + "\($path)") | .[]' <"${path_configuration_file}")
   IFS=' ' read -r -a referenced_backups <<<"$(ensure_created_backup_dir_for_all_configs referenced_backups \
     referenced_configs)"
 
-  printInfo "Ensure no duplicates"
+  print_info "Ensure no duplicates"
   ensure_not_duplicated_assets referenced_connectors "${ANALYZE_CONTAINERS_ROOT_DIR}/connector-images"
   ensure_not_duplicated_assets referenced_extensions "${ANALYZE_CONTAINERS_ROOT_DIR}/i2a-extensions"
   ensure_not_duplicated_assets referenced_data_sets "${ANALYZE_CONTAINERS_ROOT_DIR}/i2a-data"
@@ -1016,7 +1072,7 @@ not) | "\($root)/" + "\($path)") | .[]' <"${path_configuration_file}")
   ensure_not_duplicated_assets referenced_gateway_schemas "${ANALYZE_CONTAINERS_ROOT_DIR}/gateway-schemas"
 
   if [[ "${EXECUTED_WITH_ERRORS}" != "true" ]]; then
-    printInfo "Create symlinks"
+    print_info "Create symlinks"
     create_symlinks referenced_connectors "${ANALYZE_CONTAINERS_ROOT_DIR}/connector-images"
     create_symlinks referenced_extensions "${ANALYZE_CONTAINERS_ROOT_DIR}/i2a-extensions"
     create_symlinks referenced_data_sets "${ANALYZE_CONTAINERS_ROOT_DIR}/i2a-data"
@@ -1062,9 +1118,13 @@ function run_task() {
   esac
 }
 
-parse_arguments "$@"
-source_common_variables_and_scripts
-validate_arguments
-set_defaults
-check_docker_is_running
-run_task
+function main() {
+  parse_arguments "$@"
+  source_common_variables_and_scripts
+  validate_arguments
+  set_defaults
+  check_docker_is_running
+  run_task
+}
+
+main "$@"

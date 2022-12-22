@@ -27,7 +27,7 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/version.conf"
 
 # Load common variables
-checkEnvironmentIsValid
+check_environment_is_valid
 if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulated_external_variables.sh"
 elif [[ "${ENVIRONMENT}" == "config-dev" ]]; then
@@ -53,11 +53,11 @@ FIXPACK_DIR="${PRE_REQS_DIR}/fixpack"
 # Function definitions                                                        #
 ###############################################################################
 
-function extractToolkit() {
+function extract_toolkit() {
   local toolkit_minimal_version
   print "Setting up i2 Analyze Minimal Toolkit"
 
-  deleteFolderIfExists "${LOCAL_I2ANALYZE_DIR}"
+  delete_folder_if_exists "${LOCAL_I2ANALYZE_DIR}"
   mkdir -p "${LOCAL_I2ANALYZE_DIR}"
 
   tar -zxf "${PRE_REQS_DIR}/i2analyzeMinimal.tar.gz" -C "${LOCAL_I2ANALYZE_DIR}"
@@ -65,17 +65,13 @@ function extractToolkit() {
   if [[ "${toolkit_minimal_version%.*}" != "${SUPPORTED_I2ANALYZE_VERSION}" ]]; then
     print_error_and_exit "i2 Analyze Minimal Toolkit version ${toolkit_minimal_version%%-*} is not compatible with analyze-containers version ${VERSION}"
   fi
-
-  # TODO: Remove the following 2 lines after 4.4.1 upgrade
-  createFolder "${LOCAL_TOOLKIT_DIR}/examples/configurations/all-patterns/configuration/liberty"
-  mv "${LOCAL_TOOLKIT_DIR}/examples/configurations/all-patterns/configuration/fragments/common/WEB-INF/classes/server.extensions.xml" "${LOCAL_TOOLKIT_DIR}/examples/configurations/all-patterns/configuration/liberty/server.extensions.xml"
 }
 
-function extractFixPackIfNecessary() {
+function extract_fixpack_if_necessary() {
   local fixpack_version
 
   if [[ -f "${PRE_REQS_DIR}/i2analyzeFixPack.tar.gz" ]]; then
-    deleteFolderIfExistsAndCreate "${FIXPACK_DIR}"
+    delete_folder_if_exists_and_create "${FIXPACK_DIR}"
     tar -zxf "${PRE_REQS_DIR}/i2analyzeFixPack.tar.gz" -C "${FIXPACK_DIR}"
     fixpack_version=$(cat "${FIXPACK_DIR}"/toolkit/version/*.txt)
     if [[ "${fixpack_version%.*}" != "${SUPPORTED_I2ANALYZE_VERSION}" ]]; then
@@ -99,15 +95,16 @@ function extractFixPackIfNecessary() {
     fi
     find "${FIXPACK_DIR}/toolkit/version/" -type f -name "*.txt" -print0 | xargs -I{} -0 cp {} "${LOCAL_TOOLKIT_DIR}/scripts/version.txt"
   fi
-  deleteFolderIfExists "${FIXPACK_DIR}"
+  delete_folder_if_exists "${FIXPACK_DIR}"
 }
 
-function populateImagesFoldersWithEnvironmentTool() {
+function populate_images_folders_with_environment_tool() {
   print "Adding environment variable resolution support"
   cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${IMAGES_DIR}/sql_client/db-scripts"
   cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${IMAGES_DIR}/sql_server"
   cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${IMAGES_DIR}/db2_client/db-scripts"
   cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${IMAGES_DIR}/db2_server"
+  cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${IMAGES_DIR}/postgres_client/db-scripts"
   cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${IMAGES_DIR}/example_connector"
   cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${IMAGES_DIR}/etl_client"
   cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${IMAGES_DIR}/i2a_tools"
@@ -116,10 +113,10 @@ function populateImagesFoldersWithEnvironmentTool() {
   cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${TEMPLATES_DIR}/springboot-connector-image"
 }
 
-function createSolrImageResources() {
+function create_solr_image_resources() {
   print "Creating Solr configuration folders"
 
-  deleteFolderIfExists "${SOLR_IMAGES_DIR}/jars"
+  delete_folder_if_exists "${SOLR_IMAGES_DIR}/jars"
   mkdir -p "${SOLR_IMAGES_DIR}/jars/solr-data"
 
   cp -pr "${TOOLKIT_APPLICATION_DIR}/dependencies/solr-core-extension/." "${SOLR_IMAGES_DIR}/jars/"
@@ -127,10 +124,10 @@ function createSolrImageResources() {
   cp -pr "${LOCAL_TOOLKIT_DIR}/application/dependencies/solr-extension/." "${SOLR_IMAGES_DIR}/jars/solr-data/"
 }
 
-function createEtlToolkitImageResources() {
+function create_etl_toolkit_image_resources() {
   print "Setting up ETL Toolkit"
 
-  deleteFolderIfExists "${LOCAL_ETL_TOOLKIT_DIR}"
+  delete_folder_if_exists "${LOCAL_ETL_TOOLKIT_DIR}"
   mkdir -p "${LOCAL_ETL_TOOLKIT_DIR}"
   mkdir -p "${ETL_CLIENT_LIB_DIR}"
 
@@ -139,26 +136,26 @@ function createEtlToolkitImageResources() {
   cp -pr "${LOCAL_TOOLKIT_DIR}/i2-tools/jars/." "${ETL_CLIENT_LIB_DIR}"
 }
 
-function populateImageFolderWithToolsResources() {
+function populate_image_folder_with_tools_resources() {
   local IMAGE_FOLDER=${1}
   print "Setting up ${IMAGE_FOLDER} image"
 
-  deleteFolderIfExists "${IMAGES_DIR}/${IMAGE_FOLDER}/tools"
+  delete_folder_if_exists "${IMAGES_DIR}/${IMAGE_FOLDER}/tools"
   mkdir -p "${IMAGES_DIR}/${IMAGE_FOLDER}/tools"
 
   cp -pr "${LOCAL_TOOLKIT_DIR}/i2-tools" "${IMAGES_DIR}/${IMAGE_FOLDER}/tools"
   cp -pr "${LOCAL_TOOLKIT_DIR}/scripts" "${IMAGES_DIR}/${IMAGE_FOLDER}/tools"
 }
 
-function createDatabaseScriptsAndGeneratedFolder() {
+function create_database_scripts_and_generated_folder() {
   print "Creating ${LOCAL_DATABASE_SCRIPTS_DIR}/generated folder"
-  deleteFolderIfExists "${LOCAL_DATABASE_SCRIPTS_DIR}"
+  delete_folder_if_exists "${LOCAL_DATABASE_SCRIPTS_DIR}"
   mkdir -p "${LOCAL_DATABASE_SCRIPTS_DIR}/generated/dynamic"
 }
 
-function createLibertyStaticApplication() {
+function create_liberty_static_application() {
   print "Creating Liberty static application"
-  deleteFolderIfExists "${LIBERTY_CONFIG_APP}"
+  delete_folder_if_exists "${LIBERTY_CONFIG_APP}"
   mkdir -p "${LIBERTY_CONFIG_APP}"
 
   "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/create-liberty-static-application" "${ENVIRONMENT}" "${LIBERTY_CONFIG_APP}"
@@ -166,30 +163,32 @@ function createLibertyStaticApplication() {
   # Copy jdbc-drivers and verify they exist in the liberty image folder
   cp -pr "${PRE_REQS_DIR}/jdbc-drivers/." "${LIBERTY_CONFIG_APP}/third-party-dependencies/resources/jdbc/"
   if [ "$(ls -A "${LIBERTY_CONFIG_APP}/third-party-dependencies/resources/jdbc/mssql-jdbc-9."*".jre11.jar")" ]; then
-    printInfo "${LIBERTY_CONFIG_APP}/third-party-dependencies/resources/jdbc has the mssql jdbc drivers"
+    print_info "${LIBERTY_CONFIG_APP}/third-party-dependencies/resources/jdbc has the mssql jdbc drivers"
+  elif [ "$(ls -A "${LIBERTY_CONFIG_APP}/third-party-dependencies/resources/jdbc/postgresql-42."*".jar")" ]; then
+    print_info "${LIBERTY_CONFIG_APP}/third-party-dependencies/resources/jdbc has the postgres jdbc drivers"
   else
-    print_error_and_exit "${PRE_REQS_DIR}/jdbc-drivers does NOT have the correct mssql jdbc drivers, expecting: mssql-jdbc-9.*.jre11.jar"
+    print_error_and_exit "${PRE_REQS_DIR}/jdbc-drivers does NOT have the correct mssql or postgres jdbc drivers, expecting: mssql-jdbc-9.*.jre11.jar or postgresql-42.*.jar"
   fi
 }
 
-function createExampleConnectorApplication() {
+function create_example_connector_application() {
   print "Building example connector image"
-  deleteFolderIfExistsAndCreate "${LOCAL_EXAMPLE_CONNECTOR_APP_DIR}"
+  delete_folder_if_exists_and_create "${LOCAL_EXAMPLE_CONNECTOR_APP_DIR}"
 
   cp -pr "${TOOLKIT_EXAMPLE_CONNECTOR_DIR}/"* "${LOCAL_EXAMPLE_CONNECTOR_APP_DIR}"
 }
 
-function populateConnectorImagesFolder() {
+function populate_connector_images_folder() {
   local i2connect_server_version_file="${CONNECTOR_IMAGES_DIR}/i2connect-server-version.json"
   print "Populate connector-images folder with defaults"
-  createFolder "${PREVIOUS_CONNECTOR_IMAGES_DIR}"
+  create_folder "${PREVIOUS_CONNECTOR_IMAGES_DIR}"
 
   if [[ ! -f "${i2connect_server_version_file}" ]]; then
     jq -n "{\"version\": \"latest\"}" >"${i2connect_server_version_file}"
   fi
 }
 
-function generateDefaultFiles() {
+function generate_default_files() {
   if [[ "${ENVIRONMENT}" == "config-dev" ]]; then
     if [[ ! -f "${ANALYZE_CONTAINERS_ROOT_DIR}/path-configuration.json" ]]; then
       jq -n '{}' >"${ANALYZE_CONTAINERS_ROOT_DIR}/path-configuration.json"
@@ -197,62 +196,67 @@ function generateDefaultFiles() {
   fi
 }
 
-###############################################################################
-# Setting up i2 Analyze toolkit                                               #
-###############################################################################
-extractToolkit
-extractFixPackIfNecessary
+function main() {
+  ###############################################################################
+  # Setting up i2 Analyze toolkit                                               #
+  ###############################################################################
+  extract_toolkit
+  extract_fixpack_if_necessary
 
-###############################################################################
-# Adding environment variable resolution support                              #
-###############################################################################
-populateImagesFoldersWithEnvironmentTool
+  ###############################################################################
+  # Adding environment variable resolution support                              #
+  ###############################################################################
+  populate_images_folders_with_environment_tool
 
-###############################################################################
-# Creating Solr configuration folders                                         #
-###############################################################################
-createSolrImageResources
+  ###############################################################################
+  # Creating Solr configuration folders                                         #
+  ###############################################################################
+  create_solr_image_resources
 
-###############################################################################
-# Setting up ETL Toolkit                                                      #
-###############################################################################
-createEtlToolkitImageResources
+  ###############################################################################
+  # Setting up ETL Toolkit                                                      #
+  ###############################################################################
+  create_etl_toolkit_image_resources
 
-###############################################################################
-# Setting up i2 tools image                                                   #
-###############################################################################
-populateImageFolderWithToolsResources "i2a_tools"
-populateImageFolderWithToolsResources "sql_client"
-populateImageFolderWithToolsResources "db2_client"
+  ###############################################################################
+  # Setting up i2 tools image                                                   #
+  ###############################################################################
+  populate_image_folder_with_tools_resources "i2a_tools"
+  populate_image_folder_with_tools_resources "sql_client"
+  #populate_image_folder_with_tools_resources "db2_client"
+  populate_image_folder_with_tools_resources "postgres_client"
 
-###############################################################################
-# Creating Example connector application                                      #
-###############################################################################
-createExampleConnectorApplication
+  ###############################################################################
+  # Creating Example connector application                                      #
+  ###############################################################################
+  create_example_connector_application
 
-###############################################################################
-# Creating Database scripts folder                                            #
-###############################################################################
-createDatabaseScriptsAndGeneratedFolder
+  ###############################################################################
+  # Creating Database scripts folder                                            #
+  ###############################################################################
+  create_database_scripts_and_generated_folder
 
-###############################################################################
-# Creating Liberty static application                                         #
-###############################################################################
-createLibertyStaticApplication
+  ###############################################################################
+  # Creating Liberty static application                                         #
+  ###############################################################################
+  create_liberty_static_application
 
-###############################################################################
-# Populate Connector Images folder with defaults                              #
-###############################################################################
-populateConnectorImagesFolder
+  ###############################################################################
+  # Populate Connector Images folder with defaults                              #
+  ###############################################################################
+  populate_connector_images_folder
 
-###############################################################################
-# Create License Configuration                                                #
-###############################################################################
-createLicenseConfiguration
+  ###############################################################################
+  # Create License Configuration                                                #
+  ###############################################################################
+  create_license_configuration
 
-###############################################################################
-# Generate Default Files                                                      #
-###############################################################################
-generateDefaultFiles
+  ###############################################################################
+  # Generate Default Files                                                      #
+  ###############################################################################
+  generate_default_files
 
-print "Environment has been successfully prepared"
+  print "Environment has been successfully prepared"
+}
+
+main "$@"

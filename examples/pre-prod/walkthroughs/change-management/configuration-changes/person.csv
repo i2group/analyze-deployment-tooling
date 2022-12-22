@@ -1,6 +1,0 @@
-source_id,p_description_of_mark,p_accent,p_aka,p_build,p_citizenship,p_date_of_birth,p_description,p_identification_number,p_eye_color,p_facial_hair,p_first_given_name,p_hair_color,p_hair_type,p_height_from,p_height_to,p_family_name,p_middle_name,p_additional_informatio,p_occupation,p_unique_reference,p_gender,source_ref_source_location,source_ref_source_type,source_ref_source_image_url,correlation_id_type,correlation_id_key
-PER:GEN\1101,,,,,,1969-04-02,,,,,Julie,,,,,Yocham,,,Chef,,Female,http://internal.EXAMPLE_2.com/people/person_1101,Intranet,,II,person_0
-PER:GEN\2103,,,,,,1959-07-11,,,,,Fanella,,,,,Tyler,,,Manager,,Female,file:///shared/EXAMPLE_2/People.xls,File on HDD,,II,person_1
-PER:GEN\3105,,,,,,1980-01-07,,,,,Anotonya,,,,,Terkoski,,,Finance Manager,,Female,http://internal.EXAMPLE_2.com/people/person_3105,Intranet,,II,person_2
-PER:GEN\4107,,,,,,1969-10-08,,,,,Alexandra,,,,,Smodylla,,,Office Manager,,Female,file:///shared/EXAMPLE_2/People.xls,File on HDD,,II,person_3
-PER:GEN\5109,,,,,,1933-03-05,,,,,Jonny,,,185.0,185.0,Williamson,,,Financier,,Male,,Intranet,,II,person_4

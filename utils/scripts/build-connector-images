@@ -24,6 +24,7 @@ Options:
 """
 
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
+
 OPTIONS_FOR="buildConnectorImages"
 parse_arguments "$@"
 
@@ -36,8 +37,8 @@ if [[ -z "${YES_FLAG}" ]]; then
 fi
 
 if [[ "${INCLUDED_CONNECTORS[*]}" && "${EXCLUDED_CONNECTORS[*]}" ]]; then
-  printError "Incompatible options: Both (-i) and (-e) were specified."
-  printUsage "1"
+  print_error "Incompatible options: Both (-i) and (-e) were specified."
+  print_usage 1
 fi
 
 # Load common functions
@@ -49,7 +50,7 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulated_external_variables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internal_helper_variables.sh"
 
-function validateConnectorVersion() {
+function validate_connector_version() {
   local connector_name="$1"
   local connector_type="$2"
   local config_connector_version
@@ -76,11 +77,11 @@ function validateConnectorVersion() {
     -e "DECLARED_CONNECTOR_VERSION=${declared_connector_version}" \
     -e "YES_FLAG=${YES_FLAG}" \
     -v "${ANALYZE_CONTAINERS_ROOT_DIR}/utils:/opt/utils" \
-    registry.access.redhat.com/ubi8/nodejs-16 \
+    "${NODEJS_IMAGE_NAME}:${NODEJS_IMAGE_VERSION}" \
     "/opt/utils/containers/validate-i2-connect-versions"
 }
 
-function findAndCopyFileWithFolderStructure() {
+function find_and_copy_file_with_folder_structure() {
   local file_name="${1}"
   local from_folder="${2}"
   local to_folder="${3}"
@@ -92,7 +93,7 @@ function findAndCopyFileWithFolderStructure() {
   (("${result}" == 0))
 }
 
-function extractConnectorDist() {
+function extract_connector_dist() {
   local connector_name="${1}"
   local connector_dir="${CONNECTOR_IMAGES_DIR}/${connector_name}"
   local archive_files
@@ -106,41 +107,46 @@ function extractConnectorDist() {
   if [[ ! -f "${archive_files[0]}" ]]; then
     print_error_and_exit "Cannot find a .tgz archive in the ${connector_name} directory. Ensure that there is a .tgz file present."
   fi
-  deleteFolderIfExistsAndCreate "${connector_dir}/.app"
+  delete_folder_if_exists_and_create "${connector_dir}/.app"
   cp -Rf "${connector_dir}/app/." "${connector_dir}/.app"
   tar -zxf "${archive_files[0]}" --strip-components=1 -C "${connector_dir}/app"
 
   # Override settings.json with .env and .env.sample (previously connector.conf.json), if there is none then get the default from the archive
-  if findAndCopyFileWithFolderStructure "${CONNECTOR_CONFIG_FILE}" "${connector_dir}/.app" "${connector_dir}/app"; then
-    findAndCopyFileWithFolderStructure "${CONNECTOR_CONFIG_FILE}" "${connector_dir}/app" "${connector_dir}/.app"
+  if find_and_copy_file_with_folder_structure "${CONNECTOR_CONFIG_FILE}" "${connector_dir}/.app" "${connector_dir}/app"; then
+    find_and_copy_file_with_folder_structure "${CONNECTOR_CONFIG_FILE}" "${connector_dir}/app" "${connector_dir}/.app"
   fi
-  if findAndCopyFileWithFolderStructure "${CONNECTOR_ENV_FILE}" "${connector_dir}/.app" "${connector_dir}/app"; then
-    findAndCopyFileWithFolderStructure "${CONNECTOR_ENV_FILE}" "${connector_dir}/app" "${connector_dir}/.app"
+  if find_and_copy_file_with_folder_structure "${CONNECTOR_ENV_FILE}" "${connector_dir}/.app" "${connector_dir}/app"; then
+    find_and_copy_file_with_folder_structure "${CONNECTOR_ENV_FILE}" "${connector_dir}/app" "${connector_dir}/.app"
   fi
-  if findAndCopyFileWithFolderStructure "${CONNECTOR_ENV_SAMPLE_FILE}" "${connector_dir}/.app" "${connector_dir}/app"; then
-    findAndCopyFileWithFolderStructure "${CONNECTOR_ENV_SAMPLE_FILE}" "${connector_dir}/app" "${connector_dir}/.app"
+  if find_and_copy_file_with_folder_structure "${CONNECTOR_ENV_SAMPLE_FILE}" "${connector_dir}/.app" "${connector_dir}/app"; then
+    find_and_copy_file_with_folder_structure "${CONNECTOR_ENV_SAMPLE_FILE}" "${connector_dir}/app" "${connector_dir}/.app"
   fi
-  if findAndCopyFileWithFolderStructure "${OLD_CONNECTOR_CONFIG_FILE}" "${connector_dir}/.app" "${connector_dir}/app"; then
-    findAndCopyFileWithFolderStructure "${OLD_CONNECTOR_CONFIG_FILE}" "${connector_dir}/app" "${connector_dir}/.app"
+  if find_and_copy_file_with_folder_structure "${OLD_CONNECTOR_CONFIG_FILE}" "${connector_dir}/.app" "${connector_dir}/app"; then
+    find_and_copy_file_with_folder_structure "${OLD_CONNECTOR_CONFIG_FILE}" "${connector_dir}/app" "${connector_dir}/.app"
   fi
 
   # Override previously connector.secrets.json, if there is none then get the default from the archive
-  if findAndCopyFileWithFolderStructure "${OLD_CONNECTOR_SECRETS_FILE}" "${connector_dir}/.app" "${connector_dir}/app"; then
-    findAndCopyFileWithFolderStructure "${OLD_CONNECTOR_SECRETS_FILE}" "${connector_dir}/app" "${connector_dir}/.app"
+  if find_and_copy_file_with_folder_structure "${OLD_CONNECTOR_SECRETS_FILE}" "${connector_dir}/.app" "${connector_dir}/app"; then
+    find_and_copy_file_with_folder_structure "${OLD_CONNECTOR_SECRETS_FILE}" "${connector_dir}/app" "${connector_dir}/.app"
   fi
+
+  # Touch all files to force no cache of the connector image.
+  # This is required given `npm pack` sets date Oct 26th 1985 in all files.
+  # Docker cache only checks size and modified date so for character changes (version change) this is a must have.
+  find "${connector_dir}/app/" -type f -exec touch {} \;
 }
 
-function cleanUpConnectorDist() {
+function clean_up_connector_dist() {
   local connector_name="${1}"
   local connector_dir="${CONNECTOR_IMAGES_DIR}/${connector_name}"
 
-  deleteFolderIfExists "${connector_dir}/app"
+  delete_folder_if_exists "${connector_dir}/app"
   #Restore to before build stage
   cp -R "${connector_dir}/.app/." "${connector_dir}/app"
-  deleteFolderIfExists "${connector_dir}/.app"
+  delete_folder_if_exists "${connector_dir}/.app"
 }
 
-function buildConnectorImages() {
+function build_connector_images() {
   local connector_image_dir
   print "Building connectors"
 
@@ -148,20 +154,20 @@ function buildConnectorImages() {
     connector_image_dir="${CONNECTOR_IMAGES_DIR}/${connector_name}"
     [[ ! -d "${connector_image_dir}" ]] && continue
 
-    if ! checkConnectorChanged "${connector_name}"; then
+    if ! check_connector_changed "${connector_name}"; then
       continue
     fi
     if [[ "${connector_type}" != "${EXTERNAL_CONNECTOR_TYPE}" ]]; then
-      deleteContainer "${CONNECTOR_PREFIX}${connector_name}"
+      delete_container "${CONNECTOR_PREFIX}${connector_name}"
     fi
-    buildImage "${connector_image_dir}"
+    build_image "${connector_image_dir}"
 
     # Update old shasum for connector
     mv "${PREVIOUS_CONNECTOR_IMAGES_DIR}/${connector_name}.sha512.new" "${PREVIOUS_CONNECTOR_IMAGES_DIR}/${connector_name}.sha512"
   done
 }
 
-function buildImage() {
+function build_image() {
   local connector_image_dir="${1}"
   local connector_name="${connector_image_dir##*/}"
   local connector_tag
@@ -175,8 +181,8 @@ function buildImage() {
 
   # Validate connector and sdk versions
   if [[ "${connector_type}" == "${I2CONNECT_SERVER_CONNECTOR_TYPE}" ]]; then
-    extractConnectorDist "${connector_name}"
-    validateConnectorVersion "${connector_name}" "${connector_type}" || (cleanUpConnectorDist "${connector_name}" && exit 1)
+    extract_connector_dist "${connector_name}"
+    validate_connector_version "${connector_name}" "${connector_type}" || (clean_up_connector_dist "${connector_name}" && exit 1)
   fi
 
   connector_tag=$(jq -r '.tag' <"${connector_image_dir}/connector-version.json")
@@ -186,23 +192,32 @@ function buildImage() {
 
   # Build the image
   print "Building connector image: ${connector_image_name}"
-  docker build -t "${connector_image_name}" "${CONNECTOR_IMAGES_DIR}/${connector_name}"
+  docker build -t "${connector_image_name}" "${CONNECTOR_IMAGES_DIR}/${connector_name}" \
+    --build-arg NODEJS_BASE_IMAGE="${NODEJS_IMAGE_NAME}:${NODEJS_IMAGE_VERSION}" \
+    --build-arg SPRINGBOOT_BASE_IMAGE="${SPRINGBOOT_IMAGE_NAME}:${SPRINGBOOT_IMAGE_VERSION}"
 
   if [[ "${connector_type}" == "${I2CONNECT_SERVER_CONNECTOR_TYPE}" ]]; then
-    cleanUpConnectorDist "${connector_name}"
+    clean_up_connector_dist "${connector_name}"
   fi
 }
 
-createDockerNetwork "${DOMAIN_NAME}"
+function main() {
+  ###############################################################################
+  # Creating Docker network                                                     #
+  ###############################################################################
+  create_docker_network "${DOMAIN_NAME}"
 
-###############################################################################
-# Set a list of all running containers                                        #
-###############################################################################
-IFS=' ' read -ra ALL_RUNNING_CONTAINER_NAMES <<<"$(docker ps --format "{{.Names}}" -f network="${DOMAIN_NAME}" -f name="^${CONNECTOR_PREFIX}" | xargs)"
+  ###############################################################################
+  # Set a list of all running containers                                        #
+  ###############################################################################
+  IFS=' ' read -ra ALL_RUNNING_CONTAINER_NAMES <<<"$(docker ps --format "{{.Names}}" -f network="${DOMAIN_NAME}" -f name="^${CONNECTOR_PREFIX}" | xargs)"
 
-###############################################################################
-# Build Connector Images                                                      #
-###############################################################################
-buildAssetArray "connector" "connector-images"
-validateConnectorsExist
-buildConnectorImages
+  ###############################################################################
+  # Build Connector Images                                                      #
+  ###############################################################################
+  build_asset_array "connector" "connector-images"
+  validate_connectors_exist
+  build_connector_images
+}
+
+main "$@"

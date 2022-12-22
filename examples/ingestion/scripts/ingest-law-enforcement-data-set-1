@@ -46,6 +46,9 @@ BULK_IMPORT_MAPPING_IDS=(
   "Account" "Address" "Telephone" "Event" "Organisation" "Person" "Property" "Vehicle" "AccessToOrgAcc" "AccessToOrgAdd" "AccessToPerAcc" "AccessToPerAdd" "AccessToOrgOwnVeh" "AccessToPerOwnTel" "AccessToPerOwnVeh" "AccessToPerShOrg" "Associate" "Communication" "Employment" "InvolvedInEvePer" "Transaction"
 )
 
+# Ensure server has up-to-date data
+update_volume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "/var/i2a-data"
+
 ###############################################################################
 # Ingesting base data                                                         #
 ###############################################################################
@@ -80,6 +83,16 @@ for table_name in $(map_keys "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}"); 
         WITH (FORMATFILE = '/var/i2a-data/${BASE_DATA}/sqlserver/format-files/${csv_and_format_file_name}.fmt', FIRSTROW = 2)"
     run_sql_server_command_as_etl run-sql-query-for-db "${sql_query}" "${DB_NAME}"
     ;;
+  postgres)
+    IFS=',' read -r -a csv_header <"${DATA_DIR}/${BASE_DATA}/${csv_and_format_file_name}.csv"
+
+    sql_query="\
+        COPY ${STAGING_SCHEMA}.${table_name} ($(
+      IFS=','
+      echo "${csv_header[*]}"
+    )) FROM '/var/i2a-data/${BASE_DATA}/${csv_and_format_file_name}.csv' CSV HEADER ENCODING 'UTF8' NULL AS ''"
+    run_postgres_server_command_as_etl run-sql-query-for-db "${sql_query}" "${DB_NAME}"
+    ;;
   esac
 done
 
@@ -104,6 +117,9 @@ for table_name in $(map_keys "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}"); 
     ;;
   sqlserver)
     run_sql_server_command_as_etl run-sql-query-for-db "${sql_query}" "${DB_NAME}"
+    ;;
+  postgres)
+    run_postgres_server_command_as_etl run-sql-query-for-db "${sql_query}" "${DB_NAME}"
     ;;
   esac
 done

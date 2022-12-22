@@ -23,12 +23,12 @@ Options:
 """
 
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
-OPTIONS_FOR="buildExtensions"
+OPTIONS_FOR="build_extensions"
 parse_arguments "$@"
 
 if [[ "${INCLUDED_EXTENSIONS[*]}" && "${EXCLUDED_EXTENSIONS[*]}" ]]; then
-  printError "Incompatible options: Both (-i) and (-e) were specified."
-  printUsage "1"
+  print_error "Incompatible options: Both (-i) and (-e) were specified."
+  print_usage 1
 fi
 
 # Load common functions
@@ -41,18 +41,18 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internal_helper_variables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/version.conf"
 
-function removeJarFromMavenLocal() {
+function remove_jar_from_maven_local() {
   local group_id="${1}"
   local artifact_id="${2}"
 
   mvn dependency:purge-local-repository -DmanualInclude="${group_id}:${artifact_id}"
 }
 
-function isRebuildRequired() {
+function is_rebuild_required() {
   local artifact_id="$1"
   local artifact_dir="${EXTENSIONS_DIR}/${artifact_id}"
 
-  current_checksum=$(getChecksumOfDir "${artifact_dir}" "*/target/*")
+  current_checksum=$(get_check_sum_of_dir "${artifact_dir}" "*/target/*")
   if [[ -f "${PREVIOUS_EXTENSIONS_DIR}/${artifact_id}.sha512" ]]; then
     previous_checksum=$(cat "${PREVIOUS_EXTENSIONS_DIR}/${artifact_id}.sha512")
     if [[ "${previous_checksum}" == "${current_checksum}" ]]; then
@@ -63,7 +63,7 @@ function isRebuildRequired() {
   echo "true"
 }
 
-function buildExtension() {
+function build_extension() {
   local artifact_id="$1"
   local artifact_dir="${EXTENSIONS_DIR}/${artifact_id}"
   local extension_dependencies_path="${EXTENSIONS_DIR}/extension-dependencies.json"
@@ -71,7 +71,7 @@ function buildExtension() {
   local rebuild_dependencies="false"
   local rebuild_extension="false"
 
-  createFolder "${PREVIOUS_EXTENSIONS_DIR}"
+  create_folder "${PREVIOUS_EXTENSIONS_DIR}"
 
   if [[ ! -d "${artifact_dir}" ]]; then
     print_error_and_exit "Artifact ${artifact_id} does NOT exist"
@@ -80,21 +80,21 @@ function buildExtension() {
   IFS=' ' read -ra dependencies <<<"$(jq -r --arg name "${artifact_id}" '.[] | select(.name == $name) | .dependencies[]' "${extension_dependencies_path}" | xargs)"
 
   for dependency in "${dependencies[@]}"; do
-    rebuild_dependencies=$(isRebuildRequired "${dependency}")
+    rebuild_dependencies=$(is_rebuild_required "${dependency}")
     if [[ "${rebuild_dependencies}" == "true" ]]; then
-      buildExtension "${dependency}"
+      build_extension "${dependency}"
     fi
   done
 
-  rebuild_extension=$(isRebuildRequired "${artifact_id}")
+  rebuild_extension=$(is_rebuild_required "${artifact_id}")
   if [[ "${rebuild_extension}" == "true" || "${rebuild_dependencies}" == "true" ]]; then
-    buildExtensionJar "${artifact_dir}"
-    current_checksum=$(getChecksumOfDir "${artifact_dir}" "*/target/*")
+    build_extension_jar "${artifact_dir}"
+    current_checksum=$(get_check_sum_of_dir "${artifact_dir}" "*/target/*")
     echo "${current_checksum}" >"${PREVIOUS_EXTENSIONS_DIR}/${artifact_id}.sha512"
   fi
 }
 
-function buildExtensionJar() {
+function build_extension_jar() {
   local artifact_dir="$1"
 
   print "Creating Extension: ${artifact_id}"
@@ -102,14 +102,14 @@ function buildExtensionJar() {
   mvn install -Doutput.dir="${artifact_dir}/target" -Di2analyze.root.dir="${ANALYZE_CONTAINERS_ROOT_DIR}"
 }
 
-function cleanArtifacts() {
+function clean_artifacts() {
   print "Cleaning all deployed artifacts"
-  waitForUserReply "Are you sure you want to run the 'clean' task? This will permanently remove data from the deployment."
+  wait_for_user_reply "Are you sure you want to run the 'clean' task? This will permanently remove data from the deployment."
 
-  removeJarFromMavenLocal "com.i2group" "apollo-legacy"
-  removeJarFromMavenLocal "com.i2group" "disco-api"
-  removeJarFromMavenLocal "com.i2group" "daod"
-  removeJarFromMavenLocal "com.i2group" "disco-utils"
+  remove_jar_from_maven_local "com.i2group" "apollo-legacy"
+  remove_jar_from_maven_local "com.i2group" "disco-api"
+  remove_jar_from_maven_local "com.i2group" "daod"
+  remove_jar_from_maven_local "com.i2group" "disco-utils"
 }
 
 function set_up_modules_in_parent_pom() {
@@ -132,8 +132,15 @@ function set_up_modules_in_parent_pom() {
   done
 }
 
-buildAssetArray "extension" "i2a-extensions" "target"
-for extension_name in "${EXTENSIONS_ARRAY[@]}"; do
-  buildExtension "${extension_name}"
-done
-set_up_modules_in_parent_pom
+function main() {
+  ###############################################################################
+  # Build Extensions                                                            #
+  ###############################################################################
+  build_asset_array "extension" "i2a-extensions" "target"
+  for extension_name in "${EXTENSIONS_ARRAY[@]}"; do
+    build_extension "${extension_name}"
+  done
+  set_up_modules_in_parent_pom
+}
+
+main "$@"

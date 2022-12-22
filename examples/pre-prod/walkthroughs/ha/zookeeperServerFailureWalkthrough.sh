@@ -41,7 +41,7 @@ docker stop "${ZK1_CONTAINER_NAME}"
 print "Waiting for the ZooKeeper quorum status to be DEGRADED"
 TRIES=1
 while [[ "${TRIES}" -le "${MAX_TRIES}" ]]; do
-  status_message="$(getZkQuorumEnsembleStatus)"
+  status_message="$(get_zk_quorum_ensemble_status)"
   if grep -q "DEGRADED" <<<"${status_message}"; then
     echo "The Zookeeper ensemble is DEGRADED, a server is missing"
     echo "Message: ${status_message}"
@@ -65,7 +65,7 @@ docker start "${ZK1_CONTAINER_NAME}"
 print "Waiting for the ZooKeeper ensemble status to be ACTIVE"
 TRIES=1
 while [[ "${TRIES}" -le "${MAX_TRIES}" ]]; do
-  status_message="$(getZkQuorumEnsembleStatus)"
+  status_message="$(get_zk_quorum_ensemble_status)"
   if grep -q "ACTIVE" <<<"${status_message}"; then
     echo "The ZooKeeper quorum is ACTIVE, all servers are running"
     echo "Message: ${status_message}"

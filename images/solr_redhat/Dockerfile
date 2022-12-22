@@ -4,7 +4,8 @@
 #
 # SPDX short identifier: MIT
 
-FROM i2group/i2eng-solr:8.11
+ARG BASE_IMAGE="i2group/i2eng-solr:8.11"
+FROM "${BASE_IMAGE}"
 ARG I2ANALYZE_VERSION
 
 LABEL com.i2group.i2analyze-version="${I2ANALYZE_VERSION}"

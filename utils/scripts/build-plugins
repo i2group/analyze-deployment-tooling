@@ -23,12 +23,12 @@ Options:
 """
 
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
-OPTIONS_FOR="buildPlugins"
+OPTIONS_FOR="build_plugins"
 parse_arguments "$@"
 
 if [[ "${INCLUDED_PLUGINS[*]}" && "${EXCLUDED_PLUGINS[*]}" ]]; then
-  printError "Incompatible options: Both (-i) and (-e) were specified."
-  printUsage "1"
+  print_error "Incompatible options: Both (-i) and (-e) were specified."
+  print_usage 1
 fi
 
 # Load common functions
@@ -41,7 +41,7 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulated_external_variables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internal_helper_variables.sh"
 
-function buildPlugin() {
+function build_plugin() {
   local artifact_id="$1"
   local artifact_dir="${PLUGINS_DIR}/${artifact_id}"
 
@@ -49,8 +49,8 @@ function buildPlugin() {
     print_error_and_exit "Artifact ${artifact_id} does NOT exist"
   fi
 
-  createFolder "${PREVIOUS_PLUGINS_DIR}"
-  current_checksum=$(getChecksumOfDir "${artifact_dir}")
+  create_folder "${PREVIOUS_PLUGINS_DIR}"
+  current_checksum=$(get_check_sum_of_dir "${artifact_dir}")
 
   if [[ -f "${PREVIOUS_PLUGINS_DIR}/${artifact_id}.sha512" ]]; then
     previous_checksum=$(cat "${PREVIOUS_PLUGINS_DIR}/${artifact_id}.sha512")
@@ -62,10 +62,14 @@ function buildPlugin() {
   echo "${current_checksum}" >"${PREVIOUS_PLUGINS_DIR}/${artifact_id}.sha512"
 }
 
-###############################################################################
-# Build plugins                                                               #
-###############################################################################
-buildAssetArray "plugin" "i2a-plugins"
-for plugin_name in "${PLUGINS_ARRAY[@]}"; do
-  buildPlugin "${plugin_name}"
-done
+function main() {
+  ###############################################################################
+  # Build plugins                                                               #
+  ###############################################################################
+  build_asset_array "plugin" "i2a-plugins"
+  for plugin_name in "${PLUGINS_ARRAY[@]}"; do
+    build_plugin "${plugin_name}"
+  done
+}
+
+main "$@"

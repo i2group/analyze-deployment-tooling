@@ -4,12 +4,11 @@
 #
 # SPDX short identifier: MIT
 
-echo "BASH_VERSION: $BASH_VERSION"
 set -e
 
 if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
-  echo "ANALYZE_CONTAINERS_ROOT_DIR variable is not set"
-  echo "This project should be run inside a VSCode Dev Container. For more information read, the Getting Started guide at https://i2group.github.io/analyze-containers/content/getting_started.html"
+  echo "ANALYZE_CONTAINERS_ROOT_DIR variable is not set" >&2
+  echo "This project should be run inside a VSCode Dev Container. For more information read, the Getting Started guide at https://i2group.github.io/analyze-containers/content/getting_started.html" >&2
   exit 1
 fi
 
@@ -52,7 +51,7 @@ print "Running create-configuration"
 "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/create-configuration" -e "${ENVIRONMENT}" "${extra_args[@]}"
 
 set_dependencies_tag_if_necessary
-pullBaseImages
+pull_base_images
 
 print "Running build-images"
 "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/build-images" "${extra_args[@]}"
@@ -60,6 +59,6 @@ print "Running build-images"
 print "Running generate-secrets"
 "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/generate-secrets" "${extra_args[@]}"
 
-setupI2AnalyzeMavenLocal
+setup_i2_analyze_maven_local
 
 print_success "Development environment created"

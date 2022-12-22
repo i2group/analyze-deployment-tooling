@@ -31,6 +31,9 @@ map_put "$SCHEMA_TYPE_ID_TO_TABLE_NAME" "LEM1" "L_Employment"
 map_put "$SCHEMA_TYPE_ID_TO_TABLE_NAME" "LTR1" "L_Transaction"
 map_put "$SCHEMA_TYPE_ID_TO_TABLE_NAME" "ET8" "E_Communications_D"
 
+# Ensure server has up-to-date data
+update_volume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "/var/i2a-data"
+
 ###############################################################################
 # Deleting the staging tables                                                 #
 ###############################################################################
@@ -43,7 +46,10 @@ for schema_type_id in $(map_keys "$SCHEMA_TYPE_ID_TO_TABLE_NAME"); do
       run_db2_server_command_as_db2inst1 run-sql-query-for-db "${sql_query}" "${DB_NAME}"
       ;;
     sqlserver)
-      run_sql_server_command_as_etl run-sql-query-for-db "${sql_query}" "${DB_NAME}"
+      run_sql_server_command_as_dba run-sql-query-for-db "${sql_query}" "${DB_NAME}"
+      ;;
+    postgres)
+      run_postgres_server_command_as_dba run-sql-query-for-db "${sql_query}" "${DB_NAME}"
       ;;
     esac
   done

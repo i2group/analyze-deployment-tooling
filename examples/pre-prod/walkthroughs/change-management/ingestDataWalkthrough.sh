@@ -91,6 +91,9 @@ IMPORT_MAPPING_IDS=("Person" "Vehicle" "Property" "AccessToPerOwnVeh" "Account" 
 # Import IDs used for ingestion with BULK import mode
 BULK_IMPORT_MAPPING_IDS=("Event" "Address" "Organisation" "telephone" "Communication" "AccessToOrgAdd")
 
+# Ensure server has up-to-date data
+update_volume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "/var/i2a-data"
+
 ###############################################################################
 # Creating the ingestion sources                                              #
 ###############################################################################
@@ -161,7 +164,6 @@ done
 
 print "Cleaning the staging tables"
 for table_name in $(map_keys "${CORRELATED_DATA_TABLE_AND_FORMAT_FILE_NAME}"); do
-  csv_and_format_file_name=$(map_get "${CORRELATED_DATA_TABLE_AND_FORMAT_FILE_NAME}" "${table_name}")
   sql_query="\
     TRUNCATE Table ${STAGING_SCHEMA}.${table_name}"
   run_sql_server_command_as_etl run-sql-query-for-db "${sql_query}" "${DB_NAME}"
@@ -171,10 +173,7 @@ done
 # Ingesting merge correlation data                                            #
 ###############################################################################
 
-# Copy the merge person.csv
-cp "${LOCAL_CONFIG_CHANGES_DIR}/person.csv" "${LOCAL_TOOLKIT_DIR}/examples/data/${CORRELATION_MERGE_DATA}/"
-
-print "Inserting merge correlation data into into the staging tables"
+print "Inserting merge correlation data into the staging tables"
 for table_name in $(map_keys "${CORRELATED_DATA_TABLE_AND_FORMAT_FILE_NAME}"); do
   csv_and_format_file_name=$(map_get "${CORRELATED_DATA_TABLE_AND_FORMAT_FILE_NAME}" "${table_name}")
   sql_query="\

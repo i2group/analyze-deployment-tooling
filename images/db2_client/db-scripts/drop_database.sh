@@ -8,9 +8,9 @@ set -e
 
 source /opt/db-scripts/common_functions.sh
 
-catalogRemoteNode
-attachToRemote
-catalogRemoteDatabase
+catalog_remote_node
+attach_to_remote
+catalog_remote_database
 
 sql_query="DROP DATABASE \"${DB_NAME}\""
-runSQLCMD "${sql_query}"
+run_sql_cmd "${sql_query}"

@@ -33,7 +33,7 @@ MAX_TRIES=30
 #   Status of i2 Analyze service to wait-for
 #   -> Could be either 'Active', 'Down' or 'Degraded'.
 #######################################
-function waitFori2AnalyzeServiceStatus() {
+function wait_for_i2_analyze_service_status() {
   local expected_status="$1"
   local service_status
   local tries=1
@@ -41,7 +41,7 @@ function waitFori2AnalyzeServiceStatus() {
 
   print "Waiting for i2 Analyze service to be ${expected_status}"
   while [[ "${tries}" -le "${max_tries}" ]]; do
-    service_status="$(geti2AnalyzeServiceStatus)"
+    service_status="$(get_i2_analyze_service_status)"
     if [[ "${service_status}" == "${expected_status}" ]]; then
       echo "i2 Analyze service status: '${service_status}'"
       break
@@ -83,7 +83,7 @@ docker stop "${LEADER_LIBERTY}"
 ###############################################################################
 # Detecting failure                                                           #
 ###############################################################################
-waitFori2AnalyzeServiceStatus "DEGRADED"
+wait_for_i2_analyze_service_status "DEGRADED"
 
 ###############################################################################
 # Fail over                                                                   #
@@ -111,7 +111,7 @@ done
 print "Reinstating high availability by starting ${LEADER_LIBERTY}"
 docker start "${LEADER_LIBERTY}"
 
-waitFori2AnalyzeServiceStatus "ACTIVE"
+wait_for_i2_analyze_service_status "ACTIVE"
 
 print "Making sure ${LEADER_LIBERTY} is not the Liberty leader"
 TRIES=1

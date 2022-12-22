@@ -23,29 +23,29 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internal_helper_variables.sh"
 
 set_dependencies_tag_if_necessary
-checkEnvironmentIsValid
+check_environment_is_valid
 check_env_vars_are_set
-checkLicensesAcceptedIfRequired "${ENVIRONMENT}"
+check_licenses_accepted_if_required "${ENVIRONMENT}"
 
 ###############################################################################
 # Functions                                                                   #
 ###############################################################################
 
-function deployZKCluster() {
-  runZK "${ZK1_CONTAINER_NAME}" "${ZK1_FQDN}" "${ZK1_DATA_VOLUME_NAME}" "${ZK1_DATALOG_VOLUME_NAME}" "${ZK1_LOG_VOLUME_NAME}" "1" "zk1" "${ZK1_SECRETS_VOLUME_NAME}"
-  runZK "${ZK2_CONTAINER_NAME}" "${ZK2_FQDN}" "${ZK2_DATA_VOLUME_NAME}" "${ZK2_DATALOG_VOLUME_NAME}" "${ZK2_LOG_VOLUME_NAME}" "2" "zk2" "${ZK2_SECRETS_VOLUME_NAME}"
-  runZK "${ZK3_CONTAINER_NAME}" "${ZK3_FQDN}" "${ZK3_DATA_VOLUME_NAME}" "${ZK3_DATALOG_VOLUME_NAME}" "${ZK3_LOG_VOLUME_NAME}" "3" "zk3" "${ZK3_SECRETS_VOLUME_NAME}"
+function deploy_zk_cluster() {
+  run_zk "${ZK1_CONTAINER_NAME}" "${ZK1_FQDN}" "${ZK1_DATA_VOLUME_NAME}" "${ZK1_DATALOG_VOLUME_NAME}" "${ZK1_LOG_VOLUME_NAME}" 1 "zk1" "${ZK1_SECRETS_VOLUME_NAME}"
+  run_zk "${ZK2_CONTAINER_NAME}" "${ZK2_FQDN}" "${ZK2_DATA_VOLUME_NAME}" "${ZK2_DATALOG_VOLUME_NAME}" "${ZK2_LOG_VOLUME_NAME}" 2 "zk2" "${ZK2_SECRETS_VOLUME_NAME}"
+  run_zk "${ZK3_CONTAINER_NAME}" "${ZK3_FQDN}" "${ZK3_DATA_VOLUME_NAME}" "${ZK3_DATALOG_VOLUME_NAME}" "${ZK3_LOG_VOLUME_NAME}" 3 "zk3" "${ZK3_SECRETS_VOLUME_NAME}"
 }
 
-function deploySolrCluster() {
+function deploy_solr_cluster() {
   print "Running secure Solr containers"
   ### Run solr1
-  runSolr "${SOLR1_CONTAINER_NAME}" "${SOLR1_FQDN}" "${SOLR1_VOLUME_NAME}" "8983" "solr1" "${SOLR1_SECRETS_VOLUME_NAME}"
+  run_solr "${SOLR1_CONTAINER_NAME}" "${SOLR1_FQDN}" "${SOLR1_VOLUME_NAME}" 8983 "solr1" "${SOLR1_SECRETS_VOLUME_NAME}"
   ### Run solr2
-  runSolr "${SOLR2_CONTAINER_NAME}" "${SOLR2_FQDN}" "${SOLR2_VOLUME_NAME}" "8984" "solr2" "${SOLR2_SECRETS_VOLUME_NAME}"
+  run_solr "${SOLR2_CONTAINER_NAME}" "${SOLR2_FQDN}" "${SOLR2_VOLUME_NAME}" 8984 "solr2" "${SOLR2_SECRETS_VOLUME_NAME}"
 }
 
-function configureZKForSolrCluster() {
+function configure_zk_for_solr_cluster() {
   print "Configuring ZK Cluster for Solr"
   run_solr_client_command solr zk mkroot "/${SOLR_CLUSTER_ID}" -z "${ZK_MEMBERS}"
   if [[ "${SOLR_ZOO_SSL_CONNECTION}" == true ]]; then
@@ -54,7 +54,7 @@ function configureZKForSolrCluster() {
   run_solr_client_command bash -c "echo \"\${SECURITY_JSON}\" > /tmp/security.json && solr zk cp /tmp/security.json zk:/security.json -z ${ZK_HOST}"
 }
 
-function configureSolrCollections() {
+function configure_solr_collections() {
   print "Configuring Solr collections"
   run_i2_analyze_tool "/opt/i2-tools/scripts/generateSolrSchemas.sh"
   run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n daod_index -d /opt/configuration/solr/generated_config/daod_index
@@ -66,7 +66,7 @@ function configureSolrCollections() {
   run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n vq_index -d /opt/configuration/solr/generated_config/vq_index
 }
 
-function createSolrClusterPolicy() {
+function create_solr_cluster_policy() {
   print "Creating Solr cluster policy"
   # The curl command uses the container's local environment variables to obtain the SOLR_ADMIN_DIGEST_USERNAME and SOLR_ADMIN_DIGEST_PASSWORD.
   # To stop the variables being evaluated in this script, the variables are escaped using backslashes (\) and surrounded in double quotes (").
@@ -74,7 +74,7 @@ function createSolrClusterPolicy() {
   run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer -X POST -H Content-Type:text/xml -d '{ \"set-cluster-policy\": [ {\"replica\": \"<2\", \"shard\": \"#EACH\", \"host\": \"#EACH\"}]}' \"${SOLR1_BASE_URL}/api/cluster/autoscaling\""
 }
 
-function createSolrCollections() {
+function create_solr_collections() {
   print "Creating Solr collections"
   # The curl command uses the container's local environment variables to obtain the SOLR_ADMIN_DIGEST_USERNAME and SOLR_ADMIN_DIGEST_PASSWORD.
   # To stop the variables being evaluated in this script, the variables are escaped using backslashes (\) and surrounded in double quotes (").
@@ -88,7 +88,7 @@ function createSolrCollections() {
   run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=vq_index&collection.configName=vq_index&numShards=1&maxShardsPerNode=4&replicationFactor=2\""
 }
 
-function initializeIStoreDatabase() {
+function initialize_istore_database() {
   print "Initializing ISTORE database"
 
   print "Generating ISTORE scripts"
@@ -112,29 +112,29 @@ function initializeIStoreDatabase() {
   run_sql_server_command_as_dba "/opt/databaseScripts/generated/runStaticScripts.sh"
 }
 
-function deploySecureSQLServer() {
+function deploy_secure_sql_server() {
   docker volume create "${SQL_SERVER_BACKUP_VOLUME_NAME}"
-  runSQLServer
-  waitForSQLServerToBeLive "true"
+  run_sql_server
+  wait_for_sql_server_to_be_live "true"
   change_sa_password
 }
 
-function configureIStoreDatabase() {
+function configure_istore_database() {
   print "Configuring IStore database"
   run_i2_analyze_tool "/opt/i2-tools/scripts/generateDynamicInfoStoreCreationScripts.sh"
   run_sql_server_command_as_dba "/opt/databaseScripts/generated/runDynamicScripts.sh"
 }
 
-function deployLiberty() {
+function deploy_liberty() {
   ### Run liberty1
-  runLiberty "${LIBERTY1_CONTAINER_NAME}" "${LIBERTY1_FQDN}" "${LIBERTY1_VOLUME_NAME}" "${LIBERTY1_SECRETS_VOLUME_NAME}" "${LIBERTY1_PORT}" "${LIBERTY1_CONTAINER_NAME}" "${LIBERTY1_DEBUG_PORT}"
+  run_liberty "${LIBERTY1_CONTAINER_NAME}" "${LIBERTY1_FQDN}" "${LIBERTY1_VOLUME_NAME}" "${LIBERTY1_SECRETS_VOLUME_NAME}" "${LIBERTY1_PORT}" "${LIBERTY1_CONTAINER_NAME}" "${LIBERTY1_DEBUG_PORT}"
   ### Run liberty2
-  runLiberty "${LIBERTY2_CONTAINER_NAME}" "${LIBERTY2_FQDN}" "${LIBERTY2_VOLUME_NAME}" "${LIBERTY2_SECRETS_VOLUME_NAME}" "${LIBERTY2_PORT}" "${LIBERTY2_CONTAINER_NAME}" "${LIBERTY2_DEBUG_PORT}"
+  run_liberty "${LIBERTY2_CONTAINER_NAME}" "${LIBERTY2_FQDN}" "${LIBERTY2_VOLUME_NAME}" "${LIBERTY2_SECRETS_VOLUME_NAME}" "${LIBERTY2_PORT}" "${LIBERTY2_CONTAINER_NAME}" "${LIBERTY2_DEBUG_PORT}"
   ### Run load_balancer
-  runLoadBalancer
+  run_load_balancer
 }
 
-function updateMatchRules() {
+function update_match_rules() {
   ### Upload match rules
   print "Uploading system match rules"
   run_i2_analyze_tool "/opt/i2-tools/scripts/runIndexCommand.sh" update_match_rules
@@ -147,85 +147,85 @@ function updateMatchRules() {
   run_i2_analyze_tool "/opt/i2-tools/scripts/runIndexCommand.sh" switch_standby_match_index_to_live
 }
 
-function configureI2Analyze() {
+function configure_i2_analyze() {
   print "Configuring the i2 Analyze application server in HA mode"
-  buildLibertyConfiguredImageForPreProd
-  deployLiberty
-  waitFori2AnalyzeServiceToBeLive
-  updateMatchRules
+  build_liberty_configured_image_for_pre_prod
+  deploy_liberty
+  wait_for_i2_analyze_service_to_be_live
+  update_match_rules
 }
 
-function configureExampleConnector() {
-  runExampleConnector "${CONNECTOR1_CONTAINER_NAME}" "${CONNECTOR1_FQDN}" "${CONNECTOR1_CONTAINER_NAME}" "${CONNECTOR1_SECRETS_VOLUME_NAME}"
+function configure_example_connector() {
+  run_example_connector "${CONNECTOR1_CONTAINER_NAME}" "${CONNECTOR1_FQDN}" "${CONNECTOR1_CONTAINER_NAME}" "${CONNECTOR1_SECRETS_VOLUME_NAME}"
   wait_for_connector_to_be_live "${CONNECTOR1_FQDN}"
 }
 
-function createDataSourceId() {
+function create_data_source_id() {
   local dsid_properties_file_path="${LOCAL_CONFIG_DIR}/environment/dsid/dsid.infostore.properties"
 
-  createDsidPropertiesFile "${dsid_properties_file_path}"
+  create_dsid_properties_file "${dsid_properties_file_path}"
 }
 
 EXTENSIONS_DEV="true"
 ###############################################################################
 # Cleaning up Docker resources                                                #
 ###############################################################################
-cleanUpDockerResources
+clean_up_docker_resources
 
 ###############################################################################
 # Creating Docker network                                                     #
 ###############################################################################
-createDockerNetwork "${DOMAIN_NAME}"
+create_docker_network "${DOMAIN_NAME}"
 
 ###############################################################################
 # Create dsid.infostore.properties file                                       #
 ###############################################################################
-createDataSourceId
+create_data_source_id
 
 ###############################################################################
 # Running Solr and ZooKeeper                                                  #
 ###############################################################################
-deployZKCluster
-configureZKForSolrCluster
-deploySolrCluster
+deploy_zk_cluster
+configure_zk_for_solr_cluster
+deploy_solr_cluster
 
 ###############################################################################
 # Initializing the Information Store database                                 #
 ###############################################################################
-deploySecureSQLServer
-initializeIStoreDatabase
+deploy_secure_sql_server
+initialize_istore_database
 
 ###############################################################################
 # Configuring Solr and ZooKeeper                                              #
 ###############################################################################
-waitForSolrToBeLive "${SOLR1_FQDN}"
-configureSolrCollections
-createSolrClusterPolicy
-createSolrCollections
+wait_for_solr_to_be_live "${SOLR1_FQDN}"
+configure_solr_collections
+create_solr_cluster_policy
+create_solr_collections
 
 ###############################################################################
 # Configuring Information Store database                                      #
 ###############################################################################
-configureIStoreDatabase
+configure_istore_database
 
 ###############################################################################
 # Configuring Example Connector                                               #
 ###############################################################################
-configureExampleConnector
+configure_example_connector
 
 ###############################################################################
 # Configuring i2 Analyze                                                      #
 ###############################################################################
-configureI2Analyze
+configure_i2_analyze
 
 ###############################################################################
 # Running Prometheus and Grafana                                              #
 ###############################################################################
-configurePrometheusForPreProd
-runPrometheus
-waitForPrometheusServerToBeLive
-runGrafana
-waitForGrafanaServerToBeLive
+configure_prometheus_for_pre_prod
+run_prometheus
+wait_for_prometheus_server_to_be_live
+run_grafana
+wait_for_grafana_server_to_be_live
 
 set +e
 

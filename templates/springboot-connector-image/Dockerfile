@@ -4,7 +4,8 @@
 #
 # SPDX short identifier: MIT
 
-FROM adoptopenjdk/openjdk11:ubi-jre
+ARG SPRINGBOOT_BASE_IMAGE="eclipse-temurin:11-ubi9-minimal"
+FROM ${SPRINGBOOT_BASE_IMAGE}
 
 COPY docker-entrypoint.sh /opt/docker-entrypoint.sh
 COPY environment.sh /opt/environment.sh

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://i2group.github.io/analyze-containers/schemas/connector-definition-schema.json",
-  "title": "JSON schema for the Analyze Containers repository references file",
+  "title": "JSON schema for the Analyze Containers path configuration file",
   "type": "object",
   "properties": {
     "sharedConfigurations": {
@@ -11,6 +11,9 @@
         "rootDirectory": "",
         "repositories": []
       },
+      "required": [
+        "rootDirectory"
+      ],
       "properties": {
         "rootDirectory": {
           "type": "string",
@@ -106,9 +109,6 @@
             "additionalProperties": false
           }
         },
-        "required": [
-          "rootDirectory"
-        ],
         "additionalProperties": false
       }
     },

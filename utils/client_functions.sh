@@ -22,7 +22,7 @@
 # @noargs
 function check_env_vars_are_set() {
   while read -r var_name; do
-    checkVariableIsSet "${!var_name}" "${var_name} environment variable is not set"
+    check_variable_is_set "${!var_name}" "${var_name} environment variable is not set"
   done <"${ANALYZE_CONTAINERS_ROOT_DIR}/utils/requiredEnvironmentVariables.txt"
 }
 
@@ -33,7 +33,7 @@ function check_env_vars_are_set() {
 # @arg $1 string The partial path to secret
 # @internal
 function is_secret() {
-  validateParameters "1" "$@"
+  validate_parameters 1 "$@"
 
   local secret="$1"
 
@@ -45,7 +45,7 @@ function is_secret() {
 # @example
 #   get_secret "solr/ZK_DIGEST_PASSWORD"
 function get_secret() {
-  validateParameters "1" "$@"
+  validate_parameters 1 "$@"
 
   local secret="$1"
   local filePath="${GENERATED_SECRETS_DIR}/${secret}"
@@ -67,7 +67,7 @@ function get_secret() {
 #
 # @stdout The status of the Solr component.
 function get_solr_status() {
-  validateParameters "1" "$@"
+  validate_parameters 1 "$@"
 
   local timestamp="$1"
   local solr_status
@@ -98,7 +98,7 @@ function get_solr_status() {
 # @arg $1 string The request id of the asynchronous request to get the status of.
 # @stdout The JSON response or error messages.
 function get_async_request_status() {
-  validateParameters "1" "$@"
+  validate_parameters 1 "$@"
 
   local async_id="$1"
   local async_response
@@ -108,7 +108,7 @@ function get_async_request_status() {
   if [[ $(echo "${async_response}" | jq -r ".status.state") == "completed" ]]; then
     echo "completed" && return 0
   else
-    error_response=$(echo "${async_response}" | jq -r ".success.*.response")
+    error_response=$(echo "${async_response}" | jq -r ".status.msg")
     echo "${error_response}"
   fi
 }
@@ -124,7 +124,7 @@ function get_async_request_status() {
 # @exitcode 0 If index was built in 75 seconds.
 # @exitcode 1 If index was NOT built in 75 seconds.
 function wait_for_indexes_to_be_built() {
-  validateParameters "1" "$@"
+  validate_parameters 1 "$@"
 
   local match_index="$1"
   local max_tries=15
@@ -132,7 +132,7 @@ function wait_for_indexes_to_be_built() {
   local index_status_response
   local app_admin_password
 
-  app_admin_password=$(getApplicationAdminPassword)
+  app_admin_password=$(get_application_admin_password)
   print "Waiting for indexes to be built"
   for i in $(seq 1 "${max_tries}"); do
     index_status_response=$(
@@ -172,7 +172,7 @@ function wait_for_indexes_to_be_built() {
 # @exitcode 1 If the connector is not live after 10 retries.
 # @stdout Retry attempts, error messages or success message.
 function wait_for_connector_to_be_live() {
-  validateParameters "1" "$@"
+  validate_parameters 1 "$@"
 
   local connector_fqdn="$1"
   local connector_config_path="${2:-/config}"
@@ -188,10 +188,10 @@ function wait_for_connector_to_be_live() {
   print "Waiting for Connector to be live on ${connector_config_url}"
 
   for i in $(seq 1 "${max_tries}"); do
-    if runi2AnalyzeToolAsGatewayUser bash -c "curl -s -S --output /dev/null \
+    if run_i2_analyze_tool_as_gateway_user bash -c "curl -s -S --output /dev/null \
         --cert /tmp/i2acerts/i2Analyze.pem --cacert /tmp/i2acerts/CA.cer \"${connector_config_url}\""; then
       http_status_code="$(
-        runi2AnalyzeToolAsGatewayUser bash -c "curl -s --output /dev/null --write-out \"%{http_code}\" \
+        run_i2_analyze_tool_as_gateway_user bash -c "curl -s --output /dev/null --write-out \"%{http_code}\" \
         --cert /tmp/i2acerts/i2Analyze.pem --cacert /tmp/i2acerts/CA.cer \"${connector_config_url}\""
       )"
       if [[ "${http_status_code}" -eq 200 ]]; then
@@ -206,8 +206,8 @@ function wait_for_connector_to_be_live() {
   done
 
   # If you get here, wait_for_connector_to_be_live has not been successful. Run curl with -v
-  runi2AnalyzeToolAsGatewayUser bash -c "curl -v --cert /tmp/i2acerts/i2Analyze.pem --cacert /tmp/i2acerts/CA.cer \"${connector_config_url}\""
-  printWarn "Connector is NOT live at ${connector_config_url}"
+  run_i2_analyze_tool_as_gateway_user bash -c "curl -v --cert /tmp/i2acerts/i2Analyze.pem --cacert /tmp/i2acerts/CA.cer \"${connector_config_url}\""
+  print_warn "Connector is NOT live at ${connector_config_url}"
 }
 
 # @section Database Security Utilities
@@ -233,7 +233,6 @@ function change_sa_password() {
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
-    --name "${SQL_CLIENT_CONTAINER_NAME}" \
     -e "SA_USERNAME=${SA_USERNAME}" \
     -e "SA_OLD_PASSWORD=${SA_INITIAL_PASSWORD}" \
     -e "SA_NEW_PASSWORD=${SA_PASSWORD}" \
@@ -243,6 +242,36 @@ function change_sa_password() {
     -e "DB_PORT=${DB_PORT}" \
     "${SQL_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" \
     "/opt/db-scripts/change_sa_password.sh"
+}
+
+# @description Change the initial password for the postgres user.
+# @noargs
+function change_postgres_password() {
+  local POSTGRES_PASSWORD
+  local POSTGRES_INITIAL_PASSWORD
+  local SSL_CA_CERTIFICATE
+  POSTGRES_PASSWORD=$(get_secret postgres/postgres_PASSWORD)
+  POSTGRES_INITIAL_PASSWORD=$(get_secret postgres/postgres_INITIAL_PASSWORD)
+
+  if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
+    SSL_CA_CERTIFICATE=$(get_secret certificates/CA/CA.cer)
+  fi
+
+  # shellcheck disable=SC2153
+  docker run \
+    --rm \
+    "${EXTRA_ARGS[@]}" \
+    -e "SQLCMD=${SQLCMD}" \
+    -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
+    -e "PGUSER=${POSTGRES_USERNAME}" \
+    -e "POSTGRES_OLD_PASSWORD=${POSTGRES_INITIAL_PASSWORD}" \
+    -e "POSTGRES_NEW_PASSWORD=${POSTGRES_PASSWORD}" \
+    -e "DB_SSL_CONNECTION=${DB_SSL_CONNECTION}" \
+    -e "SSL_CA_CERTIFICATE=${SSL_CA_CERTIFICATE}" \
+    -e "DB_SERVER=${POSTGRES_SERVER_FQDN}" \
+    -e "DB_PORT=${DB_PORT}" \
+    "${POSTGRES_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" \
+    "/opt/db-scripts/change_postgres_password.sh"
 }
 
 # @description Change the initial password for the db2inst1 user.
@@ -263,7 +292,6 @@ function change_db2_inst1_password() {
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
-    --name "${DB2_CLIENT_CONTAINER_NAME}" \
     --privileged=true \
     -e "SQLCMD=${SQLCMD}" \
     -e "DB2INST1_USERNAME=${DB2INST1_USERNAME}" \
@@ -282,38 +310,65 @@ function change_db2_inst1_password() {
 # For more information, see [create_db_login_and_user](../security%20and%20users/db_users.md#the-createdbloginanduser-function).
 # @arg $1 string The database user name
 # @arg $2 string The database role name
+# @arg $3 string The database dialect. Defaults to sqlserver
 function create_db_login_and_user() {
-  validateParameters "2" "$@"
+  validate_parameters 2 "$@"
 
   local user="$1"
   local role="$2"
-  local SA_PASSWORD
-  local USER_PASSWORD
-  local SSL_CA_CERTIFICATE
-  SA_PASSWORD=$(get_secret sqlserver/sa_PASSWORD)
-  USER_PASSWORD=$(get_secret sqlserver/"${user}"_PASSWORD)
+  local admin_password
+  local user_password
+  local ssl_ca_certificate
+  local image_name
+  local db_server_fqdn
+  local auth_args=()
+
+  case "${DB_DIALECT}" in
+  sqlserver)
+    admin_password=$(get_secret sqlserver/sa_PASSWORD)
+    user_password=$(get_secret sqlserver/"${user}"_PASSWORD)
+    db_server_fqdn="${SQL_SERVER_FQDN}"
+    image_name="${SQL_CLIENT_IMAGE_NAME}"
+    auth_args+=("-e" "SA_USERNAME=${SA_USERNAME}")
+    auth_args+=("-e" "SA_PASSWORD=${admin_password}")
+    ;;
+  db2)
+    admin_password=$(get_secret db2server/db2inst1_PASSWORD)
+    user_password=$(get_secret db2server/"${user}"_PASSWORD)
+    db_server_fqdn="${DB2_SERVER_FQDN}"
+    image_name="${DB2_CLIENT_IMAGE_NAME}"
+    auth_args+=("-e" "ADMIN_USERNAME=${DB2INST1_USERNAME}")
+    auth_args+=("-e" "ADMIN_PASSWORD=${admin_password}")
+    ;;
+  postgres)
+    admin_password=$(get_secret postgres/postgres_PASSWORD)
+    user_password=$(get_secret postgres/"${user}"_PASSWORD)
+    db_server_fqdn="${POSTGRES_SERVER_FQDN}"
+    image_name="${POSTGRES_CLIENT_IMAGE_NAME}"
+    auth_args+=("-e" "PGUSER=${POSTGRES_USERNAME}")
+    auth_args+=("-e" "PGPASSWORD=${admin_password}")
+    ;;
+  esac
 
   if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
-    SSL_CA_CERTIFICATE=$(get_secret certificates/CA/CA.cer)
+    ssl_ca_certificate=$(get_secret certificates/CA/CA.cer)
   fi
 
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
-    --name "${SQL_CLIENT_CONTAINER_NAME}" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
-    -e "SA_USERNAME=${SA_USERNAME}" \
-    -e "SA_PASSWORD=${SA_PASSWORD}" \
+    "${auth_args[@]}" \
     -e "DB_USERNAME=${user}" \
-    -e "DB_PASSWORD=${USER_PASSWORD}" \
+    -e "DB_PASSWORD=${user_password}" \
     -e "DB_SSL_CONNECTION=${DB_SSL_CONNECTION}" \
-    -e "SSL_CA_CERTIFICATE=${SSL_CA_CERTIFICATE}" \
-    -e "DB_SERVER=${SQL_SERVER_FQDN}" \
+    -e "SSL_CA_CERTIFICATE=${ssl_ca_certificate}" \
+    -e "DB_SERVER=${db_server_fqdn}" \
     -e "DB_PORT=${DB_PORT}" \
     -e "DB_NAME=${DB_NAME}" \
     -e "DB_ROLE=${role}" \
-    "${SQL_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" \
+    "${image_name}:${I2A_DEPENDENCIES_IMAGES_TAG}" \
     "/opt/db-scripts/create_db_login_and_user.sh"
 }
 
@@ -401,10 +456,14 @@ function run_i2_analyze_tool() {
     DB_SERVER_FQDN="${DB2_SERVER_FQDN}"
     ;;
   sqlserver)
-    # shellcheck disable=SC2153
     DB_USERNAME="${DBA_USERNAME}"
     DB_PASSWORD=$(get_secret sqlserver/dba_PASSWORD)
     DB_SERVER_FQDN="${SQL_SERVER_FQDN}"
+    ;;
+  postgres)
+    DB_USERNAME="${DBA_USERNAME}"
+    DB_PASSWORD=$(get_secret postgres/dba_PASSWORD)
+    DB_SERVER_FQDN="${POSTGRES_SERVER_FQDN}"
     ;;
   esac
 
@@ -417,7 +476,7 @@ function run_i2_analyze_tool() {
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
-    --name "${I2A_TOOL_CONTAINER_NAME}" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -v "${LOCAL_CONFIG_DIR}:/opt/configuration" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
     -e "LIC_AGREEMENT=${LIC_AGREEMENT}" \
@@ -478,6 +537,7 @@ function run_i2_analyze_tool_as_external_user() {
   docker run --rm \
     "${EXTRA_ARGS[@]}" \
     -e "SERVER_SSL=true" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SSL_CA_CERTIFICATE=${SSL_CA_CERTIFICATE}" \
     "${I2A_TOOLS_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "$@"
 }
@@ -503,13 +563,9 @@ function run_sql_server_command_as_etl() {
     SSL_CA_CERTIFICATE=$(get_secret certificates/CA/CA.cer)
   fi
 
-  local container_data_dir="/var/i2a-data"
-  update_volume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
-
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
-    --name "${SQL_CLIENT_CONTAINER_NAME}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
@@ -524,24 +580,24 @@ function run_sql_server_command_as_etl() {
     "${SQL_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "$@"
 }
 
-# @description Uses an ephemeral SQL Client container to run database scripts or commands against the
-# Information Store database as the i2etl user, such as executing generated drop/create index scripts,
-# created by the ETL toolkit.
-# For more information about running a SQL Client container and the environment variables required for the
-# container, see [SQL Client](../images%20and%20containers/sql_client.html).
+# @description Uses an ephemeral Postgres Client container to run database scripts or commands against the Information Store database as the etl user.
+# For more information about running a Postgres Client container and the environment variables required for the container, see [Postgres Client](../images%20and%20containers/postgres_client.html).
 # @example
-# run_sql_server_command_as_i2_etl bash -c "${SQLCMD} ${SQLCMD_FLAGS} \
-#   -S \${DB_SERVER},${DB_PORT} -U \${DB_USERNAME} -P \${DB_PASSWORD} -d \${DB_NAME} \
-#   -i /opt/database-scripts/ET5-drop-entity-indexes.sql"
+# run_postgres_server_command_as_etl bash -c "/usr/lib/postgresql/bin/psql -w -X -q --set=client_min_messages=warning -h \${DB_SERVER} -p \${DB_PORT} -d \${DB_NAME} -c
+#   \"COPY IS_Staging.E_Person (source_id, p_description_of_mark, p_accent, p_aka, p_build, p_citizenship, p_date_of_birth,
+#   p_description, p_identification_number, p_eye_color,p_facial_hair, p_first_given_name, p_hair_color, p_hair_type,
+#   p_height_from, p_height_to, p_family_name, p_middle_name, p_additional_informatio, p_occupation, p_unique_reference,
+#   p_gender, source_ref_source_location, source_ref_source_type, source_ref_source_image_url)
+# FROM '/var/i2a-data/law-enforcement-data-set-2-merge/person.csv' CSV HEADER ENCODING 'UTF8' NULL AS ''\""
 #
 # @arg $@ string Command you want to run on the SQL Client container
 #
 # @exitcode 0 If command was executed successfully.
 # @exitcode 1 If command was NOT executed successfully.
-function run_sql_server_command_as_i2_etl() {
+function run_postgres_server_command_as_etl() {
   local DB_PASSWORD
   local SSL_CA_CERTIFICATE
-  DB_PASSWORD=$(get_secret sqlserver/i2etl_PASSWORD)
+  DB_PASSWORD=$(get_secret postgres/etl_PASSWORD)
 
   if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
     SSL_CA_CERTIFICATE=$(get_secret certificates/CA/CA.cer)
@@ -553,20 +609,171 @@ function run_sql_server_command_as_i2_etl() {
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
-    --name "${SQL_CLIENT_CONTAINER_NAME}" \
-    -v "${LOCAL_TOOLKIT_DIR}:/opt/toolkit" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
-    -e "DB_SERVER=${SQL_SERVER_FQDN}" \
+    -e "DB_SERVER=${POSTGRES_SERVER_FQDN}" \
     -e "DB_PORT=${DB_PORT}" \
     -e "DB_NAME=${DB_NAME}" \
     -e "GENERATED_DIR=/opt/databaseScripts/generated" \
-    -e "DB_USERNAME=${I2_ETL_USERNAME}" \
-    -e "DB_PASSWORD=${DB_PASSWORD}" \
+    -e "PGUSER=${ETL_USERNAME}" \
+    -e "PGPASSWORD=${DB_PASSWORD}" \
     -e "DB_SSL_CONNECTION=${DB_SSL_CONNECTION}" \
     -e "SSL_CA_CERTIFICATE=${SSL_CA_CERTIFICATE}" \
-    "${SQL_CLIENT_IMAGE_NAME}${I2A_DEPENDENCIES_IMAGES_TAG}" "$@"
+    "${POSTGRES_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "$@"
+}
+
+# @description Uses an ephemeral Postgres Client container to run database scripts or commands against the
+# Information Store database as the postgres user with the initial postgres password.
+# For more information about running a Postgres Client container and the environment variables required for the
+# container, see [Postgres Client](../images%20and%20containers/postgres_client.html).
+#
+# @arg $@ string Command you want to run on the Postgres Client container
+#
+# @exitcode 0 If command was executed successfully.
+# @exitcode 1 If command was NOT executed successfully.
+function run_postgres_server_command_as_first_start_postgres() {
+  local DB_PASSWORD
+  local SSL_CA_CERTIFICATE
+  DB_PASSWORD=$(get_secret postgres/postgres_INITIAL_PASSWORD)
+
+  if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
+    SSL_CA_CERTIFICATE=$(get_secret certificates/CA/CA.cer)
+  fi
+
+  docker run \
+    --rm \
+    "${EXTRA_ARGS[@]}" \
+    -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -e "SQLCMD=${SQLCMD}" \
+    -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
+    -e "DB_SERVER=${POSTGRES_SERVER_FQDN}" \
+    -e "DB_PORT=${DB_PORT}" \
+    -e "DB_NAME=${DB_NAME}" \
+    -e "GENERATED_DIR=/opt/databaseScripts/generated" \
+    -e "PGUSER=${POSTGRES_USERNAME}" \
+    -e "PGPASSWORD=${DB_PASSWORD}" \
+    -e "DB_SSL_CONNECTION=${DB_SSL_CONNECTION}" \
+    -e "SSL_CA_CERTIFICATE=${SSL_CA_CERTIFICATE}" \
+    "${POSTGRES_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "$@"
+}
+
+# @description Uses an ephemeral Postgres Client container to run database scripts or commands against the
+# Information Store database as the postgres user.
+# For more information about running a Postgres Client container and the environment variables required for the
+# container, see [Postgres Client](../images%20and%20containers/postgres_client.html).
+# @example
+#    run_postgres_server_command_as_postgres "/opt/i2-tools/scripts/database-creation/runStaticScripts.sh"
+#
+# @arg $@ string Command you want to run on the Postgres Client container
+#
+# @exitcode 0 If command was executed successfully.
+# @exitcode 1 If command was NOT executed successfully.
+function run_postgres_server_command_as_postgres() {
+  local DB_PASSWORD
+  local SSL_CA_CERTIFICATE
+  DB_PASSWORD=$(get_secret postgres/postgres_PASSWORD)
+
+  if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
+    SSL_CA_CERTIFICATE=$(get_secret certificates/CA/CA.cer)
+  fi
+
+  local container_data_dir="/var/i2a-data"
+  update_volume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
+
+  docker run \
+    --rm \
+    "${EXTRA_ARGS[@]}" \
+    -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -e "SQLCMD=${SQLCMD}" \
+    -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
+    -e "DB_SERVER=${POSTGRES_SERVER_FQDN}" \
+    -e "DB_PORT=${DB_PORT}" \
+    -e "DB_NAME=${DB_NAME}" \
+    -e "GENERATED_DIR=/opt/databaseScripts/generated" \
+    -e "PGUSER=${POSTGRES_USERNAME}" \
+    -e "PGPASSWORD=${DB_PASSWORD}" \
+    -e "DB_SSL_CONNECTION=${DB_SSL_CONNECTION}" \
+    -e "SSL_CA_CERTIFICATE=${SSL_CA_CERTIFICATE}" \
+    "${POSTGRES_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "$@"
+}
+
+# @description Uses an ephemeral Postgres Client container to run database scripts or commands against the
+# Information Store database as a dba user.
+# For more information about running a Postgres Client container and the environment variables required for the
+# container, see [Postgres Client](../images%20and%20containers/postgres_client.html).
+# @example
+#    run_postgres_server_command_as_dba "/opt/i2-tools/scripts/database-creation/runStaticScripts.sh"
+#
+# @arg $@ string Command you want to run on the Postgres Client container
+#
+# @exitcode 0 If command was executed successfully.
+# @exitcode 1 If command was NOT executed successfully.
+function run_postgres_server_command_as_dba() {
+  local DB_PASSWORD
+  local SSL_CA_CERTIFICATE
+  DB_PASSWORD=$(get_secret postgres/dba_PASSWORD)
+
+  if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
+    SSL_CA_CERTIFICATE=$(get_secret certificates/CA/CA.cer)
+  fi
+
+  local container_data_dir="/var/i2a-data"
+  update_volume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
+
+  docker run \
+    --rm \
+    "${EXTRA_ARGS[@]}" \
+    -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -e "SQLCMD=${SQLCMD}" \
+    -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
+    -e "DB_SERVER=${POSTGRES_SERVER_FQDN}" \
+    -e "DB_PORT=${DB_PORT}" \
+    -e "DB_NAME=${DB_NAME}" \
+    -e "GENERATED_DIR=/opt/databaseScripts/generated" \
+    -e "PGUSER=${DBA_USERNAME}" \
+    -e "PGPASSWORD=${DB_PASSWORD}" \
+    -e "DB_SSL_CONNECTION=${DB_SSL_CONNECTION}" \
+    -e "SSL_CA_CERTIFICATE=${SSL_CA_CERTIFICATE}" \
+    "${POSTGRES_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "$@"
+}
+
+# @description Uses an ephemeral Postgres Client container to run database scripts or commands against the
+# Information Store database as the dbb (the backup operator) user.
+# For more information about running a Postgres Client container and the environment variables required for the
+# container, see [Postgres Client](../images%20and%20containers/postgres_client.html).
+# @example
+#    run_postgres_server_command_as_dbb bash -c "pg_dump '/backup/istore.pgb'"
+#
+# @arg $@ string Command you want to run on the Postgres Client container
+#
+# @exitcode 0 If command was executed successfully.
+# @exitcode 1 If command was NOT executed successfully.
+function run_postgres_server_command_as_dbb() {
+  local DB_PASSWORD
+  local SSL_CA_CERTIFICATE
+  DB_PASSWORD=$(get_secret postgres/dbb_PASSWORD)
+
+  if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
+    SSL_CA_CERTIFICATE=$(get_secret certificates/CA/CA.cer)
+  fi
+
+  # shellcheck disable=SC2153
+  docker run \
+    --rm \
+    "${EXTRA_ARGS[@]}" \
+    -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -e "SQLCMD=${SQLCMD}" \
+    -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
+    -e "DB_SERVER=${POSTGRES_SERVER_FQDN}" \
+    -e "DB_PORT=${DB_PORT}" \
+    -e "DB_NAME=${DB_NAME}" \
+    -e "GENERATED_DIR=/opt/databaseScripts/generated" \
+    -e "PGUSER=${DBB_USERNAME}" \
+    -e "PGPASSWORD=${DB_PASSWORD}" \
+    -e "DB_SSL_CONNECTION=${DB_SSL_CONNECTION}" \
+    -e "SSL_CA_CERTIFICATE=${SSL_CA_CERTIFICATE}" \
+    "${SQL_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "$@"
 }
 
 # @description Uses an ephemeral SQL Client container to run database scripts or commands against the
@@ -590,7 +797,6 @@ function run_sql_server_command_as_first_start_sa() {
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
-    --name "${SQL_CLIENT_CONTAINER_NAME}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
@@ -625,13 +831,9 @@ function run_sql_server_command_as_sa() {
     SSL_CA_CERTIFICATE=$(get_secret certificates/CA/CA.cer)
   fi
 
-  local container_data_dir="/var/i2a-data"
-  update_volume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
-
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
-    --name "${SQL_CLIENT_CONTAINER_NAME}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
@@ -666,13 +868,9 @@ function run_sql_server_command_as_dba() {
     SSL_CA_CERTIFICATE=$(get_secret certificates/CA/CA.cer)
   fi
 
-  local container_data_dir="/var/i2a-data"
-  update_volume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
-
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
-    --name "${SQL_CLIENT_CONTAINER_NAME}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
@@ -711,14 +909,10 @@ function run_sql_server_command_as_dbb() {
     SSL_CA_CERTIFICATE=$(get_secret certificates/CA/CA.cer)
   fi
 
-  local container_data_dir="/var/i2a-data"
-  update_volume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
-
   # shellcheck disable=SC2153
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
-    --name "${SQL_CLIENT_CONTAINER_NAME}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
@@ -761,6 +955,11 @@ function run_etl_toolkit_tool_as_i2_etl() {
     DB_PASSWORD=$(get_secret sqlserver/i2etl_PASSWORD)
     DB_SERVER_FQDN="${SQL_SERVER_FQDN}"
     ;;
+  postgres)
+    DB_USERNAME="${I2_ETL_USERNAME}"
+    DB_PASSWORD=$(get_secret postgres/i2etl_PASSWORD)
+    DB_SERVER_FQDN="${POSTGRES_SERVER_FQDN}"
+    ;;
   esac
 
   if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
@@ -769,12 +968,10 @@ function run_etl_toolkit_tool_as_i2_etl() {
 
   local container_data_dir="/var/i2a-data"
   update_volume "${DATA_DIR}" "${I2A_DATA_CLIENT_VOLUME_NAME}" "${container_data_dir}"
-  update_volume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
 
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
-    --name "${ETL_CLIENT_CONTAINER_NAME}" \
     -v "${LOCAL_CONFIG_DIR}/logs:/opt/configuration/logs" \
     -v "${I2A_DATA_CLIENT_VOLUME_NAME}:${container_data_dir}" \
     -e "DB_SERVER=${DB_SERVER_FQDN}" \
@@ -806,16 +1003,24 @@ function run_etl_toolkit_tool_as_i2_etl() {
 function run_etl_toolkit_tool_as_dba() {
   local DB_USERNAME
   local DB_PASSWORD
+  local DB_SERVER_FQDN
   local SSL_CA_CERTIFICATE
 
   case "${DB_DIALECT}" in
   db2)
     DB_USERNAME="${DB2INST1_USERNAME}"
     DB_PASSWORD=$(get_secret db2server/db2inst1_PASSWORD)
+    DB_SERVER_FQDN="${DB2_SERVER_FQDN}"
     ;;
   sqlserver)
     DB_USERNAME="${DBA_USERNAME}"
     DB_PASSWORD=$(get_secret sqlserver/dba_PASSWORD)
+    DB_SERVER_FQDN="${SQL_SERVER_FQDN}"
+    ;;
+  postgres)
+    DB_USERNAME="${DBA_USERNAME}"
+    DB_PASSWORD=$(get_secret postgres/dba_PASSWORD)
+    DB_SERVER_FQDN="${POSTGRES_SERVER_FQDN}"
     ;;
   esac
 
@@ -825,15 +1030,13 @@ function run_etl_toolkit_tool_as_dba() {
 
   local container_data_dir="/var/i2a-data"
   update_volume "${DATA_DIR}" "${I2A_DATA_CLIENT_VOLUME_NAME}" "${container_data_dir}"
-  update_volume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
 
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
-    --name "${ETL_CLIENT_CONTAINER_NAME}" \
     -v "${LOCAL_CONFIG_DIR}/logs:/opt/configuration/logs" \
     -v "${I2A_DATA_CLIENT_VOLUME_NAME}:${container_data_dir}" \
-    -e "DB_SERVER=${SQL_SERVER_FQDN}" \
+    -e "DB_SERVER=${DB_SERVER_FQDN}" \
     -e "DB_PORT=${DB_PORT}" \
     -e "DB_NAME=${DB_NAME}" \
     -e "DB_DIALECT=${DB_DIALECT}" \
@@ -867,13 +1070,9 @@ function run_db2_server_command_as_db2inst1() {
     SSL_CA_CERTIFICATE=$(get_secret certificates/CA/CA.cer)
   fi
 
-  local container_data_dir="/var/i2a-data"
-  update_volume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
-
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
-    --name "${DB2_CLIENT_CONTAINER_NAME}" \
     --privileged=true \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
     -v "${LOCAL_CONFIG_DIR}:/opt/configuration" \
@@ -913,7 +1112,6 @@ function run_db2_server_command_as_first_start_db2inst1() {
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
-    --name "${DB2_CLIENT_CONTAINER_NAME}" \
     --privileged=true \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
     -e "SQLCMD=${SQLCMD}" \
@@ -943,18 +1141,30 @@ function run_db2_server_command_as_first_start_db2inst1() {
 # @arg $2 string The volume name.
 # @arg $3 string The directory inside the volume.
 function update_volume() {
-  validateParameters "3" "$@"
+  validate_parameters 3 "$@"
 
   local local_dir="$1"
   local volume_name="$2"
   local volume_dir="$3"
 
+  local extra_args=()
+  local -r path_configuration_json="${ANALYZE_CONTAINERS_ROOT_DIR}/path-configuration.json"
+
+  if [[ -f "${path_configuration_json}" ]]; then
+    # Ensure to mount shared root if found
+    shared_repository_mount=$(jq -r '.sharedConfigurations.rootDirectory // empty' <"${path_configuration_json}")
+    if [[ -n "${shared_repository_mount}" && -d "${shared_repository_mount}" ]]; then
+      extra_args+=("-v" "${shared_repository_mount}:${shared_repository_mount}")
+    fi
+  fi
+
   docker run \
     --rm \
+    "${extra_args[@]}" \
     -v "${local_dir}:/run/bind-mount" \
     -v "${volume_name}:${volume_dir}" \
     "${REDHAT_UBI_IMAGE_NAME}:${REDHAT_UBI_IMAGE_VERSION}" \
-    bash -c "rm -rf ${volume_dir}/* && cp -r '/run/bind-mount/.' '${volume_dir}'"
+    bash -c "rm -rf ${volume_dir}/* && cp -r -L '/run/bind-mount/.' '${volume_dir}'"
 }
 
 # @description Uses an ephemeral Red Hat UBI Docker image to update a local directory with the contents of a specified volume.
@@ -966,7 +1176,7 @@ function update_volume() {
 # @arg $2 string The volume name.
 # @arg $3 string The directory inside the volume.
 function get_volume() {
-  validateParameters "3" "$@"
+  validate_parameters 3 "$@"
 
   local local_dir="$1"
   local volume_name="$2"
@@ -974,7 +1184,7 @@ function get_volume() {
 
   # Ensure to canonicalise if it is pointing to a symlink
   host_dir=$(readlink -f "${local_dir}")
-  deleteFolderIfExistsAndCreate "${host_dir}"
+  delete_folder_if_exists_and_create "${host_dir}"
 
   docker run \
     --rm \
@@ -993,102 +1203,98 @@ function get_volume() {
 # TODO: Remove on major version
 ###############################################################################
 function checkClientFunctionsEnvironmentVariablesAreSet() {
-  printWarn "checkClientFunctionsEnvironmentVariablesAreSet has been deprecated. Please use check_env_vars_are_set instead."
+  print_warn "checkClientFunctionsEnvironmentVariablesAreSet has been deprecated. Please use check_env_vars_are_set instead."
   check_env_vars_are_set "$@"
 }
 function isSecret() {
-  printWarn "isSecret has been deprecated. Please use is_secret instead."
+  print_warn "isSecret has been deprecated. Please use is_secret instead."
   is_secret "$@"
 }
 function getSecret() {
-  printWarn "getSecret has been deprecated. Please use get_secret instead."
+  print_warn "getSecret has been deprecated. Please use get_secret instead."
   get_secret "$@"
 }
 function getSolrStatus() {
-  printWarn "getSolrStatus has been deprecated. Please use get_solr_status instead."
+  print_warn "getSolrStatus has been deprecated. Please use get_solr_status instead."
   get_solr_status "$@"
 }
 function getAsyncRequestStatus() {
-  printWarn "getAsyncRequestStatus has been deprecated. Please use get_async_request_status instead."
+  print_warn "getAsyncRequestStatus has been deprecated. Please use get_async_request_status instead."
   get_async_request_status "$@"
 }
 function waitForIndexesToBeBuilt() {
-  printWarn "waitForIndexesToBeBuilt has been deprecated. Please use wait_for_indexes_to_be_built instead."
+  print_warn "waitForIndexesToBeBuilt has been deprecated. Please use wait_for_indexes_to_be_built instead."
   wait_for_indexes_to_be_built "$@"
 }
 function waitForConnectorToBeLive() {
-  printWarn "waitForConnectorToBeLive has been deprecated. Please use wait_for_connector_to_be_live instead."
+  print_warn "waitForConnectorToBeLive has been deprecated. Please use wait_for_connector_to_be_live instead."
   wait_for_connector_to_be_live "$@"
 }
 function changeSAPassword() {
-  printWarn "changeSAPassword has been deprecated. Please use change_sa_password instead."
+  print_warn "changeSAPassword has been deprecated. Please use change_sa_password instead."
   change_sa_password "$@"
 }
 function changeDb2inst1Password() {
-  printWarn "changeDb2inst1Password has been deprecated. Please use change_db2_inst1_password instead."
+  print_warn "changeDb2inst1Password has been deprecated. Please use change_db2_inst1_password instead."
   change_db2_inst1_password "$@"
 }
 function createDbLoginAndUser() {
-  printWarn "createDbLoginAndUser has been deprecated. Please use create_db_login_and_user instead."
+  print_warn "createDbLoginAndUser has been deprecated. Please use create_db_login_and_user instead."
   create_db_login_and_user "$@"
 }
 function runSolrClientCommand() {
-  printWarn "runSolrClientCommand has been deprecated. Please use run_solr_client_command instead."
+  print_warn "runSolrClientCommand has been deprecated. Please use run_solr_client_command instead."
   run_solr_client_command "$@"
 }
 function runi2AnalyzeTool() {
-  printWarn "runi2AnalyzeTool has been deprecated. Please use run_i2_analyze_tool instead."
+  print_warn "runi2AnalyzeTool has been deprecated. Please use run_i2_analyze_tool instead."
   run_i2_analyze_tool "$@"
 }
 function runi2AnalyzeToolAsExternalUser() {
-  printWarn "runi2AnalyzeToolAsExternalUser has been deprecated. Please use run_i2_analyze_tool_as_external_user instead."
+  print_warn "runi2AnalyzeToolAsExternalUser has been deprecated. Please use run_i2_analyze_tool_as_external_user instead."
   run_i2_analyze_tool_as_external_user "$@"
 }
 function runSQLServerCommandAsETL() {
-  printWarn "runSQLServerCommandAsETL has been deprecated. Please use run_sql_server_command_as_etl instead."
+  print_warn "runSQLServerCommandAsETL has been deprecated. Please use run_sql_server_command_as_etl instead."
   run_sql_server_command_as_etl "$@"
 }
-function runSQLServerCommandAsi2ETL() {
-  printWarn "runSQLServerCommandAsi2ETL has been deprecated. Please use run_sql_server_command_as_i2_etl instead."
-  run_sql_server_command_as_i2_etl "$@"
-}
 function runSQLServerCommandAsFirstStartSA() {
-  printWarn "runSQLServerCommandAsFirstStartSA has been deprecated. Please use run_sql_server_command_as_first_start_sa instead."
+  print_warn "runSQLServerCommandAsFirstStartSA has been deprecated. Please use run_sql_server_command_as_first_start_sa instead."
   run_sql_server_command_as_first_start_sa "$@"
 }
 function runSQLServerCommandAsSA() {
-  printWarn "runSQLServerCommandAsSA has been deprecated. Please use run_sql_server_command_as_sa instead."
+  print_warn "runSQLServerCommandAsSA has been deprecated. Please use run_sql_server_command_as_sa instead."
   run_sql_server_command_as_sa "$@"
 }
 function runSQLServerCommandAsDBA() {
-  printWarn "runSQLServerCommandAsDBA has been deprecated. Please use run_sql_server_command_as_dba instead."
+  print_warn "runSQLServerCommandAsDBA has been deprecated. Please use run_sql_server_command_as_dba instead."
   run_sql_server_command_as_dba "$@"
 }
 function runSQLServerCommandAsDBB() {
-  printWarn "runSQLServerCommandAsDBB has been deprecated. Please use run_sql_server_command_as_dbb instead."
+  print_warn "runSQLServerCommandAsDBB has been deprecated. Please use run_sql_server_command_as_dbb instead."
   run_sql_server_command_as_dbb "$@"
 }
 function runEtlToolkitToolAsi2ETL() {
-  printWarn "runEtlToolkitToolAsi2ETL has been deprecated. Please use run_etl_toolkit_tool_as_i2_etl instead."
+  print_warn "runEtlToolkitToolAsi2ETL has been deprecated. Please use run_etl_toolkit_tool_as_i2_etl instead."
   run_etl_toolkit_tool_as_i2_etl "$@"
 }
 function runEtlToolkitToolAsDBA() {
-  printWarn "runEtlToolkitToolAsDBA has been deprecated. Please use run_etl_toolkit_tool_as_dba instead."
+  print_warn "runEtlToolkitToolAsDBA has been deprecated. Please use run_etl_toolkit_tool_as_dba instead."
   run_etl_toolkit_tool_as_dba "$@"
 }
 function runDb2ServerCommandAsDb2inst1() {
-  printWarn "runDb2ServerCommandAsDb2inst1 has been deprecated. Please use run_db2_server_command_as_db2inst1 instead."
+  print_warn "runDb2ServerCommandAsDb2inst1 has been deprecated. Please use run_db2_server_command_as_db2inst1 instead."
   run_db2_server_command_as_db2inst1 "$@"
 }
 function runDb2ServerCommandAsAsFirstStartDb2inst1() {
-  printWarn "runDb2ServerCommandAsAsFirstStartDb2inst1 has been deprecated. Please use run_db2_server_command_as_first_start_db2inst1 instead."
+  print_warn "runDb2ServerCommandAsAsFirstStartDb2inst1 has been deprecated. Please use run_db2_server_command_as_first_start_db2inst1 instead."
   run_db2_server_command_as_first_start_db2inst1 "$@"
 }
 function updateVolume() {
-  printWarn "updateVolume has been deprecated. Please use update_volume instead."
+  print_warn "updateVolume has been deprecated. Please use update_volume instead."
   update_volume "$@"
 }
 function getVolume() {
-  printWarn "getVolume has been deprecated. Please use get_volume instead."
+  print_warn "getVolume has been deprecated. Please use get_volume instead."
   get_volume "$@"
 }

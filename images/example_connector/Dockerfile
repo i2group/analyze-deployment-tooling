@@ -3,8 +3,8 @@
 # © N.Harris Computer Corporation (2022)
 #
 # SPDX short identifier: MIT
-
-FROM registry.access.redhat.com/ubi8/nodejs-14:1
+ARG NODEJS_BASE_IMAGE="registry.access.redhat.com/ubi9/nodejs-16"
+FROM ${NODEJS_BASE_IMAGE}
 LABEL maintainer="i2 Group"
 USER 0
 

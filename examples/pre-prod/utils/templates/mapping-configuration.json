@@ -1,0 +1,44 @@
+{
+    "sourceSchemas": {
+      "example-connector": {
+        "targetSchemas": {
+          "infostore": {
+            "itemTypeMappings": [
+              {
+                "sourceItemTypeId": "Person",
+                "targetItemTypeId": "ET5",
+                "propertyTypeMappings": {
+                  "PER4": {
+                    "sourcePropertyType": {
+                      "typeId": "PER1"
+                    }
+                  },
+                  "PER5": {
+                    "sourcePropertyType": {
+                      "typeId": "PER2"
+                    }
+                  },
+                  "PER6": {
+                    "sourcePropertyType": {
+                      "typeId": "PER3"
+                    }
+                  },
+                  "PER99": {
+                    "sourcePropertyType": {
+                      "typeId": "PER6"
+                    }
+                  },
+                  "PER12": {
+                    "sourcePropertyType": {
+                      "typeId": "PER5"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+  

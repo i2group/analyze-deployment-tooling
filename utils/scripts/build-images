@@ -50,14 +50,16 @@ docker build -t "${LOAD_BALANCER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${
 toolkit_version=$(cat "${LOCAL_TOOLKIT_DIR}/scripts/version.txt")
 print "Building Liberty base image"
 docker build -t "${LIBERTY_BASE_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/liberty_ubi_base" \
-  --build-arg I2ANALYZE_VERSION="${toolkit_version%%-*}"
+  --build-arg I2ANALYZE_VERSION="${toolkit_version%%-*}" \
+  --build-arg BASE_IMAGE="i2group/i2eng-liberty:${LIBERTY_VERSION}"
 
 ###############################################################################
 # Building Solr image                                                         #
 ###############################################################################
 print "Building Solr image"
 docker build -t "${SOLR_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/solr_redhat" \
-  --build-arg I2ANALYZE_VERSION="${toolkit_version%%-*}"
+  --build-arg I2ANALYZE_VERSION="${toolkit_version%%-*}" \
+  --build-arg BASE_IMAGE="i2group/i2eng-solr:${SOLR_VERSION}"
 
 ###############################################################################
 # Building Db2 Server image                                                   #
@@ -75,23 +77,30 @@ docker build -t "${SOLR_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DI
 # Building SQL Server image                                                   #
 ###############################################################################
 print "Building SQL Server image"
-docker build -t "${SQL_SERVER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/sql_server"
+docker build -t "${SQL_SERVER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/sql_server" \
+  --build-arg BASE_IMAGE="mcr.microsoft.com/mssql/rhel/server:${SQL_SERVER_IMAGE_VERSION}"
 
 ###############################################################################
 # Building SQL Client image                                                   #
 ###############################################################################
 print "Building SQL Client image"
-docker build -t "${SQL_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/sql_client"
+docker build -t "${SQL_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/sql_client" \
+  --build-arg BASE_IMAGE="mcr.microsoft.com/mssql/rhel/server:${SQL_SERVER_IMAGE_VERSION}"
+
+###############################################################################
+# Building Postgres Client image                                              #
+###############################################################################
+print "Building Postgres Client image"
+docker build -t "${POSTGRES_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/postgres_client" \
+  --build-arg BASE_IMAGE="i2group/i2eng-postgres:${POSTGRES_IMAGE_VERSION}"
 
 ###############################################################################
 # Building i2 Analyze Tool image                                              #
 ###############################################################################
 print "Building i2 Analyze Tool image"
 docker image build -t "${I2A_TOOLS_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/i2a_tools" \
-  --build-arg USER_UID="$(id -u "${USER}")" \
   --build-arg I2ANALYZE_VERSION="${toolkit_version%%-*}" \
-  --build-arg BASE_IMAGE="${REDHAT_UBI_IMAGE_NAME}:${REDHAT_UBI_IMAGE_VERSION}" \
-  --build-arg JAVA_BASE_IMAGE="${JAVA_IMAGE_NAME}:${JAVA_IMAGE_VERSION}"
+  --build-arg BASE_IMAGE="${JAVA_IMAGE_NAME}:${JAVA_IMAGE_VERSION}"
 
 ###############################################################################
 # Building ETL Client image                                                   #
@@ -106,10 +115,13 @@ mkdir "${IMAGES_DIR}/etl_client/etltoolkit/classes"
 cp "${LOCAL_CONFIG_I2_TOOLS_DIR}/"* "${IMAGES_DIR}/etl_client/etltoolkit/classes"
 cp "${LOCAL_ISTORE_NAMES_SQL_SERVER_PROPERTIES_FILE}" "${IMAGES_DIR}/etl_client/etltoolkit/classes"
 cp "${LOCAL_ISTORE_NAMES_DB2_PROPERTIES_FILE}" "${IMAGES_DIR}/etl_client/etltoolkit/classes"
+cp "${LOCAL_ISTORE_NAMES_POSTGRES_PROPERTIES_FILE}" "${IMAGES_DIR}/etl_client/etltoolkit/classes"
 docker build -t "${ETL_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/etl_client" \
   --build-arg BASE_IMAGE="${I2A_TOOLS_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}"
 
 ###############################################################################
 # Building Example connector image                                            #
 ###############################################################################
-docker build -t "${CONNECTOR_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/example_connector"
+print "Building Example connector image"
+docker build -t "${CONNECTOR_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/example_connector" \
+  --build-arg NODEJS_BASE_IMAGE="${NODEJS_IMAGE_NAME}:${NODEJS_IMAGE_VERSION}"

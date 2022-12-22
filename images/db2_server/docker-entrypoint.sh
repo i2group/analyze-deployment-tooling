@@ -30,7 +30,7 @@ if [[ ${SERVER_SSL} == "true" ]]; then
   file_env 'SSL_CA_CERTIFICATE'
 
   if [[ -z ${SSL_PRIVATE_KEY} || -z ${SSL_CERTIFICATE} || -z ${SSL_CA_CERTIFICATE} ]]; then
-    echo "Missing security environment variables. Please check SSL_PRIVATE_KEY SSL_CERTIFICATE"
+    echo "Missing security environment variables. Please check SSL_PRIVATE_KEY SSL_CERTIFICATE" >&2
     exit 1
   fi
 
@@ -45,7 +45,7 @@ if [[ ${SERVER_SSL} == "true" ]]; then
   if [[ -d ${TMP_SECRETS} ]]; then
     rm -r ${TMP_SECRETS}
   fi
-  mkdir ${TMP_SECRETS}
+  mkdir -p ${TMP_SECRETS}
 
   echo "${SSL_PRIVATE_KEY}" >"${KEY}"
   echo "${SSL_CERTIFICATE}" >"${CER}"

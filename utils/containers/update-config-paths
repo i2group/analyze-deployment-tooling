@@ -1,0 +1,173 @@
+#!/usr/bin/env bash
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022)
+#
+# SPDX short identifier: MIT
+
+set -e
+
+if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
+  echo "ANALYZE_CONTAINERS_ROOT_DIR variable is not set" >&2
+  echo "This project should be run inside a VSCode Dev Container. \
+For more information read, the Getting Started guide at \
+https://i2group.github.io/analyze-containers/content/getting_started.html" >&2
+  exit 1
+fi
+
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
+
+USAGE="""
+Usage:
+  update-config-paths -t {upgrade|shared} -p <path>
+  update-config-paths -t {external} -n <name> -p <path>
+  update-config-paths -t {upgrade|shared} -d
+  update-config-paths -t {external} -n <name> d
+  update-config-paths -h
+
+Options:
+  -t {upgrade}              Update upgrade path.
+  -t {shared}               Update shared path.
+  -t {external}             Update external path.
+  -p <path>                 The full path.
+  -n <name>                 The name of the path.
+  -d                        Delete the path.
+  -h                        Display the help.
+"""
+
+function usage() {
+  echo "${USAGE}" >&2
+  exit 1
+}
+
+function parse_arguments() {
+  # cspell:disable-next-line
+  while getopts ":t:n:p:dvhy" flag; do
+    case "${flag}" in
+    t)
+      TASK="${OPTARG}"
+      ;;
+    n)
+      PATH_NAME="${OPTARG}"
+      ;;
+    p)
+      PATH_TO_DIR="${OPTARG}"
+      ;;
+    d)
+      DELETE_PATH_FLAG="true"
+      ;;
+    h)
+      usage
+      ;;
+    v)
+      VERBOSE="true"
+      ;;
+    y)
+      YES_FLAG="true"
+      ;;
+    \?)
+      usage
+      ;;
+    :)
+      echo "Invalid option: ${OPTARG} requires an argument"
+      ;;
+    esac
+  done
+}
+
+function validate_arguments() {
+  if [[ -z "${TASK}" ]]; then
+    print_error_and_exit "-t flag is required"
+  fi
+
+  if [[ "${TASK}" != "upgrade" && "${TASK}" != "shared" && "${TASK}" != "external" ]]; then
+    print_error_and_exit "${TASK} is not supported"
+  fi
+
+  if [[ "${TASK}" == "external" && -z "${PATH_NAME}" ]]; then
+    print_error_and_exit "${TASK} requires the -n flag"
+  fi
+
+  if [[ -z "${PATH_TO_DIR}" && "${DELETE_PATH_FLAG}" != "true" ]]; then
+    print_error_and_exit "-p flag is required"
+  fi
+}
+
+function add_shared_path() {
+  local current_path
+  current_path=$(jq -r '.sharedConfigurations.rootDirectory' "${path_configuration_json}")
+  if [[ -n "${current_path}" && "${current_path}" != "null" ]]; then
+    wait_for_user_reply "Are you sure you want to replace the current directory '${current_path}'?"
+  fi
+  jq -r --arg path "${PATH_TO_DIR}" '. += { "sharedConfigurations": { "rootDirectory": $path } }' "${path_configuration_json}" >"${path_configuration_json}.tmp"
+  mv "${path_configuration_json}.tmp" "${path_configuration_json}"
+}
+
+function delete_shared_path() {
+  jq -r 'del(.sharedConfigurations)' "${path_configuration_json}" >"${path_configuration_json}.tmp"
+  mv "${path_configuration_json}.tmp" "${path_configuration_json}"
+}
+
+function add_upgrade_path() {
+  local current_path
+  current_path=$(jq -r '.upgradeDirectory?' "${path_configuration_json}")
+  if [[ -n "${current_path}" && "${current_path}" != "null" ]]; then
+    wait_for_user_reply "Are you sure you want to replace the current directory '${current_path}'?"
+  fi
+  jq -r --arg path "${PATH_TO_DIR}" '. += { "upgradeDirectory": $path }' "${path_configuration_json}" >"${path_configuration_json}.tmp"
+  mv "${path_configuration_json}.tmp" "${path_configuration_json}"
+}
+
+function delete_upgrade_path() {
+  jq -r 'del(.upgradeDirectory)' "${path_configuration_json}" >"${path_configuration_json}.tmp"
+  mv "${path_configuration_json}.tmp" "${path_configuration_json}"
+}
+
+function add_external_path() {
+  local current_path
+  current_path=$(jq -r --arg name "${PATH_NAME}" '.externalDirectories[]? | select(.name==$name) | .path' "${path_configuration_json}")
+  if [[ -n "${current_path}" && "${current_path}" != "null" ]]; then
+    wait_for_user_reply "Are you sure you want to replace the current directory '${current_path}'?"
+    jq -r --arg name "${PATH_NAME}" --arg path "${PATH_TO_DIR}" '. as $root | .externalDirectories | map(select(.name==$name) |= { "name": $name, "path": $path }) | $root + { "externalDirectories": . }' "${path_configuration_json}" >"${path_configuration_json}.tmp"
+    mv "${path_configuration_json}.tmp" "${path_configuration_json}"
+  else
+    jq -r --arg name "${PATH_NAME}" --arg path "${PATH_TO_DIR}" '.externalDirectories += [{ "name": $name, "path": $path }]' "${path_configuration_json}" >"${path_configuration_json}.tmp"
+    mv "${path_configuration_json}.tmp" "${path_configuration_json}"
+  fi
+}
+
+function delete_external_path() {
+  jq -r --arg name "${PATH_NAME}" 'del(.externalDirectories[]? | select(.name==$name))' "${path_configuration_json}" >"${path_configuration_json}.tmp"
+  mv "${path_configuration_json}.tmp" "${path_configuration_json}"
+}
+
+function main() {
+  parse_arguments "$@"
+  validate_arguments
+
+  local -r path_configuration_json="${ANALYZE_CONTAINERS_ROOT_DIR}/path-configuration.json"
+  case "${TASK}" in
+  upgrade)
+    if [[ "${DELETE_PATH_FLAG}" == "true" ]]; then
+      delete_upgrade_path
+    else
+      add_upgrade_path
+    fi
+    ;;
+  shared)
+    if [[ "${DELETE_PATH_FLAG}" == "true" ]]; then
+      delete_shared_path
+    else
+      add_shared_path
+    fi
+    ;;
+  external)
+    if [[ "${DELETE_PATH_FLAG}" == "true" ]]; then
+      delete_external_path
+    else
+      add_external_path
+    fi
+    ;;
+  esac
+}
+
+main "$@"

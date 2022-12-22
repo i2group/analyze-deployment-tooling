@@ -11,6 +11,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
 
+## 2.5.0 - 20/12/2022
+
+### Added
+
+* Support for PostgreSQL
+* General documentation improvements and bug fixes
+
+### Changed
+
+* The Liberty Docker image now based on the Open Liberty Docker image.
+* Node based connectors are built with the dependencies that are defined in a npm-shrinkwrap.json file if the file exist in the connector.
+* Improved shared configuration UX by changing `configure-paths` script parameters. Use the `-h` flag for more information on how to run the command.
+* `manage-environment -t upgrade` and `manage-toolkit-configuration -t {create | prepare | import | export}` commands now use the path specified in the `path-configuration.json` file instead of the `-p` flag. Use the `-h` flag in each script for more information on how to run the commands.
+
+[2.5.0]: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.5.0><!-- markdown-link-check-enable -->
+
 ## 2.4.0 - 23/09/2022
 
 ### Added
@@ -31,7 +47,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * The client functions with the previous names. Start using the renamed functions.
 
 
-[2.4.0]: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.4.0><!-- markdown-link-check-enable -->
+[2.4.0]: <https://github.com/i2group/analyze-containers/tree/v2.4.0>
 
 ## 2.3.0 - 22/07/2022
 

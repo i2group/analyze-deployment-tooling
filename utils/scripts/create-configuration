@@ -26,7 +26,7 @@ parse_arguments "$@"
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/client_functions.sh"
 
 # Load common variables
-checkEnvironmentIsValid
+check_environment_is_valid
 if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulated_external_variables.sh"
 elif [[ "${ENVIRONMENT}" == "config-dev" ]]; then
@@ -47,27 +47,26 @@ ALL_PATTERNS_CONFIG_DIR="${LOCAL_TOOLKIT_DIR}/examples/configurations/all-patter
 # Function definitions                                                        #
 ###############################################################################
 
-function createCleanBaseConfiguration() {
+function create_clean_base_configuration() {
   if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
-    createCleanBaseConfigurationForPreProd
+    create_clean_base_configuration_for_pre_prod
   elif [[ "${ENVIRONMENT}" == "aws" ]]; then
-    createCleanBaseConfigurationForAWS
+    create_clean_base_configuration_for_aws
   elif [[ "${ENVIRONMENT}" == "config-dev" ]]; then
-    createCleanBaseConfigurationConfigDev
+    create_clean_base_configuration_for_config_dev
   fi
 }
 
-function createCleanBaseConfigurationForPreProd() {
+function create_clean_base_configuration_for_pre_prod() {
   local local_config_opal_services_classes_dir="${LOCAL_CONFIGURATION_DIR}/fragments/opal-services/WEB-INF/classes"
   local toolkit_examples_dir="${LOCAL_TOOLKIT_DIR}/examples"
-  local toolkit_example_grafana_dir="${toolkit_examples_dir}/grafana"
   local toolkit_example_security_config_dir="${toolkit_examples_dir}/security"
   local toolkit_example_schemas_dir="${toolkit_examples_dir}/schemas/en_US"
   local local_config_common_classes_dir="${LOCAL_CONFIGURATION_DIR}/fragments/common/WEB-INF/classes"
   local toolkit_required_config_dir="${LOCAL_TOOLKIT_DIR}/application/required/configuration"
 
   print "Clearing down configuration"
-  deleteFolderIfExists "${LOCAL_CONFIGURATION_DIR}"
+  delete_folder_if_exists "${LOCAL_CONFIGURATION_DIR}"
 
   print "Copying all-patterns Configuration to ${LOCAL_CONFIGURATION_DIR}"
   mkdir -p "${LOCAL_CONFIGURATION_DIR}"
@@ -96,6 +95,9 @@ function createCleanBaseConfigurationForPreProd() {
   print "Copying connectors.json"
   cp -pr "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/templates/connectors.json" "${local_config_opal_services_classes_dir}"
 
+  print "Copying mapping-configuration.json"
+  cp -pr "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/templates/mapping-configuration.json" "${local_config_opal_services_classes_dir}"
+
   print "Setting schema and charting schema"
   cp -pr "${toolkit_example_schemas_dir}/law-enforcement-schema.xml" "${local_config_common_classes_dir}/schema.xml"
   cp -pr "${toolkit_example_schemas_dir}/law-enforcement-schema-charting-schemes.xml" "${local_config_common_classes_dir}/schema-charting-schemes.xml"
@@ -112,7 +114,7 @@ function createCleanBaseConfigurationForPreProd() {
   sed -i "s/^SUPPORTED_I2ANALYZE_VERSION=.*/SUPPORTED_I2ANALYZE_VERSION=${SUPPORTED_I2ANALYZE_VERSION}/g" "${LOCAL_CONFIGURATION_DIR}/version.conf"
 }
 
-function createCleanBaseConfigurationForAWS() {
+function create_clean_base_configuration_for_aws() {
   local local_config_opal_services_classes_dir="${LOCAL_CONFIGURATION_DIR}/fragments/opal-services/WEB-INF/classes"
   local toolkit_example_security_config_dir="${LOCAL_TOOLKIT_DIR}/examples/security"
   local toolkit_example_schemas_dir="${LOCAL_TOOLKIT_DIR}/examples/schemas/en_US"
@@ -120,7 +122,7 @@ function createCleanBaseConfigurationForAWS() {
   local toolkit_required_config_dir="${LOCAL_TOOLKIT_DIR}/application/required/configuration"
 
   print "Clearing down configuration"
-  deleteFolderIfExists "${LOCAL_CONFIGURATION_DIR}"
+  delete_folder_if_exists "${LOCAL_CONFIGURATION_DIR}"
 
   print "Copying all-patterns Configuration to ${LOCAL_CONFIGURATION_DIR}"
   mkdir -p "${LOCAL_CONFIGURATION_DIR}"
@@ -155,7 +157,7 @@ function createCleanBaseConfigurationForAWS() {
   sed -i "s/^SUPPORTED_I2ANALYZE_VERSION=.*/SUPPORTED_I2ANALYZE_VERSION=${SUPPORTED_I2ANALYZE_VERSION}/g" "${LOCAL_CONFIGURATION_DIR}/version.conf"
 }
 
-function createCleanBaseConfigurationConfigDev() {
+function create_clean_base_configuration_for_config_dev() {
   local toolkit_common_classes_dir="${ALL_PATTERNS_CONFIG_DIR}/fragments/common/WEB-INF/classes"
   local toolkit_opal_services_classes_dir="${ALL_PATTERNS_CONFIG_DIR}/fragments/opal-services/WEB-INF/classes"
   local toolkit_required_config_dir="${LOCAL_TOOLKIT_DIR}/application/required/configuration"
@@ -163,7 +165,7 @@ function createCleanBaseConfigurationConfigDev() {
   local license_prompt_file="${ALL_PATTERNS_CONFIG_DIR}/fragments/common/privacyagreement.html"
 
   print "Clearing down configuration"
-  deleteFolderIfExists "${LOCAL_CONFIGURATION_DIR}"
+  delete_folder_if_exists "${LOCAL_CONFIGURATION_DIR}"
 
   print "Copying all-patterns Configuration to ${LOCAL_CONFIGURATION_DIR}"
   mkdir -p "${LOCAL_CONFIGURATION_DIR}"
@@ -214,34 +216,33 @@ function createCleanBaseConfigurationConfigDev() {
   sed -i "s/^SUPPORTED_I2ANALYZE_VERSION=.*/SUPPORTED_I2ANALYZE_VERSION=${SUPPORTED_I2ANALYZE_VERSION}/g" "${LOCAL_CONFIG_DEV_DIR}/version.conf"
 }
 
-function createSolrConfiguration() {
+function create_solr_configuration() {
   local LOCAL_SOLR_CONFIG_DIR="${LOCAL_CONFIGURATION_DIR}/solr"
 
   print "Creating solr configuration"
   cp -pr "${LOCAL_TOOLKIT_DIR}/application/required/configuration/solr/." "${LOCAL_SOLR_CONFIG_DIR}"
 }
 
-function copyJdbcDriversToConfiguration() {
+function copy_jdbc_drivers_to_configuration() {
   if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
-    copyJdbcDriversToConfigurationForPreProd
+    copy_jdbc_drivers_to_configuration_for_pre_prod
   fi
 }
 
-function copyJdbcDriversToConfigurationForPreProd() {
+function copy_jdbc_drivers_to_configuration_for_pre_prod() {
   cp -pr "${PRE_REQS_DIR}/jdbc-drivers" "${LOCAL_CONFIGURATION_DIR}/environment/common"
 }
 
-function createIngestionScriptsFolder() {
+function create_ingestion_scripts_folder() {
   if [[ "${ENVIRONMENT}" == "config-dev" ]]; then
-    createFolder "${LOCAL_CONFIGURATION_DIR}/ingestion/scripts"
+    create_folder "${LOCAL_CONFIGURATION_DIR}/ingestion/scripts"
   fi
 }
 
-function createTemplateConfigurationMods() {
+function create_template_configuration_mods() {
   if [[ "${ENVIRONMENT}" == "config-dev" ]]; then
     local toolkit_config_mod_dir="${ANALYZE_CONTAINERS_ROOT_DIR}/templates/toolkit-config-mod"
     local toolkit_common_classes_dir="${ALL_PATTERNS_CONFIG_DIR}/fragments/common/WEB-INF/classes"
-    local apollo_server_settings_file_path
 
     cp -p "${toolkit_common_classes_dir}/analyze-settings.properties" \
       "${toolkit_common_classes_dir}/ApolloServerSettingsConfigurationSet.properties" \
@@ -252,29 +253,33 @@ function createTemplateConfigurationMods() {
   fi
 }
 
-###############################################################################
-# Re-creating local i2 Analyze configuration                                  #
-###############################################################################
-createCleanBaseConfiguration
+function main() {
+  ###############################################################################
+  # Re-creating local i2 Analyze configuration                                  #
+  ###############################################################################
+  create_clean_base_configuration
 
-###############################################################################
-# Creating Solr configuration                                                 #
-###############################################################################
-createSolrConfiguration
+  ###############################################################################
+  # Creating Solr configuration                                                 #
+  ###############################################################################
+  create_solr_configuration
 
-###############################################################################
-# Placing jdbc drivers into configuration                                     #
-###############################################################################
-copyJdbcDriversToConfiguration
+  ###############################################################################
+  # Placing jdbc drivers into configuration                                     #
+  ###############################################################################
+  copy_jdbc_drivers_to_configuration
 
-###############################################################################
-# Creating Ingestion Scripts Folder                                           #
-###############################################################################
-createIngestionScriptsFolder
+  ###############################################################################
+  # Creating Ingestion Scripts Folder                                           #
+  ###############################################################################
+  create_ingestion_scripts_folder
 
-###############################################################################
-# Creating Template Configuration Mods                                        #
-###############################################################################
-createTemplateConfigurationMods
+  ###############################################################################
+  # Creating Template Configuration Mods                                        #
+  ###############################################################################
+  create_template_configuration_mods
 
-print "Configuration has been successfully created"
+  print "Configuration has been successfully created"
+}
+
+main "$@"

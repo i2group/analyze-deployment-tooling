@@ -31,7 +31,7 @@ MAX_TRIES=30
 # Simulating Solr node failure                                                #
 ###############################################################################
 print "Simulating Solr node failure"
-SINCE_TIMESTAMP="$(getTimestamp)"
+SINCE_TIMESTAMP="$(get_time_stamp)"
 docker stop "${SOLR2_CONTAINER_NAME}"
 
 ###############################################################################
@@ -62,7 +62,7 @@ done
 # Start the Solr container                                                    #
 ###############################################################################
 print "Reinstating high availability by starting ${SOLR2_CONTAINER_NAME}"
-SINCE_TIMESTAMP="$(getTimestamp)"
+SINCE_TIMESTAMP="$(get_time_stamp)"
 docker start "${SOLR2_CONTAINER_NAME}"
 
 ###############################################################################
