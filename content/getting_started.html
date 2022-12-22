@@ -115,31 +115,32 @@
 </li>
 <li><p>After you install Docker, allocate at least 5GB of memory to Docker to run the containers in the example deployment.</p>
 <p> On Windows, Docker is automatically allocated 8GB or 50% of available memory whichever is less.</p>
-<p> For more information about modifying the resources allocated to Docker on MacOS, see:</p>
+<p> For more information about modifying the resources allocated to Docker, see:</p>
 <ul>
+<li><a href="https://docs.docker.com/desktop/settings/windows/#resources">Docker Desktop for Windows</a></li>
 <li><a href="https://docs.docker.com/docker-for-mac/#resources">Docker Desktop for Mac</a></li>
 </ul>
 </li>
 </ol>
 <h3 id="code">Code</h3>
 <ol>
-<li>Download the <code>tar.gz</code> from <a href="https://github.com/i2group/analyze-containers/releases/tag/v2.4.0">https://github.com/i2group/analyze-containers/releases/tag/v2.4.0</a>.</li>
+<li>Download the <code>tar.gz</code> from <a href="https://github.com/i2group/analyze-containers/releases/tag/v2.5.0">https://github.com/i2group/analyze-containers/releases/tag/v2.5.0</a>.</li>
 <li><p>Extract the <code>tar.gz</code> file by using the following steps:</p>
 <ol>
-<li>On Windows, copy the <code>analyze-containers-2.4.0.tar.gz</code> file to your WSL filesystem. For example: <code>Z:\home\&lt;user&gt;</code></li>
+<li>On Windows, copy the <code>analyze-containers-2.5.0.tar.gz</code> file to your WSL filesystem. For example: <code>Z:\home\&lt;user&gt;</code></li>
 <li><p>Extract the <code>tar.gz</code> file (On Windows, run the commands from a WSL terminal. <strong>Start</strong> &gt; <strong>wsl</strong>):</p>
 <pre><code class="lang-sh">cd /home/&lt;user&gt;
-</code></pre><pre><code class="lang-sh">tar -xvzf analyze-containers-2.4.0.tar.gz
-</code></pre><pre><code class="lang-sh">mv analyze-containers-2.4.0/ analyze-containers
+</code></pre><pre><code class="lang-sh">tar -xvzf analyze-containers-2.5.0.tar.gz
+</code></pre><pre><code class="lang-sh">mv analyze-containers-2.5.0/ analyze-containers
 </code></pre></li>
 </ol>
 </li>
 </ol>
 <h3 id="i2-analyze-minimal-toolkit">i2 Analyze minimal toolkit</h3>
 <ol>
-<li>Download the i2 Analyze V4.4.0 Minimal for Linux.<ul>
+<li>Download the i2 Analyze V4.4.1 Minimal for Linux.<ul>
 <li>To download i2 Analyze, follow the procedure described in <a href="https://support.i2group.com/s/article/2290">Where can I download the latest i2 Products?</a></li>
-<li>Populate the subject of the form with <code>Request for i2 Analyze 4.4.0 minimal toolkit for Linux</code>.</li>
+<li>Populate the subject of the form with <code>Request for i2 Analyze 4.4.1 minimal toolkit for Linux</code>.</li>
 </ul>
 </li>
 <li>Rename the <code>i2analyzeMinimal_440.tar.gz</code> file to <code>i2analyzeMinimal.tar.gz</code>, then copy it to the <code>analyze-containers/pre-reqs</code> directory.</li>
@@ -168,13 +169,18 @@
 <p>You must provide the JDBC driver to enable the application to communicate with the database.</p>
 <ol>
 <li>Download the Microsoft JDBC Driver 9.4.1 for SQL Server from <a href="https://github.com/microsoft/mssql-jdbc/releases/tag/v9.4.1">https://github.com/microsoft/mssql-jdbc/releases/tag/v9.4.1</a> by clicking the <code>mssql-jdbc-9.4.1.jre11.jar</code> asset.</li>
-<li>Copy the <code>mssql-jdbc-9.4.1.jre11.jar</code> file to the <code>analyze-containers/pre-reqs/jdbc-drivers</code> directory.</li>
+<li><p>Copy the <code>mssql-jdbc-9.4.1.jre11.jar</code> file to the <code>analyze-containers/pre-reqs/jdbc-drivers</code> directory.</p>
+</li>
+<li><p>Download the PostgreSQL JDBC Driver for PostgreSQL from <a href="https://jdbc.postgresql.org/download/">https://jdbc.postgresql.org/download/</a> by clicking the <code>download</code> button for the 42.5.1 or later Java 8 asset.</p>
+</li>
+<li>Copy the <code>postgresql-x.x.x.jar</code> file to the <code>analyze-containers/pre-reqs/jdbc-drivers</code> directory.</li>
 </ol>
 <h3 id="modifying-the-hosts-file">Modifying the hosts file</h3>
 <ol>
 <li><p>To enable you to connect to a deployment, the Solr Web UI, the database, the Prometheus Web UI and grafana, update your hosts file to include entries for the containers:</p>
 <pre><code class="lang-sh">127.0.0.1 solr1.eia
 127.0.0.1 sqlserver.eia
+127.0.0.1 postgres.eia
 127.0.0.1 i2analyze.eia
 127.0.0.1 prometheus.eia
 127.0.0.1 grafana.eia
@@ -195,18 +201,21 @@
 <h3 id="visual-studio-code">Visual Studio Code</h3>
 <p>The repository is designed to be used with VS Code to create the development environment.</p>
 <ol>
-<li><p>Download and install <a href="https://code.visualstudio.com/download">VS Code</a>
- When prompted to Select Additional Tasks during installation, be sure to check the <strong>Add to PATH</strong> option so you can easily open a folder in WSL using the code command.</p>
+<li><p>Download and install <a href="https://code.visualstudio.com/download">VS Code</a></p>
+<ul>
+<li>On Windows, when prompted to Select Additional Tasks during installation select the <strong>Add to PATH</strong> option so you can easily open a folder in WSL using the code command.</li>
+<li>On MacOS, after you install VS Code to your PATH. For more information, see <a href="https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line">Launching from the command line</a>.</li>
+</ul>
 </li>
-<li><p>Install the <a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers">Remote Containers extension</a></p>
+<li><p>Install the <a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers">Dev Containers extension</a></p>
 </li>
 <li><p>On Windows, use the following instructions to open the folder in WSL.</p>
 <ol>
-<li>Install the <a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl">Remote WSL extension</a></li>
-<li>Press <strong>F1</strong> and type <code>Remote-WSL: New WSL Window</code> and select it.</li>
+<li>Install the <a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl">WSL extension</a></li>
+<li>Press <strong>F1</strong> and type <code>WSL: New WSL Window</code> and select it.</li>
 </ol>
 </li>
-<li><p>Press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS) and type <code>Remote-Containers: Open Folder in Container</code> and select it. In the file explorer, navigate to your <code>analyze-containers</code> directory. For example: <code>/home/&lt;user-name&gt;/analyze-containers</code>.<br>If you are prompted, click <strong>Trust Folder &amp; Continue</strong>.</p>
+<li><p>Press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS) and type <code>Dev Containers: Open Folder in Container</code> and select it. In the file explorer, navigate to your <code>analyze-containers</code> directory. For example: <code>/home/&lt;user-name&gt;/analyze-containers</code>.<br>If you are prompted, click <strong>Trust Folder &amp; Continue</strong>.</p>
 </li>
 <li>After the dev container starts, if you are prompted, click <strong>Install</strong> in the pop-up that is displayed that prompts you to install the recommended VS Code extensions.</li>
 </ol>

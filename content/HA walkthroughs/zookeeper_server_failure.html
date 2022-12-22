@@ -92,14 +92,14 @@
 </code></pre><p>See the <code>Simulating ZooKeeper server failure</code> section of the walkthrough script.</p>
 <h2 id="detecting-failure">Detecting failure</h2>
 <p>When one ZooKeeper server goes offline, the other servers can still make a quorum and remain active. Because the ensemble can sustain only one more server failure, the state is defined as <code>DEGRADED</code>.</p>
-<p>In the walkthrough, the <code>getZkQuorumEnsembleStatus</code> function is used to monitor and determine the ensemble status by calling the <code>commands/srvr</code> resource on each ZooKeeper servers&#39;s
+<p>In the walkthrough, the <code>get_zk_quorum_ensemble_status</code> function is used to monitor and determine the ensemble status by calling the <code>commands/srvr</code> resource on each ZooKeeper servers&#39;s
 admin endpoint and reports the status as <code>DEGRADED</code> when one of the servers is unavailable.</p>
 <p>See the <code>Detecting failure</code> section of the walkthrough script.</p>
 <h2 id="restoring-high-availability">Restoring high availability</h2>
 <p>To restore high availability to the ensemble, restart the failed ZooKeeper server. In this example, restart the ZooKeeper container by running the following command:</p>
 <pre><code class="lang-sh">docker start zk1
 </code></pre><p>When the ZooKeeper server is up again, the status of the ensemble is <code>ACTIVE</code>.</p>
-<p>In the walkthrough, the <code>getZkQuorumEnsembleStatus</code> function is used again to determine the ensemble status.</p>
+<p>In the walkthrough, the <code>get_zk_quorum_ensemble_status</code> function is used again to determine the ensemble status.</p>
 <p>See the <code>Reinstating high availability</code> section of the walkthrough script.</p>
 </article>
           </div>

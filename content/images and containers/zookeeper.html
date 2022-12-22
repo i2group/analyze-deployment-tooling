@@ -82,6 +82,7 @@
 <p>In a containerized deployment, ZooKeeper is configured and run from a <a href="https://hub.docker.com/repository/docker/i2group/i2eng-zookeeper">ZooKeeper image</a> maintained by i2 Group on Docker Hub.</p>
 <h2 id="running-a-zookeeper-container">Running a ZooKeeper container</h2>
 <p>A ZooKeeper container uses the ZooKeeper image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to ZooKeeper on the container. The environment variables are described in <a href="#environment-variables">environment variables</a>.</p>
+<p>The container will run with a User ID and Group ID of <code>1000</code>. All files in mounted directories will be created with these IDs. If files are manipulated externally these IDs must be retained or the container will not function correctly.</p>
 <p>For more information about the command, see <a href="https://docs.docker.com/engine/reference/run/">docker run reference</a>.</p>
 <h3 id="docker-run-command">Docker run command</h3>
 <p>The following <code>docker run</code> command starts a ZooKeeper container:</p>
@@ -119,7 +120,7 @@
 <li><code>2888</code> - Port used by ZooKeeper peers to talk to each other.</li>
 </ul>
 <p>For more information, see <a href="https://docs.cloudera.com/HDPDocuments/HDP2/HDP-2.6.0/bk_reference/content/zookeeper-ports.html">ZooKeeper Service Ports</a>.</p>
-<p>For an example of the <code>docker run</code> command, see <a href="https://github.com/i2group/analyze-containers/blob/main/utils/server_functions.sh">server_functions.sh</a>. The <code>runZK</code> function takes the following arguments to support running multiple ZooKeeper containers:</p>
+<p>For an example of the <code>docker run</code> command, see <a href="https://github.com/i2group/analyze-containers/blob/main/utils/server_functions.sh">server_functions.sh</a>. The <code>run_zk</code> function takes the following arguments to support running multiple ZooKeeper containers:</p>
 <ol>
 <li><code>CONTAINER</code> - The name for the container.</li>
 <li><code>FQDN</code> - The fully qualified domain name for the container.</li>
@@ -129,8 +130,8 @@
 <li><code>HOST_PORT</code> - The port number on the host machine that is mapped to the port on the container.</li>
 <li><code>ZOO_ID</code> - An identifier for the ZooKeeper server. For more information, see <a href="#environment-variables">Environment variables</a>.</li>
 </ol>
-<p>An example of running Zookeeper container using <code>runZK</code> function:</p>
-<pre><code class="lang-bash">runZK zk1 zk1.eia zk1_data zk1_datalog zk1_logs 8080 1
+<p>An example of running Zookeeper container using <code>run_zk</code> function:</p>
+<pre><code class="lang-bash">run_zk zk1 zk1.eia zk1_data zk1_datalog zk1_logs 8080 1
 </code></pre><h3 id="volumes">Volumes</h3>
 <p>A named volume or a bind mount can be used to persist data and logs that are generated and used in the ZooKeeper container, outside of the container.</p>
 <p>For more information, see <a href="https://hub.docker.com/_/zookeeper">Where to store data</a>.</p>

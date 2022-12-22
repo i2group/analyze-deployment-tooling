@@ -81,13 +81,22 @@
 
 <p>This section describes an example of the process to upgrade i2 Analyze in a containerized environment.
 Updating the configuration includes the following high-level steps:</p>
-<pre><code>* Backing up Solr and the database
-* Rebuilding the Docker images for the new version of i2 Analyze
-* Create the upgrade change set
-* Remove the previous containers and volumes
-* Upgrading Solr, the database, the example connector, the Liberty application, Prometheus and Grafana
-* Restoring Solr and the database
-</code></pre><blockquote><p>Note: Before you complete this walkthrough, reset your environment to the base configuration. For more information, see <a href="../walkthroughs/reset_walkthroughs.html">Resetting your environment</a>.</p>
+<ul>
+<li>Backing up Solr and the database</li>
+<li>Rebuilding the Docker images for the new version of i2 Analyze</li>
+<li>Create the upgrade change set</li>
+<li>Remove the previous containers and volumes</li>
+<li>Upgrading Solr, the database, the example connector, the Liberty application, Prometheus and Grafana</li>
+<li>Restoring Solr and the database</li>
+</ul>
+<blockquote><p><strong>Note:</strong> Before you complete this walkthrough:</p>
+<ul>
+<li>Upgrade your environment using the instructions in <a href="../managing_upgrade_env.html">Upgrading your environment</a>.<ul>
+<li>You must run the <code>manage-environment -t upgrade</code> command.</li>
+</ul>
+</li>
+<li>Reset your environment to the base configuration. For more information, see <a href="../walkthroughs/reset_walkthroughs.html">Resetting your environment</a>.</li>
+</ul>
 </blockquote>
 <p>The <code>examples/pre-prod/walkthroughs/upgrade/upgradeWalkthrough.sh</code> script is a worked example that demonstrates how to upgrade a deployment in a containerized environment.</p>
 <h2 id="creating-the-solr-backup">Creating the Solr backup</h2>
@@ -98,6 +107,11 @@ Updating the configuration includes the following high-level steps:</p>
 <p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Rebuilding images</code> section demonstrates running the <code>build-images</code> script to build images with for the new version of i2 Analyze.</p>
 <h2 id="creating-the-change-set">Creating the change set</h2>
 <p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Create change set</code> section demonstrates running the <code>create-change-set</code> script that creates the upgrade change set. The change set is created in <code>examples/pre-prod/change-sets</code> and contains the database scripts that are required to upgrade the Information Store database.</p>
+<p>When using the pre-prod environment the <code>manage-environment</code> command adds the following file to the configuration from the <code>pre-reqs/i2analyze/toolkit/examples/configuration</code> directory if they do not already exist:</p>
+<pre><code>* `fragments/common/privacyagreement.html`
+* `fragments/opal-services-is/WEB-INF/classes/InfoStoreNamesPostgres.properties`
+* `fragments/common/WEB-INF/classes/server.extensions.xml`
+</code></pre><p>If you are upgrading a containerized deployment, add this file to your configuration before your upgrade.</p>
 <h2 id="removing-the-previous-containers">Removing the previous containers</h2>
 <p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Removing the previous containers</code> section demonstrates the commands to delete the previous containers and remove any Docker volumes.</p>
 <h2 id="upgrading-solr">Upgrading Solr</h2>

@@ -79,7 +79,7 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="configuration-development-environment">Configuration development environment</h1>
 
-<p>To create a production deployment of i2 Analyze, you must develop the i2 Analyze configuration. The production deployment process describes a process of using different development environments to produce your i2 Analyze configuration. For more information about the environments, see <a href="https://docs.i2group.com/analyze/4.4.0/c_plan_deploy.html">Deployment phases and environments</a>.</p>
+<p>To create a production deployment of i2 Analyze, you must develop the i2 Analyze configuration. The production deployment process describes a process of using different development environments to produce your i2 Analyze configuration. For more information about the environments, see <a href="https://docs.i2group.com/analyze/4.4.1/c_plan_deploy.html">Deployment phases and environments</a>.</p>
 <p>The analyze-containers repository enables you to create a development environment that comprises a containerized deployment of i2 Analyze. The containerized deployment enables you to switch between deployment patterns easily and redeploy changes in a consistent manner.</p>
 <p>Process overview:</p>
 <ul>
@@ -131,10 +131,16 @@ ACCEPT_EULA=Y
 <p> For information about installing the certificate, see:</p>
 <ul>
 <li>Windows: <a href="https://windowsreport.com/install-windows-10-root-certificates/#2">Install Certificates with the Microsoft Management Console</a></li>
-<li>MacOS: <a href="https://support.apple.com/guide/keychain-access/kyca2431/mac">Add certificates to a keychain using Keychain Access on Mac</a></li>
-<li>FireFox:<ul>
+<li>MacOS:  <ul>
+<li><a href="https://support.apple.com/guide/keychain-access/kyca2431/mac">Add certificates to a keychain using Keychain Access on Mac</a></li>
+<li><a href="https://support.apple.com/en-gb/guide/keychain-access/kyca11871/mac">Change the trust settings to Always Trust</a></li>
+</ul>
+</li>
+<li><p>FireFox:</p>
+<ul>
 <li>In the settings menu, type <strong>View Certificates</strong> and open it. Then, click <strong>Import</strong> and locate the <code>CA.cer</code> file.</li>
 </ul>
+<p><strong>Note:</strong> If you are using a Mac and want to access the deployment from a Windows VM, you must install the certificate in your Windows VM.</p>
 </li>
 </ul>
 </li>
@@ -160,25 +166,31 @@ ACCEPT_EULA=Y
 <li><code>cstore</code> - Chart Store</li>
 <li><code>i2c_istore</code> - i2 Connect gateway and Information Store</li>
 <li><p><code>i2c_cstore</code> - i2 Connect gateway and Chart Store  </p>
-<p>For more information about the i2 Analyze deployment patterns, see: <a href="https://docs.i2group.com/analyze/4.4.0/components.html">Components</a>.</p>
+<p>For more information about the i2 Analyze deployment patterns, see: <a href="https://docs.i2group.com/analyze/4.4.1/components.html">Components</a>.</p>
 </li>
+</ul>
+</li>
+<li><p>The following variables specify the database dialect and port used to connect from the host machine:</p>
+<ul>
+<li><code>DB_DIALECT</code> specifies the database management system to use. The possible values are <code>sqlserver</code> or <code>postgres</code>. The default value is <code>sqlserver</code>.</li>
+<li><code>HOST_PORT_DB</code> specifies the port that you use to connect to the database from the host machine. For <code>sqlserver</code> use <code>1433</code>. For <code>postgres</code> use <code>5432</code>. The default value is <code>1433</code>.</li>
 </ul>
 </li>
 <li><p>The following variables specify the ports that are exposed to the host machine for each component of i2 Analyze. Each variable has a default value:</p>
 <ul>
 <li><code>HOST_PORT_SOLR</code> specifies the port that you use to connect to the Solr Web UI from the host machine. By default, <code>8983</code>.</li>
-<li><code>HOST_PORT_DB</code> specifies the port that you use to connect to the database from the host machine. By default, <code>1433</code>.</li>
 <li><code>HOST_PORT_I2ANALYZE_SERVICE</code> specifies the port that you use to connect to the deployment from the host machine. By default, <code>9443</code>.</li>
 <li><code>HOST_PORT_PROMETHEUS</code> specifies the port that you use to connect to the Prometheus UI from the host machine. By default, <code>9090</code>.</li>
 <li><code>HOST_PORT_GRAFANA</code> specifies the port that you use to connect to the Grafana UI from the host machine. By default, <code>3500</code>.</li>
 </ul>
 <p>For example, to deploy with the i2 Connect gateway only for schema development and to use the default ports:</p>
 <pre><code class="lang-sh">DEPLOYMENT_PATTERN=&quot;schema_dev&quot;
-HOST_PORT_SOLR=&quot;8983&quot;
-HOST_PORT_DB=&quot;1433&quot;
-HOST_PORT_I2ANALYZE_SERVICE=&quot;9443&quot;
-HOST_PORT_PROMETHEUS=&quot;9090&quot;
-HOST_PORT_GRAFANA=&quot;3500&quot;
+DB_DIALECT=&quot;sqlserver&quot;
+HOST_PORT_DB=1433
+HOST_PORT_SOLR=8983
+HOST_PORT_I2ANALYZE_SERVICE=9443
+HOST_PORT_PROMETHEUS=9090
+HOST_PORT_GRAFANA=3500
 </code></pre></li>
 </ul>
 </li>
@@ -187,7 +199,7 @@ HOST_PORT_GRAFANA=&quot;3500&quot;
 <h2 id="specifying-the-schema-and-charting-schemes-files">Specifying the schema and charting schemes files</h2>
 <p>To deploy i2 Analyze, you must provide a schema and charting scheme.
 The i2 Analyze toolkit includes example files that you can use as a starting point, or you can use existing files.</p>
-<p>For more information about the example schemas, see <a href="https://docs.i2group.com/analyze/4.4.0/example_schemes.html">Example schemas</a>.</p>
+<p>For more information about the example schemas, see <a href="https://docs.i2group.com/analyze/4.4.1/example_schemes.html">Example schemas</a>.</p>
 <ol>
 <li>Choose an example schema and associated charting scheme as your starting point from the <code>pre-reqs/i2analyze/toolkit/examples/schemas</code> directory.</li>
 <li>Copy the chosen schema and charting scheme to your <code>configs/&lt;config_name&gt;/configuration</code> directory.</li>
@@ -196,14 +208,14 @@ The i2 Analyze toolkit includes example files that you can use as a starting poi
 <h2 id="specifying-the-security-schema-user-registry-and-command-access-control-files">Specifying the security schema, user registry, and command access control files</h2>
 <p>To connect to an i2 Analyze deployment, you must provide a security schema and user registry. To control access to features and enable to use of the administrator endpoints, provide a command access control file.</p>
 <p>The i2 Analyze toolkit includes example files that you can use as a starting point.</p>
-<p>For more information about the example files, see <a href="https://docs.i2group.com/analyze/4.4.0/example_schemes.html">Example schemas</a>.</p>
+<p>For more information about the example files, see <a href="https://docs.i2group.com/analyze/4.4.1/example_schemes.html">Example schemas</a>.</p>
 <ol>
 <li>Copy and overwrite the example <code>security-schema.xml</code>, <code>user-registry.xml</code>, and <code>command-access-control.xml</code> files from the <code>pre-reqs/i2analyze/toolkit/examples/security</code> directory to your <code>configs/&lt;config_name&gt;/configuration</code> directory.</li>
 </ol>
 <hr>
 <h2 id="deploying-your-config-in-the-environment">Deploying your config in the environment</h2>
 <ol>
-<li><p>Run the <code>deploy</code> command to deploy and start your environment. Provide the name of the config to deploy with by using the <code>-c</code> parameter and specify the name of the config directory. For example:</p>
+<li><p>Run the <code>deploy</code> command to deploy and start your environment. Provide the name of the config to deploy with by using the <code>-c</code> parameter and specify the name of the config directory. For example to deploy the <code>config-development</code> config:</p>
 <pre><code class="lang-sh">deploy -c config-development
 </code></pre></li>
 </ol>

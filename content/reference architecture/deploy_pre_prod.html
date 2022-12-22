@@ -95,9 +95,14 @@
 <ul>
 <li><a href="../tools%20and%20functions/create_environment.html">Create environment</a></li>
 </ul>
-<p>To create the environment and configuration, run the following commands:</p>
-<pre><code class="lang-sh">create-pre-prod-environment
-</code></pre><p>The <code>configuration</code> directory is created in the <code>examples/pre-prod</code> directory.</p>
+<p>To create the environment and configuration:</p>
+<ol>
+<li>Navigate to the <code>examples/pre-prod</code> directory.</li>
+<li><p>Run the following script:</p>
+<pre><code class="lang-sh">./create-pre-prod-environment
+</code></pre></li>
+</ol>
+<p>The <code>configuration</code> directory is created in the <code>examples/pre-prod</code> directory.</p>
 <p>By default, the environment is created for an Information Store and i2 Connect gateway deployment.</p>
 <h3 id="accepting-the-licenses">Accepting the licenses</h3>
 <ul>
@@ -107,9 +112,14 @@
 </li>
 </ul>
 <h3 id="running-the-containers-and-start-i2-analyze">Running the containers and start i2 Analyze</h3>
-<p>To deploy and start i2 Analyze, run the following command:</p>
-<pre><code class="lang-sh">deploy-pre-prod
-</code></pre><p>For more information about the actions that are completed, see <a href="../tools%20and%20functions/deploy.html">Deploying i2 Analyze</a>.</p>
+<p>To deploy and start i2 Analyze:</p>
+<ol>
+<li>Navigate to the <code>examples/pre-prod</code> directory.</li>
+<li><p>Run the following script:</p>
+<pre><code class="lang-sh">./deploy-pre-prod
+</code></pre></li>
+</ol>
+<p>For more information about the actions that are completed, see <a href="../tools%20and%20functions/deploy.html">Deploying i2 Analyze</a>.</p>
 <hr>
 <h2 id="installing-certificate">Installing Certificate</h2>
 <p>To access the system, the server that you are connecting from must trust the certificate that it receives from the deployment. To enable trust, install the <code>/dev-environment-secrets/generated-secrets/certificates/externalCA/CA.cer</code> certificate as a trusted root certificate authority in your browser and operating system&#39;s certificate store.</p>

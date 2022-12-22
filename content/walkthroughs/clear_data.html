@@ -96,7 +96,7 @@
 <blockquote><p>Note: Before you complete this walkthrough, reset your environment to the base configuration. For more information, see <a href="reset_walkthroughs.html">Resetting your environment</a>.</p>
 </blockquote>
 <h2 id="removing-the-liberty-containers">Removing the Liberty containers</h2>
-<p>Before you clear the data from a deployment, you remove the Liberty containers. To do remove the containers, run the following docker commands:</p>
+<p>Before you clear the data from a deployment, you remove the Liberty containers. To remove the containers, run the following docker commands:</p>
 <pre><code class="lang-bash">docker stop liberty1 liberty2
 docker rm liberty1 liberty2
 </code></pre><p>See the <code>Removing the Liberty containers</code> section of the walkthrough script.</p>
@@ -127,11 +127,11 @@ For more information about the function, see <a href="../tools%20and%20functions
 <li><a href="../tools%20and%20functions/i2analyze_tools.html#remove-data-from-the-information-store-tool">clearInfoStoreData</a></li>
 </ul>
 <h2 id="running-the-liberty-containers">Running the Liberty containers</h2>
-<p>The <code>runLiberty</code> server function runs a Liberty container. For more information about running a Liberty container, see <a href="../images%20and%20containers/liberty.html#running-a-liberty-container">Liberty</a>.
+<p>The <code>run_liberty</code> server function runs a Liberty container. For more information about running a Liberty container, see <a href="../images%20and%20containers/liberty.html#running-a-liberty-container">Liberty</a>.
 See the <code>Running the Liberty containers</code> section of the walkthrough script.</p>
 <blockquote><p>Note: You must run both Liberty containers.</p>
 </blockquote>
-<p>The <code>waitFori2AnalyzeServiceToBeLive</code> common function ensures that Liberty is running.</p>
+<p>The <code>wait_for_i2_analyze_service_to_be_live</code> common function ensures that Liberty is running.</p>
 </article>
           </div>
           

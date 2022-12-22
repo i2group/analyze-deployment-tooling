@@ -84,6 +84,7 @@
 <p>The Solr Client uses the same image as the Solr Server container. For more information about building the Solr image, see <a href="solr.html">Solr</a>.</p>
 <h2 id="running-a-solr-client-container">Running a Solr Client container</h2>
 <p>A Solr Client container uses the Solr image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to Solr on the container. The environment variables are described in <a href="#environment-variables">environment variables</a></p>
+<p>The container will run with a User ID and Group ID of <code>8983</code>. All files in mounted directories will be created with these IDs. If files are manipulated externally these IDs must be retained or the container will not function correctly.</p>
 <p>For more information about the command, see <a href="https://docs.docker.com/engine/reference/run/">docker run reference</a>.</p>
 <h3 id="docker-run-command">Docker run command</h3>
 <p>The following <code>docker run</code> command runs a Solr Client container:</p>
@@ -101,7 +102,7 @@
     -e SSL_PRIVATE_KEY=&quot;SSL_PRIVATE_KEY&quot; \
     -e SSL_CERTIFICATE=&quot;SSL_CERTIFICATE&quot; \
     -e SSL_CA_CERTIFICATE=&quot;SSL_CA_CERTIFICATE&quot; \
-    &quot;solr_redhat:4.4.0&quot; &quot;$@&quot;
+    &quot;solr_redhat:4.4.1&quot; &quot;$@&quot;
 </code></pre><p>For an example of the <code>docker run</code> command, see <code>run_solr_client_command</code> function in <code>client_functions.sh</code> script.
 For an example of how to use <code>run_solr_client_command</code> function, see <a href="../tools%20and%20functions/client_functions.html#runsolrclientcommand">run_solr_client_command</a>.</p>
 <h2 id="bind-mounts">Bind mounts</h2>

@@ -82,7 +82,7 @@
 <p>When you are developing a configuration that uses an Information Store, you might populate the Information Store with demonstration or test data. You can use the tooling provided to back up the Information Store that is associated with a config.
 The Information Store is contained in a Docker volume. Because Docker is not designed for permanent data storage, you can back up an Information Store to your local file system.</p>
 <h2 id="backup-location">Backup location</h2>
-<p>The backups are stored in the <code>/backups</code> directory. A sub-directory is created for each config name, with another sub-directory for each backup name. The backup file is called <code>ISTORE.bak</code>.</p>
+<p>The backups are stored in the <code>/backups</code> directory. A sub-directory is created for each config name, with another sub-directory for each backup name. The backup file is called <code>ISTORE.bak</code> for SQL Server or <code>ISTORE.pgb</code> for Postgres.</p>
 <p>For example:</p>
 <pre><code class="lang-sh">- backups
   - &lt;config_name&gt;

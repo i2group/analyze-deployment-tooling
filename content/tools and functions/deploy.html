@@ -84,13 +84,13 @@
 <h2 id="running-solr-and-zookeeper">Running Solr and ZooKeeper</h2>
 <p>The running Solr and ZooKeeper section runs the required containers and creates the Solr cluster and ZooKeeper ensemble.</p>
 <ol>
-<li><p>The <code>deployZKCluster</code> function creates the secure Zookeeper cluster for the deployment. The function includes a number of calls:</p>
+<li><p>The <code>deploy_zk_cluster</code> function creates the secure Zookeeper cluster for the deployment. The function includes a number of calls:</p>
 <ol>
-<li>The <code>runZK</code> server function runs the ZooKeeper containers that make up the ZooKeeper ensemble. For more information about running a ZooKeeper container, see <a href="../images%20and%20containers/zookeeper.html">ZooKeeper</a>.
+<li>The <code>run_zk</code> server function runs the ZooKeeper containers that make up the ZooKeeper ensemble. For more information about running a ZooKeeper container, see <a href="../images%20and%20containers/zookeeper.html">ZooKeeper</a>.
 In <code>deploy-pre-prod</code>, 3 ZooKeeper containers are used.</li>
 </ol>
 </li>
-<li><p>The <code>configureZKForSolrCluster</code> function creates the Zookeeper configuration for the secure Solr cluster for the deployment. The function includes a number of calls:</p>
+<li><p>The <code>configure_zk_for_solr_cluster</code> function creates the Zookeeper configuration for the secure Solr cluster for the deployment. The function includes a number of calls:</p>
 <ol>
 <li><p>The <code>run_solr_client_command</code> client function is used a number of times to complete the following actions:</p>
 <ol>
@@ -103,9 +103,9 @@ In <code>deploy-pre-prod</code>, 3 ZooKeeper containers are used.</li>
 </li>
 </ol>
 </li>
-<li><p>The <code>deploySolrCluster</code> function creates the secure Solr cluster for the deployment. The function includes a number of calls:</p>
+<li><p>The <code>deploy_solr_cluster</code> function creates the secure Solr cluster for the deployment. The function includes a number of calls:</p>
 <ol>
-<li><p>The <code>runSolr</code> server function runs the Solr containers for the Solr cluster. For more information about running a Solr container, see <a href="../images%20and%20containers/solr.html">Solr</a>.<br>In <code>deploy-pre-prod</code>, 2 Solr containers are used.</p>
+<li><p>The <code>run_solr</code> server function runs the Solr containers for the Solr cluster. For more information about running a Solr container, see <a href="../images%20and%20containers/solr.html">Solr</a>.<br>In <code>deploy-pre-prod</code>, 2 Solr containers are used.</p>
 <p>At this point, your ZooKeepers are running in an ensemble, and your Solr containers are running in SolrCloud Mode managed by ZooKeeper.</p>
 </li>
 </ol>
@@ -114,22 +114,22 @@ In <code>deploy-pre-prod</code>, 3 ZooKeeper containers are used.</li>
 <h2 id="initializing-the-information-store-database">Initializing the Information Store database</h2>
 <p>The initializing the Information Store database section creates a persistent database backup volume and runs the database container and configures the database management system.</p>
 <ol>
-<li><p>The <code>deploySecureSQLServer</code> function creates a persistent database backup volume and runs the database container. The function includes a number of calls that complete the following actions:</p>
+<li><p>The <code>deploy_secure_sql_server</code> function creates a persistent database backup volume and runs the database container. The function includes a number of calls that complete the following actions:</p>
 <ol>
 <li><p>The database backup volume is created first with the Docker command:</p>
 <pre><code class="lang-bash">docker volume create &quot;${SQL_SERVER_BACKUP_VOLUME_NAME}&quot;
 </code></pre><p> The volume will not be automatically deleted when the SQL Server container is removed. This helps maintain any backups created while running a SQL server container.
  For more information about docker storage, see <a href="https://docs.docker.com/storage/">Docker Storage</a>.</p>
 </li>
-<li><p>The <code>runSQLServer</code> server function creates the secure SQL Server container for the deployment.For more information about building the SQL Server image and running a container, see <a href="../images%20and%20containers/sql_server.html">Microsoft SQL Server</a>.</p>
+<li><p>The <code>run_sql_server</code> server function creates the secure SQL Server container for the deployment.For more information about building the SQL Server image and running a container, see <a href="../images%20and%20containers/sql_server.html">Microsoft SQL Server</a>.</p>
 </li>
-<li><p>Before continuing, <code>deploy-pre-prod</code> uses the <code>waitForSQLServerToBeLive</code> common function to ensure that SQL Server is running.</p>
+<li><p>Before continuing, <code>deploy-pre-prod</code> uses the <code>wait_for_sql_server_to_be_live</code> common function to ensure that SQL Server is running.</p>
 </li>
 <li><p>The <code>change_sa_password</code> client function is used to change the <code>sa</code> user&#39;s password. For more information, see <a href="../security%20and%20users/db_users.html#changing-sa-password">change_sa_password</a></p>
 </li>
 </ol>
 </li>
-<li><p>The <code>initializeIStoreDatabase</code> function generates the ISTORE scripts and creates database roles, logins and users. The function includes a number of calls that complete the following actions:</p>
+<li><p>The <code>initialize_istore_database</code> function generates the ISTORE scripts and creates database roles, logins and users. The function includes a number of calls that complete the following actions:</p>
 <ol>
 <li><p>Generate the Information Store scripts.</p>
 <ul>
@@ -191,9 +191,9 @@ For more information about the database users and their permissions, see <a href
 <h2 id="configuring-solr-and-zookeeper">Configuring Solr and ZooKeeper</h2>
 <p>The configuring Solr and ZooKeeper sections creates Solr configuration and then configures the Solr cluster and creates the Solr collections.</p>
 <ol>
-<li><p>Before continuing, <code>deploy-pre-prod</code> uses the <code>waitForSolrToBeLive</code> common function to ensure that Solr is running.</p>
+<li><p>Before continuing, <code>deploy-pre-prod</code> uses the <code>wait_for_solr_to_be_live</code> common function to ensure that Solr is running.</p>
 </li>
-<li><p>The <code>configureSolrCollections</code> function generates and uploads the Solr collections to Zookeeper.</p>
+<li><p>The <code>configure_solr_collections</code> function generates and uploads the Solr collections to Zookeeper.</p>
 <ul>
 <li><p>The <code>generateSolrSchemas.sh</code> i2-tool creates the <code>solr</code> directory in <code>examples/pre-prod/configuration/solr/generated_config</code>. This directory contains the managed-schema, Solr synonyms file and Solr config files for each index.</p>
 </li>
@@ -202,14 +202,14 @@ For more information about the database users and their permissions, see <a href
 </code></pre></li>
 </ul>
 </li>
-<li><p>The <code>createSolrClusterPolicy</code> function uses the <code>run_solr_client_command</code> client function to set a cluster policy such that each host has 1 replica of each shard.<br>For example:</p>
+<li><p>The <code>create_solr_cluster_policy</code> function uses the <code>run_solr_client_command</code> client function to set a cluster policy such that each host has 1 replica of each shard.<br>For example:</p>
 <pre><code class="lang-bash">run_solr_client_command bash -c &quot;curl -u \&quot;\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\&quot;
 --cacert ${CONTAINER_SECRETS_DIR}/CA.cer -X POST -H Content-Type:text/xml -d 
 &#39;{ \&quot;set-cluster-policy\&quot;: [ {\&quot;replica\&quot;: \&quot;&lt;2\&quot;, \&quot;shard\&quot;: \&quot;#EACH\&quot;, \&quot;host\&quot;: \&quot;#EACH\&quot;}]}&#39; 
 \&quot;${SOLR1_BASE_URL}/api/cluster/autoscaling\&quot;&quot;
 </code></pre><p>For more information about Solr policies, see <a href="https://lucene.apache.org/solr/guide/8_6/solrcloud-autoscaling-policy-preferences.html#policy-specification">Autoscaling Policy and Preferences</a>.</p>
 </li>
-<li><p>The <code>createSolrCollections</code> function creates the Solr Collections.</p>
+<li><p>The <code>create_solr_collections</code> function creates the Solr Collections.</p>
 <ul>
 <li><p>The <code>run_solr_client_command</code> client function is used to create each Solr collection. For example:</p>
 <pre><code class="lang-bash">run_solr_client_command bash -c &quot;curl -u \&quot;\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\&quot;
@@ -223,7 +223,7 @@ For more information about the database users and their permissions, see <a href
 <h2 id="configuring-the-information-store-database">Configuring the Information Store database</h2>
 <p>The configuring the Information Store database section creates objects within the database.</p>
 <ol>
-<li>The <code>configureIStoreDatabase</code> function generates and runs the dynamic database scripts that create the schema specific database objects within the database.<ul>
+<li>The <code>configure_istore_database</code> function generates and runs the dynamic database scripts that create the schema specific database objects within the database.<ul>
 <li>The <code>run_i2_analyze_tool</code> client function is used to run the <code>generateDynamicInfoStoreCreationScripts.sh</code> tool.<ul>
 <li><a href="client_functions.html#runi2analyzetool">run_i2_analyze_tool</a></li>
 <li><a href="i2analyze_tools.html#generate-dynamic-information-store-creation-scripts-tool">Generate dynamic Information Store creation scripts tool</a></li>
@@ -240,8 +240,8 @@ For more information about the database users and their permissions, see <a href
 <h2 id="configuring-the-example-connector">Configuring the Example Connector</h2>
 <p>The configuring example connector section runs the example connector used by the i2 Analyze application.</p>
 <ol>
-<li>The <code>configureExampleConnector</code> function runs and waits for the example connector to be live.<ul>
-<li>The <code>runExampleConnector</code> server function runs the example connector application.</li>
+<li>The <code>configure_example_connector</code> function runs and waits for the example connector to be live.<ul>
+<li>The <code>run_example_connector</code> server function runs the example connector application.</li>
 <li>The <code>wait_for_connector_to_be_live</code> client function checks the connector is live before allowing the script to proceed.</li>
 </ul>
 </li>
@@ -249,23 +249,23 @@ For more information about the database users and their permissions, see <a href
 <h2 id="configuring-i2-analyze">Configuring i2 Analyze</h2>
 <p>The configuring i2 Analyze section runs the Liberty containers that run the i2 Analyze application.</p>
 <ol>
-<li><p>The <code>buildLibertyConfiguredImageForPreProd</code> server function builds the configured Liberty image.  For more information, see <a href="../images%20and%20containers/liberty.html#building-a-configured-liberty-image">Building a configured Liberty image</a>.</p>
+<li><p>The <code>build_liberty_configured_image_for_pre_prod</code> server function builds the configured Liberty image.  For more information, see <a href="../images%20and%20containers/liberty.html#building-a-configured-liberty-image">Building a configured Liberty image</a>.</p>
 </li>
-<li><p>The <code>deployLiberty</code> function runs 2 liberty containers and the load balancer.</p>
+<li><p>The <code>deploy_liberty</code> function runs 2 liberty containers and the load balancer.</p>
 <ul>
-<li><p>The <code>runLiberty</code> server function runs a Liberty container from the configured image.</p>
+<li><p>The <code>run_liberty</code> server function runs a Liberty container from the configured image.</p>
 <p>For more information, see <a href="../images%20and%20containers/liberty.html#running-a-liberty-container">Running a Liberty container</a></p>
 </li>
-<li><p>The <code>runLoadBalancer</code> function in <code>server_functions.sh</code> runs HAProxy as a load balancer in a Docker container. </p>
+<li><p>The <code>run_load_balancer</code> function in <code>server_functions.sh</code> runs HAProxy as a load balancer in a Docker container. </p>
 <p>The load balancer configuration we use can be found in <code>haproxy.cfg</code> file and the variables are passed as environment variables to the Docker container. </p>
 <p>The load balancer routes requests to the application to both Liberty servers that are running. The configuration that used is a simplified configuration for example purposes and is not to be used in production. </p>
-<p>For more information about configuring a load balancer with i2 Analyze, see <a href="https://docs.i2group.com/analyze/4.4.0/hadr_loadbalancer.html">Load balancer</a>.</p>
+<p>For more information about configuring a load balancer with i2 Analyze, see <a href="https://docs.i2group.com/analyze/4.4.1/hadr_loadbalancer.html">Load balancer</a>.</p>
 </li>
 </ul>
 </li>
-<li><p>Before continuing, <code>deploy-pre-prod</code> uses the <code>waitFori2AnalyzeServiceToBeLive</code> common function to ensure that Liberty is running.</p>
+<li><p>Before continuing, <code>deploy-pre-prod</code> uses the <code>wait_for_i2_analyze_service_to_be_live</code> common function to ensure that Liberty is running.</p>
 </li>
-<li><p>The <code>updateMatchRules</code> function updates the system match rules.</p>
+<li><p>The <code>update_match_rules</code> function updates the system match rules.</p>
 <ul>
 <li>The <code>run_i2_analyze_tool</code> client function is used to run the <code>runIndexCommand.sh</code> tool. The tool is run twice, once to update the match rules file and once to switch the match indexes.<br>For more information, see <a href="i2analyze_tools.html#manage-solr-indexes-tool">Manage Solr indexes tool</a>.</li>
 </ul>
@@ -274,17 +274,17 @@ For more information about the database users and their permissions, see <a href
 <h2 id="running-prometheus-and-grafana">Running Prometheus and Grafana</h2>
 <p>The running Prometheus and Grafana section runs the Prometheus and Grafana containers.</p>
 <ol>
-<li><p>The <code>configurePrometheusForPreProd</code> common function creates the Prometheus configuration.</p>
+<li><p>The <code>configure_prometheus_for_pre_prod</code> common function creates the Prometheus configuration.</p>
 </li>
-<li><p>The <code>runPrometheus</code> server function creates the Prometheus container.
+<li><p>The <code>run_prometheus</code> server function creates the Prometheus container.
 For more information about running a Prometheus container, see <a href="../images%20and%20containers/prometheus.html">Prometheus</a>.</p>
 </li>
-<li><p>Before continuing, <code>deploy-pre-prod</code> uses the <code>waitForPrometheusServerToBeLive</code> common function to ensure that Prometheus is running.</p>
+<li><p>Before continuing, <code>deploy-pre-prod</code> uses the <code>wait_for_prometheus_server_to_be_live</code> common function to ensure that Prometheus is running.</p>
 </li>
-<li><p>The <code>runGrafana</code> server function creates the Grafana container.
+<li><p>The <code>run_grafana</code> server function creates the Grafana container.
 For more information about running a Grafana container, see <a href="../images%20and%20containers/grafana.html">Grafana</a>.</p>
 </li>
-<li><p>Before continuing, <code>deploy-pre-prod</code> uses the <code>waitForGrafanaServerToBeLive</code> common function to ensure that Grafana is running.</p>
+<li><p>Before continuing, <code>deploy-pre-prod</code> uses the <code>wait_for_grafana_server_to_be_live</code> common function to ensure that Grafana is running.</p>
 </li>
 </ol>
 </article>

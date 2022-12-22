@@ -85,37 +85,41 @@
 <p>Make a copy of your existing <code>analyze-containers</code> directory as a backup.</p>
 <h2 id="prerequisites">Prerequisites</h2>
 <ol>
-<li>Download the <code>tar.gz</code> from <a href="https://github.com/i2group/analyze-containers/releases/tag/v2.4.0">https://github.com/i2group/analyze-containers/releases/tag/v2.4.0</a>.</li>
+<li>Download the <code>tar.gz</code> from <a href="https://github.com/i2group/analyze-containers/releases/tag/v2.5.0">https://github.com/i2group/analyze-containers/releases/tag/v2.5.0</a>.</li>
 <li><p>Extract the <code>tar.gz</code> file by using the following steps:</p>
 <ol>
-<li>On Windows, copy the <code>analyze-containers-2.4.0.tar.gz</code> file to your WSL filesystem. For example: <code>Z:\home\&lt;user&gt;</code></li>
+<li>On Windows, copy the <code>analyze-containers-2.5.0.tar.gz</code> file to your WSL filesystem. For example: <code>Z:\home\&lt;user&gt;</code></li>
 <li><p>Extract the <code>tar.gz</code> file (On Windows, run the commands from a WSL terminal. <strong>Start</strong> &gt; <strong>wsl</strong>):</p>
 <pre><code class="lang-sh">cd /home/&lt;user&gt;
-</code></pre><pre><code class="lang-sh">tar -xvzf analyze-containers-2.4.0.tar.gz
-</code></pre><pre><code class="lang-sh">mv analyze-containers-2.4.0/ analyze-containers-240
+</code></pre><pre><code class="lang-sh">tar -xvzf analyze-containers-2.5.0.tar.gz
+</code></pre><pre><code class="lang-sh">mv analyze-containers-2.5.0/ analyze-containers-250
 </code></pre></li>
 </ol>
 </li>
-<li><p>If the version of i2 Analyze has not changed, you can copy the <code>i2analyzeMinimal.tar.gz</code>, any fix packs, and <code>jdbc-drivers</code> from your <code>analyze-containers</code> directory to the <code>analyze-containers-240/pre-reqs</code> directory. To see which version of i2 Analyze is required by each version of analyze-containers, see <a href="https://i2group.github.io/analyze-containers/guidetoc/index.html#compatibility">compatibility table</a>.</p>
+<li><p>If the version of i2 Analyze has not changed, you can copy the <code>i2analyzeMinimal.tar.gz</code>, any fix packs, and <code>jdbc-drivers</code> from your <code>analyze-containers</code> directory to the <code>analyze-containers-250/pre-reqs</code> directory. To see which version of i2 Analyze is required by each version of analyze-containers, see <a href="https://i2group.github.io/analyze-containers/guidetoc/index.html#compatibility">compatibility table</a>.</p>
 <ol>
-<li>Download the i2 Analyze V4.4.0 Minimal for Linux.<ul>
+<li>Download the i2 Analyze V4.4.1 Minimal for Linux.<ul>
 <li>To download i2 Analyze, follow the procedure described in <a href="https://support.i2group.com/s/article/2290">Where can I download the latest i2 Products?</a></li>
-<li>Populate the subject of the form with <code>Request for i2 Analyze 4.4.0 minimal toolkit for Linux</code>.</li>
+<li>Populate the subject of the form with <code>Request for i2 Analyze 4.4.1 minimal toolkit for Linux</code>.</li>
 </ul>
 </li>
-<li>Rename the downloaded file to <code>i2analyzeMinimal.tar.gz</code>, then copy it to the <code>analyze-containers-240/pre-reqs</code> directory.</li>
+<li>Rename the downloaded file to <code>i2analyzeMinimal.tar.gz</code>, then copy it to the <code>analyze-containers-250/pre-reqs</code> directory.</li>
 <li>Download the Microsoft JDBC Driver 9.4.1 for SQL Server from <a href="https://github.com/microsoft/mssql-jdbc/releases/tag/v9.4.1">https://github.com/microsoft/mssql-jdbc/releases/tag/v9.4.1</a> by clicking the <code>mssql-jdbc-9.4.1.jre11.jar</code> asset.<ul>
 <li>Copy the <code>mssql-jdbc-9.4.1.jre11.jar</code> file to the <code>pre-reqs/jdbc-drivers</code> directory.</li>
 </ul>
 </li>
+<li>Download the PostgreSQL JDBC Driver for PostgreSQL from <a href="https://jdbc.postgresql.org/download/">https://jdbc.postgresql.org/download/</a> by clicking the <code>download</code> button for 42.5.1 or later Java 8 asset.<ul>
+<li>Copy the <code>postgresql-x.x.x.jar</code> file to the <code>analyze-containers/pre-reqs/jdbc-drivers</code> directory.</li>
+</ul>
+</li>
 </ol>
 </li>
-<li><p>Open a new VS Code window, press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS) and type <code>Remote-Containers: Open Folder in Container</code> and select it. In the file explorer, navigate to your newly created <code>analyze-containers-240</code> directory.</p>
+<li><p>Open a new VS Code window, press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS) and type <code>Dev Containers: Open Folder in Container</code> and select it. In the file explorer, navigate to your newly created <code>analyze-containers-250</code> directory.</p>
 <ul>
 <li>You might see a prompt is displayed, this means a new dev environment is available, click rebuild to rebuild the remote dev container.</li>
 </ul>
 </li>
-<li><p>To create the configuration development environment and template config, in the <code>analyze-containers-240/scripts</code> directory run:</p>
+<li><p>To create the configuration development environment and template config, in the <code>analyze-containers-250/scripts</code> directory run:</p>
 <pre><code class="lang-sh">create-dev-environment
 </code></pre><p> The script performs the following actions:</p>
 <ul>
@@ -143,34 +147,28 @@ ACCEPT_EULA=Y
 </code></pre></li>
 </ul>
 </li>
-<li><p>Update the <code>path-configuration.json</code> file inside <code>analyze-containers-240</code> directory to reference the path to your previous analyze-containers version:</p>
+<li><p>Update the <code>path-configuration.json</code> file inside <code>analyze-containers-250</code> directory to reference the path to your previous analyze-containers version:</p>
 <ol>
-<li><p>Add the path to your previous analyze-containers directory as the value for the <code>upgradeDirectory</code> key.</p>
-<p>For example, to add <code>/home/&lt;user-name&gt;/analyze-containers</code> the <code>path-configuration.json</code> file contains the following:  </p>
-<pre><code class="lang-json">{
- &quot;upgradeDirectory&quot;: &quot;/home/&lt;user-name&gt;/analyze-containers&quot;
-}
-</code></pre></li>
-</ol>
-</li>
-</ol>
-<p>To update your environment, run the <code>configure-paths</code> command.</p>
-<ol>
-<li>Reopen the analyze-containers folder locally.  <ul>
-<li>On Windows press <strong>F1</strong>, type <code>Remote-Containers: Reopen folder in WSL</code> and select it.</li>
-<li>On MacOS press <strong>Cmd+Shift+P</strong>, type <code>Remote-Containers: Reopen folder locally</code> and select it.</li>
+<li><p>Open a terminal on your host machine.</p>
+<ul>
+<li>On Windows, use a WSL terminal. Press <strong>Start -&gt; wsl</strong></li>
 </ul>
 </li>
-<li><p>Open a terminal and run:</p>
-<pre><code class="lang-sh">./scripts/configure-paths
-</code></pre></li>
-<li><p>Reopen the analyze-containers folder in a dev container.<br>Press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS), type <code>Remote-Containers: Rebuild and Reopen in Container</code> and select it</p>
+<li><p>Navigate to the <code>analyze-containers-250/scripts</code> directory.</p>
+</li>
+<li><p>Run the <code>configure-paths</code> script with the <code>upgrade</code> task.<br> For example:</p>
+<pre><code class="lang-sh">configure-paths -t upgrade
+</code></pre><p> By default, the script assumes that your previous version of analyze containers is in the <code>/home/&lt;user-name&gt;/analyze-containers</code> directory. If your previous version is in another directory, use the <code>-p &lt;path&gt;</code> argument to specify the path.</p>
+</li>
+<li><p>Reopen the analyze-containers folder in a dev container.<br>Press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS), type <code>Dev Containers: Rebuild Container</code> and select it</p>
+</li>
+</ol>
 </li>
 </ol>
 <hr>
 <p>There are 2 options that you can choose from when you upgrade your config development environment.</p>
 <ul>
-<li><a href="#option-1">Option 1</a>: Upgrade all of your configs to use the latest version of analyze-containers and the latest version of i2 Analyze if it has changed.</li>
+<li><a href="#option-1">Option 1</a>: Upgrade all of your configs to use the latest version of analyze-containers and the latest version of i2 Analyze if it has changed. You must use this option if you are using shared configurations.</li>
 <li><a href="#option-2">Option 2</a>: Upgrade a subset of your configs to use the latest version of i2 Analyze, and keep the remaining configs using the previous version of i2 Analyze.</li>
 </ul>
 <p>Regardless of the option that you choose, you will have 2 directories for each version of the analyze-containers project. If you choose option 1 and you no longer need to previous version, the <code>manage-environment</code> script can allow you to continue working in your <code>analyze-containers</code> directory.</p>
@@ -178,9 +176,8 @@ ACCEPT_EULA=Y
 <h2 id="option-1">Option 1</h2>
 <ol>
 <li><p>If you want to upgrade all of the configs in your environment to use the latest version, run the following command:</p>
-<pre><code class="lang-sh">manage-environment -p &lt;path-to-previous-project&gt; -t upgrade
-</code></pre><p> Where <code>&lt;path-to-previous-project&gt;</code> is the absolute path to the root of your previous <code>analyze-containers</code> repository.</p>
-<p> This script completes the following actions:</p>
+<pre><code class="lang-sh">manage-environment -t upgrade
+</code></pre><p> This script completes the following actions:</p>
 <ul>
 <li>Creates a backup of the ISTORE database for each config that contains one</li>
 <li>Copies the following directories from the previous project to the current project:<ul>
@@ -198,17 +195,7 @@ ACCEPT_EULA=Y
 <li>Upgrades the configs to the latest version of i2 Analyze and analyze-containers</li>
 </ul>
 </li>
-<li><p>After you upgrade, you must remove the <code>upgradeDirectory</code> from the <code>path-configuration.json</code> file in the environment you are continuing to work in.</p>
-</li>
-<li>Reopen the analyze-containers folder locally.  <ul>
-<li>On Windows press <strong>F1</strong>, type <code>Remote-Containers: Reopen folder in WSL</code> and select it.</li>
-<li>On MacOS press <strong>Cmd+Shift+P</strong>, type <code>Remote-Containers: Reopen folder locally</code> and select it.</li>
-</ul>
-</li>
-<li><p>Open a terminal and run:</p>
-<pre><code class="lang-sh">./scripts/configure-paths
-</code></pre></li>
-<li><p>Reopen the analyze-containers folder in a dev container.<br>Press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS), type <code>Remote-Containers: Rebuild and Reopen in Container</code> and select it</p>
+<li><p>Reopen the analyze-containers folder in a dev container.<br>Press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS), type <code>Dev Containers: Rebuild Container</code> and select it</p>
 </li>
 <li><p>To start the deployment at the latest version with a config, run:</p>
 <pre><code class="lang-sh">deploy -c &lt;config-name&gt; 
@@ -235,7 +222,7 @@ ACCEPT_EULA=Y
 <li><code>&lt;config-name&gt;</code> is the name of a config to copy. You can provide multiple <code>-i</code> options for each config you want to upgrade.</li>
 </ul>
 </li>
-<li><p>Run the <code>create-dev-environment</code> command to create the images for i2 Analyze 4.4.0.</p>
+<li><p>Run the <code>create-dev-environment</code> command to create the images for i2 Analyze 4.4.1.</p>
 <pre><code class="lang-sh">create-dev-environment
 </code></pre></li>
 <li><p>Upgrades your configs to the latest version. For each config that you want to upgrade, run:</p>
@@ -247,23 +234,11 @@ ACCEPT_EULA=Y
 </li>
 </ol>
 </li>
-<li><p>After you upgrade, you must remove the <code>upgradeDirectory</code> from the <code>path-configuration.json</code> file.</p>
-</li>
-<li>Reopen the analyze-containers folder locally.  <ul>
-<li>On Windows press <strong>F1</strong>, type <code>Remote-Containers: Reopen folder in WSL</code> and select it.</li>
-<li>On MacOS press <strong>Cmd+Shift+P</strong>, type <code>Remote-Containers: Reopen folder locally</code> and select it.</li>
-</ul>
-</li>
-<li><p>Open a terminal and run:</p>
-<pre><code class="lang-sh">./scripts/configure-paths
-</code></pre></li>
-<li><p>Reopen the analyze-containers folder in a dev container.<br>Press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS), type <code>Remote-Containers: Rebuild and Reopen in Container</code> and select it</p>
-</li>
 </ol>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <p>If the upgrade process fails, you can use the following procedure to recover.</p>
 <ol>
-<li>Delete the <code>analyze-containers-2.4.0</code> folder.</li>
+<li>Delete the <code>analyze-containers-2.5.0</code> folder.</li>
 <li>In the backup from the previous version, ensure that you can deploy the configuration that failed.<br>If you cannot deploy in the previous version, fix the errors before you upgrade or remove the config so that it isn&#39;t upgraded.</li>
 <li>Restart the upgrade process from the beginning.</li>
 </ol>

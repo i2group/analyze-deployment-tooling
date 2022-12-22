@@ -89,11 +89,12 @@
 <h3 id="docker-build-command">Docker build command</h3>
 <p>The Solr image is built from the Dockerfile in <code>images/solr_redhat</code>.
 The following <code>docker build</code> command builds the Solr image:</p>
-<pre><code class="lang-bash">docker build -t &quot;solr_redhat:4.4.0&quot; images/solr_redhat \
-  --build-arg I2ANALYZE_VERSION=&quot;4.4.0&quot;
+<pre><code class="lang-bash">docker build -t &quot;solr_redhat:4.4.1&quot; images/solr_redhat \
+  --build-arg I2ANALYZE_VERSION=&quot;4.4.1&quot;
 </code></pre><p>For examples of the build commands, see <code>build-images</code> script.</p>
 <h2 id="running-a-solr-container">Running a Solr container</h2>
 <p>A Solr container uses the Solr image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to Solr on the container. The environment variables are described in <a href="#environment-variables">environment variables</a></p>
+<p>The container will run with a User ID and Group ID of <code>8983</code>. All files in mounted directories will be created with these IDs. If files are manipulated externally these IDs must be retained or the container will not function correctly.</p>
 <p>For more information about the command, see <a href="https://docs.docker.com/engine/reference/run/">docker run reference</a>.</p>
 <h3 id="docker-run-command">Docker run command</h3>
 <p>The following <code>docker run</code> command runs a Solr server container:</p>
@@ -116,16 +117,16 @@ The following <code>docker build</code> command builds the Solr image:</p>
    -e SSL_PRIVATE_KEY_FILE=&quot;/run/secrets/server.key&quot; \
    -e SSL_CERTIFICATE_FILE=&quot;/run/secrets/server.cer&quot; \
    -e SSL_CA_CERTIFICATE_FILE=&quot;/run/secrets/CA.cer&quot; \
-   &quot;solr_redhat:4.4.0&quot;
-</code></pre><p>For an example of the <code>docker run</code> command, see <a href="https://github.com/i2group/analyze-containers/blob/main/utils/server_functions.sh">server_functions.sh</a>. The <code>runSolr</code> function takes the following arguments to support running multiple Solr containers:</p>
+   &quot;solr_redhat:4.4.1&quot;
+</code></pre><p>For an example of the <code>docker run</code> command, see <a href="https://github.com/i2group/analyze-containers/blob/main/utils/server_functions.sh">server_functions.sh</a>. The <code>run_solr</code> function takes the following arguments to support running multiple Solr containers:</p>
 <ol>
 <li><code>CONTAINER</code> - The name for the container.</li>
 <li><code>FQDN</code> - The fully qualified domain name for the container and the Solr host.</li>
 <li><code>VOLUME</code> - The name for the named volume of the Solr container. For more information, see <a href="#volumes">Volumes</a>.</li>
 <li><code>HOST_PORT</code> - The port number on the host machine that is mapped to the port on the container.</li>
 </ol>
-<p>An example of running Solr container by using <code>runSolr</code> function:</p>
-<pre><code class="lang-bash">runSolr solr1 solr1.eia solr1_data 8983
+<p>An example of running Solr container by using <code>run_solr</code> function:</p>
+<pre><code class="lang-bash">run_solr solr1 solr1.eia solr1_data 8983
 </code></pre><h3 id="volumes">Volumes</h3>
 <p>A named volume or a bind mount can be used to persist data and logs that are generated and used in the Solr container, as well as a separate volume for backups, outside of the container.</p>
 <p>To configure the Solr container to use the volume, specify the <code>-v</code> option with the name of the volume and the path where the directory is mounted in the container. By setting <code>-v</code> option in the docker run command, a named volume is created. For Solr, the directory that must be mounted is <code>/var/solr</code>.

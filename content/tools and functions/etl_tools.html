@@ -85,9 +85,9 @@
 <h2 id="building-an-etl-client-image">Building an ETL Client image</h2>
 <p>The ETL client image is built from the Dockerfile in <code>images/etl_client</code>.</p>
 <p>The following <code>docker build</code> command builds the configured image:</p>
-<pre><code class="lang-bash">docker build -t &quot;etlclient_redhat:4.4.0&quot; &quot;images/etl_client&quot;
+<pre><code class="lang-bash">docker build -t &quot;etlclient_redhat:4.4.1&quot; &quot;images/etl_client&quot;
 </code></pre><h2 id="add-information-store-ingestion-source">Add Information Store ingestion source</h2>
-<p>The <code>addInformationStoreIngestionSource</code> tool defines an ingestion source in the Information Store. For more information about ingestion sources in the Information Store, see <a href="https://docs.i2group.com/analyze/4.4.0/define_ingestion_source.html">Defining an ingestion source</a>.</p>
+<p>The <code>addInformationStoreIngestionSource</code> tool defines an ingestion source in the Information Store. For more information about ingestion sources in the Information Store, see <a href="https://docs.i2group.com/analyze/4.4.1/define_ingestion_source.html">Defining an ingestion source</a>.</p>
 <p>You must provide the following arguments to the tool:</p>
 <table>
 <thead>
@@ -126,7 +126,7 @@
 <pre><code class="lang-bash">run_etl_toolkit_tool_as_i2_etl 
     bash -c &quot;/opt/i2/etltoolkit/clearInformationStoreStagingSchema&quot;
 </code></pre><h2 id="create-information-store-staging-table">Create Information Store staging table</h2>
-<p>The <code>createInformationStoreStagingTable</code> tool creates the staging tables that you can use to ingest data into the Information Store. For more information about creating the tables, see <a href="https://docs.i2group.com/analyze/4.4.0/create_staging_stables.html">Creating the staging tables</a>.</p>
+<p>The <code>createInformationStoreStagingTable</code> tool creates the staging tables that you can use to ingest data into the Information Store. For more information about creating the tables, see <a href="https://docs.i2group.com/analyze/4.4.1/create_staging_stables.html">Creating the staging tables</a>.</p>
 <p>You must provide the following arguments to the tool:</p>
 <table>
 <thead>
@@ -157,7 +157,7 @@
         -sn &lt;&gt;
         -tn &lt;&gt; &quot;
 </code></pre><h2 id="ingest-information-store-records">Ingest Information Store records</h2>
-<p>The <code>ingestInformationStoreRecords</code> is used to ingest data into the Information Store. For more information about ingesting data into the Information Store, see <a href="https://docs.i2group.com/analyze/4.4.0/ingestion_command.html">The ingestInformationStoreRecords toolkit task</a></p>
+<p>The <code>ingestInformationStoreRecords</code> is used to ingest data into the Information Store. For more information about ingesting data into the Information Store, see <a href="https://docs.i2group.com/analyze/4.4.1/ingestion_command.html">The ingestInformationStoreRecords toolkit task</a></p>
 <p>You can use the following arguments with the tool:</p>
 <table>
 <thead>
@@ -231,7 +231,7 @@
 <pre><code class="lang-bash">run_etl_toolkit_tool_as_i2_etl 
     bash -c &quot;/opt/i2/etltoolkit/syncInformationStoreCorrelation&quot;
 </code></pre><h2 id="generate-information-store-index-creation-scripts">Generate Information Store index creation scripts</h2>
-<p>The <code>generateInformationStoreIndexCreationScript</code> tool generates the scripts that create the indexes for each item type in the Information Store. For more information, see <a href="https://docs.i2group.com/analyze/4.4.0/bulk_index_management.html">database index management</a></p>
+<p>The <code>generateInformationStoreIndexCreationScript</code> tool generates the scripts that create the indexes for each item type in the Information Store. For more information, see <a href="https://docs.i2group.com/analyze/4.4.1/bulk_index_management.html">database index management</a></p>
 <p>You must provide the following arguments to the tool:</p>
 <table>
 <thead>
@@ -257,7 +257,7 @@
     -op &lt;&gt;
     -stid &lt;&gt; &quot;
 </code></pre><h2 id="generate-information-store-index-drop-scripts">Generate Information Store index drop scripts</h2>
-<p>The <code>generateInformationStoreIndexDropScript</code> tool generates the scripts that drop the indexes for each item type in the Information Store. For more information, see <a href="https://docs.i2group.com/analyze/4.4.0/bulk_index_management.html">database index management</a></p>
+<p>The <code>generateInformationStoreIndexDropScript</code> tool generates the scripts that drop the indexes for each item type in the Information Store. For more information, see <a href="https://docs.i2group.com/analyze/4.4.1/bulk_index_management.html">database index management</a></p>
 <p>You must provide the following arguments to the tool:</p>
 <table>
 <thead>
@@ -331,7 +331,7 @@
     bash -c &quot;/opt/i2/etltoolkit/disableMergedPropertyValues 
         -etd &lt;&gt;
         -stid &lt;&gt;&quot;
-</code></pre><p>For more information about correlation, see <a href="https://docs.i2group.com/analyze/4.4.0/c_correlation_intro.html">Information Store data correlation</a></p>
+</code></pre><p>For more information about correlation, see <a href="https://docs.i2group.com/analyze/4.4.1/c_correlation_intro.html">Information Store data correlation</a></p>
 <h2 id="enable-merge-property-values">Enable merge property values</h2>
 <p>The <code>enableMergedPropertyValues</code> tool creates the database views used to define the property values of merged i2 Analyze records.</p>
 <p>You can provide the following arguments to the tool:</p>
@@ -359,7 +359,7 @@
     bash -c &quot;/opt/i2/etltoolkit/enableMergedPropertyValues 
         -etd &lt;&gt; 
         -stid &lt;&gt; &quot;
-</code></pre><p>For more information about correlation, see <a href="https://docs.i2group.com/analyze/4.4.0/c_correlation_intro.html">Information Store data correlation</a></p>
+</code></pre><p>For more information about correlation, see <a href="https://docs.i2group.com/analyze/4.4.1/c_correlation_intro.html">Information Store data correlation</a></p>
 </article>
           </div>
           

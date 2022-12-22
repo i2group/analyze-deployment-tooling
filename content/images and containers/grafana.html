@@ -85,6 +85,7 @@
 <p>For more information about the configuration, see <a href="https://grafana.com/docs/grafana/latest/administration/configure-docker/?pg=oss-graf&amp;plcmt=resources#configure-a-grafana-docker-image">Configure a Grafana Docker image</a>.</p>
 <h2 id="running-a-grafana-container">Running a Grafana container</h2>
 <p>A Grafana container uses the out-of-the-box Grafana image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to Grafana on the container. The environment variables are described in <a href="#environment-variables">environment variables</a></p>
+<p>The container will run with a User ID and Group ID of <code>472</code>. All files in mounted directories will be created with these IDs. If files are manipulated externally these IDs must be retained or the container will not function correctly.</p>
 <p>For more information about the command, see <a href="https://docs.docker.com/engine/reference/run/">docker run reference</a>.</p>
 <h3 id="docker-run-command">Docker run command</h3>
 <p>The following <code>docker run</code> command runs a Grafana container:</p>
@@ -106,8 +107,8 @@
     -e PROMETHEUS_USERNAME=&quot;prometheus&quot; \
     -e PROMETHEUS_PASSWORD=&quot;prometheus&quot; \
     -e SSL_CA_CERTIFICATE=&quot;SSL_CA_CERTIFICATE&quot; \
-    &quot;grafana/grafana-oss:8.5.3&quot; 
-</code></pre><p>For an example of the <code>docker run</code> command, see <a href="https://github.com/i2group/analyze-containers/blob/main/utils/server_functions.sh">server_functions.sh</a>. The <code>runGrafana</code> function does not take any arguments.</p>
+    &quot;grafana/grafana-oss:9.2.6&quot; 
+</code></pre><p>For an example of the <code>docker run</code> command, see <a href="https://github.com/i2group/analyze-containers/blob/main/utils/server_functions.sh">server_functions.sh</a>. The <code>run_grafana</code> function does not take any arguments.</p>
 <h3 id="volumes">Volumes</h3>
 <p>A named volume or a bind mount can be used to persist data and logs that are generated and used in the Grafana container.</p>
 <p>To configure the Grafana container to use the volume, specify the <code>-v</code> option with the name of the volume and the path where the directory is mounted in the container. By setting <code>-v</code> option in the docker run command, a named volume is created. For Grafana, the directory that must be mounted is <code>/var/lib/grafana</code>.

@@ -93,51 +93,31 @@
 </li>
 </ul>
 <h2 id="configuring-your-shared-repositories-location">Configuring your shared repositories location</h2>
-<p>Use VS Code to manage the root folder of your shared configurations.</p>
 <ol>
-<li>Create a folder to store all of your shared configurations. This is the root folder for your shared configurations.<br>On Windows, the folder needs to be in the WSL filesystem. For example: <code>Z:\home\&lt;user&gt;\my-configurations</code>.</li>
-<li>Open a new VS Code window.<br>On Windows, press <strong>F1</strong> and type <code>Remote-WSL: New WSL window</code> and select it.</li>
-<li>Click <strong>File</strong> &gt; <strong>Open Folder</strong> and open the <code>my-configurations</code> folder.
-If you are prompted, click <strong>Yes, I trust the authors</strong>.</li>
-<li><p>Create a folder named <code>.vscode</code> in the root directory. Inside the <code>.vscode</code> folder, create a file called <code>settings.json</code> with the following content:</p>
-<pre><code class="lang-json">  {
-      &quot;terminal.integrated.profiles.osx&quot;: {
-          &quot;bash&quot;: {
-              &quot;path&quot;: &quot;/usr/local/opt/bash/bin/bash&quot;,
-              &quot;icon&quot;: &quot;terminal-bash&quot;
-          }
-      },
-      &quot;terminal.integrated.defaultProfile.osx&quot;: &quot;bash&quot;,
-      &quot;files.exclude&quot;: {
-          &quot;**/.*&quot;: true
-      },
-      &quot;terminal.integrated.defaultProfile.windows&quot;: &quot;C:\\WINDOWS\\System32\\wsl.exe&quot;
-  }
-</code></pre><p> This will configure your VS Code terminal and hide the <code>.</code> files.</p>
-</li>
-<li><p>In the analyze-containers VS Code window, edit the <code>path-configuration.json</code> file to provide the path to the root of your shared configurations as the <code>rootDirectory</code>.<br>For example:</p>
-<pre><code class="lang-json">{
-    &quot;sharedConfigurations&quot;: {
-        &quot;rootDirectory&quot;: &quot;/home/&lt;user&gt;/my-configurations&quot;,
-        &quot;repositories&quot;: []
-    }
-}
-</code></pre></li>
-</ol>
-<p>To update your environment to use the root directory, you must run the <code>configure-paths</code> command.</p>
-<ol>
-<li>Reopen the analyze-containers folder locally.  <ul>
-<li>On Windows press <strong>F1</strong>, type <code>Remote-Containers: Reopen folder in WSL</code> and select it.</li>
-<li>On MacOS press <strong>Cmd+Shift+P</strong>, type <code>Remote-Containers: Reopen folder locally</code> and select it.</li>
+<li><p>Open a terminal on your host machine.</p>
+<ul>
+<li>On Windows, use a WSL terminal. Press <strong>Start -&gt; wsl</strong></li>
 </ul>
 </li>
-<li><p>Open a terminal and run:</p>
-<pre><code class="lang-sh">./scripts/configure-paths
-</code></pre></li>
-<li><p>Reopen the analyze-containers folder in a dev container.<br>Press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS), type <code>Remote-Containers: Rebuild and Reopen in Container</code> and select it.</p>
+<li><p>Navigate to the <code>analyze-containers/scripts</code> directory.</p>
+</li>
+<li><p>Run the <code>configure-paths</code> script with the <code>shared</code> task.<br> For example:</p>
+<pre><code class="lang-sh">configure-paths -t shared
+</code></pre><p> By default the script creates a folder named <code>my-configurations</code> in your home directory For example <code>/home/&lt;user&gt;/my-configurations</code>. To specify a different path, use <code>-p &lt;path&gt;</code> with your path when you run the command.</p>
+</li>
+<li><p>Reopen the analyze-containers folder in a dev container.<br>Press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS), type <code>Dev Containers: Rebuild Container</code> and select it.</p>
 </li>
 </ol>
-<p>When you have the shared configurations directory and VS Code window configured, you can create a configuration to share with others or link a configuration that someone has shared with you to use in your local environment.</p>
+<p>After you have run the script, you can open the shared configurations folder in VS Code. In the same terminal as step 1, navigate to your shared configuration folder and open VS Code.</p>
+<ol>
+<li><p>For example, navigate to the directory:</p>
+<pre><code class="lang-sh">cd ~/my-configurations
+</code></pre></li>
+<li><p>Open VS Code:</p>
+<pre><code class="lang-sh">code .
+</code></pre><p> This VS Code window is now referred to as the <code>shared configurations VS Code window</code>.</p>
+</li>
+</ol>
 <h2 id="sharing-a-configuration">Sharing a configuration</h2>
 <p>You can share a configuration that you have already developed locally, or you can start developing a shared configuration from a new template.</p>
 <ol>
@@ -180,7 +160,7 @@ If your configuration is located in a git repository, you can clone it to the sh
 <pre><code class="lang-sh">manage-environment -t link
 </code></pre></li>
 </ol>
-<p><strong>Important:</strong> You must run the <code>manage-environment -t link</code> command every time that you update the repositories object in the <code>path-configuration.json</code> file.</p>
+<p><strong>Important:</strong> The repositories in the <code>path-configuration.json</code> are updated after you run the <code>manage-environment -t link</code> or the <code>deploy</code> commands.</p>
 <h3 id="linking-specific-configs-or-assets">Linking specific configs or assets</h3>
 <p>You can link to specific configs or assets from a shared configuration.</p>
 <ul>

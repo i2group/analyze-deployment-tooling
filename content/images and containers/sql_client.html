@@ -85,15 +85,15 @@
 <p>The SQL Server Client image is built from the Dockerfile in <code>images/sql_client</code>.</p>
 <h3 id="docker-build-command">Docker build command</h3>
 <p>The following <code>docker build</code> command builds the SQL Server Client image:</p>
-<pre><code class="lang-bash">docker build -t &quot;sqlserver_client_redhat:4.4.0&quot; images/sql_client
+<pre><code class="lang-bash">docker build -t &quot;sqlserver_client_redhat:4.4.1&quot; images/sql_client
 </code></pre><h2 id="running-a-sql-server-client-container">Running a SQL Server Client container</h2>
 <p>An SQL Server Client container uses the SQL Server Client image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to the container. The environment variables are described in <a href="#environment-variables">environment variables</a>.</p>
+<p>The container will run with a User ID and Group ID of <code>10001</code>. All files in mounted directories will be created with these IDs. If files are manipulated externally these IDs must be retained or the container will not function correctly.</p>
 <p>For more information about the command, see <a href="https://docs.docker.com/engine/reference/run/">docker run reference</a>.</p>
 <h3 id="docker-run-command">Docker run command</h3>
 <p>The following <code>docker run</code> command runs a SQL Server Client container:</p>
 <pre><code class="lang-bash">docker run \
     --rm \
-    --name &quot;sqlclient&quot; \
     --network &quot;eia&quot; \
     -v &quot;pre-reqs/i2analyze/toolkit:/opt/toolkit&quot; \
     -v &quot;examples/pre-prod/database-scripts/generated:/opt/databaseScripts/generated&quot; \
@@ -107,14 +107,14 @@
     -e DB_PASSWORD=&quot;DBA_PASSWORD&quot; \
     -e DB_SSL_CONNECTION=true \
     -e SSL_CA_CERTIFICATE=&quot;SSL_CA_CERTIFICATE&quot; \
-    &quot;sqlserver_client_redhat:4.4.0&quot; &quot;$@&quot;
+    &quot;sqlserver_client_redhat:4.4.1&quot; &quot;$@&quot;
 </code></pre><p>For an example of the <code>docker run</code> command, see <code>run_sql_server_command_as_etl</code> function in <code>client_functions.sh</code> script.
 For an example of how to use <code>run_sql_server_command_as_etl</code> function, see <a href="../tools%20and%20functions/client_functions.html#runsqlservercommandasetl">run_sql_server_command_as_etl</a>.</p>
 <blockquote><p>Note: you can run SQL Server Client container as different users, see <a href="../tools%20and%20functions/client_functions.html#runsqlservercommandasdba"><code>run_sql_server_command_as_dba</code></a>, <a href="../tools%20and%20functions/client_functions.html#runsqlservercommandassa"><code>run_sql_server_command_as_sa</code></a></p>
 </blockquote>
 <h2 id="bind-mounts">Bind mounts</h2>
 <ul>
-<li><p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access ZooKeeper and certificates used in SSL.<br>The directory is mounted to a location in the container defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>SSL_CA_CERTIFICATE_FILE</code> to locate the secrets.
+<li><p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access the database and certificates used in SSL.<br>The directory is mounted to a location in the container defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>SSL_CA_CERTIFICATE_FILE</code> to locate the secrets.
 In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files. This is achieved by using a bind mount. In production this would not be required.</p>
 </li>
 <li><p><strong>Toolkit</strong>:<br>For the SQL Server Client to use the tools in <code>/opt/toolkit/i2-tools/scripts</code>,
@@ -178,7 +178,7 @@ the toolkit must be mounted into the container.<br>In the example scripts, this 
 </tbody>
 </table>
 <h2 id="command-parsing">Command parsing</h2>
-<p>When commands are passed to the Solr client by using the <code>&quot;$@&quot;</code> notation, the command that is passed to the container must be escaped correctly. On the container, the command is run using <code>docker exec &quot;$@&quot;</code>. Because the command is passed to the <code>docker run</code> command using <code>bash -c</code>, the command must be maintained as a double quoted string.</p>
+<p>When commands are passed to the SQL Server client by using the <code>&quot;$@&quot;</code> notation, the command that is passed to the container must be escaped correctly. On the container, the command is run using <code>docker exec &quot;$@&quot;</code>. Because the command is passed to the <code>docker run</code> command using <code>bash -c</code>, the command must be maintained as a double quoted string.</p>
 <p>For example:</p>
 <pre><code class="lang-bash">    run_sql_server_command_as_etl 
     bash -c 

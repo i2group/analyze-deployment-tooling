@@ -92,27 +92,32 @@
 </ul>
 <h2 id="index">Index</h2>
 <ul>
-<li><a href="#check_env_vars_are_set">check_env_vars_are_set</a></li>
-<li><a href="#get_secret">get_secret</a></li>
-<li><a href="#get_solr_status">get_solr_status</a></li>
-<li><a href="#get_async_request_status">get_async_request_status</a></li>
-<li><a href="#wait_for_indexes_to_be_built">wait_for_indexes_to_be_built</a></li>
-<li><a href="#wait_for_connector_to_be_live">wait_for_connector_to_be_live</a></li>
-<li><a href="#change_sa_password">change_sa_password</a></li>
-<li><a href="#create_db_login_and_user">create_db_login_and_user</a></li>
-<li><a href="#run_solr_client_command">run_solr_client_command</a></li>
-<li><a href="#run_i2_analyze_tool">run_i2_analyze_tool</a></li>
-<li><a href="#run_i2_analyze_tool_as_external_user">run_i2_analyze_tool_as_external_user</a></li>
-<li><a href="#run_sql_server_command_as_etl">run_sql_server_command_as_etl</a></li>
-<li><a href="#run_sql_server_command_as_i2_etl">run_sql_server_command_as_i2_etl</a></li>
-<li><a href="#run_sql_server_command_as_first_start_sa">run_sql_server_command_as_first_start_sa</a></li>
-<li><a href="#run_sql_server_command_as_sa">run_sql_server_command_as_sa</a></li>
-<li><a href="#run_sql_server_command_as_dba">run_sql_server_command_as_dba</a></li>
-<li><a href="#run_sql_server_command_as_dbb">run_sql_server_command_as_dbb</a></li>
-<li><a href="#run_etl_toolkit_tool_as_i2_etl">run_etl_toolkit_tool_as_i2_etl</a></li>
-<li><a href="#run_etl_toolkit_tool_as_dba">run_etl_toolkit_tool_as_dba</a></li>
-<li><a href="#update_volume">update_volume</a></li>
-<li><a href="#get_volume">get_volume</a></li>
+<li><a href="#checkenvvarsareset">check_env_vars_are_set</a></li>
+<li><a href="#getsecret">get_secret</a></li>
+<li><a href="#getsolrstatus">get_solr_status</a></li>
+<li><a href="#getasyncrequeststatus">get_async_request_status</a></li>
+<li><a href="#waitforindexestobebuilt">wait_for_indexes_to_be_built</a></li>
+<li><a href="#waitforconnectortobelive">wait_for_connector_to_be_live</a></li>
+<li><a href="#changesapassword">change_sa_password</a></li>
+<li><a href="#changepostgrespassword">change_postgres_password</a></li>
+<li><a href="#createdbloginanduser">create_db_login_and_user</a></li>
+<li><a href="#runsolrclientcommand">run_solr_client_command</a></li>
+<li><a href="#runi2analyzetool">run_i2_analyze_tool</a></li>
+<li><a href="#runi2analyzetoolasexternaluser">run_i2_analyze_tool_as_external_user</a></li>
+<li><a href="#runsqlservercommandasetl">run_sql_server_command_as_etl</a></li>
+<li><a href="#runpostgresservercommandasetl">run_postgres_server_command_as_etl</a></li>
+<li><a href="#runpostgresservercommandasfirststartpostgres">run_postgres_server_command_as_first_start_postgres</a></li>
+<li><a href="#runpostgresservercommandaspostgres">run_postgres_server_command_as_postgres</a></li>
+<li><a href="#runpostgresservercommandasdba">run_postgres_server_command_as_dba</a></li>
+<li><a href="#runpostgresservercommandasdbb">run_postgres_server_command_as_dbb</a></li>
+<li><a href="#runsqlservercommandasfirststartsa">run_sql_server_command_as_first_start_sa</a></li>
+<li><a href="#runsqlservercommandassa">run_sql_server_command_as_sa</a></li>
+<li><a href="#runsqlservercommandasdba">run_sql_server_command_as_dba</a></li>
+<li><a href="#runsqlservercommandasdbb">run_sql_server_command_as_dbb</a></li>
+<li><a href="#runetltoolkittoolasi2etl">run_etl_toolkit_tool_as_i2_etl</a></li>
+<li><a href="#runetltoolkittoolasdba">run_etl_toolkit_tool_as_dba</a></li>
+<li><a href="#updatevolume">update_volume</a></li>
+<li><a href="#getvolume">get_volume</a></li>
 </ul>
 <h2 id="environment-utilities">Environment utilities</h2>
 <h3 id="checkenvvarsareset">check_env_vars_are_set</h3>
@@ -193,6 +198,9 @@ Uses the generated secrets to call the change_sa_password.sh with the initial (g
 sa password and the new (generated) password.
 For more information, see <a href="../security%20and%20users/db_users.html#the-changesapassword-function">change_sa_password</a>.</p>
 <p><em>Function has no arguments.</em></p>
+<h3 id="changepostgrespassword">change_postgres_password</h3>
+<p>Change the initial password for the postgres user.</p>
+<p><em>Function has no arguments.</em></p>
 <h3 id="createdbloginanduser">create_db_login_and_user</h3>
 <p>Creates a database login and user for the provided user, and assigns the user to the provided role.
 For more information, see <a href="../security%20and%20users/db_users.html#the-createdbloginanduser-function">create_db_login_and_user</a>.</p>
@@ -200,6 +208,7 @@ For more information, see <a href="../security%20and%20users/db_users.html#the-c
 <ul>
 <li><strong>$1</strong> (string): The database user name</li>
 <li><strong>$2</strong> (string): The database role name</li>
+<li><strong>$3</strong> (string): The database dialect. Defaults to sqlserver</li>
 </ul>
 <h2 id="execution-utilities">Execution Utilities</h2>
 <h3 id="runsolrclientcommand">run_solr_client_command</h3>
@@ -276,16 +285,16 @@ WITH (FORMATFILE = &#39;/var/i2a-data/law-enforcement-data-set-2-merge/sqlserver
 <li><strong>0</strong>: If command was executed successfully.</li>
 <li><strong>1</strong>: If command was NOT executed successfully.</li>
 </ul>
-<h3 id="runsqlservercommandasi2etl">run_sql_server_command_as_i2_etl</h3>
-<p>Uses an ephemeral SQL Client container to run database scripts or commands against the
-Information Store database as the i2etl user, such as executing generated drop/create index scripts,
-created by the ETL toolkit.
-For more information about running a SQL Client container and the environment variables required for the
-container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
+<h3 id="runpostgresservercommandasetl">run_postgres_server_command_as_etl</h3>
+<p>Uses an ephemeral Postgres Client container to run database scripts or commands against the Information Store database as the etl user.
+For more information about running a Postgres Client container and the environment variables required for the container, see <a href="../images%20and%20containers/postgres_client.html">Postgres Client</a>.</p>
 <h4 id="example-7">Example</h4>
-<pre><code class="lang-bash">run_sql_server_command_as_i2_etl bash -c &quot;${SQLCMD} ${SQLCMD_FLAGS} \
-  -S \${DB_SERVER},${DB_PORT} -U \${DB_USERNAME} -P \${DB_PASSWORD} -d \${DB_NAME} \
-  -i /opt/database-scripts/ET5-drop-entity-indexes.sql&quot;
+<pre><code class="lang-bash">run_postgres_server_command_as_etl bash -c &quot;/usr/lib/postgresql/bin/psql -w -X -q --set=client_min_messages=warning -h \${DB_SERVER} -p \${DB_PORT} -d \${DB_NAME} -c
+  \&quot;COPY IS_Staging.E_Person (source_id, p_description_of_mark, p_accent, p_aka, p_build, p_citizenship, p_date_of_birth,
+  p_description, p_identification_number, p_eye_color,p_facial_hair, p_first_given_name, p_hair_color, p_hair_type,
+  p_height_from, p_height_to, p_family_name, p_middle_name, p_additional_informatio, p_occupation, p_unique_reference,
+  p_gender, source_ref_source_location, source_ref_source_type, source_ref_source_image_url)
+FROM &#39;/var/i2a-data/law-enforcement-data-set-2-merge/person.csv&#39; CSV HEADER ENCODING &#39;UTF8&#39; NULL AS &#39;&#39;\&quot;&quot;
 </code></pre><h4 id="arguments-10">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the SQL Client container</li>
@@ -295,16 +304,78 @@ container, see <a href="../images%20and%20containers/sql_client.html">SQL Client
 <li><strong>0</strong>: If command was executed successfully.</li>
 <li><strong>1</strong>: If command was NOT executed successfully.</li>
 </ul>
+<h3 id="runpostgresservercommandasfirststartpostgres">run_postgres_server_command_as_first_start_postgres</h3>
+<p>Uses an ephemeral Postgres Client container to run database scripts or commands against the
+Information Store database as the postgres user with the initial postgres password.
+For more information about running a Postgres Client container and the environment variables required for the
+container, see <a href="../images%20and%20containers/postgres_client.html">Postgres Client</a>.</p>
+<h4 id="arguments-11">Arguments</h4>
+<ul>
+<li><strong>...</strong> (string): Command you want to run on the Postgres Client container</li>
+</ul>
+<h4 id="exit-codes-7">Exit codes</h4>
+<ul>
+<li><strong>0</strong>: If command was executed successfully.</li>
+<li><strong>1</strong>: If command was NOT executed successfully.</li>
+</ul>
+<h3 id="runpostgresservercommandaspostgres">run_postgres_server_command_as_postgres</h3>
+<p>Uses an ephemeral Postgres Client container to run database scripts or commands against the
+Information Store database as the postgres user.
+For more information about running a Postgres Client container and the environment variables required for the
+container, see <a href="../images%20and%20containers/postgres_client.html">Postgres Client</a>.</p>
+<h4 id="example-8">Example</h4>
+<pre><code class="lang-bash">run_postgres_server_command_as_postgres &quot;/opt/i2-tools/scripts/database-creation/runStaticScripts.sh&quot;
+</code></pre><h4 id="arguments-12">Arguments</h4>
+<ul>
+<li><strong>...</strong> (string): Command you want to run on the Postgres Client container</li>
+</ul>
+<h4 id="exit-codes-8">Exit codes</h4>
+<ul>
+<li><strong>0</strong>: If command was executed successfully.</li>
+<li><strong>1</strong>: If command was NOT executed successfully.</li>
+</ul>
+<h3 id="runpostgresservercommandasdba">run_postgres_server_command_as_dba</h3>
+<p>Uses an ephemeral Postgres Client container to run database scripts or commands against the
+Information Store database as a dba user.
+For more information about running a Postgres Client container and the environment variables required for the
+container, see <a href="../images%20and%20containers/postgres_client.html">Postgres Client</a>.</p>
+<h4 id="example-9">Example</h4>
+<pre><code class="lang-bash">run_postgres_server_command_as_dba &quot;/opt/i2-tools/scripts/database-creation/runStaticScripts.sh&quot;
+</code></pre><h4 id="arguments-13">Arguments</h4>
+<ul>
+<li><strong>...</strong> (string): Command you want to run on the Postgres Client container</li>
+</ul>
+<h4 id="exit-codes-9">Exit codes</h4>
+<ul>
+<li><strong>0</strong>: If command was executed successfully.</li>
+<li><strong>1</strong>: If command was NOT executed successfully.</li>
+</ul>
+<h3 id="runpostgresservercommandasdbb">run_postgres_server_command_as_dbb</h3>
+<p>Uses an ephemeral Postgres Client container to run database scripts or commands against the
+Information Store database as the dbb (the backup operator) user.
+For more information about running a Postgres Client container and the environment variables required for the
+container, see <a href="../images%20and%20containers/postgres_client.html">Postgres Client</a>.</p>
+<h4 id="example-10">Example</h4>
+<pre><code class="lang-bash">run_postgres_server_command_as_dbb bash -c &quot;pg_dump &#39;/backup/istore.pgb&#39;&quot;
+</code></pre><h4 id="arguments-14">Arguments</h4>
+<ul>
+<li><strong>...</strong> (string): Command you want to run on the Postgres Client container</li>
+</ul>
+<h4 id="exit-codes-10">Exit codes</h4>
+<ul>
+<li><strong>0</strong>: If command was executed successfully.</li>
+<li><strong>1</strong>: If command was NOT executed successfully.</li>
+</ul>
 <h3 id="runsqlservercommandasfirststartsa">run_sql_server_command_as_first_start_sa</h3>
 <p>Uses an ephemeral SQL Client container to run database scripts or commands against the
 Information Store database as the sa user with the initial SA password.
 For more information about running a SQL Client container and the environment variables required for the
 container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
-<h4 id="arguments-11">Arguments</h4>
+<h4 id="arguments-15">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the SQL Client container</li>
 </ul>
-<h4 id="exit-codes-7">Exit codes</h4>
+<h4 id="exit-codes-11">Exit codes</h4>
 <ul>
 <li><strong>0</strong>: If command was executed successfully.</li>
 <li><strong>1</strong>: If command was NOT executed successfully.</li>
@@ -314,13 +385,13 @@ container, see <a href="../images%20and%20containers/sql_client.html">SQL Client
 Information Store database as the SA user.
 For more information about running a SQL Client container and the environment variables required for the
 container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
-<h4 id="example-8">Example</h4>
+<h4 id="example-11">Example</h4>
 <pre><code class="lang-bash">run_sql_server_command_as_sa &quot;/opt/i2-tools/scripts/database-creation/runStaticScripts.sh&quot;
-</code></pre><h4 id="arguments-12">Arguments</h4>
+</code></pre><h4 id="arguments-16">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the SQL Client container</li>
 </ul>
-<h4 id="exit-codes-8">Exit codes</h4>
+<h4 id="exit-codes-12">Exit codes</h4>
 <ul>
 <li><strong>0</strong>: If command was executed successfully.</li>
 <li><strong>1</strong>: If command was NOT executed successfully.</li>
@@ -330,13 +401,13 @@ container, see <a href="../images%20and%20containers/sql_client.html">SQL Client
 Information Store database as the dba user.
 For more information about running a SQL Client container and the environment variables required for the
 container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
-<h4 id="example-9">Example</h4>
+<h4 id="example-12">Example</h4>
 <pre><code class="lang-bash">run_sql_server_command_as_dba &quot;/opt/i2-tools/scripts/clearInfoStoreData.sh&quot;
-</code></pre><h4 id="arguments-13">Arguments</h4>
+</code></pre><h4 id="arguments-17">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the SQL Client container</li>
 </ul>
-<h4 id="exit-codes-9">Exit codes</h4>
+<h4 id="exit-codes-13">Exit codes</h4>
 <ul>
 <li><strong>0</strong>: If command was executed successfully.</li>
 <li><strong>1</strong>: If command was NOT executed successfully.</li>
@@ -346,17 +417,17 @@ container, see <a href="../images%20and%20containers/sql_client.html">SQL Client
 Information Store database as the dbb (the backup operator) user.
 For more information about running a SQL Client container and the environment variables required for the
 container, see <a href="../images%20and%20containers/sql_client.html">SQL Client</a>.</p>
-<h4 id="example-10">Example</h4>
+<h4 id="example-13">Example</h4>
 <pre><code class="lang-bash">run_sql_server_command_as_dbb bash -c &quot;/opt/mssql-tools/bin/sqlcmd -N -b -C -S sqlserver.eia,1433 -U \&quot;\${DB_USERNAME}\&quot; -P \&quot;\${DB_PASSWORD}\&quot; \
   -Q \&quot;USE ISTORE;
   BACKUP DATABASE ISTORE
   TO DISK = &#39;/backup/istore.bak&#39;
      WITH FORMAT;\&quot;&quot;
-</code></pre><h4 id="arguments-14">Arguments</h4>
+</code></pre><h4 id="arguments-18">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the SQL Client container</li>
 </ul>
-<h4 id="exit-codes-10">Exit codes</h4>
+<h4 id="exit-codes-14">Exit codes</h4>
 <ul>
 <li><strong>0</strong>: If command was executed successfully.</li>
 <li><strong>1</strong>: If command was NOT executed successfully.</li>
@@ -366,13 +437,13 @@ container, see <a href="../images%20and%20containers/sql_client.html">SQL Client
 Information Store using the i2 ETL user credentials.
 For more information about running the ETL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/etl_client.html">ETL Client</a>.
 For more information about running the ETL toolkit container and the tasks that you can run, see <a href="../tools%20and%20functions/etl_tools.html">ETL Tools</a></p>
-<h4 id="example-11">Example</h4>
+<h4 id="example-14">Example</h4>
 <pre><code class="lang-bash">run_etl_toolkit_tool_as_i2_etl bash -c &quot;/opt/i2/etltoolkit/addInformationStoreIngestionSource --ingestionSourceName EXAMPLE_1 --ingestionSourceDescription EXAMPLE_1&quot;
-</code></pre><h4 id="arguments-15">Arguments</h4>
+</code></pre><h4 id="arguments-19">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the ETL Toolkit container</li>
 </ul>
-<h4 id="exit-codes-11">Exit codes</h4>
+<h4 id="exit-codes-15">Exit codes</h4>
 <ul>
 <li><strong>0</strong>: If command was executed successfully.</li>
 <li><strong>1</strong>: If command was NOT executed successfully.</li>
@@ -382,13 +453,13 @@ For more information about running the ETL toolkit container and the tasks that 
 Information Store using the DBA user credentials.
 For more information about running the ETL Client container and the environment variables required for the container, see <a href="../images%20and%20containers/etl_client.html">ETL Client</a>.
 For more information about running the ETL toolkit container and the tasks that you can run, see <a href="../tools%20and%20functions/etl_tools.html">ETL Tools</a></p>
-<h4 id="example-12">Example</h4>
+<h4 id="example-15">Example</h4>
 <pre><code class="lang-bash">run_etl_toolkit_tool_as_dba bash -c &quot;/opt/i2/etltoolkit/addInformationStoreIngestionSource --ingestionSourceName EXAMPLE_1 --ingestionSourceDescription EXAMPLE_1&quot;
-</code></pre><h4 id="arguments-16">Arguments</h4>
+</code></pre><h4 id="arguments-20">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the ETL Toolkit container</li>
 </ul>
-<h4 id="exit-codes-12">Exit codes</h4>
+<h4 id="exit-codes-16">Exit codes</h4>
 <ul>
 <li><strong>0</strong>: If command was executed successfully.</li>
 <li><strong>1</strong>: If command was NOT executed successfully.</li>
@@ -397,9 +468,9 @@ For more information about running the ETL toolkit container and the tasks that 
 <h3 id="updatevolume">update_volume</h3>
 <p>Uses an ephemeral Red Hat UBI Docker image to update a volume with the contents of a local directory.
 For example, to update the the run/secrets directory in the liberty1_secrets volume with the content of the local /dev-environment-secrets/simulated-secret-store directory, run:</p>
-<h4 id="example-13">Example</h4>
+<h4 id="example-16">Example</h4>
 <pre><code class="lang-bash">update_volume &quot;/dev-environment-secrets/simulated-secret-store&quot; &quot;liberty1_secrets&quot; &quot;/run/secrets&quot;
-</code></pre><h4 id="arguments-17">Arguments</h4>
+</code></pre><h4 id="arguments-21">Arguments</h4>
 <ul>
 <li><strong>$1</strong> (string): The local directory on your machine.</li>
 <li><strong>$2</strong> (string): The volume name.</li>
@@ -408,15 +479,16 @@ For example, to update the the run/secrets directory in the liberty1_secrets vol
 <h3 id="getvolume">get_volume</h3>
 <p>Uses an ephemeral Red Hat UBI Docker image to update a local directory with the contents of a specified volume.
 For example, to get the contents from the run/secrets directory in the liberty1_secrets volume into your local /dev-environment-secrets/simulated-secret-store directory, run:</p>
-<h4 id="example-14">Example</h4>
+<h4 id="example-17">Example</h4>
 <pre><code class="lang-bash">get_volume &quot;/dev-environment-secrets/simulated-secret-store&quot; &quot;liberty1_secrets&quot; &quot;/run/secrets&quot;
-</code></pre><h4 id="arguments-18">Arguments</h4>
+</code></pre><h4 id="arguments-22">Arguments</h4>
 <ul>
 <li><strong>$1</strong> (string): The local directory on your machine.</li>
 <li><strong>$2</strong> (string): The volume name.</li>
 <li><strong>$3</strong> (string): The directory inside the volume.</li>
 </ul>
-<!-- markdownlint-configure-file { "MD024": false } --></article>
+<!-- markdownlint-configure-file { "MD024": false } -->
+</article>
           </div>
           
           <div class="hidden-sm col-md-2" role="complementary">

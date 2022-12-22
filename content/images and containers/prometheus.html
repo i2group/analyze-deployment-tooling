@@ -86,6 +86,7 @@
 <p>For more information about the file, see <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#configuration-file">Configuration file</a>.</p>
 <h2 id="running-a-prometheus-container">Running a Prometheus container</h2>
 <p>A Prometheus container uses a <a href="https://hub.docker.com/repository/docker/i2group/i2eng-prometheus">Prometheus image</a> maintained by i2 Group on Docker Hub.</p>
+<p>The container will run with a User ID and Group ID of <code>1000</code>. All files in mounted directories will be created with these IDs. If files are manipulated externally these IDs must be retained or the container will not function correctly.</p>
 <p>For more information about the command, see <a href="https://docs.docker.com/engine/reference/run/">docker run reference</a>.</p>
 <h3 id="docker-run-command">Docker run command</h3>
 <p>The following <code>docker run</code> command runs a Prometheus container:</p>
@@ -98,8 +99,8 @@
     -v &quot;examples/pre-prod/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml&quot; \
     -v &quot;prometheus_data:/prometheus&quot; \
     -v &quot;prometheus_secrets:/run/secrets&quot; \
-    &quot;i2group/i2eng-prometheus:2.36&quot;
-</code></pre><p>For an example of the <code>docker run</code> command, see <a href="https://github.com/i2group/analyze-containers/blob/main/utils/server_functions.sh">server_functions.sh</a>. The <code>runPrometheus</code> function does not take any arguments.</p>
+    &quot;i2group/i2eng-prometheus:2.40&quot;
+</code></pre><p>For an example of the <code>docker run</code> command, see <a href="https://github.com/i2group/analyze-containers/blob/main/utils/server_functions.sh">server_functions.sh</a>. The <code>run_prometheus</code> function does not take any arguments.</p>
 <h3 id="volumes">Volumes</h3>
 <p>A named volume or a bind mount can be used to persist data and logs that are generated and used in the Prometheus container.</p>
 <p>To configure the Prometheus container to use the volume, specify the <code>-v</code> option with the name of the volume and the path where the directory is mounted in the container. By setting <code>-v</code> option in the docker run command, a named volume is created. For Prometheus, the directory that must be mounted is <code>/prometheus</code>.

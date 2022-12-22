@@ -79,7 +79,7 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="ingesting-development-data-into-the-information-store">Ingesting development data into the Information Store</h1>
 
-<p>When you are developing a configuration, ingest a small amount of representative test data into the system to ensure the schema is suitable for your data and you can configure i2 Analyze to meet your requirements. For more information about ingesting data, see <a href="https://docs.i2group.com/analyze/4.4.0/data_ingestion.html">Ingesting data into the Information Store</a>.</p>
+<p>When you are developing a configuration, ingest a small amount of representative test data into the system to ensure the schema is suitable for your data and you can configure i2 Analyze to meet your requirements. For more information about ingesting data, see <a href="https://docs.i2group.com/analyze/4.4.1/data_ingestion.html">Ingesting data into the Information Store</a>.</p>
 <p>Ensure that the <code>DEPLOYMENT_PATTERN</code> variable in the <code>&lt;config_name&gt;/utils/variables.conf</code> file is set to a pattern that includes the Information Store.<br>For example:</p>
 <pre><code class="lang-sh">DEPLOYMENT_PATTERN=&quot;i2c_istore&quot;
 </code></pre><p>Process overview:</p>
@@ -100,7 +100,7 @@ There is not a 1-to-1 mapping between data sets and configs. Each data set must 
             - &lt;script2&gt;
 </code></pre><h2 id="ingesting-data-into-the-config-dev-environment">Ingesting data into the config dev environment</h2>
 <p>The <code>manage-data</code> command is used to manage the ingestion process in the dev environment.</p>
-<p>To ingest data into the Information Store, you must create scripts that call the ETL tools that complete the actions required by i2 Analyze for you ingest data.<br>For more information, see: - <a href="tools%20and%20functions/etl_tools.html">ETL tools</a> - <a href="https://docs.i2group.com/analyze/4.4.0/data_ingestion.html">Ingesting data into the Information Store</a></p>
+<p>To ingest data into the Information Store, you must create scripts that call the ETL tools that complete the actions required by i2 Analyze for you ingest data.<br>For more information, see: - <a href="tools%20and%20functions/etl_tools.html">ETL tools</a> - <a href="https://docs.i2group.com/analyze/4.4.1/data_ingestion.html">Ingesting data into the Information Store</a></p>
 <ul>
 <li>You can find example scripts in the <code>examples/ingestion/scripts</code> directory. These scripts demonstrate how to create staging tables, populate them, and ingest the data into the Information Store.</li>
 </ul>
@@ -113,9 +113,9 @@ There is not a 1-to-1 mapping between data sets and configs. Each data set must 
 <li><code>&lt;script_name&gt;</code> is the name of a script in the directory specified for &lt;data_set&gt;</li>
 </ul>
 <h3 id="creating-ingestion-sources">Creating ingestion sources</h3>
-<p>The ingestion sources for a config are contained in the configuration. Ingestion sources are defined in <code>&lt;config_name&gt;/configuration/ingestion/scripts/createIngestionSources.sh</code>.</p>
+<p>The ingestion sources for a config are contained in the configuration. Ingestion sources are defined in <code>&lt;config_name&gt;/configuration/ingestion/scripts/create-ingestion-sources</code>.</p>
 <ol>
-<li>Copy the <code>examples/ingestion/scripts/createIngestionSources.sh</code> file to the <code>&lt;config_name&gt;/configuration/ingestion/scripts/</code> directory.</li>
+<li>Copy the <code>examples/ingestion/scripts/create-ingestion-sources</code> file to the <code>&lt;config_name&gt;/configuration/ingestion/scripts/</code> directory.</li>
 </ol>
 <p>In the script, the <code>INGESTION_SOURCES</code> array contains the name and description of 2 example sources.</p>
 <pre><code class="lang-bash">INGESTION_SOURCES=(
@@ -126,7 +126,7 @@ There is not a 1-to-1 mapping between data sets and configs. Each data set must 
 <p>To create the ingestion sources in the array, the <code>manage-data</code> command is called as follows:</p>
 <pre><code class="lang-bash">manage-data -c &lt;config_name&gt; -t sources
 </code></pre><h2 id="example-ingestion-process">Example ingestion process</h2>
-<p>The i2 Analyze minimal toolkit contains the example <code>law-enforcement-data-set-1</code> data that can be ingested when the example law enforcement schema (<code>law-enforcement-schema.xml</code>) is deployed. This contains a number of CSV files that contain the data, and a mapping.xml file. For more information about the mapping file, see <a href="https://docs.i2group.com/analyze/4.4.0/c_ingestion_mapping.html">Ingestion mapping files</a>.</p>
+<p>The i2 Analyze minimal toolkit contains the example <code>law-enforcement-data-set-1</code> data that can be ingested when the example law enforcement schema (<code>law-enforcement-schema.xml</code>) is deployed. This contains a number of CSV files that contain the data, and a mapping.xml file. For more information about the mapping file, see <a href="https://docs.i2group.com/analyze/4.4.1/c_ingestion_mapping.html">Ingestion mapping files</a>.</p>
 <p>Before you can ingest the law enforcement example data, complete the following steps to provide the data set and scripts:</p>
 <ol>
 <li>Copy the <code>pre-reqs/i2analyze/toolkit/examples/data/law-enforcement-data-set-1</code> directory to the <code>i2a-data</code> directory.</li>
@@ -134,17 +134,17 @@ There is not a 1-to-1 mapping between data sets and configs. Each data set must 
 <pre><code class="lang-sh">- i2a-data
     - law-enforcement-data-set-1
         - scripts
-            - ingestLawEnforcementDataSet1.sh
-            - createStagingTables.sh
+            - ingest-law-enforcement-data-set-1
+            - create-staging-tables
 </code></pre></li>
-<li><p>Copy the <code>examples/ingestion/scripts/createIngestionSources.sh</code> file to the <code>&lt;config_name&gt;/configuration/ingestion/scripts/</code> directory.</p>
+<li><p>Copy the <code>examples/ingestion/scripts/create-ingestion-sources</code> file to the <code>&lt;config_name&gt;/configuration/ingestion/scripts/</code> directory.</p>
 </li>
-<li><p>Use the <code>manage-data</code> to create the ingestion sources defined in the example <code>createIngestionSources.sh</code>.<br>For example:</p>
+<li><p>Use the <code>manage-data</code> to create the ingestion sources defined in the example <code>create-ingestion-sources</code>.<br>For example:</p>
 <pre><code class="lang-sh">manage-data -c config-development -t sources
 </code></pre></li>
 <li><p>The example scripts separate the creation of the staging tables from the ingestion of data. To ingest the example data into the config-development config, run the following commands:</p>
-<pre><code class="lang-bash">manage-data -c config-development -t ingest -d law-enforcement-data-set-1 -s createStagingTables.sh
-manage-data -c config-development -t ingest -d law-enforcement-data-set-1 -s ingestLawEnforcementDataSet1.sh
+<pre><code class="lang-bash">manage-data -c config-development -t ingest -d law-enforcement-data-set-1 -s create-staging-tables
+manage-data -c config-development -t ingest -d law-enforcement-data-set-1 -s ingest-law-enforcement-data-set-1
 </code></pre></li>
 </ol>
 <h2 id="the-manage-data-script">The manage-data script</h2>

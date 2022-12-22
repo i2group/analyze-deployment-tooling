@@ -79,6 +79,23 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="managing-container-security">Managing container security</h1>
 
+<h2 id="file-permissions">File permissions</h2>
+<p>Containers by design are independent of the host OS they are run on. They can have their own UIDs and with the use of volumes their own independent storage. However, files sometimes need to be moved between containers and hosts. The approach to managing this depends on the type of image.</p>
+<p>Image documentation can be found in <a href="../images%20and%20containers/images.html">Images and containers</a></p>
+<h3 id="server-file-permissions">Server File permissions</h3>
+<p>All the server images are setup to run with a specific UID. These are documented for each image.</p>
+<p>The server images require access to persistent file storage. This is provided by the use of either a volume or bind mount for each directory that needs to be persisted beyond the life of a container. The directory locations are documented for each image.</p>
+<p>When files are created by running containers they will be created with the specific UIDs for each server. If for any reason these files are manipulated externally the UIDs need to be retained to ensure the servers function correctly.</p>
+<p>The use of volumes is encouraged as as this will largely avoid any permission issues which can be encountered when using bind mounts.</p>
+<h3 id="tool-file-permissions">Tool File permissions</h3>
+<p>Tools containers are used to perform one off operations. As such they don&#39;t have any need for persistent storage. However, it is common to want to consume or generate files.</p>
+<p>To facilitate these operations bind mounts are used to attach the local file system to documented directory locations for the tools.</p>
+<p>To ensure that the storage can be accessed correctly the tool images do not have pre-defined users. Instead the container must be run with the UID and GID of the local user. All file operations will then be performed as this user.</p>
+<p>Typically this would be achieved by using the <code>--user</code> flag when running a Docker container to set the UID and GID. However, to make this easier the user switch is implemented in the container entrypoint by passing in the UID and GID as environment variables. Do <strong>NOT</strong> attempt to use the <code>--user</code> flag.</p>
+<p>Care must be taken that the local user chosen has the correct permissions for any files being created/read by the tool.</p>
+<h3 id="visual-studio-code-dev-container-file-permissions">Visual Studio Code Dev Container File permissions</h3>
+<p>The analyze-containers project uses a Dev Container, which requires a bind mount of the workspace (and any others paths
+referenced in path-configuration.json file). The user that gets read, write, and execute permissions is called <code>vscode</code> and the container user&#39;s UID/GID is updated at runtime to match your local user (host). To learn more about Dev Container users, see <a href="https://code.visualstudio.com/remote/advancedcontainers/add-nonroot-user">Add a non-root user to a container</a>.</p>
 <h2 id="ssl-certificates-in-the-deployment">SSL certificates in the deployment</h2>
 <p>The example deployment is configured to use SSL connections for communication between clients and i2 Analyze, and between the components of i2 Analyze.</p>
 <p>To achieve this, the appropriate certificate authorities and certificates are used. The <code>generate-secrets</code> script is used to simulate the process of creating the required keys and acquiring certificate authority-signed certificates.</p>
@@ -109,7 +126,7 @@
 </li>
 </ul>
 <h2 id="creating-keys-and-certificates">Creating keys and certificates</h2>
-<p>The following diagram shows a simplified sequence of creating a container certificate from the certificate authority and using it to establish trust:</p>
+<p>The following steps show a simplified sequence of creating a container certificate from the certificate authority and using it to establish trust:</p>
 <ol>
 <li><p>The certificate authority&#39;s certificate is distributed to the client.</p>
 </li>
@@ -123,7 +140,7 @@
 <li><p>The CA signs and returns a signed certificate for the server.<br>In the <code>generate-secrets</code> script, the CA signing the certificate is completed by:</p>
 <pre><code class="lang-bash">openssl x509 -req -sha256 -CA CA.cer -CAkey CA.key -days 90 -CAcreateserial -CAserial CA.srl -extfile x509.ext -extensions &quot;solr&quot; -in key.csr -out server.cer
 </code></pre></li>
-<li><p>When communication is established, the <code>container certificate</code> is sent to the client. The client uses it&#39;s copy of the <code>CA certificate</code> to verify that the <code>container certificate</code> was signed by the same CA.</p>
+<li><p>When communication is established, the <code>container certificate</code> is sent to the client. The client uses its copy of the <code>CA certificate</code> to verify that the <code>container certificate</code> was signed by the same CA.</p>
 </li>
 </ol>
 <h2 id="password-generation">Password generation</h2>
@@ -220,7 +237,8 @@ The docker desktop does not support secrets, but the example environment example
 </tr>
 </tbody>
 </table>
-<!-- cspell:ignore jhga98u43jndfj --></article>
+<!-- cspell:ignore jhga98u43jndfj -->
+</article>
           </div>
           
           <div class="hidden-sm col-md-2" role="complementary">
