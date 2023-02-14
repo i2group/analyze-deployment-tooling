@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
-# © N.Harris Computer Corporation (2022)
+# © N.Harris Computer Corporation (2022-2023)
 #
 # SPDX short identifier: MIT
 
@@ -38,7 +38,9 @@ sql_query="\
     CREATE ROLE i2Analyze_Role;
         GRANT CONNECT ON DATABASE \"${DB_NAME}\" TO i2Analyze_Role;
     CREATE ROLE DBB_Role;
-        GRANT CONNECT ON DATABASE \"${DB_NAME}\" TO DBB_Role;"
+        GRANT CONNECT ON DATABASE \"${DB_NAME}\" TO DBB_Role;
+    CREATE ROLE i2_Public_Role;
+        GRANT CONNECT ON DATABASE \"${DB_NAME}\" TO i2_Public_Role;"
 run_sql_query_for_db "${sql_query}" "${DB_NAME}"
 
 set +e

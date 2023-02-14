@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
-# © N.Harris Computer Corporation (2022)
+# © N.Harris Computer Corporation (2022-2023)
 #
 # SPDX short identifier: MIT
 
@@ -88,7 +88,7 @@ function build_extension() {
 
   rebuild_extension=$(is_rebuild_required "${artifact_id}")
   if [[ "${rebuild_extension}" == "true" || "${rebuild_dependencies}" == "true" ]]; then
-    build_extension_jar "${artifact_dir}"
+    build_extension_jar "${artifact_dir}" "${artifact_id}"
     current_checksum=$(get_check_sum_of_dir "${artifact_dir}" "*/target/*")
     echo "${current_checksum}" >"${PREVIOUS_EXTENSIONS_DIR}/${artifact_id}.sha512"
   fi
@@ -96,7 +96,11 @@ function build_extension() {
 
 function build_extension_jar() {
   local artifact_dir="$1"
+  local artifact_id="$2"
 
+  if [[ ! -f "${artifact_dir}/pom.xml" ]]; then
+    print_error_and_exit "Missing pom.xml file for extension '${artifact_id}'"
+  fi
   print "Creating Extension: ${artifact_id}"
   cd "${artifact_dir}"
   mvn install -Doutput.dir="${artifact_dir}/target" -Di2analyze.root.dir="${ANALYZE_CONTAINERS_ROOT_DIR}"

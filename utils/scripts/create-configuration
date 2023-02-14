@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
-# © N.Harris Computer Corporation (2022)
+# © N.Harris Computer Corporation (2022-2023)
 #
 # SPDX short identifier: MIT
 
@@ -193,6 +193,7 @@ function create_clean_base_configuration_for_config_dev() {
   cp "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/templates/plugin-references.json" "${LOCAL_CONFIGURATION_DIR}"
   cp "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/templates/mapping-configuration.json" "${LOCAL_CONFIGURATION_DIR}"
   cp "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/templates/pom.xml" "${EXTENSIONS_DIR}/pom.xml"
+  sed -i "s/{{VERSION}}/${SUPPORTED_I2ANALYZE_VERSION}/" "${EXTENSIONS_DIR}/pom.xml"
   if [[ ! -f "${EXTENSIONS_DIR}/extension-dependencies.json" ]]; then
     echo "[]" >"${EXTENSIONS_DIR}/extension-dependencies.json"
   fi

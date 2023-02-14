@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
-# © N.Harris Computer Corporation (2022)
+# © N.Harris Computer Corporation (2022-2023)
 #
 # SPDX short identifier: MIT
 
@@ -191,7 +191,7 @@ function run_postgres_server() {
     -e "SERVER_SSL=${DB_SSL_CONNECTION}" \
     -e "SSL_PRIVATE_KEY=${ssl_private_key}" \
     -e "SSL_CERTIFICATE=${ssl_certificate}" \
-    "i2group/i2eng-postgres:${POSTGRES_IMAGE_VERSION}"
+    "${POSTGRES_SERVER_IMAGE_NAME}:${POSTGRES_IMAGE_VERSION}"
 }
 
 #######################################

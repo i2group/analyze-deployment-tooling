@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
-# © N.Harris Computer Corporation (2022)
+# © N.Harris Computer Corporation (2022-2023)
 #
 # SPDX short identifier: MIT
 
@@ -56,6 +56,14 @@ sql_query="\
                                         GRANT SELECT, INSERT, EXEC ON SCHEMA::IS_FP TO i2Analyze_Role;
                                             GRANT SELECT, UPDATE, INSERT, DELETE ON SCHEMA::IS_WC TO i2Analyze_Role;
                                               GRANT EXEC ON SCHEMA::IS_PUBLIC TO i2Analyze_Role;"
+runSQLQueryForDB "${sql_query}" "${DB_NAME}"
+
+# Creating a Role for accessing the IS_Public schema (i2_Public_Role)
+echo "Role: i2_Public_Role"
+sql_query="\
+    CREATE ROLE i2_Public_Role;
+        GRANT CONNECT TO i2_Public_Role;
+                GRANT ALTER, SELECT, UPDATE, INSERT, DELETE, EXEC ON SCHEMA::IS_PUBLIC TO i2_Public_Role;"
 runSQLQueryForDB "${sql_query}" "${DB_NAME}"
 
 set +e

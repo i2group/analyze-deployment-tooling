@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
-# © N.Harris Computer Corporation (2022)
+# © N.Harris Computer Corporation (2022-2023)
 #
 # SPDX short identifier: MIT
 
@@ -233,6 +233,7 @@ function change_sa_password() {
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SA_USERNAME=${SA_USERNAME}" \
     -e "SA_OLD_PASSWORD=${SA_INITIAL_PASSWORD}" \
     -e "SA_NEW_PASSWORD=${SA_PASSWORD}" \
@@ -261,6 +262,7 @@ function change_postgres_password() {
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
     -e "PGUSER=${POSTGRES_USERNAME}" \
@@ -310,7 +312,6 @@ function change_db2_inst1_password() {
 # For more information, see [create_db_login_and_user](../security%20and%20users/db_users.md#the-createdbloginanduser-function).
 # @arg $1 string The database user name
 # @arg $2 string The database role name
-# @arg $3 string The database dialect. Defaults to sqlserver
 function create_db_login_and_user() {
   validate_parameters 2 "$@"
 
@@ -357,6 +358,7 @@ function create_db_login_and_user() {
   docker run \
     --rm \
     "${EXTRA_ARGS[@]}" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
     "${auth_args[@]}" \
@@ -370,6 +372,72 @@ function create_db_login_and_user() {
     -e "DB_ROLE=${role}" \
     "${image_name}:${I2A_DEPENDENCIES_IMAGES_TAG}" \
     "/opt/db-scripts/create_db_login_and_user.sh"
+}
+
+# @description Assigns the user to the provided role.
+# For more information, see [create_db_login_and_user](../security%20and%20users/db_users.md#the-createdbloginanduser-function).
+# @arg $1 string The database user name
+# @arg $2 string The database role name
+function add_user_to_role() {
+  validate_parameters 2 "$@"
+
+  local user="$1"
+  local role="$2"
+  local admin_password
+  local user_password
+  local ssl_ca_certificate
+  local image_name
+  local db_server_fqdn
+  local auth_args=()
+
+  case "${DB_DIALECT}" in
+  sqlserver)
+    admin_password=$(get_secret sqlserver/sa_PASSWORD)
+    user_password=$(get_secret sqlserver/"${user}"_PASSWORD)
+    db_server_fqdn="${SQL_SERVER_FQDN}"
+    image_name="${SQL_CLIENT_IMAGE_NAME}"
+    auth_args+=("-e" "SA_USERNAME=${SA_USERNAME}")
+    auth_args+=("-e" "SA_PASSWORD=${admin_password}")
+    ;;
+  db2)
+    admin_password=$(get_secret db2server/db2inst1_PASSWORD)
+    user_password=$(get_secret db2server/"${user}"_PASSWORD)
+    db_server_fqdn="${DB2_SERVER_FQDN}"
+    image_name="${DB2_CLIENT_IMAGE_NAME}"
+    auth_args+=("-e" "ADMIN_USERNAME=${DB2INST1_USERNAME}")
+    auth_args+=("-e" "ADMIN_PASSWORD=${admin_password}")
+    ;;
+  postgres)
+    admin_password=$(get_secret postgres/postgres_PASSWORD)
+    user_password=$(get_secret postgres/"${user}"_PASSWORD)
+    db_server_fqdn="${POSTGRES_SERVER_FQDN}"
+    image_name="${POSTGRES_CLIENT_IMAGE_NAME}"
+    auth_args+=("-e" "PGUSER=${POSTGRES_USERNAME}")
+    auth_args+=("-e" "PGPASSWORD=${admin_password}")
+    ;;
+  esac
+
+  if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
+    ssl_ca_certificate=$(get_secret certificates/CA/CA.cer)
+  fi
+
+  docker run \
+    --rm \
+    "${EXTRA_ARGS[@]}" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
+    -e "SQLCMD=${SQLCMD}" \
+    -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
+    "${auth_args[@]}" \
+    -e "DB_USERNAME=${user}" \
+    -e "DB_PASSWORD=${user_password}" \
+    -e "DB_SSL_CONNECTION=${DB_SSL_CONNECTION}" \
+    -e "SSL_CA_CERTIFICATE=${ssl_ca_certificate}" \
+    -e "DB_SERVER=${db_server_fqdn}" \
+    -e "DB_PORT=${DB_PORT}" \
+    -e "DB_NAME=${DB_NAME}" \
+    -e "DB_ROLE=${role}" \
+    "${image_name}:${I2A_DEPENDENCIES_IMAGES_TAG}" \
+    "/opt/db-scripts/add_user_to_db_role.sh"
 }
 
 # @section Execution Utilities
@@ -412,6 +480,7 @@ function run_solr_client_command() {
     --init \
     -v "${LOCAL_CONFIG_DIR}:/opt/configuration" \
     -v "${SOLR_BACKUP_VOLUME_NAME}:${SOLR_BACKUP_VOLUME_LOCATION}" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e SOLR_ADMIN_DIGEST_USERNAME="${SOLR_ADMIN_DIGEST_USERNAME}" \
     -e SOLR_ADMIN_DIGEST_PASSWORD="${SOLR_ADMIN_DIGEST_PASSWORD}" \
     -e ZOO_DIGEST_USERNAME="${ZK_DIGEST_USERNAME}" \
@@ -567,6 +636,7 @@ function run_sql_server_command_as_etl() {
     --rm \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
     -e "DB_SERVER=${SQL_SERVER_FQDN}" \
@@ -610,6 +680,7 @@ function run_postgres_server_command_as_etl() {
     --rm \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
     -e "DB_SERVER=${POSTGRES_SERVER_FQDN}" \
@@ -645,6 +716,7 @@ function run_postgres_server_command_as_first_start_postgres() {
     --rm \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
     -e "DB_SERVER=${POSTGRES_SERVER_FQDN}" \
@@ -685,6 +757,7 @@ function run_postgres_server_command_as_postgres() {
     --rm \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
     -e "DB_SERVER=${POSTGRES_SERVER_FQDN}" \
@@ -725,6 +798,7 @@ function run_postgres_server_command_as_dba() {
     --rm \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
     -e "DB_SERVER=${POSTGRES_SERVER_FQDN}" \
@@ -763,6 +837,7 @@ function run_postgres_server_command_as_dbb() {
     --rm \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
     -e "DB_SERVER=${POSTGRES_SERVER_FQDN}" \
@@ -798,6 +873,7 @@ function run_sql_server_command_as_first_start_sa() {
     --rm \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
     -e "DB_SERVER=${SQL_SERVER_FQDN}" \
@@ -835,6 +911,7 @@ function run_sql_server_command_as_sa() {
     --rm \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
     -e "DB_SERVER=${SQL_SERVER_FQDN}" \
@@ -872,6 +949,7 @@ function run_sql_server_command_as_dba() {
     --rm \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
     -e "DB_SERVER=${SQL_SERVER_FQDN}" \
@@ -914,6 +992,7 @@ function run_sql_server_command_as_dbb() {
     --rm \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
     -e "DB_SERVER=${SQL_SERVER_FQDN}" \
@@ -974,6 +1053,7 @@ function run_etl_toolkit_tool_as_i2_etl() {
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_CONFIG_DIR}/logs:/opt/configuration/logs" \
     -v "${I2A_DATA_CLIENT_VOLUME_NAME}:${container_data_dir}" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "DB_SERVER=${DB_SERVER_FQDN}" \
     -e "DB_PORT=${DB_PORT}" \
     -e "DB_NAME=${DB_NAME}" \
@@ -1036,6 +1116,7 @@ function run_etl_toolkit_tool_as_dba() {
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_CONFIG_DIR}/logs:/opt/configuration/logs" \
     -v "${I2A_DATA_CLIENT_VOLUME_NAME}:${container_data_dir}" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "DB_SERVER=${DB_SERVER_FQDN}" \
     -e "DB_PORT=${DB_PORT}" \
     -e "DB_NAME=${DB_NAME}" \

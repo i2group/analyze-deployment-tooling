@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
-# © N.Harris Computer Corporation (2022)
+# © N.Harris Computer Corporation (2022-2023)
 #
 # SPDX short identifier: MIT
 
@@ -110,6 +110,12 @@ function validate_arguments() {
   [[ "${TASK}" == "import" || "${TASK}" == "export" || "${TASK}" == "create" || "${TASK}" == "prepare" ]] || print_usage 1
 
   check_property_set_or_usage "${CONFIG_NAME}"
+  if [[ ! "${CONFIG_NAME}" =~ ^[0-9a-zA-Z_+\-]+$ ]]; then
+    printf "\e[31mERROR: Config '%s' name cannot contain special characters or spaces. Allowed characters are 0-9a-zA-Z_+-\n" "${CONFIG_NAME}" >&2
+    printf "\e[0m" >&2
+    print_usage 1
+  fi
+
   check_property_set_or_usage "${PATH_NAME}"
   ON_PREM_TOOLKIT_DIR="$(jq -r --arg name "${PATH_NAME}" '.externalDirectories[]? | select(.name==$name) .path' "${ANALYZE_CONTAINERS_ROOT_DIR}/path-configuration.json")"
   if [[ -z "${ON_PREM_TOOLKIT_DIR}" || "${ON_PREM_TOOLKIT_DIR}" == "null" ]]; then

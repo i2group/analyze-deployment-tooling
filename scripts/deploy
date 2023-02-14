@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris
 # Computer Corporation.
-# © N.Harris Computer Corporation (2022)
+# © N.Harris Computer Corporation (2022-2023)
 #
 # SPDX short identifier: MIT
 
@@ -42,23 +42,7 @@ parse_arguments "$@"
 [[ "${TASK}" == "clean" || "${TASK}" == "backup" || "${TASK}" == "restore" ||
   "${TASK}" == "package" || -z "${TASK}" ]] || print_usage 1
 
-if [[ -z "${CONFIG_NAME}" ]]; then
-  print_usage 1
-fi
-
-if [[ ! "${CONFIG_NAME}" =~ ^[0-9a-zA-Z_+\-]+$ ]]; then
-  printf "\e[31mERROR: Config '%s' name cannot contain special characters or \
-spaces. Allowed characters are 0-9a-zA-Z_+-\n" "${CONFIG_NAME}" >&2
-  printf "\e[0m" >&2
-  print_usage 1
-fi
-
-if [[ ! -d "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}" ]]; then
-  printf "\e[31mERROR: Config '%s' name does not exist in '%s' directory." \
-    "${CONFIG_NAME}" "${ANALYZE_CONTAINERS_ROOT_DIR}/configs" >&2
-  printf "\e[0m" >&2
-  print_usage 1
-fi
+check_valid_config_name "${CONFIG_NAME}"
 
 if [[ "${TASK}" == "package" ]]; then
   EXTENSIONS_DEV="false"
@@ -463,6 +447,8 @@ function restore_istore_database() {
     ;;
   sqlserver)
     update_volume "${BACKUP_DIR}" "${SQL_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
+    run_db_container_with_backup_volume chown -R mssql:0 "${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
+
     print "Restoring the ${DB_NAME} database"
     sql_query="\
       RESTORE DATABASE ${DB_NAME} FROM DISK = '${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}/${DB_BACKUP_FILE_NAME}';"
@@ -470,6 +456,8 @@ function restore_istore_database() {
     ;;
   postgres)
     update_volume "${BACKUP_DIR}" "${POSTGRES_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
+    run_db_container_with_backup_volume chown -R postgres:0 "${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
+
     print "Restoring the ${DB_NAME} database"
     docker exec "${POSTGRES_SERVER_CONTAINER_NAME}" bash -c "${SQLCMD} ${DB_NAME} < ${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}/${DB_BACKUP_FILE_NAME}"
     ;;
@@ -487,6 +475,15 @@ function recreate_sql_server_users() {
               DROP USER dbb;"
   run_sql_server_command_as_sa run-sql-query "${sql_query}"
 
+  print "Creating i2_Public_Role"
+  sql_query="\
+    USE ISTORE;
+      IF DATABASE_PRINCIPAL_ID(N'i2_Public_Role') IS NULL
+          CREATE ROLE i2_Public_Role;
+              GRANT CONNECT TO i2_Public_Role;
+                    GRANT ALTER, SELECT, UPDATE, INSERT, DELETE, EXEC ON SCHEMA::IS_PUBLIC TO i2_Public_Role;"
+  run_sql_server_command_as_sa run-sql-query "${sql_query}"
+
   print "Creating database logins and users"
   create_db_login_and_user "dbb" "db_backupoperator"
   create_db_login_and_user "dba" "DBA_Role"
@@ -495,6 +492,9 @@ function recreate_sql_server_users() {
   create_db_login_and_user "etl" "External_ETL_Role"
   run_sql_server_command_as_sa "/opt/db-scripts/configure_dba_roles_and_permissions.sh"
   run_sql_server_command_as_sa "/opt/db-scripts/add_etl_user_to_sys_admin_role.sh"
+
+  print "Assigning additional database roles to users"
+  assign_additional_roles_to_users
 }
 
 function recreate_postgres_server_users() {
@@ -506,6 +506,9 @@ function recreate_postgres_server_users() {
   create_db_login_and_user "i2analyze" "i2Analyze_Role"
   create_db_login_and_user "i2etl" "i2_ETL_Role"
   create_db_login_and_user "etl" "External_ETL_Role"
+
+  print "Assigning additional database roles to users"
+  assign_additional_roles_to_users
 }
 
 function initialize_db2_server() {
@@ -626,6 +629,14 @@ function configure_istore_database() {
     run_postgres_server_command_as_dba "/opt/databaseScripts/generated/runDynamicScripts.sh"
     ;;
   esac
+
+  print "Assigning additional database roles to users"
+  assign_additional_roles_to_users
+}
+
+function assign_additional_roles_to_users() {
+  add_user_to_role "i2analyze" "i2_Public_Role"
+  add_user_to_role "i2etl" "Deletion_By_Rule"
 }
 
 function deploy_liberty() {
@@ -846,7 +857,7 @@ function upgrade_database() {
     run_sql_server_command_as_dba "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/upgrade"
     ;;
   postgres)
-    echo "DB2 is not supported"
+    run_postgres_server_command_as_dba "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/upgrade"
     ;;
   esac
 }
@@ -998,7 +1009,7 @@ function call_gateway_reload() {
     print "Calling gateway reload endpoint"
     login_to_liberty
 
-    local max_tries=15
+    local max_tries=20
 
     for i in $(seq 1 "${max_tries}"); do
       if curl \
@@ -1020,7 +1031,8 @@ function call_gateway_reload() {
       sleep 5
     done
 
-    jq '.errorMessage' /tmp/response.txt
+    print_info "http_code: ${http_code}"
+    print_info "response: $(</tmp/response.txt)"
     print_error_and_exit "${errors_message}"
   fi
 }
@@ -1671,27 +1683,7 @@ function create_backup() {
 
   create_folder "${BACKUP_DIR}/${BACKUP_NAME}"
 
-  # Create the back up
-  print "Backing up the ISTORE database"
-  local backup_file_path="${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}/${DB_BACKUP_FILE_NAME}"
-  case "${DB_DIALECT}" in
-  db2)
-    print_error_and_exit "Not implemented yet"
-    ;;
-  sqlserver)
-    local sql_query="\
-      USE ISTORE;
-        BACKUP DATABASE ${DB_NAME}
-        TO DISK = '${backup_file_path}'
-        WITH FORMAT;"
-    run_sql_server_command_as_dbb run-sql-query "${sql_query}"
-    get_volume "${BACKUP_DIR}" "${SQL_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
-    ;;
-  postgres)
-    docker exec "${POSTGRES_SERVER_CONTAINER_NAME}" bash -c "mkdir -p ${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME} && /usr/bin/pg_dump ${DB_NAME} > ${backup_file_path}"
-    get_volume "${BACKUP_DIR}" "${POSTGRES_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
-    ;;
-  esac
+  backup_database
 }
 
 function restore_from_backup() {
@@ -1879,6 +1871,27 @@ function work_out_task_to_run() {
   fi
   print_info "STATE: ${STATE}"
 
+  # Only if state is 4 and config versions are different an upgrade should be run
+  # Otherwise check state
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/version.conf"
+  CONFIG_SUPPORTED_I2ANALYZE_VERSION="${SUPPORTED_I2ANALYZE_VERSION}"
+  source "${ANALYZE_CONTAINERS_ROOT_DIR}/version.conf"
+  CURRENT_SUPPORTED_I2ANALYZE_VERSION="${SUPPORTED_I2ANALYZE_VERSION}"
+  if [[ "${CONFIG_SUPPORTED_I2ANALYZE_VERSION}" != "${CURRENT_SUPPORTED_I2ANALYZE_VERSION}" ]]; then
+    if [[ "${CONFIG_SUPPORTED_I2ANALYZE_VERSION}" < "4.3.4.0" ]]; then
+      print_error_and_exit "Upgrade from i2 Analyze version ${CONFIG_SUPPORTED_I2ANALYZE_VERSION} is not supported"
+    fi
+    if [[ "${CONFIG_SUPPORTED_I2ANALYZE_VERSION}" > "${CURRENT_SUPPORTED_I2ANALYZE_VERSION}" ]]; then
+      print_error_and_exit "Unsupported i2Analyze version ${CONFIG_SUPPORTED_I2ANALYZE_VERSION}"
+    fi
+    if [[ "${STATE}" == 4 ]]; then
+      print "Upgrading deployment"
+      TASK="upgrade"
+    else
+      print_error_and_exit "The deployment requires to be healthy before upgrading. Please redeploy with i2Analyze version ${CONFIG_SUPPORTED_I2ANALYZE_VERSION} before running this task again."
+    fi
+  fi
+
   if [[ "${STATE}" == 0 ]]; then
     print "Creating initial deployment"
     TASK="create"
@@ -1888,21 +1901,9 @@ function work_out_task_to_run() {
   elif [[ "${STATE}" == 3 ]]; then
     print "Current Deployment is NOT healthy"
     TASK="update"
-  elif [[ "${STATE}" == 4 ]]; then
-    source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/version.conf"
-    CONFIG_SUPPORTED_I2ANALYZE_VERSION="${SUPPORTED_I2ANALYZE_VERSION}"
-    source "${ANALYZE_CONTAINERS_ROOT_DIR}/version.conf"
-    CURRENT_SUPPORTED_I2ANALYZE_VERSION="${SUPPORTED_I2ANALYZE_VERSION}"
-    if [[ "${CONFIG_SUPPORTED_I2ANALYZE_VERSION}" != "${CURRENT_SUPPORTED_I2ANALYZE_VERSION}" ]]; then
-      print "Upgrading deployment"
-      if [[ "${CONFIG_SUPPORTED_I2ANALYZE_VERSION}" < "4.3.4.0" ]]; then
-        print_error_and_exit "Upgrade from i2 Analyze version ${CONFIG_SUPPORTED_I2ANALYZE_VERSION} is not supported"
-      fi
-      TASK="upgrade"
-    else
-      print "Updating deployment"
-      TASK="update"
-    fi
+  elif [[ "${STATE}" == 4 && "${CONFIG_SUPPORTED_I2ANALYZE_VERSION}" == "${CURRENT_SUPPORTED_I2ANALYZE_VERSION}" ]]; then
+    print "Updating deployment"
+    TASK="update"
   fi
 
   if [[ "${TASK}" == "update" ]]; then

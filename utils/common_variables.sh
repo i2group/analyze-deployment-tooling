@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
-# © N.Harris Computer Corporation (2022)
+# © N.Harris Computer Corporation (2022-2023)
 #
 # SPDX short identifier: MIT
 # shellcheck disable=SC2034
@@ -22,6 +22,7 @@ ZOOKEEPER_IMAGE_NAME="i2group/i2eng-zookeeper"
 SOLR_IMAGE_NAME="solr_redhat"
 SQL_SERVER_IMAGE_NAME="sqlserver_redhat"
 SQL_CLIENT_IMAGE_NAME="sqlserver_client_redhat"
+POSTGRES_SERVER_IMAGE_NAME="i2group/i2eng-postgres"
 POSTGRES_CLIENT_IMAGE_NAME="postgres_client_image"
 DB2_SERVER_IMAGE_NAME="db2_redhat"
 DB2_CLIENT_IMAGE_NAME="db2_client_redhat"

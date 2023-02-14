@@ -19,9 +19,13 @@ connector-url-mappings-file.json
 i2connect-server-version.json
 extension-dependencies.json
 i2a-extensions/pom.xml
+i2a-extensions/*/target
 
 # Secrets
 configs/**/configuration/**/secrets/
+
+# Backups
+backups/**/global-upgrade
 
 # All Hidden Folders/Files except .gitignore .gitkeep .gitattributes .dockerignore
 .*

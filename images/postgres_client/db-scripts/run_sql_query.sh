@@ -8,12 +8,10 @@ set -e
 
 source '/opt/db-scripts/common_functions.sh'
 
-# Create a user
-sql_query="\
-    CREATE USER ${DB_USERNAME} WITH ENCRYPTED PASSWORD '${DB_PASSWORD}';
-        GRANT ${DB_ROLE} TO ${DB_USERNAME}"
-run_sql_query_for_db "${sql_query}" "${DB_NAME}"
-
-echo "Login: $DB_USERNAME User: $DB_USERNAME"
+if [[ "$#" == 1 ]]; then
+  run_sql_query "$1"
+else
+  run_sql_query_for_db "$1" "$2"
+fi
 
 set +e

@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
-# © N.Harris Computer Corporation (2022)
+# © N.Harris Computer Corporation (2022-2023)
 #
 # SPDX short identifier: MIT
 ARG NODEJS_BASE_IMAGE="registry.access.redhat.com/ubi9/nodejs-16"

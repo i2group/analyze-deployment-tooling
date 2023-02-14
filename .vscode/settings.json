@@ -46,6 +46,10 @@
     "url": "./utils/schemas/extension-references-schema.json"
   },
   {
+    "fileMatch": ["*extension-dependencies.json"],
+    "url": "./utils/schemas/extension-dependencies-schema.json"
+  },
+  {
     "fileMatch": ["*plugin-references.json"],
     "url": "./utils/schemas/plugin-references-schema.json"
   },

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
-# © N.Harris Computer Corporation (2022)
+# © N.Harris Computer Corporation (2022-2023)
 #
 # SPDX short identifier: MIT
 
@@ -81,6 +81,14 @@ sql_query="\
                         ALTER DEFAULT PRIVILEGES IN SCHEMA IS_VQ GRANT SELECT ON TABLES TO DBB_Role;
                             ALTER DEFAULT PRIVILEGES IN SCHEMA IS_FP GRANT SELECT ON TABLES TO DBB_Role;
                                 ALTER DEFAULT PRIVILEGES IN SCHEMA IS_WC GRANT SELECT ON TABLES TO DBB_Role;"
+run_sql_query_for_db "${sql_query}" "${DB_NAME}"
+
+# Creating a Role for accessing the IS_Public schema (i2_Public_Role)
+echo "Role: i2_Public_Role"
+sql_query="\
+    GRANT USAGE ON SCHEMA IS_PUBLIC TO i2_Public_Role;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA IS_PUBLIC GRANT SELECT, UPDATE ON TABLES TO i2_Public_Role;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA IS_PUBLIC GRANT EXECUTE ON ROUTINES TO i2Analyze_Role;"
 run_sql_query_for_db "${sql_query}" "${DB_NAME}"
 
 set +e

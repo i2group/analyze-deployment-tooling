@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
-# © N.Harris Computer Corporation (2022)
+# © N.Harris Computer Corporation (2022-2023)
 #
 # SPDX short identifier: MIT
 
@@ -168,11 +168,14 @@ function build_connector_images() {
 }
 
 function build_image() {
-  local connector_image_dir="${1}"
+  local connector_image_dir="$1"
   local connector_name="${connector_image_dir##*/}"
   local connector_tag
   local connector_type
 
+  if [[ ! -f "${connector_image_dir}/connector-definition.json" ]]; then
+    print_error_and_exit "Missing connector-definition.json file for connector '${connector_name}'"
+  fi
   connector_type=$(jq -r '.type' <"${connector_image_dir}/connector-definition.json")
 
   if [[ "${connector_type}" == "${EXTERNAL_CONNECTOR_TYPE}" ]]; then

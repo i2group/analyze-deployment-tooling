@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
-# © N.Harris Computer Corporation (2022)
+# © N.Harris Computer Corporation (2022-2023)
 #
 # SPDX short identifier: MIT
 
@@ -1467,7 +1467,7 @@ function restart_docker_containers_for_config() {
         continue
       fi
       docker start "${container_name}"
-      if [[ "${container_name}" == "${SQL_SERVER_CONTAINER_NAME}" ]]; then
+      if [[ "${container_name}" == "${SQL_SERVER_CONTAINER_NAME}" || "${container_name}" == "${DB2_SERVER_CONTAINER_NAME}" || "${container_name}" == "${POSTGRES_SERVER_CONTAINER_NAME}" ]]; then
         database_restarted="true"
       elif [[ "${container_name}" == "${SOLR1_CONTAINER_NAME}" ]] || [[ "${container_name}" == "${ZK1_CONTAINER_NAME}" ]]; then
         solr_restarted="true"
@@ -1477,7 +1477,7 @@ function restart_docker_containers_for_config() {
     # Waiting for system to be up if state is pass the creation
     if source "${PREVIOUS_STATE_FILE_PATH}"; then
       if [[ "${database_restarted}" == "true" && "${STATE}" -gt 2 ]]; then
-        wait_for_sql_server_to_be_live
+        wait_for_db_to_be_live
       elif [[ "${solr_restarted}" == "true" && "${STATE}" -gt 2 ]]; then
         wait_for_solr_to_be_live "${SOLR1_FQDN}"
       fi
@@ -1535,6 +1535,81 @@ function run_solr_container_with_backup_volume() {
     -v "${SOLR_BACKUP_VOLUME_NAME}:${SOLR_BACKUP_VOLUME_LOCATION}" \
     --user="root" \
     "${SOLR_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "$@"
+}
+
+#######################################
+# Runs a DB container as root to change permissions on the DB backup volume.
+# Arguments:
+#   None
+#######################################
+function run_db_container_with_backup_volume() {
+  case "${DB_DIALECT}" in
+  sqlserver)
+    image_name="${SQL_SERVER_IMAGE_NAME}"
+    image_tag="${I2A_DEPENDENCIES_IMAGES_TAG}"
+    volume_name="${SQL_SERVER_BACKUP_VOLUME_NAME}"
+    ;;
+  db2)
+    image_name="${DB2_SERVER_IMAGE_NAME}"
+    image_tag="${I2A_DEPENDENCIES_IMAGES_TAG}"
+    volume_name="${DB2_SERVER_BACKUP_VOLUME_NAME}"
+    ;;
+  postgres)
+    image_name="${POSTGRES_SERVER_IMAGE_NAME}"
+    image_tag="${POSTGRES_IMAGE_VERSION}"
+    volume_name="${POSTGRES_SERVER_BACKUP_VOLUME_NAME}"
+    ;;
+  esac
+
+  docker run --rm \
+    -v "${volume_name}:${DB_CONTAINER_BACKUP_DIR}" \
+    --user="root" \
+    "${image_name}:${image_tag}" "$@"
+}
+
+function backup_database() {
+  local backup_file_path="${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}/${DB_BACKUP_FILE_NAME}"
+  case "${DB_DIALECT}" in
+  db2)
+    print_error_and_exit "Not implemented yet"
+    ;;
+  sqlserver)
+    print "Backing up the ${DB_NAME} database for container: ${SQL_SERVER_CONTAINER_NAME}"
+    if [[ "${VERSION}" < "2.4.0" ]]; then
+      updateVolume "${BACKUP_DIR}" "${SQL_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
+    else
+      update_volume "${BACKUP_DIR}" "${SQL_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
+      echo "Debug: Updating permission"
+    fi
+    if [[ "${VERSION}" < "2.3.0" ]]; then
+      run_db_container_with_backup_volume chown -R root "${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
+    else
+      run_db_container_with_backup_volume chown -R mssql:0 "${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
+    fi
+
+    local sql_query="\
+      USE ${DB_NAME};
+        BACKUP DATABASE ${DB_NAME}
+        TO DISK = '${backup_file_path}'
+        WITH FORMAT;"
+
+    # TODO: Remove on major version
+    if [[ "${VERSION}" < "2.4.0" ]]; then
+      runSQLServerCommandAsDBB runSQLQuery "${sql_query}"
+      getVolume "${BACKUP_DIR}" "${SQL_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
+    else
+      run_sql_server_command_as_dbb run-sql-query "${sql_query}"
+      get_volume "${BACKUP_DIR}" "${SQL_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
+    fi
+    ;;
+  postgres)
+    print "Backing up the ${DB_NAME} database for container: ${POSTGRES_SERVER_CONTAINER_NAME}"
+    update_volume "${BACKUP_DIR}" "${POSTGRES_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
+    run_db_container_with_backup_volume chown -R postgres:0 "${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
+    docker exec "${POSTGRES_SERVER_CONTAINER_NAME}" bash -c "/usr/bin/pg_dump ${DB_NAME} > ${backup_file_path}"
+    get_volume "${BACKUP_DIR}" "${POSTGRES_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
+    ;;
+  esac
 }
 
 #######################################
@@ -2532,11 +2607,11 @@ function pull_base_images() {
   docker pull "haproxy:${HA_PROXY_IMAGE_VERSION}"
   docker pull "i2group/i2eng-liberty:${LIBERTY_VERSION}"
   docker pull "i2group/i2eng-solr:${SOLR_VERSION}"
-  docker pull "i2group/i2eng-zookeeper:${ZOOKEEPER_VERSION}"
+  docker pull "${ZOOKEEPER_IMAGE_NAME}:${ZOOKEEPER_VERSION}"
   docker pull "i2group/i2eng-prometheus:${PROMETHEUS_VERSION}"
   docker pull "grafana/grafana-oss:${GRAFANA_VERSION}"
   docker pull "mcr.microsoft.com/mssql/rhel/server:${SQL_SERVER_IMAGE_VERSION}"
-  docker pull "i2group/i2eng-postgres:${POSTGRES_IMAGE_VERSION}"
+  docker pull "${POSTGRES_SERVER_IMAGE_NAME}:${POSTGRES_IMAGE_VERSION}"
   docker pull "${NODEJS_IMAGE_NAME}:${NODEJS_IMAGE_VERSION}"
   docker pull "${SPRINGBOOT_IMAGE_NAME}:${SPRINGBOOT_IMAGE_VERSION}"
 }
@@ -2623,7 +2698,22 @@ function start_db_server() {
   sqlserver)
     print "Starting SQL Server container"
     docker start "${SQL_SERVER_CONTAINER_NAME}"
-    # TODO: Remove on major version
+    ;;
+  db2)
+    print "Starting Db2 Server container"
+    docker start "${DB2_SERVER_CONTAINER_NAME}"
+    ;;
+  postgres)
+    print "Starting Postgres Server container"
+    docker start "${POSTGRES_SERVER_CONTAINER_NAME}"
+    ;;
+  esac
+  wait_for_db_to_be_live
+}
+
+function wait_for_db_to_be_live() {
+  case "${DB_DIALECT}" in
+  sqlserver)
     if [[ "${VERSION}" < "2.4.1" ]]; then
       waitForSQLServerToBeLive
     else
@@ -2631,13 +2721,9 @@ function start_db_server() {
     fi
     ;;
   db2)
-    print "Starting Db2 Server container"
-    docker start "${DB2_SERVER_CONTAINER_NAME}"
     wait_for_db2_server_to_be_live
     ;;
   postgres)
-    print "Starting Postgres Server container"
-    docker start "${POSTGRES_SERVER_CONTAINER_NAME}"
     wait_for_postgres_server_to_be_live
     ;;
   esac
@@ -2710,6 +2796,27 @@ function clear_search_index() {
   run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/match_index1/collectionprops.json"
   run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/match_index2/collectionprops.json"
   run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/chart_index/collectionprops.json"
+}
+
+function check_valid_config_name() {
+  local config_name="$1"
+  local root_dir="${2:-"${ANALYZE_CONTAINERS_ROOT_DIR}"}"
+  if [[ -z "${config_name}" ]]; then
+    print_usage 1
+  fi
+
+  if [[ ! "${config_name}" =~ ^[0-9a-zA-Z_+\-]+$ ]]; then
+    printf "\e[31mERROR: Config '%s' name cannot contain special characters or spaces. Allowed characters are 0-9a-zA-Z_+-\n" "${config_name}" >&2
+    printf "\e[0m" >&2
+    print_usage 1
+  fi
+
+  if [[ ! -d "${root_dir}/configs/${config_name}" ]]; then
+    printf "\e[31mERROR: Config '%s' name does not exist in '%s' directory." \
+      "${config_name}" "${root_dir}/configs" >&2
+    printf "\e[0m" >&2
+    print_usage 1
+  fi
 }
 ###############################################################################
 # End of function definitions.                                                #

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
-# © N.Harris Computer Corporation (2022)
+# © N.Harris Computer Corporation (2022-2023)
 #
 # SPDX short identifier: MIT
 
@@ -37,9 +37,7 @@ parse_arguments "$@"
 
 [[ "${TASK}" == "ingest" || "${TASK}" == "delete" || "${TASK}" == "sources" ]] || print_usage 1
 
-if [[ -z "${CONFIG_NAME}" ]]; then
-  print_usage 1
-fi
+check_valid_config_name "${CONFIG_NAME}"
 
 if [[ "${TASK}" == "ingest" ]]; then
   if [[ -z "${DATA_SET}" ]] || [[ -z "${SCRIPT_NAME}" ]]; then

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
-# © N.Harris Computer Corporation (2022)
+# © N.Harris Computer Corporation (2022-2023)
 #
 # SPDX short identifier: MIT
 
@@ -111,9 +111,12 @@ function source_common_variables_and_scripts() {
 function create_backup() {
   CONFIG_NAME="$1"
 
+  check_valid_config_name "${CONFIG_NAME}" "${PREVIOUS_PROJECT_PATH}"
+
   print_info "Setting prerequisites to backup: ${CONFIG_NAME}"
   unset I2A_DEPENDENCIES_IMAGES_TAG
 
+  # Needed for 2.1.3 and 2.2.0 upgrade
   AWS_DEPLOY="false"
 
   local client_function_paths=("${PREVIOUS_PROJECT_PATH}/utils/client_functions.sh" "${PREVIOUS_PROJECT_PATH}/utils/clientFunctions.sh")
@@ -143,18 +146,26 @@ function create_backup() {
     return
   fi
 
-  if [[ "${DB_DIALECT}" == "db2" ]]; then
+  print "Creating backup for: ${CONFIG_NAME}"
+  local container_id
+
+  case "${DB_DIALECT}" in
+  db2)
     print_error_and_exit "Db2 backup in not implemented yet"
     return
-  fi
-
-  print "Creating backup for: ${CONFIG_NAME}"
-
-  local container_id
-  container_id="$(docker ps -aq --no-trunc -f name="^${SQL_SERVER_CONTAINER_NAME}$")"
+    ;;
+  sqlserver)
+    container_id="$(docker ps -aq --no-trunc -f name="^${SQL_SERVER_CONTAINER_NAME}$")"
+    container_name="SQL Server"
+    ;;
+  postgres)
+    container_id="$(docker ps -aq --no-trunc -f name="^${POSTGRES_SERVER_CONTAINER_NAME}$")"
+    container_name="Postgres"
+    ;;
+  esac
 
   if [[ -z "${container_id}" ]]; then
-    print_error_and_exit "Cannot find the SQL Server container for config: ${CONFIG_NAME}. Please redeploy before running this task again."
+    print_error_and_exit "Cannot find the ${container_name} container for config: ${CONFIG_NAME}. Please redeploy before running this task again."
   fi
 
   # Restart Docker containers
@@ -170,24 +181,7 @@ function create_backup() {
 
   delete_folder_if_exists_and_create "${PREVIOUS_PROJECT_PATH}/backups/${CONFIG_NAME}/${BACKUP_NAME}"
 
-  # Create the back up
-  print "Backing up the ISTORE database for container: ${SQL_SERVER_CONTAINER_NAME}"
-
-  local backup_file_path="${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}/${DB_BACKUP_FILE_NAME}"
-  local sql_query="\
-  	USE ISTORE;
-  		BACKUP DATABASE ISTORE
-  		TO DISK = '${backup_file_path}'
-  		WITH FORMAT;"
-
-  # TODO: Remove on major version
-  if [[ "${VERSION}" < "2.4.0" ]]; then
-    runSQLServerCommandAsDBB runSQLQuery "${sql_query}"
-    getVolume "${BACKUP_DIR}" "${SQL_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
-  else
-    run_sql_server_command_as_dbb run-sql-query "${sql_query}"
-    get_volume "${BACKUP_DIR}" "${SQL_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
-  fi
+  backup_database
 
   stop_db_server
 }
@@ -238,6 +232,7 @@ function copy_configurations() {
   source_file_or_next version_paths
 
   for config_name in "${CONFIGS_ARRAY[@]}"; do
+    check_valid_config_name "${config_name}" "${PREVIOUS_PROJECT_PATH}"
     local prev_config_path="${PREVIOUS_PROJECT_PATH}/configs/${config_name}"
     local current_config_path="${CURRENT_PROJECT_PATH}/configs/${config_name}"
     [[ ! -d "${prev_config_path}" ]] && continue
@@ -403,23 +398,22 @@ function copy_plugins() {
 }
 
 function copy_secrets() {
-  local secret_name
+  local old_secret_dir new_secret_dir
   print "Copying all secrets"
 
   sudo chown -R "$USER" "${CURRENT_PROJECT_PATH}/dev-environment-secrets"
 
-  for secret in "${PREVIOUS_PROJECT_PATH}"/dev-environment-secrets/*; do
-    [[ ! -d "${secret}" ]] && continue
-    secret_name=$(basename "${secret}")
-
-    if [[ -d "${CURRENT_PROJECT_PATH}/dev-environment-secrets/${secret_name}" ]]; then
-      rm -r "${CURRENT_PROJECT_PATH}/dev-environment-secrets/${secret_name}"
+  readarray -t secret_list < <(find "${PREVIOUS_PROJECT_PATH}/dev-environment-secrets" -mindepth 2 -maxdepth 2 -type d)
+  for old_secret_dir in "${secret_list[@]}"; do
+    new_secret_dir="${old_secret_dir/"${PREVIOUS_PROJECT_PATH}"/"${CURRENT_PROJECT_PATH}"}"
+    if [ -z "$(ls -A "${old_secret_dir}")" ]; then
+      continue # Ignore empty folders
     fi
-    cp -r "${secret}" "${CURRENT_PROJECT_PATH}/dev-environment-secrets"
+    delete_folder_if_exists_and_create "${new_secret_dir}"
+    cp -R "${old_secret_dir}"/* "${new_secret_dir}"
   done
 
   print_info "Generating missing secrets"
-  export ANALYZE_CONTAINERS_ROOT_DIR="${CURRENT_PROJECT_PATH}"
   "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/generate-secrets"
 
   update_core_secrets_volumes
@@ -490,15 +484,16 @@ function copy_additional_resources() {
 function run_copy_task() {
   export ANALYZE_CONTAINERS_ROOT_DIR="${PREVIOUS_PROJECT_PATH}"
   build_config_array
+  export ANALYZE_CONTAINERS_ROOT_DIR="${CURRENT_PROJECT_PATH}"
   copy_configurations
   copy_backups
-  copy_secrets
   copy_extensions
   copy_plugins
   copy_connectors
   copy_gateway_schemas
   copy_data
   copy_additional_resources
+  copy_secrets
 }
 
 function run_upgrade_task() {
@@ -535,12 +530,12 @@ function run_upgrade_task() {
   # Copy all
   copy_configurations
   copy_backups
-  copy_secrets
   copy_extensions
   copy_plugins
   copy_connectors
   copy_gateway_schemas
   copy_data
+  copy_secrets
 
   # The version is changed in the copy_configurations function when sourcing old one
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/version.conf"
@@ -589,11 +584,11 @@ function get_base_image_ids() {
   image_ids+=$(get_image_id "haproxy:${HA_PROXY_IMAGE_VERSION}")
   image_ids+=$(get_image_id "i2group/i2eng-liberty:${LIBERTY_VERSION}")
   image_ids+=$(get_image_id "i2group/i2eng-solr:${SOLR_VERSION}")
-  image_ids+=$(get_image_id "i2group/i2eng-zookeeper:${ZOOKEEPER_VERSION}")
+  image_ids+=$(get_image_id "${ZOOKEEPER_IMAGE_NAME}:${ZOOKEEPER_VERSION}")
   image_ids+=$(get_image_id "i2group/i2eng-prometheus:${PROMETHEUS_VERSION}")
   image_ids+=$(get_image_id "grafana/grafana-oss:${GRAFANA_VERSION}")
   image_ids+=$(get_image_id "mcr.microsoft.com/mssql/rhel/server:${SQL_SERVER_IMAGE_VERSION}")
-  image_ids+=$(get_image_id "i2group/i2eng-postgres:${POSTGRES_IMAGE_VERSION}")
+  image_ids+=$(get_image_id "${POSTGRES_SERVER_IMAGE_NAME}:${POSTGRES_IMAGE_VERSION}")
   image_ids+=$(get_image_id "${NODEJS_IMAGE_NAME}:${NODEJS_IMAGE_VERSION}")
   image_ids+=$(get_image_id "${SPRINGBOOT_IMAGE_NAME}:${SPRINGBOOT_IMAGE_VERSION}")
 
@@ -765,6 +760,8 @@ function run_build_connectors_task() {
   "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/generate-secrets" -c connectors "${connector_args[@]}"
   print "Running build-connector-images"
   "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/build-connector-images" "${connector_args[@]}"
+
+  print_success "Connectors have been built"
 }
 
 function run_build_extensions_task() {
@@ -787,6 +784,8 @@ function run_build_extensions_task() {
 
   print "Building i2 Analyze extensions"
   "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/build-extensions" "${extension_args[@]}"
+
+  print_success "Extensions have been built"
 }
 
 function jq_assets_query() {
@@ -911,13 +910,41 @@ path-configuration.json file."
   done
 }
 
+function ensure_correctly_setup_connectors() {
+  local -n array_of_assets="$1"
+  local name
+  local reviewed_assets=()
+
+  for asset in "${array_of_assets[@]}"; do
+    if [[ ! -f "${asset}/connector-definition.json" ]]; then
+      print_warn ""
+    fi
+  done
+}
+
 function create_symlinks() {
   local -n from_path_array="$1"
   local to_path="$2"
-  local asset_name from_path
+  local asset_name from_path asset_type
+  
+  asset_type="$(basename "${to_path}")"
 
   for from_path in "${from_path_array[@]}"; do
     asset_name="$(basename "${from_path}")"
+    case "${asset_type}" in
+    "connector-images")
+      if [[ ! -f "${from_path}/connector-definition.json" ]]; then
+        print_warn "Shared connector '${asset_name}' configured incorrectly. Skipping."
+        continue
+      fi
+      ;;
+    "i2a-extensions")
+      if [[ ! -f "${from_path}/pom.xml" ]]; then
+        print_warn "Shared extension '${asset_name}' configured incorrectly. Skipping."
+        continue
+      fi
+      ;;
+    esac
     ln -s "${from_path}" "${to_path}/${asset_name}"
   done
 }

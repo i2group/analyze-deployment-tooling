@@ -11,10 +11,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
 
+## 2.5.1 - 14/02/2023
+
+### Changed
+
+* Improved validation on scripts
+
+### Fixed
+
+* Fixed documentation Docker bind examples
+* Fixed pre-prod upgrade from v2.3.0
+
+### Workaround
+
+* Upgrading from v2.2.0 after a you complete a back up results in connectors that cannot be recovered. Before you upgrade, run `deploy -c <config_name> -t connectors`.
+
+[2.5.1]: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.5.1><!-- markdown-link-check-enable -->
+
 ## 2.5.0 - 20/12/2022
 
 ### Added
 
+* Updated for compatibility with i2 Analyze 4.4.1
 * Support for PostgreSQL
 * General documentation improvements and bug fixes
 
@@ -25,7 +43,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * Improved shared configuration UX by changing `configure-paths` script parameters. Use the `-h` flag for more information on how to run the command.
 * `manage-environment -t upgrade` and `manage-toolkit-configuration -t {create | prepare | import | export}` commands now use the path specified in the `path-configuration.json` file instead of the `-p` flag. Use the `-h` flag in each script for more information on how to run the commands.
 
-[2.5.0]: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.5.0><!-- markdown-link-check-enable -->
+[2.5.0]: <https://github.com/i2group/analyze-containers/tree/v2.5.0>
 
 ## 2.4.0 - 23/09/2022
 
@@ -63,7 +81,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 [2.3.0]: <https://github.com/i2group/analyze-containers/tree/v2.3.0>
 
-## 2.2.0 - 06/05/2022
+## 2.2.0 [Deprecated] - 06/05/2022
 
 ### Added
 
@@ -75,15 +93,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 * i2Connect SDK connector base image
 
-[2.2.0]: <https://github.com/i2group/analyze-containers/tree/v2.2.0>
-
-## 2.1.3 - 13/05/2022
+## 2.1.3 [Deprecated] - 13/05/2022
 
 ### Added
 
 * Functionality to support upgrading to future releases of i2 Analyze
-
-[2.1.3]: <https://github.com/i2group/analyze-containers/tree/v2.1.3>
 
 ## 2.1.2 [Deprecated] - 31/03/2022
 

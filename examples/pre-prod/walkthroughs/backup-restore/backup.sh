@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
-# © N.Harris Computer Corporation (2022)
+# © N.Harris Computer Corporation (2022-2023)
 #
 # SPDX short identifier: MIT
 
@@ -31,7 +31,7 @@ backup_version=1
 ###############################################################################
 # Set up backup permission                                                    #
 ###############################################################################
-run_solr_container_with_backup_volume mkdir "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}"
+run_solr_container_with_backup_volume mkdir -p "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}"
 run_solr_container_with_backup_volume chown -R solr:0 "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}"
 
 ###############################################################################

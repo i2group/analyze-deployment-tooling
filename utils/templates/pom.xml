@@ -15,7 +15,7 @@
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
     <output.dir>${project.basedir}/target</output.dir>
-    <i2analyze.version>4.4.1</i2analyze.version>
+    <i2analyze.version>{{VERSION}}</i2analyze.version>
   </properties>
 
   <build>

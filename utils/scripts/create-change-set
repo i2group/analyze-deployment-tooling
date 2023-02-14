@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
-# © N.Harris Computer Corporation (2022)
+# © N.Harris Computer Corporation (2022-2023)
 #
 # SPDX short identifier: MIT
 
@@ -133,15 +133,15 @@ function create_upgrade_change_set() {
       previous_db_container_name="sqlserver"
     else
       if [[ "${CONFIG_SUPPORTED_I2ANALYZE_VERSION}" < "4.4.0" ]]; then
-        previous_db_container_name="sqlserver.${CONFIG_NAME}_${CONFIG_SUPPORTED_I2ANALYZE_VERSION%.*}"
+        previous_db_container_name="${DB_DIALECT}.${CONFIG_NAME}_${CONFIG_SUPPORTED_I2ANALYZE_VERSION%.*}"
       else
-        previous_db_container_name="sqlserver.${CONFIG_NAME}_${CONFIG_SUPPORTED_I2ANALYZE_VERSION}"
+        previous_db_container_name="${DB_DIALECT}.${CONFIG_NAME}_${CONFIG_SUPPORTED_I2ANALYZE_VERSION}"
       fi
     fi
     # Restart Docker containers
     print "Restarting container: ${previous_db_container_name}"
     docker start "${previous_db_container_name}"
-    wait_for_sql_server_to_be_live
+    wait_for_db_to_be_live
     create_database_upgrade_change_set
   fi
   create_configuration_upgrade_change_set
