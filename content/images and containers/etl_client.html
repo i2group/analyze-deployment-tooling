@@ -89,15 +89,15 @@
 </code></pre><p>For examples of the build commands, see the <a href="https://github.com/i2group/analyze-containers/blob/main/utils/scripts/build-images">build-images</a> script.</p>
 <h2 id="running-an-etl-client-container">Running an ETL Client container</h2>
 <p>A ETL Client container uses the ETL Client image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to the container. The environment variables are described in <a href="#environment-variables">environment variables</a>.</p>
-<p>The container will run with a User ID and Group ID of <code>1000</code>. All files in mounted directories will be created with these IDs. If files are manipulated externally these IDs must be retained or the container will not function correctly.</p>
+<p>The container will run with a default User ID and Group ID of <code>1000</code> (this can be changed with the <code>USER_ID</code> and <code>GROUP_ID</code> env variables). All files in mounted directories will be created with these IDs. If files are manipulated externally these IDs must be retained or the container will not function correctly.</p>
 <p>For more information about the command, see <a href="https://docs.docker.com/engine/reference/run/">docker run reference</a>.</p>
 <h3 id="docker-run-command">Docker run command</h3>
 <p>The following <code>docker run</code> command runs the ETL Client container:</p>
 <pre><code class="lang-bash">docker run --rm \
-    --name &quot;etl_client&quot; \
     --network &quot;eia&quot; \
-    -v &quot;examples/pre-prod/configuration/logs:/opt/configuration/logs&quot; \
-    -v &quot;prereqs/i2analyze/toolkit/examples/data:/var/i2a-data&quot; \
+    -v &quot;/home/&lt;user-name&gt;/analyze-containers/examples/pre-prod/configuration/logs:/opt/configuration/logs&quot; \
+    -v &quot;/home/&lt;user-name&gt;/analyze-containers/prereqs/i2analyze/toolkit/examples/data:/var/i2a-data&quot; \
+    -e USER_ID=&quot;$(id -u)&quot; -e GROUP_ID=&quot;$(id -g)&quot; \
     -e DB_SERVER=&quot;sqlserver.eia&quot; \
     -e DB_PORT=&quot;1433&quot; \
     -e DB_NAME=&quot;ISTORE&quot; \
@@ -111,7 +111,8 @@
     -e DB_SSL_CONNECTION=&quot;true&quot; \
     -e SSL_CA_CERTIFICATE=&quot;SSL_CA_CERTIFICATE&quot; \
     &quot;etlclient_redhat:4.4.1&quot; &quot;$@&quot;
-</code></pre><p>For an example of the <code>docker run</code> command, see <code>run_etl_toolkit_tool_as_i2_etl</code> function in the <a href="https://github.com/i2group/analyze-containers/blob/main/utils/client_functions.sh">client_functions.sh</a> script.
+</code></pre><p>The local user ID is required so that a user is created in the Docker container with a <code>USER_ID</code> that is the same as the local user. The user is required to ensure that the local user can access any files that are generated on the container. The value of <code>$id</code> comes from your shell.</p>
+<p>For an example of the <code>docker run</code> command, see <code>run_etl_toolkit_tool_as_i2_etl</code> function in the <a href="https://github.com/i2group/analyze-containers/blob/main/utils/client_functions.sh">client_functions.sh</a> script.
 For an example of how to use <code>run_etl_toolkit_tool_as_i2_etl</code> function, see <a href="../tools%20and%20functions/client_functions.html#run_etl_toolkit_tool_as_i2_etl">run_etl_toolkit_tool_as_i2_etl</a>.</p>
 <h3 id="bind-mounts">Bind mounts</h3>
 <ul>
@@ -177,7 +178,7 @@ For an example of how to use <code>run_etl_toolkit_tool_as_i2_etl</code> functio
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022)
+            &copy; N. Harris Computer Corporation (2022-2023)
             
           </div>
         </div>

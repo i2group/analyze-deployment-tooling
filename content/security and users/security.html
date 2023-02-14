@@ -98,8 +98,8 @@
 referenced in path-configuration.json file). The user that gets read, write, and execute permissions is called <code>vscode</code> and the container user&#39;s UID/GID is updated at runtime to match your local user (host). To learn more about Dev Container users, see <a href="https://code.visualstudio.com/remote/advancedcontainers/add-nonroot-user">Add a non-root user to a container</a>.</p>
 <h2 id="ssl-certificates-in-the-deployment">SSL certificates in the deployment</h2>
 <p>The example deployment is configured to use SSL connections for communication between clients and i2 Analyze, and between the components of i2 Analyze.</p>
-<p>To achieve this, the appropriate certificate authorities and certificates are used. The <code>generate-secrets</code> script is used to simulate the process of creating the required keys and acquiring certificate authority-signed certificates.</p>
-<blockquote><p>Note: The keys and certificates used are set to expire after 90 days. To use the certificates for longer than this, you must run the <code>generate-secrets</code> script again.</p>
+<p>To achieve this, the appropriate certificate authorities and certificates are used. The <code>create-dev-environment</code> script is used to simulate the process of creating the required keys and acquiring certificate authority-signed certificates.</p>
+<blockquote><p>Note: The keys and certificates used are set to expire after 90 days. To use the certificates for longer than this, you must run the <code>create-dev-environment</code> script again.</p>
 </blockquote>
 <h2 id="certificate-authorities-ca">Certificate Authorities (CA)</h2>
 <p>In the example, two CAs are used to provide trust:</p>
@@ -258,7 +258,7 @@ The docker desktop does not support secrets, but the example environment example
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022)
+            &copy; N. Harris Computer Corporation (2022-2023)
             
           </div>
         </div>

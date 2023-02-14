@@ -95,8 +95,8 @@
    --net &quot;eia&quot; \
    --net-alias &quot;prometheus.eia&quot; \
     -p &quot;9090:9090&quot; \
-    -v &quot;examples/pre-prod/prometheus/web-config.yml:/etc/prometheus/web-config.yml&quot; \
-    -v &quot;examples/pre-prod/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml&quot; \
+    -v &quot;/home/&lt;user-name&gt;/analyze-containers/examples/pre-prod/prometheus/web-config.yml:/etc/prometheus/web-config.yml&quot; \
+    -v &quot;/home/&lt;user-name&gt;/analyze-containers/examples/pre-prod/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml&quot; \
     -v &quot;prometheus_data:/prometheus&quot; \
     -v &quot;prometheus_secrets:/run/secrets&quot; \
     &quot;i2group/i2eng-prometheus:2.40&quot;
@@ -194,7 +194,7 @@ For example:</p>
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022)
+            &copy; N. Harris Computer Corporation (2022-2023)
             
           </div>
         </div>

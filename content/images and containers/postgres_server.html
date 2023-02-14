@@ -94,7 +94,7 @@
    -v &quot;postgres_data:/var/lib/postgresql&quot; \
    -v &quot;postgres_sqlbackup:/backup&quot; \
    -v &quot;postgres_secrets:/run/secrets/&quot; \
-   -v &quot;prereqs/i2analyze/toolkit/examples/data:/var/i2a-data&quot; \
+   -v &quot;i2a_data_server:/var/i2a-data&quot; \
    -e POSTGRES_USER=&quot;postgres&quot; \
    -e POSTGRES_PASSWORD=&quot;POSTGRES_PASSWORD&quot; \
    -e SERVER_SSL=true \
@@ -179,7 +179,7 @@ For example:</p>
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022)
+            &copy; N. Harris Computer Corporation (2022-2023)
             
           </div>
         </div>

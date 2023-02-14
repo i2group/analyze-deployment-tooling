@@ -88,15 +88,16 @@
 <pre><code class="lang-bash">docker build -t &quot;sqlserver_client_redhat:4.4.1&quot; images/sql_client
 </code></pre><h2 id="running-a-sql-server-client-container">Running a SQL Server Client container</h2>
 <p>An SQL Server Client container uses the SQL Server Client image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to the container. The environment variables are described in <a href="#environment-variables">environment variables</a>.</p>
-<p>The container will run with a User ID and Group ID of <code>10001</code>. All files in mounted directories will be created with these IDs. If files are manipulated externally these IDs must be retained or the container will not function correctly.</p>
+<p>The container will run with a default User ID and Group ID of <code>10001</code> (this can be changed with the <code>USER_ID</code> and <code>GROUP_ID</code> env variables). All files in mounted directories will be created with these IDs. If files are manipulated externally these IDs must be retained or the container will not function correctly.</p>
 <p>For more information about the command, see <a href="https://docs.docker.com/engine/reference/run/">docker run reference</a>.</p>
 <h3 id="docker-run-command">Docker run command</h3>
 <p>The following <code>docker run</code> command runs a SQL Server Client container:</p>
 <pre><code class="lang-bash">docker run \
     --rm \
     --network &quot;eia&quot; \
-    -v &quot;pre-reqs/i2analyze/toolkit:/opt/toolkit&quot; \
-    -v &quot;examples/pre-prod/database-scripts/generated:/opt/databaseScripts/generated&quot; \
+    -v &quot;/home/&lt;user-name&gt;/analyze-containers/pre-reqs/i2analyze/toolkit:/opt/toolkit&quot; \
+    -v &quot;/home/&lt;user-name&gt;/analyze-containers/examples/pre-prod/database-scripts/generated:/opt/databaseScripts/generated&quot; \
+    -e USER_ID=&quot;$(id -u)&quot; -e GROUP_ID=&quot;$(id -g)&quot; \
     -e SQLCMD=&quot;/opt/mssql-tools/bin/sqlcmd&quot; \
     -e SQLCMD_FLAGS=&quot;-N -b&quot; \
     -e DB_SERVER=&quot;sqlserver.eia&quot; \
@@ -108,7 +109,8 @@
     -e DB_SSL_CONNECTION=true \
     -e SSL_CA_CERTIFICATE=&quot;SSL_CA_CERTIFICATE&quot; \
     &quot;sqlserver_client_redhat:4.4.1&quot; &quot;$@&quot;
-</code></pre><p>For an example of the <code>docker run</code> command, see <code>run_sql_server_command_as_etl</code> function in <code>client_functions.sh</code> script.
+</code></pre><p>The local user ID is required so that a user is created in the Docker container with a <code>USER_ID</code> that is the same as the local user. The user is required to ensure that the local user can access any files that are generated on the container. The value of <code>$id</code> comes from your shell.</p>
+<p>For an example of the <code>docker run</code> command, see <code>run_sql_server_command_as_etl</code> function in <code>client_functions.sh</code> script.
 For an example of how to use <code>run_sql_server_command_as_etl</code> function, see <a href="../tools%20and%20functions/client_functions.html#runsqlservercommandasetl">run_sql_server_command_as_etl</a>.</p>
 <blockquote><p>Note: you can run SQL Server Client container as different users, see <a href="../tools%20and%20functions/client_functions.html#runsqlservercommandasdba"><code>run_sql_server_command_as_dba</code></a>, <a href="../tools%20and%20functions/client_functions.html#runsqlservercommandassa"><code>run_sql_server_command_as_sa</code></a></p>
 </blockquote>
@@ -213,7 +215,7 @@ the toolkit must be mounted into the container.<br>In the example scripts, this 
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022)
+            &copy; N. Harris Computer Corporation (2022-2023)
             
           </div>
         </div>

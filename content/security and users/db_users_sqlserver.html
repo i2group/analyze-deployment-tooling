@@ -302,6 +302,46 @@ Note: The <code>configure_dba_roles_and_permissions.sh</code> script is run duri
 </tr>
 </tbody>
 </table>
+<h2 id="deletionbyrule">Deletion_By_Rule</h2>
+<p>The <code>Deletion_By_Rule</code> requires permissions to access/execute objects in the Information Store public schema.</p>
+<p>The following table provides an overview of the permissions required on the schemas in the Information Store database:</p>
+<table>
+<thead>
+<tr>
+<th>Schema</th>
+<th>Permissions</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IS_Public</td>
+<td>SELECT, EXEC</td>
+<td>Require to run deletion-by-rule jobs.</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>add_user_to_db_role.sh</code> script is used to make the <code>i2etl</code> user a member of the <code>Deletion_By_Rule</code> database role.</p>
+<h2 id="i2publicrole">i2_Public_Role</h2>
+<p>The <code>i2_Public_Role</code> requires permissions to access/update objects in the Information Store public schema.</p>
+<p>The following table provides an overview of the permissions required on the schemas in the Information Store database:</p>
+<table>
+<thead>
+<tr>
+<th>Schema</th>
+<th>Permissions</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IS_Public</td>
+<td>ALTER, SELECT, UPDATE, INSERT, DELETE, EXEC</td>
+<td>Required to complete actions that require access, modification, and execution permissions to objects in the IS_Public schema. For example, to use custom task scheduling.</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>add_user_to_db_role.sh</code> script is used to make the <code>i2analyze</code> user a member of the <code>i2_Public_Role</code> database role.</p>
 <h2 id="the-database-backup-operator-role">The database backup operator role</h2>
 <p>The example also demonstrates how to perform a database backup. The <code>dbb</code> user will perform this action and is a member of the SQL Server built-in role, <code>db_backupoperator</code>. This gives this user the correct permissions for performing a backup and nothing else.</p>
 <p>For more information, see <a href="https://docs.microsoft.com/en-us/sql/relational-databases/security/authentication-access/database-level-roles?view=sql-server-ver15#fixed-database-roles">Fixed-Database Roles</a> for more details.</p>
@@ -324,7 +364,7 @@ Note: The <code>configure_dba_roles_and_permissions.sh</code> script is run duri
 </tr>
 <tr>
 <td><code>i2analyze</code></td>
-<td>The <code>i2analyze</code> user is a member of the <code>i2analyze_Role</code>.</td>
+<td>The <code>i2analyze</code> user is a member of the <code>i2analyze_Role</code> and <code>i2_Public_Role</code>.</td>
 <td>The password is in the <code>i2analyze_PASSWORD</code> file in the <code>dev-environment-secrets/generated-secrets/sqlserver</code> directory.</td>
 </tr>
 <tr>
@@ -334,7 +374,7 @@ Note: The <code>configure_dba_roles_and_permissions.sh</code> script is run duri
 </tr>
 <tr>
 <td><code>i2etl</code></td>
-<td>The <code>i2etl</code> user is a member of <code>i2_ETL_Role</code>.</td>
+<td>The <code>i2etl</code> user is a member of <code>i2_ETL_Role</code> and <code>Deletion_By_Rule</code></td>
 <td>The password is in the <code>i2etl_PASSWORD</code> file in the <code>dev-environment-secrets/generated-secrets/sqlserver</code> directory.</td>
 </tr>
 <tr>
@@ -352,13 +392,13 @@ Note: The <code>configure_dba_roles_and_permissions.sh</code> script is run duri
 <p>The <code>sa</code> user and login exists on the base SQL Server image. The <code>sa</code> user is used to create the following artifacts:  </p>
 <ul>
 <li>Database: <code>ISTORE</code></li>
-<li>Roles: <code>i2analyze_Role</code>, <code>External_ETL_Role,</code>, <code>i2_ETL_Role</code> and <code>DBA_Role</code></li>
+<li>Roles: <code>i2analyze_Role</code>, <code>External_ETL_Role,</code>, <code>i2_ETL_Role</code>, <code>DBA_Role</code>, <code>Deletion_By_Rule</code> and <code>i2_Public_Role</code></li>
 <li>Logins: <code>i2analyze</code>, <code>etl</code>, <code>i2etl</code>, <code>dba</code>, and <code>dbb</code></li>
 <li>Users: <code>i2analyze</code>, <code>etl</code>, <code>i2etl</code>, <code>dba</code>, and <code>dbb</code></li>
 </ul>
 <p>The roles and users must be created after the Information Store database is created.</p>
 <h2 id="creating-the-roles">Creating the roles</h2>
-<p>The <code>sa</code> user is used to run the <code>create_db_roles.sh</code> client function that creates the <code>i2Analyze_Role</code>, <code>External_ETL_Role</code>, <code>i2_ETL_Role</code>, and <code>DBA_Role</code> roles.</p>
+<p>The <code>sa</code> user is used to run the <code>create_db_roles.sh</code> client function that creates the <code>i2Analyze_Role</code>, <code>External_ETL_Role</code>, <code>i2_ETL_Role</code>, <code>i2_Public_Role</code> and <code>DBA_Role</code> roles.</p>
 <p>To create the roles, the <code>create_db_roles.sh</code> script is run using the <code>run_sql_server_command_as_sa</code> client function. This function uses an ephemeral SQL Server client container to create the database roles. For more information about the client function, see:</p>
 <ul>
 <li><a href="../tools%20and%20functions/client_functions.html#runsqlservercommandassa">run_sql_server_command_as_sa</a></li>
@@ -493,7 +533,7 @@ Note: The <code>configure_dba_roles_and_permissions.sh</code> script is run duri
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022)
+            &copy; N. Harris Computer Corporation (2022-2023)
             
           </div>
         </div>

@@ -329,6 +329,46 @@
 </tr>
 </tbody>
 </table>
+<h2 id="deletionbyrule">Deletion_By_Rule</h2>
+<p>The <code>Deletion_By_Rule</code> requires permissions to access/execute objects in the Information Store public schema.</p>
+<p>The following table provides an overview of the permissions required on the schemas in the Information Store database:</p>
+<table>
+<thead>
+<tr>
+<th>Schema</th>
+<th>Permissions</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IS_Public</td>
+<td>SELECT, EXEC</td>
+<td>Require to run deletion-by-rule jobs.</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>add_user_to_db_role.sh</code> script is used to make the <code>i2etl</code> user a member of the <code>Deletion_By_Rule</code> database role.</p>
+<h2 id="i2publicrole">i2_Public_Role</h2>
+<p>The <code>i2_Public_Role</code> requires permissions to access/update objects in the Information Store public schema.</p>
+<p>The following table provides an overview of the permissions required on the schemas in the Information Store database:</p>
+<table>
+<thead>
+<tr>
+<th>Schema</th>
+<th>Permissions</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IS_Public</td>
+<td>ALTER, SELECT, UPDATE, INSERT, DELETE, EXEC</td>
+<td>Required to complete actions that require access, modification, and execution permissions to objects in the IS_Public schema. For example, to use custom task scheduling.</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>add_user_to_db_role.sh</code> script is used to make the <code>i2analyze</code> user a member of the <code>i2_Public_Role</code> database role.</p>
 <h2 id="the-database-backup-operator-role">The database backup operator role</h2>
 <p>The example also demonstrates how to perform a database backup. The <code>dbb</code> user will perform this action and requires <code>USAGE</code> and <code>SELECT</code>
 permissions in the following schemas in the Information Store database:</p>
@@ -361,7 +401,7 @@ permissions in the following schemas in the Information Store database:</p>
 </tr>
 <tr>
 <td><code>i2analyze</code></td>
-<td>The <code>i2analyze</code> user is a member of the <code>i2analyze_Role</code>.</td>
+<td>The <code>i2analyze</code> user is a member of the <code>i2analyze_Role</code> and <code>i2_Public_Role</code>.</td>
 <td>The password is in the <code>i2analyze_PASSWORD</code> file in the <code>dev-environment-secrets/generated-secrets/postgres</code> directory.</td>
 </tr>
 <tr>
@@ -371,7 +411,7 @@ permissions in the following schemas in the Information Store database:</p>
 </tr>
 <tr>
 <td><code>i2etl</code></td>
-<td>The <code>i2etl</code> user is a member of <code>i2_ETL_Role</code>.</td>
+<td>The <code>i2etl</code> user is a member of <code>i2_ETL_Role</code> and <code>Deletion_By_Rule</code>.</td>
 <td>The password is in the <code>i2etl_PASSWORD</code> file in the <code>dev-environment-secrets/generated-secrets/postgres</code> directory.</td>
 </tr>
 <tr>
@@ -389,7 +429,7 @@ permissions in the following schemas in the Information Store database:</p>
 <p>The <code>postgres</code> user and login exists on the base Postgres image. The <code>postgres</code> user is used to create the following artifacts:  </p>
 <ul>
 <li>Database: <code>ISTORE</code></li>
-<li>Roles: <code>i2analyze_Role</code>, <code>External_ETL_Role,</code>, <code>i2_ETL_Role</code> and <code>DBA_Role</code></li>
+<li>Roles: <code>i2analyze_Role</code>, <code>External_ETL_Role,</code>, <code>i2_ETL_Role</code>, <code>DBA_Role</code>, <code>Deletion_By_Rule</code> and <code>i2_Public_Role</code></li>
 <li>Users: <code>i2analyze</code>, <code>etl</code>, <code>i2etl</code>, <code>dba</code>, and <code>dbb</code></li>
 </ul>
 <p>The roles and users must be created after the Information Store database is created. And the ownership of the database needs to be
@@ -414,7 +454,7 @@ given to the DBA role.</p>
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022)
+            &copy; N. Harris Computer Corporation (2022-2023)
             
           </div>
         </div>

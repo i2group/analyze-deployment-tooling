@@ -101,7 +101,7 @@
    -v &quot;sqlserver_data:/var/opt/mssql&quot; \
    -v &quot;sqlserver_sqlbackup:/backup&quot; \
    -v &quot;sqlserver_secrets:/run/secrets/&quot; \
-   -v &quot;prereqs/i2analyze/toolkit/examples/data:/var/i2a-data&quot; \
+   -v &quot;/home/&lt;user-name&gt;/analyze-containers/prereqs/i2analyze/toolkit/examples/data:/var/i2a-data&quot; \
    -e ACCEPT_EULA=&quot;Y&quot; \
    -e MSSQL_AGENT_ENABLED=true \
    -e MSSQL_PID=&quot;Developer&quot; \
@@ -197,7 +197,7 @@ For example:</p>
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022)
+            &copy; N. Harris Computer Corporation (2022-2023)
             
           </div>
         </div>

@@ -84,6 +84,10 @@
 <p><strong>Solution:</strong><br>Ensure that you have opened the analyze-containers folder in a WSL VS Code window before opening the folder as a Dev Container.</p>
 <p>In the bottom-left of the window, the green bar must say <code>WSL: Ubuntu</code>. For example: <img src="../images/vscode_wsl_green.png" alt="WSL: Ubuntu">.</p>
 <p>If it does not say <code>WSL: Ubuntu</code>, press <strong>F1</strong> and type <code>WSL: Reopen folder in WSL</code> then select it. After the WSL window opens, you can then follow the instructions to open the folder in a Dev Container.</p>
+<h2 id="error-when-reloading-vs-code-window">Error when reloading VS Code window</h2>
+<p><strong>Scenario:</strong><br>When you have multiple versions of analyze-containers running in VS Code and run <code>manage-environment -t stop</code> in one of the windows, the other VS Code window displays the message <code>Cannot reconnect. Please reload the window.</code>. When you press <strong>Reload Window</strong>, you might see the following message: <code>An error occurred setting up the container.</code></p>
+<p><strong>Solution:</strong>
+In the error dialogue, press <strong>Retry</strong>.</p>
 <h2 id="error-grafana-not-live">Error: <code>Grafana not live</code></h2>
 <p><strong>Scenario:</strong><br>An error is reported that Grafana is <code>Not Live</code> when running <code>deploy</code> but the system has been running successfully before.</p>
 <p><strong>Solutions:</strong>  </p>
@@ -135,7 +139,7 @@
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022)
+            &copy; N. Harris Computer Corporation (2022-2023)
             
           </div>
         </div>
