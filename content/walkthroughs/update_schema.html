@@ -105,13 +105,13 @@ docker rm liberty1 liberty2
 After you modify the configuration, build a new configured liberty image with the updated configuration.
 The <code>build_liberty_configured_image_for_pre_prod</code> server function builds the configured Liberty image.  For more information, see <a href="../images%20and%20containers/liberty.html#building-a-configured-liberty-image">Building a configured Liberty image</a>.
 See the <code>Modifying the schema</code> section of the walkthrough script.</p>
-<p>To modify your schema, use i2 Analyze Schema Designer. For more information on installing Schema Designer please see: <a href="https://docs.i2group.com/analyze/4.4.1/ar_tools_welcome.html">i2 Analyze Schema Designer</a>.</p>
+<p>To modify your schema, use i2 Analyze Schema Designer. For more information on installing Schema Designer please see: <a href="https://docs.i2group.com/analyze4.4.1/ar_tools_welcome.html">i2 Analyze Schema Designer</a>.</p>
 <h2 id="validating-your-schema">Validating your schema</h2>
 <p>After you modify the schema, you can use the <code>validateSchemaAndSecuritySchema.sh</code> tool to validate it. If the schema is invalid, errors are reported.
 See the <code>Validating the schema</code> section of the walkthrough script.</p>
 <p>The <code>run_i2_analyze_tool</code> client function is used to run the <code>validateSchemaAndSecuritySchema.sh</code> tool.  </p>
 <ul>
-<li><a href="../tools%20and%20functions/client_functions.html#runi2analyzetool">run_i2_analyze_tool</a></li>
+<li><a href="../tools%20and%20functions/client_functions.md#run-i2-analyze-tool">run_i2_analyze_tool</a></li>
 <li><a href="../tools%20and%20functions/i2analyze_tools.html#schema-validation-tool">validateSchemaAndSecuritySchema</a></li>
 </ul>
 <h2 id="generating-the-database-scripts">Generating the database scripts</h2>
@@ -119,7 +119,7 @@ See the <code>Validating the schema</code> section of the walkthrough script.</p
 See the <code>Generating update schema scripts</code> section of the walkthrough script.</p>
 <p>The <code>run_i2_analyze_tool</code> client function is used to run the <code>generateUpdateSchemaScripts.sh</code> tool.  </p>
 <ul>
-<li><a href="../tools%20and%20functions/client_functions.html#runi2analyzetool">run_i2_analyze_tool</a></li>
+<li><a href="../tools%20and%20functions/client_functions.md#run-i2-analyze-tool">run_i2_analyze_tool</a></li>
 <li><a href="../tools%20and%20functions/i2analyze_tools.html#schema-update-tool">generateUpdateSchemaScripts</a></li>
 </ul>
 <h2 id="running-the-generated-scripts">Running the generated scripts</h2>
@@ -127,7 +127,7 @@ See the <code>Generating update schema scripts</code> section of the walkthrough
 See the <code>Running the generated scripts</code> section of the walkthrough script.</p>
 <p>The <code>run_sql_server_command_as_dba</code> client function is used to run the <code>runDatabaseScripts.sh</code> tool.  </p>
 <ul>
-<li><a href="../tools%20and%20functions/client_functions.html#runsqlservercommandasdba">run_sql_server_command_as_dba</a></li>
+<li><a href="../tools%20and%20functions/client_functions.md#run-sql-server-command-as-dba">run_sql_server_command_as_dba</a></li>
 <li><a href="../tools%20and%20functions/i2analyze_tools.html#run-database-scripts-tool">runDatabaseScripts</a></li>
 </ul>
 <p>After the database scripts are run, the Information Store database is updated with any changes to the schema.</p>
@@ -141,7 +141,7 @@ See the <code>Running the generated scripts</code> section of the walkthrough sc
 See the <code>Validating database consistency</code> section of the walkthrough script.</p>
 <p>The <code>run_i2_analyze_tool</code> client function is used to run the <code>dbConsistencyCheckScript.sh</code> tool.  </p>
 <ul>
-<li><a href="../tools%20and%20functions/client_functions.html#runi2analyzetool">run_i2_analyze_tool</a></li>
+<li><a href="../tools%20and%20functions/client_functions.md#run-i2-analyze-tool">run_i2_analyze_tool</a></li>
 <li><a href="../tools%20and%20functions/i2analyze_tools.html#information-store-database-consistency-tool">dbConsistencyCheckScript</a></li>
 </ul>
 </article>

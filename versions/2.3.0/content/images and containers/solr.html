@@ -89,8 +89,8 @@
 <h3 id="docker-build-command">Docker build command</h3>
 <p>The Solr image is built from the Dockerfile in <code>images/solr_redhat</code>.
 The following <code>docker build</code> command builds the Solr image:</p>
-<pre><code class="lang-bash">docker build -t &quot;solr_redhat:4.4.0&quot; images/solr_redhat \
-  --build-arg I2ANALYZE_VERSION=&quot;4.4.0&quot;
+<pre><code class="lang-bash">docker build -t &quot;solr_redhat:{{i2analyze_version}}&quot; images/solr_redhat \
+  --build-arg I2ANALYZE_VERSION=&quot;{{i2analyze_version}}&quot;
 </code></pre><p>For examples of the build commands, see <code>buildImages.sh</code> script.</p>
 <h2 id="running-a-solr-container">Running a Solr container</h2>
 <p>A Solr container uses the Solr image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to Solr on the container. The environment variables are described in <a href="#environment-variables">environment variables</a></p>
@@ -116,7 +116,7 @@ The following <code>docker build</code> command builds the Solr image:</p>
    -e SSL_PRIVATE_KEY_FILE=&quot;/run/secrets/server.key&quot; \
    -e SSL_CERTIFICATE_FILE=&quot;/run/secrets/server.cer&quot; \
    -e SSL_CA_CERTIFICATE_FILE=&quot;/run/secrets/CA.cer&quot; \
-   &quot;solr_redhat:4.4.0&quot;
+   &quot;solr_redhat:{{i2analyze_version}}&quot;
 </code></pre><p>For an example of the <code>docker run</code> command, see <a href="https://github.com/i2group/analyze-containers/blob/main/utils/serverFunctions.sh">serverFunctions.sh</a>. The <code>runSolr</code> function takes the following arguments to support running multiple Solr containers:</p>
 <ol>
 <li><code>CONTAINER</code> - The name for the container.</li>

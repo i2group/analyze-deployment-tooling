@@ -85,7 +85,7 @@
 <p>The SQL Server image is built from the Dockerfile in <code>images/sql_server</code>.</p>
 <h3 id="docker-build-command">Docker build command</h3>
 <p>The following <code>docker build</code> command builds the SQL Server image:</p>
-<pre><code class="lang-bash">docker build -t &quot;sqlserver_redhat:4.4.1&quot; images/sqlserver
+<pre><code class="lang-bash">docker build -t &quot;sqlserver_redhat:{{i2analyze_version}}&quot; images/sqlserver
 </code></pre><p>For examples of the build commands, see <code>build-images</code> script.</p>
 <h2 id="running-a-sql-server-container">Running a SQL Server container</h2>
 <p>The SQL Server container uses the SQL Server image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to the container. The environment variables are described in <a href="#environment-variables">environment variables</a>.</p>
@@ -109,7 +109,7 @@
    -e SERVER_SSL=true \
    -e SSL_PRIVATE_KEY_FILE=&quot;/run/secrets/server.key&quot; \
    -e SSL_CERTIFICATE_FILE=&quot;/run/secrets/server.cer&quot; \
-   &quot;sqlserver_redhat:4.4.1&quot;
+   &quot;sqlserver_redhat:{{i2analyze_version}}&quot;
 </code></pre><p>For an example of the <code>docker run</code> command, see <a href="https://github.com/i2group/analyze-containers/blob/main/utils/server_functions.sh">server_functions.sh</a>. The <code>run_sql_server</code> does not take any arguments.</p>
 <h3 id="volumes">Volumes</h3>
 <p>Named volumes are used to persist data and logs that are generated and used in the SQL Server container, as well as a separate volume for backups, outside of the container.</p>

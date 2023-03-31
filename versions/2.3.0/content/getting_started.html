@@ -123,23 +123,23 @@
 </ol>
 <h3 id="code">Code</h3>
 <ol>
-<li>Download the <code>tar.gz</code> from <a href="https://github.com/i2group/analyze-containers/releases/tag/v2.3.0">https://github.com/i2group/analyze-containers/releases/tag/v2.3.0</a>.</li>
+<li>Download the <code>tar.gz</code> from <a href="https://github.com/i2group/analyze-containers/releases/tag/v{{version}}">https://github.com/i2group/analyze-containers/releases/tag/v{{version}}</a>.</li>
 <li><p>Extract the <code>tar.gz</code> file by using the following steps:</p>
 <ol>
-<li>On Windows, copy the <code>analyze-containers-2.3.0.tar.gz</code> file to your WSL filesystem. For example: <code>Z:\home\&lt;user&gt;</code></li>
+<li>On Windows, copy the <code>analyze-containers-{{version}}.tar.gz</code> file to your WSL filesystem. For example: <code>Z:\home\&lt;user&gt;</code></li>
 <li><p>Extract the <code>tar.gz</code> file (On Windows, run the commands from a WSL terminal. <strong>Start</strong> &gt; <strong>wsl</strong>):</p>
 <pre><code class="lang-sh">cd /home/&lt;user&gt;
-</code></pre><pre><code class="lang-sh">tar -xvzf analyze-containers-2.3.0.tar.gz
-</code></pre><pre><code class="lang-sh">mv analyze-containers-2.3.0/ analyze-containers
+</code></pre><pre><code class="lang-sh">tar -xvzf analyze-containers-{{version}}.tar.gz
+</code></pre><pre><code class="lang-sh">mv analyze-containers-{{version}}/ analyze-containers
 </code></pre></li>
 </ol>
 </li>
 </ol>
 <h3 id="i2-analyze-minimal-toolkit">i2 Analyze minimal toolkit</h3>
 <ol>
-<li>Download the i2 Analyze V4.4.0 Minimal for Linux.<ul>
+<li>Download the i2 Analyze V{{i2analyze_version}} Minimal for Linux.<ul>
 <li>To download i2 Analyze, follow the procedure described in <a href="https://support.i2group.com/s/article/2290">Where can I download the latest i2 Products?</a></li>
-<li>Populate the subject of the form with <code>Request for i2 Analyze 4.4.0 minimal toolkit for Linux</code>.</li>
+<li>Populate the subject of the form with <code>Request for i2 Analyze {{i2analyze_version}} minimal toolkit for Linux</code>.</li>
 </ul>
 </li>
 <li>Rename the <code>i2analyzeMinimal_440.tar.gz</code> file to <code>i2analyzeMinimal.tar.gz</code>, then copy it to the <code>analyze-containers/pre-reqs</code> directory.</li>
@@ -167,8 +167,8 @@
 <h3 id="jdbc-drivers">JDBC drivers</h3>
 <p>You must provide the JDBC driver to enable the application to communicate with the database.</p>
 <ol>
-<li>Download the Microsoft JDBC Driver 9.4.1 for SQL Server from <a href="https://github.com/microsoft/mssql-jdbc/releases/tag/v9.4.1">https://github.com/microsoft/mssql-jdbc/releases/tag/v9.4.1</a> by clicking the <code>mssql-jdbc-9.4.1.jre11.jar</code> asset.</li>
-<li>Copy the <code>mssql-jdbc-9.4.1.jre11.jar</code> file to the <code>analyze-containers/pre-reqs/jdbc-drivers</code> directory.</li>
+<li>Download the Microsoft JDBC Driver {{mssql_jdbc_version}} for SQL Server from <a href="https://github.com/microsoft/mssql-jdbc/releases/tag/v{{mssql_jdbc_version}}">https://github.com/microsoft/mssql-jdbc/releases/tag/v{{mssql_jdbc_version}}</a> by clicking the <code>mssql-jdbc-{{mssql_jdbc_version}}.jre11.jar</code> asset.</li>
+<li>Copy the <code>mssql-jdbc-{{mssql_jdbc_version}}.jre11.jar</code> file to the <code>analyze-containers/pre-reqs/jdbc-drivers</code> directory.</li>
 </ol>
 <h3 id="modifying-the-hosts-file">Modifying the hosts file</h3>
 <ol>

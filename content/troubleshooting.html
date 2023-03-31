@@ -119,6 +119,36 @@ In the error dialogue, press <strong>Retry</strong>.</p>
 <li>Run <code>docker system prune</code> to remove dangling images and containers that are no longer in use to free up already allocated Docker disk space.</li>
 <li>Allocate more disk space to Docker via Docker Desktop (on MacOS) or <code>.wslconfig</code> (on Windows).</li>
 </ol>
+<h2 id="error-ingestionscriptscreate-ingestion-sourcessh-doesnt-exist">Error: <code>ingestion/scripts/create-ingestion-sources.sh doesn&#39;t exist</code></h2>
+<p><strong>Scenario:</strong><br>When you attempt to use any of the example ingestion scripts, the scripts cannot be found.</p>
+<p>This happens when you have upgraded from a previous version where the scripts had different names.</p>
+<p><strong>Solutions:</strong>  </p>
+<ol>
+<li>If you have not modified the contents of the ingestion scripts:<ol>
+<li>Delete the following scripts:<ul>
+<li><code>&lt;config-name&gt;/ingestion/scripts</code>:<ul>
+<li><code>createIngestionSources.sh</code></li>
+</ul>
+</li>
+<li><code>i2a-data/law-enforcement-data-set-1/scripts</code>:<ul>
+<li><code>createIngestionSources.sh</code></li>
+<li><code>createStagingTables.sh</code></li>
+<li><code>deleteStagingTables.sh</code></li>
+<li><code>ingestLawEnforcementDataSet1.sh</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Replace the deleted files with the ones in <code>examples/ingestion/scripts</code> with similar name.<br> For example, <code>createIngestionSources.sh</code> is now <code>create-ingestion-sources.sh</code>.</li>
+<li>Re-run the initial command that failed.</li>
+</ol>
+</li>
+<li>If you have modified the contents of the ingestion scripts:<ol>
+<li>You can run the ingestion command and reference the previous script names.</li>
+<li>You can rename the scripts in the <code>&lt;config-name&gt;/ingestion/scripts</code> and <code>i2a-data/law-enforcement-data-set-1/scripts</code> directories to match the names in <code>examples/ingestion/scripts</code>.<br> For example, <code>createIngestionSources.sh</code> is now <code>create-ingestion-sources.sh</code>.</li>
+</ol>
+</li>
+</ol>
 </article>
           </div>
           

@@ -97,7 +97,7 @@
 <ol>
 <li>Use the config development environment to create and develop a config.<br>For more information, see <a href="deploy_config_dev.html">Configuration development environment</a>.
 When you are happy with the developed configuration, you can complete the process that enables you to use it with the i2 Analyze deployment toolkit.</li>
-<li>Install the i2 Analyze deployment toolkit.<br>For more information, see <a href="https://docs.i2group.com/analyze/4.4.0/analyze_install.html">Installing i2 Analyze</a>.</li>
+<li>Install the i2 Analyze deployment toolkit.<br>For more information, see <a href="https://docs.i2group.com/analyze4.4.0/analyze_install.html">Installing i2 Analyze</a>.</li>
 <li><p>To mount the directory where you installed the i2 Analyze toolkit to the dev container, open the <code>devcontainer.json</code> file inside <code>.devcontainer</code> directory. In the <code>mounts</code> object, add the path to the toolkit directory as the source and target.<br>On Windows, you must use forward slashes (<code>/</code>). If your toolkit is on the Windows filesystem, access it by using the <code>/mnt</code> directory.<br>For example:</p>
 <pre><code class="lang-json"> &quot;mounts&quot;: [
    ...
@@ -127,18 +127,18 @@ When you are happy with the developed configuration, you can complete the proces
 </li>
 </ol>
 </li>
-<li><p>You can then deploy your i2 Analyze deployment toolkit configuration. For more information about deploying i2 Analyze, see <a href="https://docs.i2group.com/analyze/4.4.0/t_create_config.html">Deploying i2 Analyze</a>.
+<li><p>You can then deploy your i2 Analyze deployment toolkit configuration. For more information about deploying i2 Analyze, see <a href="https://docs.i2group.com/analyze4.4.0/t_create_config.html">Deploying i2 Analyze</a>.
 Start at step 3 from the linked documentation. There are a number of environment specific configuration files that are not populated in the config development environment.</p>
 </li>
 </ol>
 <h2 id="use-case-2">Use case 2</h2>
-<p>This section assumes that you are starting with a configuration from an i2 Analyze deployment toolkit. For more information about deploying i2 Analyze, see <a href="https://docs.i2group.com/analyze/4.4.0/analyze_deployment.html">Deploying i2 Analyze</a>.</p>
+<p>This section assumes that you are starting with a configuration from an i2 Analyze deployment toolkit. For more information about deploying i2 Analyze, see <a href="https://docs.i2group.com/analyze4.4.0/analyze_deployment.html">Deploying i2 Analyze</a>.</p>
 <p>The config development environment uses fixed names for schemas and configuration files. Before you can import your deployment toolkit configuration into the config development environment, your configuration must be updated to use the expected file names. The <code>manageToolkitConfiguration.sh</code> script can rename the files for you and update any references to them.</p>
 <p>You can also decide whether or not to use the config development environment configuration set in your deployment toolkit configuration.
 If you decide to use the new config set, all settings for the deployment must be specified in the <code>analyze-settings.properties</code> file.
 If you choose not to use the new configuration set, any additions that you make to the <code>analyze-settings</code> file in the config development environment are not exported.</p>
 <ol>
-<li>Back up your i2 Analyze deployment toolkit configuration.<br>Fore more information about backing up your configuration, see <a href="https://docs.i2group.com/analyze/4.4.0/backup-restore-config.html">Back up and restore the configuration</a>.</li>
+<li>Back up your i2 Analyze deployment toolkit configuration.<br>Fore more information about backing up your configuration, see <a href="https://docs.i2group.com/analyze4.4.0/backup-restore-config.html">Back up and restore the configuration</a>.</li>
 <li>Use the config development environment to create an empty config to import your configuration in to.<br>For more information, see <a href="deploy_config_dev.html">Configuration development environment</a>. You do not need to specify any schema files or deploy the config.</li>
 <li><p>To mount the directory where your i2 Analyze toolkit is installed to the dev container, open the <code>devcontainer.json</code> file inside <code>.devcontainer</code> directory. In the <code>mounts</code> object, add the path to the toolkit directory as the source and target.<br>On Windows, you must use forward slashes (<code>/</code>). If your toolkit is on the Windows filesystem, access it by using the <code>/mnt</code> directory.<br>For example:</p>
 <pre><code class="lang-json"> &quot;mounts&quot;: [
@@ -191,14 +191,14 @@ You can remove the <code>DiscoClientSettings</code> and <code>DiscoServerSetting
 <p>The connector IDs are displayed when you run the <code>import</code> and <code>export</code> tasks to enable you to provide the connectors in each environment. For more information about deploying connectors, see:</p>
 <ul>
 <li><a href="connector_config_dev.html">Adding connectors to your config development environment</a></li>
-<li><a href="https://docs.i2group.com/analyze/4.4.0/i2_connect_topology.html">Adding connectors to your i2 Analyze deployment toolkit configuration</a></li>
+<li><a href="https://docs.i2group.com/analyze4.4.0/i2_connect_topology.html">Adding connectors to your i2 Analyze deployment toolkit configuration</a></li>
 </ul>
 <h2 id="extensions">Extensions</h2>
 <p>In the config development environment, i2Analyze extensions are built and deployed using Maven.</p>
 <p>To add an extension to your i2 Analyze deployment toolkit, copy the JAR from <code>i2a-extensions/&lt;extension-name&gt;/target/&lt;extension-name&gt;-&lt;version&gt;.jar</code> and follow the DevEssentials deployment steps.
 For more information, see <a href="https://github.com/i2group/analyze/blob/master/documentation/Configuring-the-group-based-default-security-dimension-values-example-project.md">Configuring the &#39;group-based default security dimension values&#39; example project</a> for an example of the steps to take.</p>
 <h2 id="prometheus-and-grafana">Prometheus and Grafana</h2>
-<p>In the config development environment, Prometheus and Grafana are run on Docker images. You can modify the <code>configs/&lt;config-name&gt;/configuration/prometheus/prometheus.yml</code> file and the Grafana dashboards in <code>configs/&lt;config-name&gt;/configuration/grafana/dashboards</code> folder to further develop your metrics configuration and once finished this can be copied to the locations that are required by Prometheus and Grafana. For more information, see <a href="https://docs.i2group.com/analyze/4.4.0/configure_monitoring.html">Configure server monitoring</a>.</p>
+<p>In the config development environment, Prometheus and Grafana are run on Docker images. You can modify the <code>configs/&lt;config-name&gt;/configuration/prometheus/prometheus.yml</code> file and the Grafana dashboards in <code>configs/&lt;config-name&gt;/configuration/grafana/dashboards</code> folder to further develop your metrics configuration and once finished this can be copied to the locations that are required by Prometheus and Grafana. For more information, see <a href="https://docs.i2group.com/analyze4.4.0/configure_monitoring.html">Configure server monitoring</a>.</p>
 <hr>
 <h2 id="managetoolkitconfigurationsh-script">manageToolkitConfiguration.sh script</h2>
 <pre><code class="lang-sh">Usage:

@@ -107,7 +107,7 @@
    -e &quot;SSL_PRIVATE_KEY_FILE=/run/secrets/server.key&quot; \
    -e &quot;SSL_CERTIFICATE_FILE=/run/secrets/server.cer&quot; \
    -e &quot;SSL_CA_CERTIFICATE_FILE=/run/secrets/CA.cer&quot; \
-   &quot;i2eng/i2eng-zookeeper:3.6&quot;
+   &quot;i2eng/i2eng-zookeeper:{{zookeeper_version}}&quot;
 </code></pre><p><em>Note:</em> <code>SERVER_SSL</code> variable is set based on the <code>SOLR_ZOO_SSL_CONNECTION</code> switch, see <a href="#environment-variables">Environment variables</a>.</p>
 <h3 id="zookeeper-service-ports">ZooKeeper Service Ports</h3>
 <p>Default ports used by ZooKeeper are:</p>

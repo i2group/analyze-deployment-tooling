@@ -79,7 +79,7 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="configuration-development-environment">Configuration development environment</h1>
 
-<p>To create a production deployment of i2 Analyze, you must develop the i2 Analyze configuration. The production deployment process describes a process of using different development environments to produce your i2 Analyze configuration. For more information about the environments, see <a href="https://docs.i2group.com/analyze/4.4.1/c_plan_deploy.html">Deployment phases and environments</a>.</p>
+<p>To create a production deployment of i2 Analyze, you must develop the i2 Analyze configuration. The production deployment process describes a process of using different development environments to produce your i2 Analyze configuration. For more information about the environments, see <a href="https://docs.i2group.com/analyze4.4.1/c_plan_deploy.html">Deployment phases and environments</a>.</p>
 <p>The analyze-containers repository enables you to create a development environment that comprises a containerized deployment of i2 Analyze. The containerized deployment enables you to switch between deployment patterns easily and redeploy changes in a consistent manner.</p>
 <p>Process overview:</p>
 <ul>
@@ -90,22 +90,18 @@
 </ul>
 <p>If you have already run the <code>create-dev-environment</code> script and you want to create a new custom config from the template, go to <a href="#creating-a-config">Creating a development config</a>.</p>
 <h2 id="prerequisites">Prerequisites</h2>
-<p>Before you create the configuration development environment, you must configure the analyze-containers repository.<br>For more information, see <a href="getting_started.html">Getting started with the analyze-containers repository</a>.</p>
+<ul>
+<li><p>Before you create the configuration development environment, you must configure the analyze-containers repository.<br>For more information, see <a href="getting_started.html">Getting started with the analyze-containers repository</a>.</p>
+</li>
+<li><p>To edit files and run commands, use VS Code. If you have not already got it open, follow the steps in <a href="getting_started.html#visual-studio-code">VS Code</a> to do so.</p>
+</li>
+</ul>
 <hr>
 <h2 id="creating-the-configuration-development-environment">Creating the configuration development environment</h2>
 <ol>
-<li><p>To create the configuration development environment and template config, run <code>create-dev-environment</code> command.</p>
-<p> The script performs the following actions:</p>
-<ul>
-<li>Extracts the required files from the i2 Analyze deployment toolkit</li>
-<li>Builds the required Docker images for the development environment</li>
-<li>Generates the secrets that are used in the environment</li>
-<li>Creates the configuration template  <ul>
-<li>The configuration template is located in <code>/templates/config-development</code>.</li>
-</ul>
-</li>
-</ul>
-</li>
+<li><p>To create the configuration development environment and template config, run:</p>
+<pre><code class="lang-sh">create-dev-environment
+</code></pre></li>
 </ol>
 <h3 id="accepting-the-licenses">Accepting the licenses</h3>
 <ol>
@@ -120,7 +116,7 @@
 </ol>
 </li>
 </ol>
-<p>For example:</p>
+<p>For example, update the <code>licenses.conf</code> file to match:</p>
 <pre><code class="lang-sh">LIC_AGREEMENT=ACCEPT
 MSSQL_PID=Developer
 ACCEPT_EULA=Y
@@ -166,7 +162,7 @@ ACCEPT_EULA=Y
 <li><code>cstore</code> - Chart Store</li>
 <li><code>i2c_istore</code> - i2 Connect gateway and Information Store</li>
 <li><p><code>i2c_cstore</code> - i2 Connect gateway and Chart Store  </p>
-<p>For more information about the i2 Analyze deployment patterns, see: <a href="https://docs.i2group.com/analyze/4.4.1/components.html">Components</a>.</p>
+<p>For more information about the i2 Analyze deployment patterns, see: <a href="https://docs.i2group.com/analyze4.4.1/components.html">Components</a>.</p>
 </li>
 </ul>
 </li>
@@ -199,16 +195,16 @@ HOST_PORT_GRAFANA=3500
 <h2 id="specifying-the-schema-and-charting-schemes-files">Specifying the schema and charting schemes files</h2>
 <p>To deploy i2 Analyze, you must provide a schema and charting scheme.
 The i2 Analyze toolkit includes example files that you can use as a starting point, or you can use existing files.</p>
-<p>For more information about the example schemas, see <a href="https://docs.i2group.com/analyze/4.4.1/example_schemes.html">Example schemas</a>.</p>
+<p>For more information about the example schemas, see <a href="https://docs.i2group.com/analyze4.4.1/example_schemes.html">Example schemas</a>.</p>
 <ol>
-<li>Choose an example schema and associated charting scheme as your starting point from the <code>pre-reqs/i2analyze/toolkit/examples/schemas</code> directory.</li>
+<li>Choose an example schema and associated charting scheme as your starting point from the <code>pre-reqs/i2analyze/toolkit/examples/schemas/&lt;locale&gt;</code> directory.</li>
 <li>Copy the chosen schema and charting scheme to your <code>configs/&lt;config_name&gt;/configuration</code> directory.</li>
 <li>Remove the existing <code>schema.xml</code> and <code>schema-charting-schemes.xml</code> files. Then, rename your chosen schema file to <code>schema.xml</code> and your charting scheme to <code>schema-charting-schemes.xml</code>.</li>
 </ol>
 <h2 id="specifying-the-security-schema-user-registry-and-command-access-control-files">Specifying the security schema, user registry, and command access control files</h2>
 <p>To connect to an i2 Analyze deployment, you must provide a security schema and user registry. To control access to features and enable to use of the administrator endpoints, provide a command access control file.</p>
 <p>The i2 Analyze toolkit includes example files that you can use as a starting point.</p>
-<p>For more information about the example files, see <a href="https://docs.i2group.com/analyze/4.4.1/example_schemes.html">Example schemas</a>.</p>
+<p>For more information about the example files, see <a href="https://docs.i2group.com/analyze4.4.1/example_schemes.html">Example schemas</a>.</p>
 <ol>
 <li>Copy and overwrite the example <code>security-schema.xml</code>, <code>user-registry.xml</code>, and <code>command-access-control.xml</code> files from the <code>pre-reqs/i2analyze/toolkit/examples/security</code> directory to your <code>configs/&lt;config_name&gt;/configuration</code> directory.</li>
 </ol>

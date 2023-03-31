@@ -80,15 +80,19 @@
 <h1 id="getting-started-with-the-analyze-containers-repository">Getting started with the analyze-containers repository</h1>
 
 <h2 id="prerequisites">Prerequisites</h2>
-<p>You can run the code in the analyze-containers repository on Windows with Windows Subsystem for Linux and MacOS.</p>
+<p>You can run the code in the analyze-containers repository on Windows with Windows Subsystem for Linux and MacOS.
+The system requires being connected to the internet to download required repositories. If you are running the project
+from an environment without an internet connection, see <a href="reference%20architecture/external_dependencies.html">External dependencies</a>.</p>
 <h3 id="windows-subsystem-for-linux-wsl">Windows Subsystem for Linux (WSL)</h3>
 <p>If you are on <strong>Windows</strong>, you must use WSL 2 as the backend for Docker and to run the shell scripts in this repository.</p>
 <ol>
-<li><p>To install WSL, in an administrator Command Prompt, run:</p>
-<pre><code class="lang-sh">wsl --install
-</code></pre><p> Then, restart your machine.<br> For information about installing WSL, see <a href="https://docs.microsoft.com/en-gb/windows/wsl/setup/environment#get-started">Install Linux on Windows with WSL</a>.</p>
+<li><p>In an administrator Command Prompt, run the following command:</p>
+<pre><code class="lang-cmd">wsl --install
+</code></pre></li>
+<li><p>Restart your machine to complete the installation.</p>
 </li>
-<li>Configure your WSL user. For more information, see <a href="https://docs.microsoft.com/en-gb/windows/wsl/setup/environment#set-up-your-linux-username-and-password">Set up your Linux username and password</a>.</li>
+<li>After you restart, open the distribution. Press <strong>Start -&gt; wsl</strong></li>
+<li>You will be asked to create a User Name and Password for your Linux distribution.<br> For more information, see <a href="https://docs.microsoft.com/en-gb/windows/wsl/setup/environment#set-up-your-linux-username-and-password">Set up your Linux username and password</a>.</li>
 <li><p>Create a mapped network drive in Windows for WSL.</p>
 <ol>
 <li><p>In a command prompt, run the following command to list your WSL distributions.</p>
@@ -124,23 +128,23 @@
 </ol>
 <h3 id="code">Code</h3>
 <ol>
-<li>Download the <code>tar.gz</code> from <a href="https://github.com/i2group/analyze-containers/releases/tag/v2.5.1">https://github.com/i2group/analyze-containers/releases/tag/v2.5.1</a>.</li>
+<li>Download the <code>tar.gz</code> from <a href="https://github.com/i2group/analyze-containers/releases/tag/v{{version}}">https://github.com/i2group/analyze-containers/releases/tag/v{{version}}</a>.</li>
 <li><p>Extract the <code>tar.gz</code> file by using the following steps:</p>
 <ol>
-<li>On Windows, copy the <code>analyze-containers-2.5.1.tar.gz</code> file to your WSL filesystem. For example: <code>Z:\home\&lt;user&gt;</code></li>
+<li>On Windows, copy the <code>analyze-containers-{{version}}.tar.gz</code> file to your WSL filesystem. For example: <code>Z:\home\&lt;user&gt;</code></li>
 <li><p>Extract the <code>tar.gz</code> file (On Windows, run the commands from a WSL terminal. <strong>Start</strong> &gt; <strong>wsl</strong>):</p>
 <pre><code class="lang-sh">cd /home/&lt;user&gt;
-</code></pre><pre><code class="lang-sh">tar -xvzf analyze-containers-2.5.1.tar.gz
-</code></pre><pre><code class="lang-sh">mv analyze-containers-2.5.1/ analyze-containers
+</code></pre><pre><code class="lang-sh">tar -xvzf analyze-containers-{{version}}.tar.gz
+</code></pre><pre><code class="lang-sh">mv analyze-containers-{{version}}/ analyze-containers
 </code></pre></li>
 </ol>
 </li>
 </ol>
 <h3 id="i2-analyze-minimal-toolkit">i2 Analyze minimal toolkit</h3>
 <ol>
-<li>Download the i2 Analyze V4.4.1 Minimal for Linux.<ul>
+<li>Download the i2 Analyze V{{i2analyze_version}} Minimal for Linux.<ul>
 <li>To download i2 Analyze, follow the procedure described in <a href="https://support.i2group.com/s/article/2290">Where can I download the latest i2 Products?</a></li>
-<li>Populate the subject of the form with <code>Request for i2 Analyze 4.4.1 minimal toolkit for Linux</code>.</li>
+<li>Populate the subject of the form with <code>Request for i2 Analyze {{i2analyze_version}} minimal toolkit for Linux</code>.</li>
 </ul>
 </li>
 <li>Rename the <code>i2analyzeMinimal_440.tar.gz</code> file to <code>i2analyzeMinimal.tar.gz</code>, then copy it to the <code>analyze-containers/pre-reqs</code> directory.</li>
@@ -168,35 +172,38 @@
 <h3 id="jdbc-drivers">JDBC drivers</h3>
 <p>You must provide the JDBC driver to enable the application to communicate with the database.</p>
 <ol>
-<li>Download the Microsoft JDBC Driver 9.4.1 for SQL Server from <a href="https://github.com/microsoft/mssql-jdbc/releases/tag/v9.4.1">https://github.com/microsoft/mssql-jdbc/releases/tag/v9.4.1</a> by clicking the <code>mssql-jdbc-9.4.1.jre11.jar</code> asset.</li>
-<li><p>Copy the <code>mssql-jdbc-9.4.1.jre11.jar</code> file to the <code>analyze-containers/pre-reqs/jdbc-drivers</code> directory.</p>
+<li>Download the Microsoft JDBC Driver {{mssql_jdbc_version}} for SQL Server from <a href="https://github.com/microsoft/mssql-jdbc/releases/tag/v{{mssql_jdbc_version}}">https://github.com/microsoft/mssql-jdbc/releases/tag/v{{mssql_jdbc_version}}</a> by clicking the <code>mssql-jdbc-{{mssql_jdbc_version}}.jre11.jar</code> asset.</li>
+<li><p>Copy the <code>mssql-jdbc-{{mssql_jdbc_version}}.jre11.jar</code> file to the <code>analyze-containers/pre-reqs/jdbc-drivers</code> directory.</p>
 </li>
-<li><p>Download the PostgreSQL JDBC Driver for PostgreSQL from <a href="https://jdbc.postgresql.org/download/">https://jdbc.postgresql.org/download/</a> by clicking the <code>download</code> button for the 42.5.1 or later Java 8 asset.</p>
+<li><p>Download the PostgreSQL JDBC Driver for PostgreSQL from <a href="https://jdbc.postgresql.org/download/">https://jdbc.postgresql.org/download/</a> by clicking the <code>download</code> button for the {{postgres_jdbc_version}} or later Java 8 asset.</p>
 </li>
 <li>Copy the <code>postgresql-x.x.x.jar</code> file to the <code>analyze-containers/pre-reqs/jdbc-drivers</code> directory.</li>
 </ol>
 <h3 id="modifying-the-hosts-file">Modifying the hosts file</h3>
+<p>To enable you to connect to a deployment, the Solr Web UI, the database, the Prometheus Web UI and grafana, update your hosts file to include entries for the containers.</p>
 <ol>
-<li><p>To enable you to connect to a deployment, the Solr Web UI, the database, the Prometheus Web UI and grafana, update your hosts file to include entries for the containers:</p>
+<li><p>Run the following commands to update the <code>hosts</code> file for your operating system:</p>
+<ul>
+<li>On <strong>Windows</strong>, open an Administrator Command Prompt and run <code>Notepad.exe C:\Windows\System32\drivers\etc\hosts</code> to edit the hosts file.</li>
+<li>On <strong>MacOS</strong>, run <code>sudo vi /etc/hosts</code> to edit the hosts.</li>
+</ul>
+</li>
+<li><p>Add the following lines to your <code>hosts</code> file:</p>
 <pre><code class="lang-sh">127.0.0.1 solr1.eia
 127.0.0.1 sqlserver.eia
 127.0.0.1 postgres.eia
 127.0.0.1 i2analyze.eia
 127.0.0.1 prometheus.eia
 127.0.0.1 grafana.eia
-</code></pre><ul>
-<li>On Windows, edit the hosts file in <code>C:\Windows\System32\drivers\etc</code>.</li>
-<li>On MacOS, edit the hosts file in <code>/etc/hosts</code>.</li>
-</ul>
-</li>
+</code></pre></li>
 </ol>
-<p>If you deploy on MacOS, for your virtual machine to connect to i2 Analyze, complete the following:</p>
+<p>If you deploy on <strong>MacOS</strong>, for your virtual machine to connect to i2 Analyze, complete the following:</p>
 <ol>
 <li><p>On your MacOS terminal, run <code>ifconfig</code> and identify the IP address for your virtual machine in a section such as <code>vmnet1</code>. For example, <code>172.16.100.1</code>.</p>
 </li>
-<li><p>Then, on your Windows virtual machine add the following line to the <code>C:\Windows\System32\drivers\etc\hosts</code> file:</p>
-<pre><code class="lang-sh">172.16.100.1 i2analyze.eia
-</code></pre></li>
+<li><p>Then, on your Windows virtual machine add the same lines above to the file with the identified IP address.  To edit the hosts file, open an Administrator Command Prompt and run <code>Notepad.exe C:\Windows\System32\drivers\etc\hosts</code>.<br>For example <code>172.16.100.1 i2analyze.eia</code>.</p>
+</li>
+<li>To ensure that your hosts file is configured correctly, open a command prompt in your virtual machine and run: <code>ping i2analyze.eia</code>.<br>If you get a successful response, your virtual machine is configured correctly.</li>
 </ol>
 <h3 id="visual-studio-code">Visual Studio Code</h3>
 <p>The repository is designed to be used with VS Code to create the development environment.</p>
