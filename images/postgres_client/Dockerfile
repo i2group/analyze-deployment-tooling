@@ -26,8 +26,9 @@ RUN apt-get update \
   && chmod +x /usr/local/bin/gosu \
   # Verify that the binary works
   && gosu nobody true \
-  && mkdir -p /opt/databaseScripts/generated /opt/toolkit /etc/pki /tmp/i2acerts \
+  && mkdir -p /opt/databaseScripts/generated /opt/customDatabaseScripts /opt/toolkit /etc/pki /tmp/i2acerts \
   && chown -R ${USER} /opt/databaseScripts/generated \
+  /opt/customDatabaseScripts \
   /opt/toolkit \
   /etc/pki \
   /tmp/i2acerts \

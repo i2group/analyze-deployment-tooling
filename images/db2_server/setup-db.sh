@@ -14,8 +14,8 @@ su - db2inst1 -c "db2 update dbm cfg using SVCENAME 50000"
 su - db2inst1 -c "db2set DB2AUTH=OSAUTHDB"
 
 # Create i2a-data dir and set permissions
-mkdir -p /var/i2a-data
-chown -R db2inst1:db2iadm1 /var/i2a-data
+mkdir -p /run/secrets /backup /var/i2a-data
+chown -R db2inst1:db2iadm1 /run/secrets /backup /var/i2a-data
 
 # Restart and update instance
 su - db2inst1 -c "db2stop"

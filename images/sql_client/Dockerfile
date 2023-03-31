@@ -32,8 +32,9 @@ COPY --chown="${USERNAME}:0" tools/ /opt/
 ENV TOOLKIT_DIR=/opt \
   USER="${USERNAME}"
 
-RUN mkdir -p /opt/databaseScripts/generated /opt/toolkit /tmp/i2acerts \
+RUN mkdir -p /opt/databaseScripts/generated /opt/customDatabaseScripts /opt/toolkit /tmp/i2acerts \
   && chown -R ${USERNAME} /opt/databaseScripts/generated \
+  /opt/customDatabaseScripts \
   /opt/toolkit \
   /etc/pki
 

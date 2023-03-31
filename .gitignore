@@ -15,6 +15,7 @@ images/liberty_ubi_combined/lib/**
 images/liberty_ubi_combined/plugins/**
 images/liberty_ubi_combined/server.extensions.xml
 images/liberty_ubi_combined/server.extensions.dev.xml
+images/liberty_ubi_combined/jvm.options
 images/liberty_ubi_combined/user.registry.xml
 images/liberty_ubi_combined/privacyagreement.html
 images/solr_redhat/jars/**

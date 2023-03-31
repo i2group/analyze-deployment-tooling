@@ -11,6 +11,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
 
+## 2.5.2 - 31/03/2023
+
+### Added
+
+* Documentation to describe how to create your own repositories to deploy in an air-gapped system.
+
+### Changed
+
+* Improved documentation for creating and using the config development environment.
+
+### Fixed
+
+* Stopped filling Grafana logs with unnecessary messages.
+* Database creation scripts no longer contain empty placeholders.
+* Can now create ingestion sources in an upgraded system.
+* The Liberty user registry is updated during a deploy.
+* Stopped repeating Liberty properties on start up.
+* Password generation issues on Mac OS
+
+[2.5.2]: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.5.2><!-- markdown-link-check-enable -->
+
 ## 2.5.1 - 14/02/2023
 
 ### Changed
@@ -26,7 +47,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 * Upgrading from v2.2.0 after a you complete a back up results in connectors that cannot be recovered. Before you upgrade, run `deploy -c <config_name> -t connectors`.
 
-[2.5.1]: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.5.1><!-- markdown-link-check-enable -->
+[2.5.1]: <https://github.com/i2group/analyze-containers/tree/v2.5.1>
 
 ## 2.5.0 - 20/12/2022
 

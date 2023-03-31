@@ -59,6 +59,8 @@ for table_name in $(map_keys "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}"); 
   csv_and_format_file_name=$(map_get "${BASE_DATA_TABLE_TO_CSV_AND_FORMAT_FILE_NAME}" "${table_name}")
   case "${DB_DIALECT}" in
   db2)
+    # Fix permissions
+    docker exec -it "${DB2_SERVER_CONTAINER_NAME}" bash -c "chown -R db2inst1:db2iadm1 /var/i2a-data"
     IFS=',' read -r -a csv_header <"${DATA_DIR}/${BASE_DATA}/${csv_and_format_file_name}.csv"
     columns=()
     for header in "${csv_header[@]}"; do

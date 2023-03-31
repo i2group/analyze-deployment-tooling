@@ -3,8 +3,7 @@
 # © N.Harris Computer Corporation (2022-2023)
 #
 # SPDX short identifier: MIT
-
-FROM ibmcom/db2:11.5.6.0
+FROM icr.io/db2_community/db2:11.5.8.0
 
 LABEL maintainer="i2 Group"
 # hadolint ignore=DL3002

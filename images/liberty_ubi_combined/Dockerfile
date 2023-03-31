@@ -8,7 +8,7 @@ FROM ${BASE_IMAGE}
 
 # Copy classes configuration into liberty image
 COPY --chown=1001:0 classes/ /config/apps/opal-services.war/WEB-INF/classes/
-COPY --chown=1001:0 server.extensions*.xml /config/
+COPY --chown=1001:0 server.extensions*.xml jvm.options* /config/
 COPY --chown=1001:0 user.registry.xml /liberty/usr/shared/config/user.registry.xml
 COPY --chown=1001:0 application/web-app-files/ /config/apps/opal-services.war/WEB-INF/
 

@@ -32,6 +32,7 @@ if [[ ${SOLR_ZOO_SSL_CONNECTION} == true ]]; then
   KEYSTORE=${TMP_SECRETS}/keystore.p12
   TRUSTSTORE=${TMP_SECRETS}/truststore.p12
   KEYSTORE_PASS=$(openssl rand -base64 16)
+  KEYSTORE_PASS="${KEYSTORE_PASS//\//=}"
   export KEYSTORE_PASS
 
   echo "${SSL_PRIVATE_KEY}" >"${KEY}"
@@ -64,6 +65,7 @@ elif [[ ${DB_SSL_CONNECTION} == true ]]; then
   CA_CER=${TMP_SECRETS}/CA.cer
   TRUSTSTORE=${TMP_SECRETS}/truststore.p12
   KEYSTORE_PASS=$(openssl rand -base64 16)
+  KEYSTORE_PASS="${KEYSTORE_PASS//\//=}"
   export KEYSTORE_PASS
 
   # Create a directory if it doesn't exist
@@ -116,8 +118,8 @@ fi
 
 # If user not root ensure to give correct permissions before start
 if [ -n "$GROUP_ID" ] && [ "$GROUP_ID" != "0" ]; then
-  groupmod -g "$GROUP_ID" "${USER}" >/dev/null
-  usermod -u "$USER_ID" -g "$GROUP_ID" "${USER}" >/dev/null
+  groupmod -g "$GROUP_ID" "${USER}" &>/dev/null
+  usermod -u "$USER_ID" -g "$GROUP_ID" "${USER}" &>/dev/null
   chown -R "${USER_ID}:${GROUP_ID}" "/simulatedKeyStore" \
     "/opt/configuration" \
     "/opt/databaseScripts/generated" \

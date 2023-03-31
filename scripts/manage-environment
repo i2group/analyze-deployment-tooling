@@ -347,7 +347,7 @@ function copy_configurations() {
 }
 
 function copy_backups() {
-  local backup_path
+  local backup_path backup_path_owner
   print "Copying backups"
 
   for backup_name in "${CONFIGS_ARRAY[@]}"; do
@@ -356,8 +356,11 @@ function copy_backups() {
     if [[ -d "${CURRENT_PROJECT_PATH}/backups/${backup_name}" ]]; then
       print_error_and_exit "Backup folder already exists: ${CURRENT_PROJECT_PATH}/backups/${backup_name}"
     else
-      # Fix permissions
-      sudo chown -R "$(id -u "${USER}")" "${backup_path}"
+      backup_path_owner="$(stat --format '%U' "${backup_path}")"
+      if [[ "$USER" != "$backup_path_owner" ]]; then
+        # Fix permissions
+        sudo chown -R "$USER" "${backup_path}"
+      fi
       cp -r "${backup_path}" "${CURRENT_PROJECT_PATH}/backups"
     fi
   done
@@ -398,10 +401,14 @@ function copy_plugins() {
 }
 
 function copy_secrets() {
-  local old_secret_dir new_secret_dir
+  local old_secret_dir new_secret_dir secrets_owner
   print "Copying all secrets"
 
-  sudo chown -R "$USER" "${CURRENT_PROJECT_PATH}/dev-environment-secrets"
+  secrets_owner="$(stat --format '%U' "${CURRENT_PROJECT_PATH}/dev-environment-secrets")"
+  if [[ "$USER" != "$secrets_owner" ]]; then
+    # Fix permissions
+    sudo chown -R "$USER" "${CURRENT_PROJECT_PATH}/dev-environment-secrets"
+  fi
 
   readarray -t secret_list < <(find "${PREVIOUS_PROJECT_PATH}/dev-environment-secrets" -mindepth 2 -maxdepth 2 -type d)
   for old_secret_dir in "${secret_list[@]}"; do
@@ -603,7 +610,13 @@ function get_image_ids() {
   image_ids+=$(get_image_id "${SOLR_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
   image_ids+=$(get_image_id "${SQL_SERVER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
   image_ids+=$(get_image_id "${SQL_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
+  image_ids+=$(get_image_id "${POSTGRES_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
   image_ids+=$(get_image_id "${I2A_TOOLS_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
+
+  if [[ "${DEV_BUILD}" == "true" ]]; then
+    image_ids+=$(get_image_id "${DB2_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
+    image_ids+=$(get_image_id "${DB2_SERVER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
+  fi
 
   echo "${image_ids}"
 }
@@ -926,7 +939,7 @@ function create_symlinks() {
   local -n from_path_array="$1"
   local to_path="$2"
   local asset_name from_path asset_type
-  
+
   asset_type="$(basename "${to_path}")"
 
   for from_path in "${from_path_array[@]}"; do

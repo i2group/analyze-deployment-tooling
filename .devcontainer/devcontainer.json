@@ -2,12 +2,12 @@
   "name": "Analyze Containers Dev",
   "image": "i2group/i2eng-analyze-containers-dev:1.1",
   "remoteUser": "vscode",
-  "runArgs": [
-    "--init"
-  ],
+  "runArgs": ["--init"],
   "mounts": [
     "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind",
-    "source=analyze-containers,target=/commandhistory,type=volume"
+    "source=analyze-containers,target=/commandhistory,type=volume",
+    "source=${localEnv:HOME}/.m2,target=/home/vscode/.m2,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.config/gh,target=/home/vscode/.config/gh,type=bind"
   ],
   "overrideCommand": false,
   "initializeCommand": "bash ./.devcontainer/bootstrap init",

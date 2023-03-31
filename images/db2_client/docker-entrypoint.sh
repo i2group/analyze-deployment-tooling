@@ -45,6 +45,9 @@ case "$1" in
 "run-sql-query-for-db")
   su -p db2inst1 -c "set -e; . /opt/db-scripts/common_functions.sh && run_sql_query_for_db \"$2\" \"$3\""
   ;;
+"run-sql-file")
+  su -p db2inst1 -c "set -e; . /opt/db-scripts/common_functions.sh && run_sql_file \"$2\""
+  ;;
 *)
   set +e
   su -p db2inst1 -c ". /home/db2inst1/sqllib/db2profile && $(printf '"%s" ' "$@")"

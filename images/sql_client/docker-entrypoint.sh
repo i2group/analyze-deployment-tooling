@@ -45,12 +45,13 @@ function run_with_user() {
 # If user not root ensure to give correct permissions before start
 if [ -n "$GROUP_ID" ] && [ "$GROUP_ID" != "0" ]; then
   if [ "$(getent group "${USER}")" ]; then
-    groupmod -g "$GROUP_ID" "${USER}" >/dev/null
+    groupmod -g "$GROUP_ID" "${USER}" &>/dev/null
   else
-    groupadd -g "$GROUP_ID" "${USER}" >/dev/null
+    groupadd -g "$GROUP_ID" "${USER}" &>/dev/null
   fi
-  usermod -u "$USER_ID" -g "$GROUP_ID" "${USER}" >/dev/null
+  usermod -u "$USER_ID" -g "$GROUP_ID" "${USER}" &>/dev/null
   chown -R "${USER_ID}:0" "/opt/databaseScripts/generated" \
+    "/opt/customDatabaseScripts" \
     "/opt/toolkit" \
     "/etc/pki" \
     "${TMP_SECRETS}"
@@ -70,6 +71,9 @@ case "$1" in
   # Fallthrough
 "run-sql-query-for-db")
   run_with_user /opt/db-scripts/run_sql_query.sh "$2" "$3"
+  ;;
+"run-sql-file")
+  run_with_user /opt/db-scripts/run_sql_file.sh "$2"
   ;;
 *)
   set +e

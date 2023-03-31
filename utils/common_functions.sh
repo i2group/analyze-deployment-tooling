@@ -93,6 +93,9 @@ function set_options() {
   "generateSecrets")
     OPTIONS="c:t:i:e:vhy"
     ;;
+  "manageContainerConfig")
+    OPTIONS="c:p:h"
+    ;;
   "manageConfig")
     OPTIONS="t:vhy"
     ;;
@@ -169,6 +172,8 @@ function parse_arguments() {
       p)
         if [[ "${OPTIONS_FOR}" == "manageEnv" ]]; then
           PREVIOUS_PROJECT_PATH="${OPTARG}"
+        elif [[ "${OPTIONS_FOR}" == "manageContainerConfig" ]]; then
+          PATH_FOR_EXPORT="${OPTARG}"
         elif [[ "${OPTIONS_FOR}" == "configurePaths" ]]; then
           PATH_TO_DIR="${OPTARG}"
         fi
@@ -1125,6 +1130,18 @@ function map_keys() {
   alias -p | grep "$1" | cut -d'=' -f1 | awk -F"$1" '{print $2; }'
 }
 
+function print_with_code() {
+  local msg="$1"
+  local code="$2"
+
+  if [[ "${CI}" == "true" ]]; then
+    printf "# %s\n" "$msg" >&2
+  else
+    printf "\n\e[%s%s\n" "$code" "$msg" >&2
+    printf "\e[0m" >&2
+  fi
+}
+
 #######################################
 # Prints a heading style message to the console.
 # Arguments:
@@ -1143,8 +1160,7 @@ function print() {
 #   1: The message
 #######################################
 function print_error() {
-  printf "\n\e[31mERROR: %s\n" "$1" >&2
-  printf "\e[0m" >&2
+  print_with_code "ERROR: $1" "31m"
 }
 
 #######################################
@@ -1154,8 +1170,7 @@ function print_error() {
 #   1: The message
 #######################################
 function print_error_and_exit() {
-  printf "\n\e[31mERROR: %s\n" "$1" >&2
-  printf "\e[0m" >&2
+  print_error "$1"
   if [[ "${CONTINUE_ON_ERROR}" == "true" ]]; then
     EXECUTED_WITH_ERRORS="true"
     return
@@ -1170,8 +1185,7 @@ function print_error_and_exit() {
 #######################################
 function print_success() {
   if [[ "${EXECUTED_WITH_ERRORS}" != "true" ]]; then
-    printf "\n\e[32mSUCCESS: %s\n" "$1" >&2
-    printf "\e[0m" >&2
+    print_with_code "SUCCESS: $1" "32m"
   fi
 }
 
@@ -1194,8 +1208,7 @@ function print_error_and_usage() {
 #   1: The message
 #######################################
 function print_warn() {
-  printf "\n\e[33mWARN: %s\n" "$1"
-  printf "\e[0m"
+  print_with_code "WARN: $1" "33m"
 }
 
 #######################################
@@ -1543,6 +1556,7 @@ function run_solr_container_with_backup_volume() {
 #   None
 #######################################
 function run_db_container_with_backup_volume() {
+  local extra_args=()
   case "${DB_DIALECT}" in
   sqlserver)
     image_name="${SQL_SERVER_IMAGE_NAME}"
@@ -1553,6 +1567,7 @@ function run_db_container_with_backup_volume() {
     image_name="${DB2_SERVER_IMAGE_NAME}"
     image_tag="${I2A_DEPENDENCIES_IMAGES_TAG}"
     volume_name="${DB2_SERVER_BACKUP_VOLUME_NAME}"
+    extra_args+=("--entrypoint=")
     ;;
   postgres)
     image_name="${POSTGRES_SERVER_IMAGE_NAME}"
@@ -1564,6 +1579,7 @@ function run_db_container_with_backup_volume() {
   docker run --rm \
     -v "${volume_name}:${DB_CONTAINER_BACKUP_DIR}" \
     --user="root" \
+    "${extra_args[@]}" \
     "${image_name}:${image_tag}" "$@"
 }
 
@@ -1571,7 +1587,17 @@ function backup_database() {
   local backup_file_path="${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}/${DB_BACKUP_FILE_NAME}"
   case "${DB_DIALECT}" in
   db2)
-    print_error_and_exit "Not implemented yet"
+    print "Backing up the ${DB_NAME} database for container: ${DB2_SERVER_CONTAINER_NAME}"
+    # Ensure to close all connections
+    docker exec "${DB2_SERVER_CONTAINER_NAME}" bash -c "su - db2inst1 -c \"${SQLCMD} FORCE APPLICATION ALL\""
+    sleep 30
+
+    # Db2 doesn't use named file
+    backup_file_path="${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
+    update_volume "${BACKUP_DIR}" "${DB2_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
+    run_db_container_with_backup_volume chown -R 1000:1000 "${backup_file_path}"
+    run_db2_server_command_as_db2inst1 "/opt/db-scripts/backup_database.sh" "${backup_file_path}"
+    get_volume "${BACKUP_DIR}" "${DB2_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
     ;;
   sqlserver)
     print "Backing up the ${DB_NAME} database for container: ${SQL_SERVER_CONTAINER_NAME}"
@@ -1908,12 +1934,13 @@ function get_topology_id() {
 }
 
 function create_dsid_properties_for_deployment_pattern() {
-  local dsid_properties_file_path="${1}"
+  local config_dir="${1:-"${LOCAL_CONFIG_DIR}"}"
+  local dsid_properties_file_path="${config_dir}/environment/dsid/dsid.properties"
   local dsid_deployment_pattern_properties_file_path
   local topology_id
 
   topology_id="$(get_topology_id)"
-  dsid_deployment_pattern_properties_file_path="${LOCAL_CONFIG_DIR}/environment/dsid/dsid.${topology_id}.properties"
+  dsid_deployment_pattern_properties_file_path="${config_dir}/environment/dsid/dsid.${topology_id}.properties"
   mv "${dsid_properties_file_path}" "${dsid_deployment_pattern_properties_file_path}"
 
   add_data_source_properties_if_necessary "${dsid_deployment_pattern_properties_file_path}"
@@ -1925,22 +1952,24 @@ function create_dsid_properties_for_deployment_pattern() {
 #   None
 #######################################
 function create_mounted_config_structure() {
-  local FRAGMENTS_PATH="${LOCAL_CONFIG_DIR}/fragments"
+  local mounted_folder_path="${1:-"${LOCAL_CONFIG_DIR}"}"
+  local existing_configuration_path="${2:-"${GENERATED_LOCAL_CONFIG_DIR}"}"
+  local FRAGMENTS_PATH="${mounted_folder_path}/fragments"
   local OPAL_SERVICES_IS_CLASSES_PATH="${FRAGMENTS_PATH}/opal-services-is/WEB-INF/classes"
   local OPAL_SERVICES_CLASSES_PATH="${FRAGMENTS_PATH}/opal-services/WEB-INF/classes"
   local OPAL_SERVICES_PLUGINS_PATH="${FRAGMENTS_PATH}/opal-services/plugins"
   local COMMON_PATH="${FRAGMENTS_PATH}/common"
   local COMMON_CLASSES_PATH="${COMMON_PATH}/WEB-INF/classes"
-  local ENV_COMMON_PATH="${LOCAL_CONFIG_DIR}/environment/common"
-  local LIVE_PATH="${LOCAL_CONFIG_DIR}/live"
-  local LIBERTY_PATH="${LOCAL_CONFIG_DIR}/liberty"
-  local LOG4J_PATH="${LOCAL_CONFIG_DIR}/i2-tools/classes"
+  local ENV_COMMON_PATH="${mounted_folder_path}/environment/common"
+  local LIVE_PATH="${mounted_folder_path}/live"
+  local LIBERTY_PATH="${mounted_folder_path}/liberty"
+  local LOG4J_PATH="${mounted_folder_path}/i2-tools/classes"
   local topology_id
   local plugin_references_file="${LOCAL_USER_CONFIG_DIR}/plugin-references.json"
 
   # Create hidden configuration folder
-  delete_folder_if_exists_and_create "${LOCAL_CONFIG_DIR}"
-  cp -pr "${GENERATED_LOCAL_CONFIG_DIR}/." "${LOCAL_CONFIG_DIR}"
+  delete_folder_if_exists_and_create "${mounted_folder_path}"
+  cp -pr "${existing_configuration_path}/." "${mounted_folder_path}"
 
   # Add jdbc drivers from pre-reqs folder
   delete_folder_if_exists_and_create "${ENV_COMMON_PATH}"
@@ -1948,51 +1977,59 @@ function create_mounted_config_structure() {
   # Recreate structure and copy right files
   mkdir -p "${LOG4J_PATH}" "${ENV_COMMON_PATH}" "${OPAL_SERVICES_IS_CLASSES_PATH}" "${OPAL_SERVICES_CLASSES_PATH}" "${COMMON_CLASSES_PATH}" "${LIVE_PATH}" "${LIBERTY_PATH}"
   cp -pr "${PRE_REQS_DIR}/jdbc-drivers" "${ENV_COMMON_PATH}"
-  mv "${LOCAL_CONFIG_DIR}/analyze-settings.properties" \
-    "${LOCAL_CONFIG_DIR}/analyze-connect.properties" \
-    "${LOCAL_CONFIG_DIR}/ApolloServerSettingsMandatory.properties" \
-    "${LOCAL_CONFIG_DIR}/ApolloServerSettingsConfigurationSet.properties" \
-    "${LOCAL_CONFIG_DIR}/schema-charting-schemes.xml" \
-    "${LOCAL_CONFIG_DIR}/schema.xml" "${LOCAL_CONFIG_DIR}/security-schema.xml" \
-    "${LOCAL_CONFIG_DIR}/mapping-configuration.json" \
-    "${LOCAL_CONFIG_DIR}/log4j2.xml" "${COMMON_CLASSES_PATH}"
-  mv "${LOCAL_CONFIG_DIR}/schema-results-configuration.xml" \
-    "${LOCAL_CONFIG_DIR}/schema-vq-configuration.xml" \
-    "${LOCAL_CONFIG_DIR}/schema-source-reference-schema.xml" \
-    "${LOCAL_CONFIG_DIR}/command-access-control.xml" \
-    "${LOCAL_CONFIG_DIR}/DiscoSolrConfiguration.properties" \
-    "${LOCAL_CONFIG_DIR}/connectors-template.json" \
+  if [[ "${OPTIONS_FOR}" != "manageContainerConfig" ]]; then
+    mv "${mounted_folder_path}/analyze-connect.properties" "${COMMON_CLASSES_PATH}"
+    mv "${mounted_folder_path}/connectors-template.json" "${OPAL_SERVICES_CLASSES_PATH}"
+  fi
+  mv "${mounted_folder_path}/analyze-settings.properties" \
+    "${mounted_folder_path}/ApolloServerSettingsMandatory.properties" \
+    "${mounted_folder_path}/ApolloServerSettingsConfigurationSet.properties" \
+    "${mounted_folder_path}/schema-charting-schemes.xml" \
+    "${mounted_folder_path}/schema.xml" "${mounted_folder_path}/security-schema.xml" \
+    "${mounted_folder_path}/mapping-configuration.json" \
+    "${mounted_folder_path}/log4j2.xml" "${COMMON_CLASSES_PATH}"
+  mv "${mounted_folder_path}/schema-results-configuration.xml" \
+    "${mounted_folder_path}/schema-vq-configuration.xml" \
+    "${mounted_folder_path}/schema-source-reference-schema.xml" \
+    "${mounted_folder_path}/command-access-control.xml" \
+    "${mounted_folder_path}/DiscoSolrConfiguration.properties" \
     "${OPAL_SERVICES_CLASSES_PATH}"
-  mv "${LOCAL_CONFIG_DIR}/InfoStoreNamesDb2.properties" \
-    "${LOCAL_CONFIG_DIR}/InfoStoreNamesSQLServer.properties" \
-    "${LOCAL_CONFIG_DIR}/InfoStoreNamesPostgres.properties" \
+  mv "${mounted_folder_path}/InfoStoreNamesDb2.properties" \
+    "${mounted_folder_path}/InfoStoreNamesSQLServer.properties" \
+    "${mounted_folder_path}/InfoStoreNamesPostgres.properties" \
     "${OPAL_SERVICES_IS_CLASSES_PATH}"
-  mv "${LOCAL_CONFIG_DIR}/fmr-match-rules.xml" "${LOCAL_CONFIG_DIR}/system-match-rules.xml" \
-    "${LOCAL_CONFIG_DIR}/highlight-queries-configuration.xml" "${LOCAL_CONFIG_DIR}/geospatial-configuration.json" \
-    "${LOCAL_CONFIG_DIR}/type-access-configuration.xml" \
+  mv "${mounted_folder_path}/fmr-match-rules.xml" "${mounted_folder_path}/system-match-rules.xml" \
+    "${mounted_folder_path}/highlight-queries-configuration.xml" "${mounted_folder_path}/geospatial-configuration.json" \
+    "${mounted_folder_path}/type-access-configuration.xml" \
     "${LIVE_PATH}"
-  mv "${LOCAL_CONFIG_DIR}/privacyagreement.html" "${COMMON_PATH}"
-  if [[ -f "${LOCAL_CONFIG_DIR}/server.extensions.xml" ]]; then
-    mv "${LOCAL_CONFIG_DIR}/server.extensions.xml" "${LIBERTY_PATH}"
+  mv "${mounted_folder_path}/privacyagreement.html" "${COMMON_PATH}"
+  if [[ -f "${mounted_folder_path}/server.extensions.xml" ]]; then
+    mv "${mounted_folder_path}/server.extensions.xml" "${LIBERTY_PATH}"
   fi
-  if [[ -f "${LOCAL_CONFIG_DIR}/server.extensions.dev.xml" ]]; then
-    mv "${LOCAL_CONFIG_DIR}/server.extensions.dev.xml" "${LIBERTY_PATH}"
+  if [[ -f "${mounted_folder_path}/server.extensions.dev.xml" ]]; then
+    mv "${mounted_folder_path}/server.extensions.dev.xml" "${LIBERTY_PATH}"
   fi
-  if [[ -f "${LOCAL_CONFIG_DIR}/user.registry.xml" ]]; then
-    mv "${LOCAL_CONFIG_DIR}/user.registry.xml" "${LIBERTY_PATH}"
+  if [[ -f "${mounted_folder_path}/user.registry.xml" ]]; then
+    mv "${mounted_folder_path}/user.registry.xml" "${LIBERTY_PATH}"
   fi
-  rm "${LOCAL_CONFIG_DIR}/extension-references.json" &>/dev/null || true
-  rm "${LOCAL_CONFIG_DIR}/plugin-references.json" &>/dev/null || true
+  if [[ -f "${mounted_folder_path}/web.xml" ]]; then
+    mv "${mounted_folder_path}/web.xml" "${LIBERTY_PATH}"
+  fi
+  if [[ -f "${mounted_folder_path}/jvm.options" ]]; then
+    mv "${mounted_folder_path}/jvm.options" "${LIBERTY_PATH}"
+  fi
+  rm "${mounted_folder_path}/extension-references.json" &>/dev/null || true
+  rm "${mounted_folder_path}/plugin-references.json" &>/dev/null || true
 
-  create_dsid_properties_for_deployment_pattern "${LOCAL_CONFIG_DIR}/environment/dsid/dsid.properties"
+  create_dsid_properties_for_deployment_pattern "${mounted_folder_path}"
 
   # Move all outstanding .properties files into the common classes dir
-  find "${LOCAL_CONFIG_DIR}" -maxdepth 1 -name "*.properties" -exec mv -t "${COMMON_CLASSES_PATH}" {} +
+  find "${mounted_folder_path}" -maxdepth 1 -name "*.properties" -exec mv -t "${COMMON_CLASSES_PATH}" {} +
 
   # Add gateway schemas
   for gateway_short_name in "${!GATEWAY_SHORT_NAME_SET[@]}"; do
-    mv "${LOCAL_CONFIG_DIR}/${gateway_short_name}-schema.xml" "${COMMON_CLASSES_PATH}"
-    mv "${LOCAL_CONFIG_DIR}/${gateway_short_name}-schema-charting-schemes.xml" "${COMMON_CLASSES_PATH}"
+    mv "${mounted_folder_path}/${gateway_short_name}-schema.xml" "${COMMON_CLASSES_PATH}"
+    mv "${mounted_folder_path}/${gateway_short_name}-schema-charting-schemes.xml" "${COMMON_CLASSES_PATH}"
   done
 
   # Copy plugins
@@ -2011,10 +2048,11 @@ function create_mounted_config_structure() {
 }
 
 function create_data_source_id() {
-  local dsid_properties_file_path="${LOCAL_USER_CONFIG_DIR}/environment/dsid/dsid.properties"
+  local dsid_properties_file_path="${1}/environment/dsid/dsid.properties"
 
   # Ensure this to work for previous release
-  local old_dsid_properties_file_path="${LOCAL_USER_CONFIG_DIR}/environment/dsid/dsid.infostore.properties"
+  local old_dsid_properties_file_path="${1}/environment/dsid/dsid.infostore.properties"
+
   if [[ -f "${old_dsid_properties_file_path}" ]]; then
     mv "${old_dsid_properties_file_path}" "${dsid_properties_file_path}"
   fi
@@ -2026,34 +2064,43 @@ function generate_boiler_plate_files() {
   local grafana_provisioning_dir="${examples_dir}/grafana/provisioning"
   local all_patterns_config_dir="${examples_dir}/configurations/all-patterns/configuration"
   local toolkit_common_classes_dir="${all_patterns_config_dir}/fragments/common/WEB-INF/classes"
-  local toolkit_opal_services_classes_dir="${all_patterns_config_dir}/fragments/opal-services/WEB-INF/classes"
 
   cp -p "${toolkit_common_classes_dir}/ApolloServerSettingsMandatory.properties" "${GENERATED_LOCAL_CONFIG_DIR}"
   cp -p "${toolkit_common_classes_dir}/ApolloServerSettingsConfigurationSet.properties" "${GENERATED_LOCAL_CONFIG_DIR}"
 
-  echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?><server>
-    <webAppSecurity overrideHttpAuthMethod=\"FORM\" allowAuthenticationFailOverToAuthMethod=\"FORM\"  loginFormURL=\"opal/login.html\" loginErrorURL=\"opal/login.html?failed\"/>
-    <featureManager>
-        <feature>restConnector-2.0</feature>
-    </featureManager>
-    <applicationMonitor updateTrigger=\"mbean\" dropinsEnabled=\"false\"/>
-    <config updateTrigger=\"mbean\"/>
-    <administrator-role>
-        <user>${I2_ANALYZE_ADMIN}</user>
-    </administrator-role>
-  </server>" >"${GENERATED_LOCAL_CONFIG_DIR}/server.extensions.dev.xml"
+  if [[ "${DEV_LIBERTY_SERVER_EXTENSIONS}" == "true" ]]; then
+    echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?><server>
+      <webAppSecurity overrideHttpAuthMethod=\"FORM\" allowAuthenticationFailOverToAuthMethod=\"FORM\"  loginFormURL=\"opal/login.html\" loginErrorURL=\"opal/login.html?failed\"/>
+      <featureManager>
+          <feature>restConnector-2.0</feature>
+      </featureManager>
+      <applicationMonitor updateTrigger=\"mbean\" dropinsEnabled=\"false\"/>
+      <config updateTrigger=\"mbean\"/>
+      <administrator-role>
+          <user>${I2_ANALYZE_ADMIN}</user>
+      </administrator-role>
+    </server>" >"${GENERATED_LOCAL_CONFIG_DIR}/server.extensions.dev.xml"
+  else
+    echo '<?xml version="1.0" encoding="UTF-8"?><server/>' >"${GENERATED_LOCAL_CONFIG_DIR}/server.extensions.dev.xml"
+  fi
 
   mkdir -p "${GENERATED_LOCAL_CONFIG_DIR}/grafana/provisioning/datasources"
+  mkdir -p "${GENERATED_LOCAL_CONFIG_DIR}/grafana/provisioning/plugins"
+  mkdir -p "${GENERATED_LOCAL_CONFIG_DIR}/grafana/provisioning/notifiers"
+  mkdir -p "${GENERATED_LOCAL_CONFIG_DIR}/grafana/provisioning/alerting"
   cp -pr "${grafana_provisioning_dir}/." "${GENERATED_LOCAL_CONFIG_DIR}/grafana/provisioning"
   cp -p "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/templates/prometheus-datasource.yml" "${GENERATED_LOCAL_CONFIG_DIR}/grafana/provisioning/datasources/prometheus-datasource.yml"
 }
 
 function generate_connectors_artifacts() {
-  local connector_references_file="${LOCAL_USER_CONFIG_DIR}/connector-references.json"
+  local config_dir="${1:-"${LOCAL_USER_CONFIG_DIR}"}"
+  local generated_configuration_path="${2:-"${GENERATED_LOCAL_CONFIG_DIR}"}"
 
-  local connector_definitions_file="${GENERATED_LOCAL_CONFIG_DIR}/connectors-template.json"
-  local gateway_properties_file="${GENERATED_LOCAL_CONFIG_DIR}/analyze-connect.properties"
-  local temp_file="${LOCAL_USER_CONFIG_DIR}/temp.json"
+  local connector_references_file="${config_dir}/connector-references.json"
+
+  local connector_definitions_file="${generated_configuration_path}/connectors-template.json"
+  local gateway_properties_file="${generated_configuration_path}/analyze-connect.properties"
+  local temp_file="${config_dir}/temp.json"
 
   #Find all connector names from connector-references.json and combine connector-definition from each connector together
   IFS=' ' read -ra all_connector_names <<<"$(jq -r '.connectors // empty | .[].name' <"${connector_references_file}" | xargs)"
@@ -2099,8 +2146,8 @@ function generate_connectors_artifacts() {
 
   #Copy in gateway schemas
   for gateway_short_name in "${!GATEWAY_SHORT_NAME_SET[@]}"; do
-    cp "${GATEWAY_SCHEMA_DIR}/${gateway_short_name}-schema.xml" "${GENERATED_LOCAL_CONFIG_DIR}"
-    cp "${GATEWAY_SCHEMA_DIR}/${gateway_short_name}-schema-charting-schemes.xml" "${GENERATED_LOCAL_CONFIG_DIR}"
+    cp "${GATEWAY_SCHEMA_DIR}/${gateway_short_name}-schema.xml" "${generated_configuration_path}"
+    cp "${GATEWAY_SCHEMA_DIR}/${gateway_short_name}-schema-charting-schemes.xml" "${generated_configuration_path}"
   done
 }
 
@@ -2537,7 +2584,7 @@ function validate_parameters_not_empty() {
 
 function validate_parameters() {
   local expected_param_count="$1"
-  local actual_param_count=$(("$#" - 1))
+  local actual_param_count=$(($# - 1))
 
   if [[ "${actual_param_count}" -lt "${expected_param_count}" ]]; then
     print_error_and_exit "The number of parameters (${actual_param_count}) is not the same as the expected number of parameters (${expected_param_count})."

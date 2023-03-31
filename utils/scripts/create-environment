@@ -78,19 +78,19 @@ function extract_fixpack_if_necessary() {
       print_error_and_exit "Fix Pack version ${fixpack_version} is not compatible with i2 Analyze Toolkit Minimal version ${SUPPORTED_I2ANALYZE_VERSION}"
     fi
     print "Applying i2 Analyze Fix Pack ${fixpack_version}"
-    if [[ "$(ls -A "${FIXPACK_DIR}/toolkit/application/dependencies/solr-extension")" ]]; then
+    if [[ -d "${FIXPACK_DIR}/toolkit/application/dependencies/solr-extension" && "$(ls -A "${FIXPACK_DIR}/toolkit/application/dependencies/solr-extension")" ]]; then
       cp -r "${FIXPACK_DIR}/toolkit/application/dependencies/solr-extension/." "${TOOLKIT_APPLICATION_DIR}/dependencies/solr-extension"
     fi
-    if [[ "$(ls -A "${FIXPACK_DIR}/toolkit/application/shared")" ]]; then
+    if [[ -d "${FIXPACK_DIR}/toolkit/application/shared" && "$(ls -A "${FIXPACK_DIR}/toolkit/application/shared")" ]]; then
       cp -r "${FIXPACK_DIR}/toolkit/application/shared/." "${TOOLKIT_APPLICATION_DIR}/shared"
     fi
-    if [[ "$(ls -A "${FIXPACK_DIR}/toolkit/application/targets/opal-services-is-daod")" ]]; then
+    if [[ -d "${FIXPACK_DIR}/toolkit/application/targets/opal-services-is-daod" && "$(ls -A "${FIXPACK_DIR}/toolkit/application/targets/opal-services-is-daod")" ]]; then
       cp -r "${FIXPACK_DIR}/toolkit/application/targets/opal-services-is-daod/." "${TOOLKIT_APPLICATION_DIR}/targets/opal-services"
     fi
-    if [[ "$(ls -A "${FIXPACK_DIR}/toolkit/scripts/xsd")" ]]; then
+    if [[ -d "${FIXPACK_DIR}/toolkit/scripts/xsd" && "$(ls -A "${FIXPACK_DIR}/toolkit/scripts/xsd")" ]]; then
       cp -r "${FIXPACK_DIR}/toolkit/scripts/xsd/." "${LOCAL_TOOLKIT_DIR}/scripts/xsd"
     fi
-    if [[ "$(ls -A "${FIXPACK_DIR}/toolkit/scripts-bin/buildSrc")" ]]; then
+    if [[ -d "${FIXPACK_DIR}/toolkit/scripts-bin/buildSrc" && "$(ls -A "${FIXPACK_DIR}/toolkit/scripts-bin/buildSrc")" ]]; then
       cp -r "${FIXPACK_DIR}/toolkit/scripts-bin/buildSrc/." "${LOCAL_TOOLKIT_DIR}/i2-tools/jars"
     fi
     find "${FIXPACK_DIR}/toolkit/version/" -type f -name "*.txt" -print0 | xargs -I{} -0 cp {} "${LOCAL_TOOLKIT_DIR}/scripts/version.txt"
@@ -137,7 +137,7 @@ function create_etl_toolkit_image_resources() {
 }
 
 function populate_image_folder_with_tools_resources() {
-  local IMAGE_FOLDER=${1}
+  local IMAGE_FOLDER="$1"
   print "Setting up ${IMAGE_FOLDER} image"
 
   delete_folder_if_exists "${IMAGES_DIR}/${IMAGE_FOLDER}/tools"
@@ -223,7 +223,15 @@ function main() {
   ###############################################################################
   populate_image_folder_with_tools_resources "i2a_tools"
   populate_image_folder_with_tools_resources "sql_client"
-  #populate_image_folder_with_tools_resources "db2_client"
+  # TODO: Remove after upgrade to 4.4.2
+  # - Start -
+  cp -r "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/overrides/sqlserver/." "${IMAGES_DIR}/i2a_tools/tools/i2-tools/scripts/database-templates/sqlserver"
+  cp -r "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/overrides/sqlserver/." "${IMAGES_DIR}/sql_client/tools/i2-tools/scripts/database-templates/sqlserver"
+  # - End -
+
+  if [[ "${DEV_BUILD}" == "true" ]]; then
+    populate_image_folder_with_tools_resources "db2_client"
+  fi
   populate_image_folder_with_tools_resources "postgres_client"
 
   ###############################################################################
@@ -256,7 +264,7 @@ function main() {
   ###############################################################################
   generate_default_files
 
-  print "Environment has been successfully prepared"
+  print_success "Environment has been successfully prepared"
 }
 
 main "$@"

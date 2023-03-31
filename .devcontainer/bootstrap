@@ -27,6 +27,7 @@ function run_task() {
 
 function init() {
   docker pull i2group/i2eng-analyze-containers-dev:1.1
+  mkdir -p "${HOME}/.m2" "${HOME}/.config/gh"
 }
 
 function create() {

@@ -80,6 +80,7 @@ function run_solr() {
   local HOST_PORT="$4"
   local SECRET_LOCATION="$5"
   local SECRETS_VOLUME="$6"
+  local DEBUG_PORT="$7"
 
   local ssl_private_key
   ssl_private_key=$(get_secret "certificates/${SECRET_LOCATION}/server.key")
@@ -93,17 +94,23 @@ function run_solr() {
   local zk_digest_readonly_password
   zk_digest_readonly_password=$(get_secret "solr/ZK_DIGEST_READONLY_PASSWORD")
 
+  local extra_args=()
+  if [[ -n "${DEBUG_PORT}" ]]; then
+    extra_args+=("-p" "${DEBUG_PORT}:${DEBUG_PORT}")
+  fi
+
   print "Solr container ${CONTAINER} is starting"
   docker run -d \
     --name "${CONTAINER}" \
     --net "${DOMAIN_NAME}" \
     --net-alias "${FQDN}" \
     --init \
+    "${extra_args[@]}" \
     -p "${HOST_PORT}":8983 \
     -v "${VOLUME}:/var/solr" \
     -v "${SOLR_BACKUP_VOLUME_NAME}:${SOLR_BACKUP_VOLUME_LOCATION}" \
     -v "${SECRETS_VOLUME}:${CONTAINER_SECRETS_DIR}" \
-    -e SOLR_OPTS="-Dsolr.allowPaths=${SOLR_BACKUP_VOLUME_LOCATION}" \
+    -e SOLR_OPTS="-Dsolr.allowPaths=${SOLR_BACKUP_VOLUME_LOCATION} ${SOLR_OPTS}" \
     -e "ZK_HOST=${ZK_HOST}" \
     -e "SOLR_HOST=${FQDN}" \
     -e "ZOO_DIGEST_USERNAME=${ZK_DIGEST_USERNAME}" \
@@ -255,14 +262,17 @@ function run_liberty() {
   local KEY_FOLDER="$6"
   local DEBUG_PORT="$7"
 
-  local libertyStartCommand=()
-  local dbEnvironment=("-e" "DB_DIALECT=${DB_DIALECT}" "-e" "DB_PORT=${DB_PORT}")
-  local runInDebug
+  local liberty_start_command=()
+  local db_environment=("-e" "DB_DIALECT=${DB_DIALECT}" "-e" "DB_PORT=${DB_PORT}")
 
-  if [[ ${DEBUG_LIBERTY_SERVERS[*]} =~ (^|[[:space:]])"${CONTAINER}"($|[[:space:]]) ]]; then
-    runInDebug=true
-  else
-    runInDebug=false
+  # TODO: Remove after a major upgrade
+  if [[ -n "${DEBUG_LIBERTY_SERVERS}" ]]; then
+    print_warn "DEBUG_LIBERTY_SERVERS has been deprecated. Please use LIBERTY_DEBUG=\"true\" instead."
+    if [[ ${DEBUG_LIBERTY_SERVERS[*]} =~ (^|[[:space:]])"${CONTAINER}"($|[[:space:]]) ]]; then
+      LIBERTY_DEBUG="true"
+    else
+      LIBERTY_DEBUG="false"
+    fi
   fi
 
   local ssl_outbound_private_key
@@ -304,26 +314,26 @@ function run_liberty() {
   case "${DB_DIALECT}" in
   db2)
     db_password=$(get_secret "db2server/db2inst1_PASSWORD")
-    dbEnvironment+=("-e" "DB_SERVER=${DB2_SERVER_FQDN}")
-    dbEnvironment+=("-e" "DB_NODE=${DB_NODE}")
-    dbEnvironment+=("-e" "DB_USERNAME=${DB2INST1_USERNAME}")
+    db_environment+=("-e" "DB_SERVER=${DB2_SERVER_FQDN}")
+    db_environment+=("-e" "DB_NODE=${DB_NODE}")
+    db_environment+=("-e" "DB_USERNAME=${DB2INST1_USERNAME}")
     ;;
   sqlserver)
     db_password=$(get_secret "sqlserver/i2analyze_PASSWORD")
-    dbEnvironment+=("-e" "DB_SERVER=${SQL_SERVER_FQDN}")
-    dbEnvironment+=("-e" "DB_USERNAME=${I2_ANALYZE_USERNAME}")
+    db_environment+=("-e" "DB_SERVER=${SQL_SERVER_FQDN}")
+    db_environment+=("-e" "DB_USERNAME=${I2_ANALYZE_USERNAME}")
     ;;
   postgres)
     db_password=$(get_secret "postgres/i2analyze_PASSWORD")
-    dbEnvironment+=("-e" "DB_SERVER=${POSTGRES_SERVER_FQDN}")
-    dbEnvironment+=("-e" "DB_USERNAME=${I2_ANALYZE_USERNAME}")
+    db_environment+=("-e" "DB_SERVER=${POSTGRES_SERVER_FQDN}")
+    db_environment+=("-e" "DB_USERNAME=${I2_ANALYZE_USERNAME}")
     ;;
   esac
-  dbEnvironment+=("-e" "DB_PASSWORD=${db_password}")
+  db_environment+=("-e" "DB_PASSWORD=${db_password}")
 
-  if [[ "${runInDebug}" == false ]]; then
+  if [[ "${LIBERTY_DEBUG}" == "false" ]]; then
     print "Liberty container ${CONTAINER} is starting"
-    libertyStartCommand+=("${LIBERTY_CONFIGURED_IMAGE_NAME}:${I2A_LIBERTY_CONFIGURED_IMAGE_TAG}")
+    liberty_start_command+=("${LIBERTY_CONFIGURED_IMAGE_NAME}:${I2A_LIBERTY_CONFIGURED_IMAGE_TAG}")
   else
     print "Liberty container ${CONTAINER} is starting in debug mode"
     if [ -z "$6" ]; then
@@ -331,16 +341,16 @@ function run_liberty() {
       exit 1
     fi
 
-    libertyStartCommand+=("-p")
-    libertyStartCommand+=("${DEBUG_PORT}:${DEBUG_PORT}")
-    libertyStartCommand+=("-e")
-    libertyStartCommand+=("WLP_DEBUG_ADDRESS=0.0.0.0:${DEBUG_PORT}")
-    libertyStartCommand+=("-e")
-    libertyStartCommand+=("WLP_DEBUG_SUSPEND=y")
-    libertyStartCommand+=("${LIBERTY_CONFIGURED_IMAGE_NAME}:${I2A_LIBERTY_CONFIGURED_IMAGE_TAG}")
-    libertyStartCommand+=("/liberty/bin/server")
-    libertyStartCommand+=("debug")
-    libertyStartCommand+=("defaultServer")
+    liberty_start_command+=("-p")
+    liberty_start_command+=("${DEBUG_PORT}:${DEBUG_PORT}")
+    liberty_start_command+=("-e")
+    liberty_start_command+=("WLP_DEBUG_ADDRESS=0.0.0.0:${DEBUG_PORT}")
+    liberty_start_command+=("-e")
+    liberty_start_command+=("WLP_DEBUG_SUSPEND=${WLP_DEBUG_SUSPEND}")
+    liberty_start_command+=("${LIBERTY_CONFIGURED_IMAGE_NAME}:${I2A_LIBERTY_CONFIGURED_IMAGE_TAG}")
+    liberty_start_command+=("/liberty/bin/server")
+    liberty_start_command+=("debug")
+    liberty_start_command+=("defaultServer")
   fi
 
   #Pass in mappings environment if there is one
@@ -362,7 +372,7 @@ function run_liberty() {
     -v "${SECRET_VOLUME}:${CONTAINER_SECRETS_DIR}" \
     -v "${VOLUME}:/data" \
     -e "LICENSE=${LIC_AGREEMENT}" \
-    "${dbEnvironment[@]}" \
+    "${db_environment[@]}" \
     -e "ZK_HOST=${ZK_MEMBERS}" \
     -e "ZOO_DIGEST_USERNAME=${ZK_DIGEST_USERNAME}" \
     -e "ZOO_DIGEST_PASSWORD=${zk_digest_password}" \
@@ -383,9 +393,9 @@ function run_liberty() {
     -e "LIBERTY_HADR_MODE=1" \
     -e "LIBERTY_HADR_POLL_INTERVAL=1" \
     -e "CONNECTOR_URL_MAP=${CONNECTOR_URL_MAP}" \
-    "${libertyStartCommand[@]}"
+    "${liberty_start_command[@]}"
 
-  if [[ "${runInDebug}" == true ]]; then
+  if [[ "${LIBERTY_DEBUG}" == "true" && "${WLP_DEBUG_SUSPEND}" == "y" ]]; then
     # Wait until debugger is attached
     wait_for_user_reply "You need to attach the debugger now before continuing. Ready?"
   fi
@@ -457,6 +467,8 @@ function build_liberty_configured_image() {
     ! -name connector-references.json \
     ! -name server.extensions.xml \
     ! -name server.extensions.dev.xml \
+    ! -name web.xml \
+    ! -name jvm.options \
     ! -name '*.bak' \
     ! -name '*.xsd' \
     -exec cp -t "${liberty_configured_classes_folder_path}" {} \;
@@ -509,7 +521,7 @@ function build_liberty_configured_image() {
   else
     echo '<?xml version="1.0" encoding="UTF-8"?><server/>' >"${liberty_configured_path}/server.extensions.xml"
   fi
-  if [[ "${EXTENSIONS_DEV}" == true ]]; then
+  if [[ "${DEV_LIBERTY_SERVER_EXTENSIONS}" == "true" ]]; then
     cp -r "${LOCAL_CONFIG_DIR}/liberty/server.extensions.dev.xml" "${liberty_configured_path}/"
   else
     echo '<?xml version="1.0" encoding="UTF-8"?><server/>' >"${liberty_configured_path}/server.extensions.dev.xml"
@@ -517,11 +529,17 @@ function build_liberty_configured_image() {
 
   # Copy catalog.json & web.xml specific to the DEPLOYMENT_PATTERN
   cp -r "${TOOLKIT_APPLICATION_DIR}/target-mods/${CATALOGUE_TYPE}/catalog.json" "${liberty_configured_classes_folder_path}"
-  cp -r "${TOOLKIT_APPLICATION_DIR}/fragment-mods/${APPLICATION_BASE_TYPE}/WEB-INF/web.xml" "${liberty_configured_web_app_files_folder_path}/web.xml"
-
-  sed -i.bak -e '1s/^/<?xml version="1.0" encoding="UTF-8"?><web-app xmlns="http:\/\/java.sun.com\/xml\/ns\/javaee" xmlns:xsi="http:\/\/www.w3.org\/2001\/XMLSchema-instance" xsi:schemaLocation="http:\/\/java.sun.com\/xml\/ns\/javaee http:\/\/java.sun.com\/xml\/ns\/javaee\/web-app_3_0.xsd" id="WebApp_ID" version="3.0"> <display-name>opal<\/display-name>/' \
-    "${liberty_configured_web_app_files_folder_path}/web.xml"
-  echo '</web-app>' >>"${liberty_configured_web_app_files_folder_path}/web.xml"
+  if [[ -f "${LOCAL_CONFIG_DIR}/liberty/web.xml" ]]; then
+    cp -r "${LOCAL_CONFIG_DIR}/liberty/web.xml" "${liberty_configured_web_app_files_folder_path}/web.xml"
+  else
+    cp -r "${TOOLKIT_APPLICATION_DIR}/fragment-mods/${APPLICATION_BASE_TYPE}/WEB-INF/web.xml" "${liberty_configured_web_app_files_folder_path}/web.xml"
+    sed -i.bak -e '1s/^/<?xml version="1.0" encoding="UTF-8"?><web-app xmlns="http:\/\/java.sun.com\/xml\/ns\/javaee" xmlns:xsi="http:\/\/www.w3.org\/2001\/XMLSchema-instance" xsi:schemaLocation="http:\/\/java.sun.com\/xml\/ns\/javaee http:\/\/java.sun.com\/xml\/ns\/javaee\/web-app_3_0.xsd" id="WebApp_ID" version="3.0"> <display-name>opal<\/display-name>/' \
+      "${liberty_configured_web_app_files_folder_path}/web.xml"
+    echo '</web-app>' >>"${liberty_configured_web_app_files_folder_path}/web.xml"
+  fi
+  if [[ -f "${LOCAL_CONFIG_DIR}/liberty/jvm.options" ]]; then
+    cp -r "${LOCAL_CONFIG_DIR}/liberty/jvm.options" "${liberty_configured_path}/"
+  fi
 
   # In the schema_dev deployment point Gateway schemes to the ISTORE schemes
   if [[ "${DEPLOYMENT_PATTERN}" == "schema_dev" ]]; then

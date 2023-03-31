@@ -53,17 +53,17 @@ function catalog_remote_node() {
 }
 
 function catalog_remote_database() {
-  local db_name="${1}"
+  local db_name="$1"
   run_sql_cmd "CATALOG DATABASE \"${db_name}\" AT NODE \"${DB_NODE}\""
 }
 
 function connect_to_database() {
-  local db_name="${1}"
+  local db_name="$1"
   run_sql_cmd "CONNECT TO \"${db_name}\" USER \"${USERNAME}\" USING \"${PASSWORD}\""
 }
 
 function connect_to_remote_database() {
-  local db_name="${1}"
+  local db_name="$1"
   identify_credentials
 
   catalog_remote_node
@@ -131,6 +131,7 @@ function run_sql_query_for_db() {
 function run_sql_file() {
   local file="$1"
 
+  connect_to_remote_database "${DB_NAME}"
   ${SQLCMD} ${SQLCMD_FLAGS} ${file}
 
   return "${?}"

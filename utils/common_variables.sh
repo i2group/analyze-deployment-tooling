@@ -140,6 +140,16 @@ case "${DEPLOYMENT_PATTERN}" in
   ;;
 esac
 
+if [[ -z "${WLP_DEBUG_SUSPEND}" ]]; then
+  WLP_DEBUG_SUSPEND="y"
+fi
+if [[ -z "${LIBERTY_DEBUG}" ]]; then
+  LIBERTY_DEBUG="false"
+fi
+if [[ -z "${SOLR_OPTS}" ]]; then
+  SOLR_OPTS=""
+fi
+
 ###############################################################################
 # Gateway variables                                                           #
 ###############################################################################

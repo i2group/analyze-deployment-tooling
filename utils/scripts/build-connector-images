@@ -68,7 +68,14 @@ function validate_connector_version() {
 
   print "Running validatei2ConnectVersions tool"
 
-  docker run -it --rm \
+  local extra_args=()
+  if [[ "${YES_FLAG}" != "true" ]]; then
+    extra_args+=("-it")
+  fi
+  
+  docker run \
+    --rm \
+   "${extra_args[@]}" \
     -e "CONNECTOR_NAME=${connector_name}" \
     -e "CONNECTOR_TYPE=${connector_type}" \
     -e "CONFIG_I2CONNECT_SERVER_VERSION=${config_i2connect_server_version}" \
@@ -146,37 +153,44 @@ function clean_up_connector_dist() {
   delete_folder_if_exists "${connector_dir}/.app"
 }
 
+function build_connector_image() {
+  local connector_name="$1"
+  local connector_image_dir="$2"
+  local connector_type="$3"
+
+  if ! check_connector_changed "${connector_name}"; then
+    return
+  fi
+  if [[ "${connector_type}" != "${EXTERNAL_CONNECTOR_TYPE}" ]]; then
+    delete_container "${CONNECTOR_PREFIX}${connector_name}"
+  fi
+  build_image "${connector_name}" "${connector_image_dir}" "${connector_type}"
+
+  # Update old shasum for connector
+  mv "${PREVIOUS_CONNECTOR_IMAGES_DIR}/${connector_name}.sha512.new" "${PREVIOUS_CONNECTOR_IMAGES_DIR}/${connector_name}.sha512"
+}
+
 function build_connector_images() {
-  local connector_image_dir
+  local connector_image_dir connector_type
   print "Building connectors"
 
   for connector_name in "${CONNECTORS_ARRAY[@]}"; do
     connector_image_dir="${CONNECTOR_IMAGES_DIR}/${connector_name}"
     [[ ! -d "${connector_image_dir}" ]] && continue
 
-    if ! check_connector_changed "${connector_name}"; then
-      continue
+    if [[ ! -f "${connector_image_dir}/connector-definition.json" ]]; then
+      print_error_and_exit "Missing connector-definition.json file for connector '${connector_name}'"
     fi
-    if [[ "${connector_type}" != "${EXTERNAL_CONNECTOR_TYPE}" ]]; then
-      delete_container "${CONNECTOR_PREFIX}${connector_name}"
-    fi
-    build_image "${connector_image_dir}"
+    connector_type=$(jq -r '.type' <"${connector_image_dir}/connector-definition.json")
 
-    # Update old shasum for connector
-    mv "${PREVIOUS_CONNECTOR_IMAGES_DIR}/${connector_name}.sha512.new" "${PREVIOUS_CONNECTOR_IMAGES_DIR}/${connector_name}.sha512"
+    build_connector_image "${connector_name}" "${connector_image_dir}" "${connector_type}"
   done
 }
 
 function build_image() {
-  local connector_image_dir="$1"
-  local connector_name="${connector_image_dir##*/}"
-  local connector_tag
-  local connector_type
-
-  if [[ ! -f "${connector_image_dir}/connector-definition.json" ]]; then
-    print_error_and_exit "Missing connector-definition.json file for connector '${connector_name}'"
-  fi
-  connector_type=$(jq -r '.type' <"${connector_image_dir}/connector-definition.json")
+  local connector_name="$1"
+  local connector_image_dir="$2"
+  local connector_type="$3"
 
   if [[ "${connector_type}" == "${EXTERNAL_CONNECTOR_TYPE}" ]]; then
     return

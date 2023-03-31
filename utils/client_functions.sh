@@ -6,7 +6,7 @@
 
 # @file client_functions.sh
 # @brief A set of client functions that you can use to perform actions against the server components of i2 Analyze.
-# @description
+# @description  <!-- markdown-link-check-disable -->
 #     The list of client functions groups:
 #      * [Environment Utilities](#environment-utilities)
 #      * [Secret Utilities](#secret-utilities)
@@ -18,7 +18,7 @@
 # @section Environment utilities
 # @description
 
-# @description Checks if all required environment variables are set.
+# @descriptionChecks if all required environment variables are set.
 # @noargs
 function check_env_vars_are_set() {
   while read -r var_name; do
@@ -27,7 +27,7 @@ function check_env_vars_are_set() {
 }
 
 # @section Secret utilities
-# @description
+# @description  <!-- markdown-link-check-enable -->
 
 # @description Check if the secret name exists in the secret store.
 # @arg $1 string The partial path to secret
@@ -94,7 +94,7 @@ function get_solr_status() {
 # in the JSON response returned.
 # If the state is not marked as completed, the function returns the response message which contains
 # any error messages that are reported with the asynchronous request.
-# For more information about the Asynchronous Collection API, see [REQUESTSTATUS: Request Status of an Async Call](https://lucene.apache.org/solr/guide/8_7/collections-api.html#requeststatus).
+# For more information about the Asynchronous Collection API, see [REQUESTSTATUS: Request Status of an Async Call](https://lucene.apache.org/solr/guide/8_9/collections-api.html#requeststatus).
 # @arg $1 string The request id of the asynchronous request to get the status of.
 # @stdout The JSON response or error messages.
 function get_async_request_status() {
@@ -400,12 +400,8 @@ function add_user_to_role() {
     auth_args+=("-e" "SA_PASSWORD=${admin_password}")
     ;;
   db2)
-    admin_password=$(get_secret db2server/db2inst1_PASSWORD)
-    user_password=$(get_secret db2server/"${user}"_PASSWORD)
-    db_server_fqdn="${DB2_SERVER_FQDN}"
-    image_name="${DB2_CLIENT_IMAGE_NAME}"
-    auth_args+=("-e" "ADMIN_USERNAME=${DB2INST1_USERNAME}")
-    auth_args+=("-e" "ADMIN_PASSWORD=${admin_password}")
+    # Db2 has only the admin user
+    return
     ;;
   postgres)
     admin_password=$(get_secret postgres/postgres_PASSWORD)
@@ -612,7 +608,7 @@ function run_i2_analyze_tool_as_external_user() {
 }
 
 # @description Uses an ephemeral SQL Client container to run database scripts or commands against the Information Store database as the etl user.
-# For more information about running a SQL Client container and the environment variables required for the container, see [SQL Client](../images%20and%20containers/sql_client.html).
+# For more information about running a SQL Client container and the environment variables required for the container, see [SQL Client](../images%20and%20containers/sql_client.md).
 # @example
 # run_sql_server_command_as_etl bash -c "/opt/mssql-tools/bin/sqlcmd -N -b -S \${DB_SERVER} -U \${DB_USERNAME} -P \${DB_PASSWORD} -d \${DB_NAME} -Q
 # \"BULK INSERT IS_Staging.E_Person
@@ -636,6 +632,7 @@ function run_sql_server_command_as_etl() {
     --rm \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -v "${LOCAL_CUSTOM_DB_SCRIPTS_DIR}:/opt/customDatabaseScripts" \
     -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
@@ -651,7 +648,7 @@ function run_sql_server_command_as_etl() {
 }
 
 # @description Uses an ephemeral Postgres Client container to run database scripts or commands against the Information Store database as the etl user.
-# For more information about running a Postgres Client container and the environment variables required for the container, see [Postgres Client](../images%20and%20containers/postgres_client.html).
+# For more information about running a Postgres Client container and the environment variables required for the container, see [Postgres Client](../images%20and%20containers/postgres_client.md).
 # @example
 # run_postgres_server_command_as_etl bash -c "/usr/lib/postgresql/bin/psql -w -X -q --set=client_min_messages=warning -h \${DB_SERVER} -p \${DB_PORT} -d \${DB_NAME} -c
 #   \"COPY IS_Staging.E_Person (source_id, p_description_of_mark, p_accent, p_aka, p_build, p_citizenship, p_date_of_birth,
@@ -680,6 +677,7 @@ function run_postgres_server_command_as_etl() {
     --rm \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -v "${LOCAL_CUSTOM_DB_SCRIPTS_DIR}:/opt/customDatabaseScripts" \
     -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
@@ -697,7 +695,7 @@ function run_postgres_server_command_as_etl() {
 # @description Uses an ephemeral Postgres Client container to run database scripts or commands against the
 # Information Store database as the postgres user with the initial postgres password.
 # For more information about running a Postgres Client container and the environment variables required for the
-# container, see [Postgres Client](../images%20and%20containers/postgres_client.html).
+# container, see [Postgres Client](../images%20and%20containers/postgres_client.md).
 #
 # @arg $@ string Command you want to run on the Postgres Client container
 #
@@ -733,7 +731,7 @@ function run_postgres_server_command_as_first_start_postgres() {
 # @description Uses an ephemeral Postgres Client container to run database scripts or commands against the
 # Information Store database as the postgres user.
 # For more information about running a Postgres Client container and the environment variables required for the
-# container, see [Postgres Client](../images%20and%20containers/postgres_client.html).
+# container, see [Postgres Client](../images%20and%20containers/postgres_client.md).
 # @example
 #    run_postgres_server_command_as_postgres "/opt/i2-tools/scripts/database-creation/runStaticScripts.sh"
 #
@@ -757,6 +755,7 @@ function run_postgres_server_command_as_postgres() {
     --rm \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -v "${LOCAL_CUSTOM_DB_SCRIPTS_DIR}:/opt/customDatabaseScripts" \
     -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
@@ -774,7 +773,7 @@ function run_postgres_server_command_as_postgres() {
 # @description Uses an ephemeral Postgres Client container to run database scripts or commands against the
 # Information Store database as a dba user.
 # For more information about running a Postgres Client container and the environment variables required for the
-# container, see [Postgres Client](../images%20and%20containers/postgres_client.html).
+# container, see [Postgres Client](../images%20and%20containers/postgres_client.md).
 # @example
 #    run_postgres_server_command_as_dba "/opt/i2-tools/scripts/database-creation/runStaticScripts.sh"
 #
@@ -798,6 +797,7 @@ function run_postgres_server_command_as_dba() {
     --rm \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -v "${LOCAL_CUSTOM_DB_SCRIPTS_DIR}:/opt/customDatabaseScripts" \
     -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
@@ -815,7 +815,7 @@ function run_postgres_server_command_as_dba() {
 # @description Uses an ephemeral Postgres Client container to run database scripts or commands against the
 # Information Store database as the dbb (the backup operator) user.
 # For more information about running a Postgres Client container and the environment variables required for the
-# container, see [Postgres Client](../images%20and%20containers/postgres_client.html).
+# container, see [Postgres Client](../images%20and%20containers/postgres_client.md).
 # @example
 #    run_postgres_server_command_as_dbb bash -c "pg_dump '/backup/istore.pgb'"
 #
@@ -837,6 +837,7 @@ function run_postgres_server_command_as_dbb() {
     --rm \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -v "${LOCAL_CUSTOM_DB_SCRIPTS_DIR}:/opt/customDatabaseScripts" \
     -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
@@ -854,7 +855,7 @@ function run_postgres_server_command_as_dbb() {
 # @description Uses an ephemeral SQL Client container to run database scripts or commands against the
 # Information Store database as the sa user with the initial SA password.
 # For more information about running a SQL Client container and the environment variables required for the
-# container, see [SQL Client](../images%20and%20containers/sql_client.html).
+# container, see [SQL Client](../images%20and%20containers/sql_client.md).
 #
 # @arg $@ string Command you want to run on the SQL Client container
 #
@@ -890,7 +891,7 @@ function run_sql_server_command_as_first_start_sa() {
 # @description Uses an ephemeral SQL Client container to run database scripts or commands against the
 # Information Store database as the SA user.
 # For more information about running a SQL Client container and the environment variables required for the
-# container, see [SQL Client](../images%20and%20containers/sql_client.html).
+# container, see [SQL Client](../images%20and%20containers/sql_client.md).
 # @example
 #    run_sql_server_command_as_sa "/opt/i2-tools/scripts/database-creation/runStaticScripts.sh"
 #
@@ -911,6 +912,7 @@ function run_sql_server_command_as_sa() {
     --rm \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -v "${LOCAL_CUSTOM_DB_SCRIPTS_DIR}:/opt/customDatabaseScripts" \
     -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
@@ -928,7 +930,7 @@ function run_sql_server_command_as_sa() {
 # @description Uses an ephemeral SQL Client container to run database scripts or commands against the
 # Information Store database as the dba user.
 # For more information about running a SQL Client container and the environment variables required for the
-# container, see [SQL Client](../images%20and%20containers/sql_client.html).
+# container, see [SQL Client](../images%20and%20containers/sql_client.md).
 # @example
 #    run_sql_server_command_as_dba "/opt/i2-tools/scripts/clearInfoStoreData.sh"
 #
@@ -949,6 +951,7 @@ function run_sql_server_command_as_dba() {
     --rm \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -v "${LOCAL_CUSTOM_DB_SCRIPTS_DIR}:/opt/customDatabaseScripts" \
     -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
@@ -966,7 +969,7 @@ function run_sql_server_command_as_dba() {
 # @description Uses an ephemeral SQL Client container to run database scripts or commands against the
 # Information Store database as the dbb (the backup operator) user.
 # For more information about running a SQL Client container and the environment variables required for the
-# container, see [SQL Client](../images%20and%20containers/sql_client.html).
+# container, see [SQL Client](../images%20and%20containers/sql_client.md).
 # @example
 #    run_sql_server_command_as_dbb bash -c "/opt/mssql-tools/bin/sqlcmd -N -b -C -S sqlserver.eia,1433 -U \"\${DB_USERNAME}\" -P \"\${DB_PASSWORD}\" \
 #      -Q \"USE ISTORE;
@@ -992,6 +995,7 @@ function run_sql_server_command_as_dbb() {
     --rm \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
+    -v "${LOCAL_CUSTOM_DB_SCRIPTS_DIR}:/opt/customDatabaseScripts" \
     -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
@@ -1008,8 +1012,8 @@ function run_sql_server_command_as_dbb() {
 
 # @description Uses an ephemeral ETL toolkit container to run ETL toolkit tasks against the
 # Information Store using the i2 ETL user credentials.
-# For more information about running the ETL Client container and the environment variables required for the container, see [ETL Client](../images%20and%20containers/etl_client.html).
-# For more information about running the ETL toolkit container and the tasks that you can run, see [ETL Tools](../tools%20and%20functions/etl_tools.html)
+# For more information about running the ETL Client container and the environment variables required for the container, see [ETL Client](../images%20and%20containers/etl_client.md).
+# For more information about running the ETL toolkit container and the tasks that you can run, see [ETL Tools](../tools%20and%20functions/etl_tools.md)
 # @example
 #   run_etl_toolkit_tool_as_i2_etl bash -c "/opt/i2/etltoolkit/addInformationStoreIngestionSource --ingestionSourceName EXAMPLE_1 --ingestionSourceDescription EXAMPLE_1"
 #
@@ -1071,8 +1075,8 @@ function run_etl_toolkit_tool_as_i2_etl() {
 
 # @description Uses an ephemeral ETL toolkit container to run ETL toolkit tasks against the
 # Information Store using the DBA user credentials.
-# For more information about running the ETL Client container and the environment variables required for the container, see [ETL Client](../images%20and%20containers/etl_client.html).
-# For more information about running the ETL toolkit container and the tasks that you can run, see [ETL Tools](../tools%20and%20functions/etl_tools.html)
+# For more information about running the ETL Client container and the environment variables required for the container, see [ETL Client](../images%20and%20containers/etl_client.md).
+# For more information about running the ETL toolkit container and the tasks that you can run, see [ETL Tools](../tools%20and%20functions/etl_tools.md)
 # @example
 #   run_etl_toolkit_tool_as_dba bash -c "/opt/i2/etltoolkit/addInformationStoreIngestionSource --ingestionSourceName EXAMPLE_1 --ingestionSourceDescription EXAMPLE_1"
 #
@@ -1157,6 +1161,7 @@ function run_db2_server_command_as_db2inst1() {
     --privileged=true \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
     -v "${LOCAL_CONFIG_DIR}:/opt/configuration" \
+    -v "${LOCAL_CUSTOM_DB_SCRIPTS_DIR}:/opt/customDatabaseScripts" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
     -e "DB_INSTALL_DIR=${DB_INSTALL_DIR}" \

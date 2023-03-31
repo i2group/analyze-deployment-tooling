@@ -166,7 +166,7 @@ function create_data_source_id() {
   create_dsid_properties_file "${dsid_properties_file_path}"
 }
 
-EXTENSIONS_DEV="true"
+DEV_LIBERTY_SERVER_EXTENSIONS="true"
 ###############################################################################
 # Cleaning up Docker resources                                                #
 ###############################################################################

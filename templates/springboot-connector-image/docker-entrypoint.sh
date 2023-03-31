@@ -28,6 +28,7 @@ if [[ ${SSL_ENABLED} == true ]]; then
 
   echo "${SSL_CA_CERTIFICATE}" >"${CA_CER}"
   KEYSTORE_PASS=$(openssl rand -base64 16)
+  KEYSTORE_PASS="${KEYSTORE_PASS//\//=}"
   export KEYSTORE_PASS
   keytool -importcert -noprompt -alias ca -keystore "${TRUSTSTORE}" -file ${CA_CER} -storepass:env KEYSTORE_PASS -storetype PKCS12
 

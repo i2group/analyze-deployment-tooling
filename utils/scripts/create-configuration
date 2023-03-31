@@ -214,6 +214,8 @@ function create_clean_base_configuration_for_config_dev() {
   echo "<!-- Replace this with your command-access-control.xml configuration file -->" >"${LOCAL_CONFIGURATION_DIR}/command-access-control.xml"
 
   cp "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/templates/version.conf" "${LOCAL_CONFIG_DEV_DIR}"
+  mkdir -p "${LOCAL_CONFIG_DEV_DIR}/configuration/database-scripts"
+
   sed -i "s/^SUPPORTED_I2ANALYZE_VERSION=.*/SUPPORTED_I2ANALYZE_VERSION=${SUPPORTED_I2ANALYZE_VERSION}/g" "${LOCAL_CONFIG_DEV_DIR}/version.conf"
 }
 

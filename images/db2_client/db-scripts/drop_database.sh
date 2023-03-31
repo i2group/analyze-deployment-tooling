@@ -6,11 +6,12 @@
 
 set -e
 
-source /opt/db-scripts/common_functions.sh
+. /opt/db-scripts/environment.sh
+. /opt/db-scripts/common_functions.sh
 
 catalog_remote_node
 attach_to_remote
-catalog_remote_database
+catalog_remote_database "${DB_NAME}"
 
 sql_query="DROP DATABASE \"${DB_NAME}\""
 run_sql_cmd "${sql_query}"

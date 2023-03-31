@@ -254,10 +254,6 @@ else
   LOCAL_CA_CERT_DIR_FOR_CURL="${LOCAL_CA_CERT_DIR}"
 fi
 
-DEBUG_LIBERTY_SERVERS=()
-# Provide a list of liberty container names to start in debug mode such as:
-# DEBUG_LIBERTY_SERVERS=("${LIBERTY1_CONTAINER_NAME}" "${LIBERTY2_CONTAINER_NAME}")
-
 # Windows (WSL)
 DEVELOPMENT_JARS_DIR="/c/i2/iap-discovery/Liberty/wlp/usr/servers/is-daod/apps/opal-services-is-daod.war/WEB-INF/lib"
 # Mac OS

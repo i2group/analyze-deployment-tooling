@@ -94,7 +94,11 @@ function create_mounts() {
     "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind" \
     --arg history_mount \
     "source=analyze-containers,target=/commandhistory,type=volume" \
-    '.mounts |= . + [$docker_mount, $history_mount]' "${devcontainer_json}" >"${ANALYZE_CONTAINERS_ROOT_DIR}/.devcontainer/tmp.json"
+    --arg mvn_mount \
+    "source=\${localEnv:HOME}/.m2,target=/home/vscode/.m2,type=bind,consistency=cached" \
+    --arg gh_mount \
+    "source=\${localEnv:HOME}/.config/gh,target=/home/vscode/.config/gh,type=bind" \
+    '.mounts |= . + [$docker_mount, $history_mount, $mvn_mount, $gh_mount]' "${devcontainer_json}" >"${ANALYZE_CONTAINERS_ROOT_DIR}/.devcontainer/tmp.json"
   mv "${ANALYZE_CONTAINERS_ROOT_DIR}/.devcontainer/tmp.json" "${devcontainer_json}"
 
   # Add mount for each path in the path-configuration.json file

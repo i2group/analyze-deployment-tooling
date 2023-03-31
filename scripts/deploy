@@ -44,10 +44,13 @@ parse_arguments "$@"
 
 check_valid_config_name "${CONFIG_NAME}"
 
-if [[ "${TASK}" == "package" ]]; then
-  EXTENSIONS_DEV="false"
-else
-  EXTENSIONS_DEV="true"
+# Only set if the var isn't already available
+if [[ -z "${DEV_LIBERTY_SERVER_EXTENSIONS}" ]]; then
+  if [[ "${TASK}" == "package" ]]; then
+    DEV_LIBERTY_SERVER_EXTENSIONS="false"
+  else
+    DEV_LIBERTY_SERVER_EXTENSIONS="true"
+  fi
 fi
 
 if [[ -z "${YES_FLAG}" ]]; then
@@ -112,7 +115,9 @@ function compare_current_configuration() {
     ["security-schema.xml"]=3
     ["environment/dsid/dsid.properties"]=3
     ["server.extensions.xml"]=4
-    ["server.extensions.dev.xml"]=4)
+    ["server.extensions.dev.xml"]=4
+    ["web.xml"]=4
+    ["jvm.options"]=4)
   # Add gateway schemas
   for gateway_short_name in "${!GATEWAY_SHORT_NAME_SET[@]}"; do
     checkFilesArray+=(["${gateway_short_name}-schema.xml"]=1)
@@ -322,7 +327,7 @@ function deploy_zk_cluster() {
 
 function deploy_solr_cluster() {
   print "Running Solr container"
-  run_solr "${SOLR1_CONTAINER_NAME}" "${SOLR1_FQDN}" "${SOLR1_VOLUME_NAME}" "${HOST_PORT_SOLR}" "solr1" "${SOLR1_SECRETS_VOLUME_NAME}"
+  run_solr "${SOLR1_CONTAINER_NAME}" "${SOLR1_FQDN}" "${SOLR1_VOLUME_NAME}" "${HOST_PORT_SOLR}" "solr1" "${SOLR1_SECRETS_VOLUME_NAME}" "${SOLR_DEBUG_PORT}"
 }
 
 function configure_zk_for_solr_cluster() {
@@ -409,7 +414,7 @@ function create_database() {
 function restore_database() {
   case "${DB_DIALECT}" in
   db2)
-    print_error_and_exit "Not implemented yet"
+    restore_db2_server
     ;;
   sqlserver)
     restore_sql_server
@@ -418,6 +423,11 @@ function restore_database() {
     restore_postgres_server
     ;;
   esac
+}
+
+function restore_db2_server() {
+  deploy_secure_db2_server
+  restore_istore_database
 }
 
 function restore_sql_server() {
@@ -443,7 +453,13 @@ function restore_istore_database() {
 
   case "${DB_DIALECT}" in
   db2)
-    print_error_and_exit "Not implemented yet"
+    update_volume "${BACKUP_DIR}" "${DB2_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
+    run_db_container_with_backup_volume chown -R 1000:1000 "${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
+
+    print "Restoring the ${DB_NAME} database"
+    sql_query="\
+      RESTORE DATABASE ${DB_NAME} USER \"\${DB_USERNAME}\" USING \"\${DB_PASSWORD}\" FROM \"${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}\""
+    run_db2_server_command_as_db2inst1 run-sql-query "${sql_query}"
     ;;
   sqlserver)
     update_volume "${BACKUP_DIR}" "${SQL_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
@@ -551,10 +567,10 @@ function deploy_secure_postgres_server() {
 }
 
 function initialize_istore_database_for_db2_server() {
-  run_db2_server_command_as_db2inst1inst1 "/opt/databaseScripts/generated/runDatabaseCreationScripts.sh"
+  run_db2_server_command_as_db2inst1 "/opt/databaseScripts/generated/runDatabaseCreationScripts.sh"
 
   print "Initializing ISTORE database tables"
-  run_db2_server_command_as_db2inst1inst1 "/opt/databaseScripts/generated/runStaticScripts.sh"
+  run_db2_server_command_as_db2inst1 "/opt/databaseScripts/generated/runStaticScripts.sh"
 }
 
 function initialize_istore_database_for_sql_server() {
@@ -620,7 +636,7 @@ function configure_istore_database() {
   run_i2_analyze_tool "/opt/i2-tools/scripts/generateDynamicInfoStoreCreationScripts.sh"
   case "${DB_DIALECT}" in
   db2)
-    run_db2_server_command_as_db2inst1inst1 "/opt/databaseScripts/generated/runDynamicScripts.sh"
+    run_db2_server_command_as_db2inst1 "/opt/databaseScripts/generated/runDynamicScripts.sh"
     ;;
   sqlserver)
     run_sql_server_command_as_dba "/opt/databaseScripts/generated/runDynamicScripts.sh"
@@ -632,6 +648,21 @@ function configure_istore_database() {
 
   print "Assigning additional database roles to users"
   assign_additional_roles_to_users
+
+  if [[ -f "${LOCAL_CUSTOM_DB_SCRIPTS_DIR}/informationStoreModifications.sql" ]]; then
+    print "Run custom modification script"
+    case "${DB_DIALECT}" in
+    db2)
+      run_db2_server_command_as_db2inst1 run-sql-file "/opt/customDatabaseScripts/informationStoreModifications.sql"
+      ;;
+    sqlserver)
+      run_sql_server_command_as_dba run-sql-file "/opt/customDatabaseScripts/informationStoreModifications.sql"
+      ;;
+    postgres)
+      run_postgres_server_command_as_dba run-sql-file "/opt/customDatabaseScripts/informationStoreModifications.sql"
+      ;;
+    esac
+  fi
 }
 
 function assign_additional_roles_to_users() {
@@ -800,7 +831,7 @@ function upgrade() {
   remove_docker_volumes
 
   # Required to fix text search
-  # TODO: Look into what specifically is required  to repeat inside this function
+  # TODO: Look into what specifically is required  to repeat inside this function (CIR-2285)
   initialize_deployment
 
   validate_json_files
@@ -948,7 +979,7 @@ function notify_update_server_configuration() {
     --cacert "${LOCAL_EXTERNAL_CA_CERT_DIR}/CA.cer" \
     --cookie /tmp/cookie.txt \
     --header 'Content-Type: application/json' \
-    --data-raw "{\"params\":[{\"value\" : [\"\"],\"type\" : {\"className\":\"java.util.ArrayList\",\"items\":[\"java.lang.String\"]}},{\"value\" : [\"/liberty/usr/shared/config/user.registry.xml\"],\"type\" : {\"className\":\"java.util.ArrayList\",\"items\":[\"java.lang.String\"]}},{\"value\" : [\"\"],\"type\" : {\"className\":\"java.util.ArrayList\",\"items\":[\"java.lang.String\"]}}],\"signature\":[\"java.util.Collection\",\"java.util.Collection\",\"java.util.Collection\"]}" \
+    --data-raw "{\"params\":[{\"value\" : [\"\"],\"type\" : {\"className\":\"java.util.ArrayList\",\"items\":[\"java.lang.String\"]}},{\"value\" : [\"/opt/ol/wlp/usr/shared/config/user.registry.xml\"],\"type\" : {\"className\":\"java.util.ArrayList\",\"items\":[\"java.lang.String\"]}},{\"value\" : [\"\"],\"type\" : {\"className\":\"java.util.ArrayList\",\"items\":[\"java.lang.String\"]}}],\"signature\":[\"java.util.Collection\",\"java.util.Collection\",\"java.util.Collection\"]}" \
     --request POST "${BASE_URI}/IBMJMXConnectorREST/mbeans/WebSphere%3Aservice%3Dcom.ibm.ws.kernel.filemonitor.FileNotificationMBean/operations/notifyFileChanges" \
     >/tmp/http_code.txt; then
     # Invoking FileNotificationMBean doc: https://www.ibm.com/docs/en/zosconnect/3.0?topic=demand-invoking-filenotificationmbean-from-rest-api
@@ -967,6 +998,7 @@ function update_live_configuration() {
   local errors_message="Validation errors detected, please review the above message(s)."
   if [[ " ${filesChangedArray[*]} " == *" user.registry.xml "* ]]; then
     notify_update_server_configuration
+    return
   fi
 
   local max_tries=15
@@ -1150,6 +1182,12 @@ function copy_local_config_to_the_liberty_container() {
   if [[ -f "${GENERATED_LOCAL_CONFIG_DIR}/server.extensions.dev.xml" ]]; then
     docker cp "${GENERATED_LOCAL_CONFIG_DIR}/server.extensions.dev.xml" "${LIBERTY1_CONTAINER_NAME}:${liberty_server_path}"
   fi
+  if [[ -f "${GENERATED_LOCAL_CONFIG_DIR}/web.xml" ]]; then
+    docker cp "${GENERATED_LOCAL_CONFIG_DIR}/web.xml" "${LIBERTY1_CONTAINER_NAME}:${liberty_app_war_path}/WEB-INF"
+  fi
+  if [[ -f "${GENERATED_LOCAL_CONFIG_DIR}/jvm.options" ]]; then
+    docker cp "${GENERATED_LOCAL_CONFIG_DIR}/jvm.options" "${LIBERTY1_CONTAINER_NAME}:/config"
+  fi
   rm -rf "${tmp_classes_dir}"
 
   docker cp "${GENERATED_LOCAL_CONFIG_DIR}/privacyagreement.html" "${LIBERTY1_CONTAINER_NAME}:${liberty_app_war_path}/privacyagreement.html"
@@ -1276,7 +1314,7 @@ function update_schema() {
         print "Running the generated scripts"
         case "${DB_DIALECT}" in
         db2)
-          run_db2_server_command_as_db2inst1inst1 "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
+          run_db2_server_command_as_db2inst1 "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
           ;;
         sqlserver)
           run_sql_server_command_as_dba "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
@@ -1699,7 +1737,8 @@ function restore_from_backup() {
   if [[ ! -d "${BACKUP_DIR}/${BACKUP_NAME}" ]]; then
     print_error_and_exit "Backup directory ${BACKUP_DIR}/${BACKUP_NAME} does NOT exist"
   fi
-  if [[ ! -f "${backup_file_path}" || ! -s "${backup_file_path}" ]]; then
+  # Db2 has a timestamp on the file name. Ignore
+  if [[ "${DB_DIALECT}" != "db2" && (! -f "${backup_file_path}" || ! -s "${backup_file_path}") ]]; then
     print_error_and_exit "Backup file ${backup_file_path} does NOT exist or is empty."
   fi
 
@@ -1773,7 +1812,7 @@ function initialize_deployment() {
   validate_mandatory_files_present
 
   # Auto generate dsid into config folder before we create the generated one
-  create_data_source_id
+  create_data_source_id "${LOCAL_USER_CONFIG_DIR}"
 
   generate_artifacts
 
@@ -1789,7 +1828,7 @@ function initialize_deployment() {
   add_config_admin_to_security_schema
   create_mounted_config_structure
 
-  if [[ ! -f "${PREVIOUS_STATE_FILE_PATH}" ]]; then
+  if [[ ! -f "${PREVIOUS_STATE_FILE_PATH}" && "${TASK}" != "package" ]]; then
     create_initial_state_file
   fi
 }

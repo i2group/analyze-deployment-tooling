@@ -61,17 +61,19 @@ docker build -t "${SOLR_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DI
   --build-arg I2ANALYZE_VERSION="${toolkit_version%%-*}" \
   --build-arg BASE_IMAGE="i2group/i2eng-solr:${SOLR_VERSION}"
 
-###############################################################################
-# Building Db2 Server image                                                   #
-###############################################################################
-# print "Building Db2 Server image"
-# docker build -t "${DB2_SERVER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/db2_server"
+if [[ "${DEV_BUILD}" == "true" ]]; then
+  ###############################################################################
+  # Building Db2 Server image                                                   #
+  ###############################################################################
+  print "Building Db2 Server image"
+  docker build -t "${DB2_SERVER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/db2_server"
 
-###############################################################################
-# Building Db2 Client image                                                   #
-###############################################################################
-# print "Building Db2 Client image"
-# docker build -t "${DB2_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/db2_client"
+  ###############################################################################
+  # Building Db2 Client image                                                   #
+  ###############################################################################
+  print "Building Db2 Client image"
+  docker build -t "${DB2_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/db2_client"
+fi
 
 ###############################################################################
 # Building SQL Server image                                                   #

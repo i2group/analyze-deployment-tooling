@@ -96,13 +96,14 @@ LIBERTY1_DEBUG_PORT=7777
 LIBERTY2_PORT=9044
 LIBERTY2_DEBUG_PORT=7778
 SOLR_PORT=8983
+SOLR_DEBUG_PORT=5005
 ZK_PORT=8080
 CONNECTOR1_APP_PORT=3443
 CONNECTOR2_APP_PORT=3443
 
 if [[ -z "${DB_DIALECT}" ]]; then
-  # Default to sqlserver
-  DB_DIALECT="sqlserver"
+  # Default to postgres
+  DB_DIALECT="postgres"
 fi
 
 case "${DB_DIALECT}" in
@@ -200,9 +201,10 @@ I2_ANALYZE_ADMIN="I2AnalyzeConfigDevAdmin"
 ###############################################################################
 LOCAL_USER_CHANGE_SETS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/change-sets"
 LOCAL_USER_CONFIG_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/configuration"
+LOCAL_CUSTOM_DB_SCRIPTS_DIR="${LOCAL_USER_CONFIG_DIR}/database-scripts"
 LOCAL_CONFIG_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/.configuration"
 GENERATED_LOCAL_CONFIG_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/.configuration-generated"
-LOCAL_LIB_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/.i2a-extensions" # TODO: only used in upgrade, should be removed together when removing it from upgrade.
+LOCAL_LIB_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/.i2a-extensions" # TODO: only used in upgrade, should be removed together when removing it from upgrade (CIR-2675).
 LOCAL_GENERATED_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/database-scripts/generated"
 
 PRE_REQS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/pre-reqs"
