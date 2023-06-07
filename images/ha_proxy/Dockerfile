@@ -4,19 +4,19 @@
 #
 # SPDX short identifier: MIT
 
-FROM haproxy:2.2
+FROM haproxy:2.8
 LABEL maintainer="i2 Group"
 
 ARG USER=haproxy
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
+USER root
 RUN groupmod --gid $USER_GID $USER \
   && usermod --uid $USER_UID --gid $USER_GID $USER \
   && chown -R $USER_UID:$USER_GID /opt \
   /usr/local/etc/haproxy
 
-USER root
 RUN apt-get update \
   && apt-get -y install \
   sudo

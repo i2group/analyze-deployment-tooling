@@ -77,6 +77,18 @@ EXTRA_ARGS+=("-a" "stdout")
 EXTRA_ARGS+=("-a" "stdin")
 
 ###############################################################################
+# Security configuration                                                      #
+###############################################################################
+CA_DURATION=365
+CERTIFICATE_DURATION=365
+CERTIFICATE_KEY_SIZE=4096
+CA_KEY_SIZE=4096
+I2_ANALYZE_CERT_FOLDER_NAME="i2analyze"
+GATEWAY_CERT_FOLDER_NAME="gateway_user"
+ADMIN_ACCESS_PERMISSIONS=("i2:Administrator" "i2:Notes" "i2:RecordsUpload" "i2:RecordsDelete" "i2:ChartsUpload" "i2:ChartsDelete"
+  "i2:ChartsRead" "i2:RecordsExport" "i2:Connectors" "i2:Connectors:connector-id" "i2:Notebook")
+
+###############################################################################
 # Network Security Variables                                                  #
 ###############################################################################
 DB_SSL_CONNECTION="false"

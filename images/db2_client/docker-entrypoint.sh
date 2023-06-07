@@ -30,6 +30,22 @@ if [[ "${DB_SSL_CONNECTION}" == "true" ]]; then
   update-ca-trust
 fi
 
+function set_up_client() {
+  retry=0
+  while (( retry < 5 )); do 
+    if /opt/ibm/db2/V11.5/instance/db2icrt -s client db2inst1; then
+      break 
+    fi
+    retry=$((retry+1))
+    sleep 3
+  done
+  if (( retry == 5 )); then
+    echo "Error setting up Db2 Client"
+    exit 1
+  fi
+}
+set_up_client
+
 case "$1" in
 "runSQLQuery")
   print_warn "runSQLQuery has been deprecated. Please use run-sql-query instead."

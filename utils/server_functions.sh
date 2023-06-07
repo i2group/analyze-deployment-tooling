@@ -39,11 +39,18 @@ function run_zk() {
   local ssl_ca_certificate
   ssl_ca_certificate=$(get_secret "certificates/CA/CA.cer")
 
+  local extra_args=()
+  if [[ "${DEV_BUILD}" == "true" ]]; then
+    extra_args+=("-p" "${ZK_SECURE_CLIENT_PORT}:2281")
+    extra_args+=("-p" "${ZK_CLIENT_PORT}:2181")
+  fi
+
   print "ZooKeeper container ${CONTAINER} is starting"
   docker run -d \
     --name "${CONTAINER}" \
     --net "${DOMAIN_NAME}" \
     --net-alias "${FQDN}" \
+    "${extra_args[@]}" \
     -v "${DATA_VOLUME}:/data" \
     -v "${DATALOG_VOLUME}:/datalog" \
     -v "${LOG_VOLUME}:/logs" \
@@ -348,7 +355,7 @@ function run_liberty() {
     liberty_start_command+=("-e")
     liberty_start_command+=("WLP_DEBUG_SUSPEND=${WLP_DEBUG_SUSPEND}")
     liberty_start_command+=("${LIBERTY_CONFIGURED_IMAGE_NAME}:${I2A_LIBERTY_CONFIGURED_IMAGE_TAG}")
-    liberty_start_command+=("/liberty/bin/server")
+    liberty_start_command+=("/opt/ol/wlp/bin/server")
     liberty_start_command+=("debug")
     liberty_start_command+=("defaultServer")
   fi
@@ -480,20 +487,32 @@ function build_liberty_configured_image() {
   for extension in "${extension_files[@]}"; do
     # shellcheck disable=SC2001
     extension_name=$(echo "${extension}" | sed 's|\(.*\)-.*|\1|')
+    is_code_extension="true"
     if [[ ! -f "${EXTENSIONS_DIR}/${extension_name}/target/${extension}.jar" ]]; then
-      echo "Extension does NOT exist: ${EXTENSIONS_DIR}/${extension_name}/target/${extension}.jar"
-      continue
+      if [[ ! $(find -L "${EXTENSIONS_DIR}/${extension_name}" -mindepth 1 -maxdepth 1 -name "*.jar" -type f -print0 | xargs -0) ]]; then
+        echo "Extension does NOT exist: ${EXTENSIONS_DIR}/${extension_name}/target/${extension}.jar"
+        continue
+      fi
+      is_code_extension="false"
     fi
     # Copy dependencies of the extension
     IFS=' ' read -ra dependencies <<<"$(jq -r --arg name "${extension_name}" '.[] | select(.name == $name) | .dependencies[]' "${extension_dependencies_path}" | xargs)"
     for dependency_name in "${dependencies[@]}"; do
-      local dependency_version
-      dependency_version="$(xmlstarlet sel -t -v "/project/version" "${EXTENSIONS_DIR}/${dependency_name}/pom.xml")"
-      cp "${EXTENSIONS_DIR}/${dependency_name}/target/${dependency_name}-${dependency_version}.jar" "${liberty_configured_lib_folder_path}"
+      if [[ ! -f "${EXTENSIONS_DIR}/${dependency_name}/pom.xml" ]]; then
+        find -L "${EXTENSIONS_DIR}/${dependency_name}" -mindepth 1 -maxdepth 1 -name "*.jar" -type f -exec cp -p {} "${liberty_configured_lib_folder_path}" \;
+      else
+        local dependency_version
+        dependency_version="$(xmlstarlet sel -t -v "/project/version" "${EXTENSIONS_DIR}/${dependency_name}/pom.xml")"
+        cp "${EXTENSIONS_DIR}/${dependency_name}/target/${dependency_name}-${dependency_version}.jar" "${liberty_configured_lib_folder_path}"
+      fi
       cp -p "${PREVIOUS_EXTENSIONS_DIR}/${dependency_name}.sha512" "${PREVIOUS_CONFIGURATION_DIR}/lib"
     done
     # Copy the extension
-    cp "${EXTENSIONS_DIR}/${extension_name}/target/${extension}.jar" "${liberty_configured_lib_folder_path}"
+    if [[ "${is_code_extension}" == "false" ]]; then
+      find -L "${EXTENSIONS_DIR}/${extension_name}" -mindepth 1 -maxdepth 1 -name "*.jar" -type f -exec cp -p {} "${liberty_configured_lib_folder_path}" \;
+    else
+      cp "${EXTENSIONS_DIR}/${extension_name}/target/${extension}.jar" "${liberty_configured_lib_folder_path}"
+    fi
     cp -p "${PREVIOUS_EXTENSIONS_DIR}/${extension_name}.sha512" "${PREVIOUS_CONFIGURATION_DIR}/lib"
   done
 

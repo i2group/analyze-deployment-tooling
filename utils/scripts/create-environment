@@ -229,7 +229,7 @@ function main() {
   cp -r "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/overrides/sqlserver/." "${IMAGES_DIR}/sql_client/tools/i2-tools/scripts/database-templates/sqlserver"
   # - End -
 
-  if [[ "${DEV_BUILD}" == "true" ]]; then
+  if [[ "${DEV_DB2_BUILD}" == "true" ]]; then
     populate_image_folder_with_tools_resources "db2_client"
   fi
   populate_image_folder_with_tools_resources "postgres_client"

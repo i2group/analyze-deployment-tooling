@@ -11,6 +11,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
 
+## 2.5.3 - 07/06/2023
+
+### Added
+
+* Ability to update the Solr configuration without cleaning the deployment first.
+
+### Changed
+
+* Increased the certificate expiry time for the development environment certificates from 90 days to 365 days.
+
+### Fixed
+
+* Security schema changes now included in change sets
+* The pre-prod example deployment now backs up the match_index2
+* Versions are correctly resolved in documentation
+
+[2.5.3]: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.5.3><!-- markdown-link-check-enable -->
+
 ## 2.5.2 - 31/03/2023
 
 ### Added
@@ -30,7 +48,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * Stopped repeating Liberty properties on start up.
 * Password generation issues on Mac OS
 
-[2.5.2]: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.5.2><!-- markdown-link-check-enable -->
+[2.5.2]: <https://github.com/i2group/analyze-containers/tree/v2.5.2>
 
 ## 2.5.1 - 14/02/2023
 

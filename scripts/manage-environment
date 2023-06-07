@@ -613,7 +613,7 @@ function get_image_ids() {
   image_ids+=$(get_image_id "${POSTGRES_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
   image_ids+=$(get_image_id "${I2A_TOOLS_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
 
-  if [[ "${DEV_BUILD}" == "true" ]]; then
+  if [[ "${DEV_DB2_BUILD}" == "true" ]]; then
     image_ids+=$(get_image_id "${DB2_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
     image_ids+=$(get_image_id "${DB2_SERVER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
   fi

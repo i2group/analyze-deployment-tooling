@@ -72,6 +72,9 @@ check_docker_is_running
 set_dependencies_tag_if_necessary
 
 RELOAD_GATEWAY_REQUIRED="false"
+CHANGE_SET_EXISTS="false"
+# TODO: DESTRUCTIVE_CHANGE_COMPLETED variable should be removed when we split the i2 Tool for validating the schema and security schema, task CIR-528
+DESTRUCTIVE_CHANGE_COMPLETED="false"
 
 ###############################################################################
 # Create Helper Functions                                                     #
@@ -114,15 +117,24 @@ function compare_current_configuration() {
     ["schema.xml"]=3
     ["security-schema.xml"]=3
     ["environment/dsid/dsid.properties"]=3
+    ["solr/schema-template-definition.xml"]=3
     ["server.extensions.xml"]=4
     ["server.extensions.dev.xml"]=4
     ["web.xml"]=4
     ["jvm.options"]=4)
+
   # Add gateway schemas
   for gateway_short_name in "${!GATEWAY_SHORT_NAME_SET[@]}"; do
     checkFilesArray+=(["${gateway_short_name}-schema.xml"]=1)
     checkFilesArray+=(["${gateway_short_name}-schema-charting-schemes.xml"]=1)
   done
+
+  # Extract synonyms file name (could be only one) from the schema-template-definition.xml
+  local synonyms_file
+  synonyms_file="$(extract_synonyms_file_name "${CURRENT_CONFIGURATION_PATH}/solr/schema-template-definition.xml")"
+  if [[ -n "${synonyms_file}" ]]; then
+    checkFilesArray+=(["solr/${synonyms_file}"]=3)
+  fi
 
   # array used to store file changes (if any)
   configFinalActionCode=0
@@ -352,6 +364,9 @@ function configure_solr_collections() {
   run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n match_index1 -d /opt/configuration/solr/generated_config/match_index
   run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n match_index2 -d /opt/configuration/solr/generated_config/match_index
   run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n vq_index -d /opt/configuration/solr/generated_config/vq_index
+  if [[ "${DEV_BUILD}" == "true" ]]; then
+    run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n main_index_test -d /opt/configuration/solr/generated_config/main_index
+  fi
 }
 
 function delete_solr_collections() {
@@ -366,11 +381,17 @@ function delete_solr_collections() {
   run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=DELETE&name=daod_index\""
   run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=DELETE&name=highlight_index\""
   run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=DELETE&name=vq_index\""
+  if [[ "${DEV_BUILD}" == "true" ]]; then
+    run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=DELETE&name=main_index_test\""
+  fi
 
   run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/main_index/collectionprops.json"
   run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/match_index1/collectionprops.json"
   run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/match_index2/collectionprops.json"
   run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/chart_index/collectionprops.json"
+  if [[ "${DEV_BUILD}" == "true" ]]; then
+    run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/main_index_test/collectionprops.json"
+  fi
 }
 
 function create_solr_collections() {
@@ -385,6 +406,9 @@ function create_solr_collections() {
   run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=daod_index&collection.configName=daod_index&numShards=1&maxShardsPerNode=4&replicationFactor=1\""
   run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=highlight_index&collection.configName=highlight_index&numShards=1&maxShardsPerNode=4&replicationFactor=1\""
   run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=vq_index&collection.configName=vq_index&numShards=1&maxShardsPerNode=4&replicationFactor=1\""
+  if [[ "${DEV_BUILD}" == "true" ]]; then
+    run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=main_index_test&collection.configName=main_index_test&numShards=1&maxShardsPerNode=4&replicationFactor=1\""
+  fi
 }
 
 function create_database() {
@@ -893,13 +917,6 @@ function upgrade_database() {
   esac
 }
 
-function upgrade_solr() {
-  print "Upgrading Solr"
-
-  run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n vq_index -d /opt/configuration/solr/generated_config/vq_index
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=vq_index&collection.configName=vq_index&numShards=1&maxShardsPerNode=4&replicationFactor=2\""
-}
-
 function upgrade_liberty() {
   deploy_liberty
   update_log4j_file
@@ -1292,14 +1309,17 @@ function download_highlight_queries_xsd() {
 
 function update_schema() {
   local errors_message="Validation errors detected, please review the above message(s)"
+  print "Updating the deployed schema"
 
-  if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
-    print "Updating the deployed schema"
+  if [[ "${DEPLOYMENT_PATTERN}" == *"store"* && "${DESTRUCTIVE_CHANGE_COMPLETED}" == "false" ]]; then
 
     print_info "Stopping Liberty container"
     stop_application
 
-    "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/create-change-set" -c "${CONFIG_NAME}" -t "update"
+    if [[ "${CHANGE_SET_EXISTS}" == "false" ]]; then
+      "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/create-change-set" -c "${CONFIG_NAME}" -t "update"
+      CHANGE_SET_EXISTS="true"
+    fi
 
     if ! run_i2_analyze_tool "/opt/i2-tools/scripts/validateSchemaAndSecuritySchema.sh" >'/tmp/result_validate_security_schema'; then
       start_application
@@ -1336,14 +1356,19 @@ function update_security_schema() {
   local result_update_security_schema
   local result_update_security_schema_exitcode
   local errors_message="Validation errors detected, please review the above message(s)"
+  print "Updating the deployed security schema"
 
-  if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
-    print "Updating the deployed security schema"
+  if [[ "${DEPLOYMENT_PATTERN}" == *"store"* && "${DESTRUCTIVE_CHANGE_COMPLETED}" == "false" ]]; then
 
     print_info "Stopping Liberty application"
     stop_application
 
     print_info "Updating security schema"
+
+    if [[ "${CHANGE_SET_EXISTS}" == "false" ]]; then
+      "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/create-change-set" -c "${CONFIG_NAME}" -t "update"
+      CHANGE_SET_EXISTS="true"
+    fi
     if ! run_i2_analyze_tool "/opt/i2-tools/scripts/updateSecuritySchema.sh" >'/tmp/result_update_security_schema'; then
       start_application
       echo "[INFO] Response from i2 Analyze Tool: $(cat '/tmp/result_update_security_schema')"
@@ -1360,10 +1385,35 @@ function update_security_schema() {
   fi
 }
 
+function solr_schema_change() {
+  if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
+    print_info "Stopping Liberty application"
+    stop_application
+  fi
+
+  print_info "Updating the deployed Solr indexes"
+  print_warn "Destructive Solr indexes change(s) detected"
+  wait_for_user_reply "The Solr configuration changes require a re-index. Do you wish to rebuild the Solr indexes?"
+  configure_solr_collections
+  clear_search_index
+  print_info "Destructive Solr indexes change(s) complete"
+}
+
+function solr_synonyms_change() {
+  print_info "Updating the deployed Solr synonyms"
+
+  configure_solr_collections
+  # Restart solr node
+  stop_container "${SOLR1_CONTAINER_NAME}"
+  start_container "${SOLR1_CONTAINER_NAME}"
+  wait_for_solr_to_be_live "${SOLR1_FQDN}"
+}
+
 function destructive_schema_or_security_schema_change() {
   rebuild_database
   delete_solr_collections
   create_solr_collections
+  DESTRUCTIVE_CHANGE_COMPLETED="true"
 }
 
 function update_data_source_id_file() {
@@ -1405,6 +1455,12 @@ function handle_configuration_change() {
       handle_extension_change
     elif [[ "${fileName}" == "plugin-references.json" || "${fileName}" = plugins/*.sha512 ]]; then
       handle_plugin_change
+    elif [[ "${fileName}" == "solr/schema-template-definition.xml" ]]; then
+      solr_schema_change
+    elif [[ "${fileName}" == solr/*.txt ]]; then
+      if ! is_string_in_array "solr/schema-template-definition.xml" filesChangedArray; then
+        solr_synonyms_change
+      fi
     fi
   done
 
@@ -1534,8 +1590,12 @@ function handle_extension_change() {
     done
     for extension_name in "${deleted_extensions[@]}"; do
       print_info "Delete old library ${jars_liberty_path}/${extension_name}"
-      extension_version="$(xmlstarlet sel -t -v "/project/version" "${EXTENSIONS_DIR}/${extension_name}/pom.xml")"
-      docker exec "${LIBERTY1_CONTAINER_NAME}" bash -c "rm ${jars_liberty_path}/${extension_name}-${extension_version}.jar > /dev/null" || true
+      if [[ -f "${EXTENSIONS_DIR}/${extension_name}/pom.xml" ]]; then
+        extension_version="$(xmlstarlet sel -t -v "/project/version" "${EXTENSIONS_DIR}/${extension_name}/pom.xml")"
+        docker exec "${LIBERTY1_CONTAINER_NAME}" bash -c "rm ${jars_liberty_path}/${extension_name}-${extension_version}.jar > /dev/null" || true
+      else
+        docker exec "${LIBERTY1_CONTAINER_NAME}" bash -c "rm ${jars_liberty_path}/${extension_name}.jar > /dev/null" || true
+      fi
     done
   fi
 
@@ -1553,9 +1613,17 @@ function handle_extension_change() {
   for extension_name in "${extension_files[@]}"; do
     # Save current sha in the previous config
     cp -pr "${PREVIOUS_EXTENSIONS_DIR}/${extension_name}.sha512" "${PREVIOUS_CONFIGURATION_LIB_PATH}"
-    extension_version="$(xmlstarlet sel -t -v "/project/version" "${EXTENSIONS_DIR}/${extension_name}/pom.xml")"
     # Copy extension to the liberty container
-    docker cp "${EXTENSIONS_DIR}/${extension_name}/target/${extension_name}-${extension_version}.jar" "${LIBERTY1_CONTAINER_NAME}:${jars_liberty_path}"
+    if [[ -f "${EXTENSIONS_DIR}/${extension_name}/pom.xml" ]]; then
+      extension_version="$(xmlstarlet sel -t -v "/project/version" "${EXTENSIONS_DIR}/${extension_name}/pom.xml")"
+      docker cp "${EXTENSIONS_DIR}/${extension_name}/target/${extension_name}-${extension_version}.jar" "${LIBERTY1_CONTAINER_NAME}:${jars_liberty_path}"
+    else
+      while read -r file_name; do
+        if [[ -f "${file_name}" ]]; then
+          docker cp "${file_name}" "${LIBERTY1_CONTAINER_NAME}:${jars_liberty_path}"
+        fi
+      done <<<"$(find -L "${EXTENSIONS_DIR}/${extension_name}" -mindepth 1 -maxdepth 1 -type f -name "*.jar")"
+    fi
   done
 }
 
@@ -2038,10 +2106,16 @@ function main() {
   create_docker_network "${DOMAIN_NAME}"
 
   "${ANALYZE_CONTAINERS_ROOT_DIR}/scripts/manage-environment" -t link
-
   if [[ "${TASK}" != "clean" && "${TASK}" != "package" ]]; then
-    # Restart exited Docker containers
-    restart_docker_containers_for_config "${CONFIG_NAME}"
+    if [[ ! -f "${PREVIOUS_STATE_FILE_PATH}" ]]; then
+      # The deployment is not healthy, if generated config doesn't exist and at least 1 config container present
+      if check_some_containers_exist; then
+        wait_for_user_reply "The '${CONFIG_NAME}' is not in a healthy state. Continuing to run the 'deploy' task to return the system to a healthy state. This will permanently remove the data from the deployment."
+      fi
+    else
+      # Restart exited Docker containers if generated config exists
+      restart_docker_containers_for_config "${CONFIG_NAME}"
+    fi
     restart_connectors_for_config
   fi
 

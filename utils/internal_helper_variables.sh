@@ -69,18 +69,6 @@ PROMETHEUS_SECRETS_VOLUME_NAME="${PROMETHEUS_HOST_NAME}_secrets"
 GRAFANA_SECRETS_VOLUME_NAME="${GRAFANA_HOST_NAME}_secrets"
 
 ###############################################################################
-# Security configuration                                                      #
-###############################################################################
-CA_DURATION=90
-CERTIFICATE_DURATION=90
-CERTIFICATE_KEY_SIZE=4096
-CA_KEY_SIZE=4096
-I2_ANALYZE_CERT_FOLDER_NAME="i2analyze"
-GATEWAY_CERT_FOLDER_NAME="gateway_user"
-ADMIN_ACCESS_PERMISSIONS=("i2:Administrator" "i2:Notes" "i2:RecordsUpload" "i2:RecordsDelete" "i2:ChartsUpload" "i2:ChartsDelete"
-  "i2:ChartsRead" "i2:RecordsExport" "i2:Connectors" "i2:Connectors:connector-id" "i2:Notebook")
-
-###############################################################################
 # Backup and restore variables                                                #
 ###############################################################################
 SOLR_BACKUP_VOLUME_LOCATION="/backup"

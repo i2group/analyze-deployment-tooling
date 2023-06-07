@@ -132,7 +132,14 @@ function check_data_set_exists() {
   fi
 }
 
+function check_deployment_pattern() {
+  if [[ "${DEPLOYMENT_PATTERN}" != *"istore"* ]]; then
+    print_error_and_exit "Data management is not allowed with the current deployment pattern '${DEPLOYMENT_PATTERN}'. Please change the deployment pattern to one that includes 'istore' to proceed with data management."
+  fi
+}
+
 function main() {
+  check_deployment_pattern
   check_deployment_is_live "${CONFIG_NAME}"
 
   if [[ "${TASK}" == "ingest" ]]; then

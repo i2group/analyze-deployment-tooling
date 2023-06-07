@@ -236,10 +236,10 @@ wait_for_i2_analyze_service_to_be_live
 print "Upgrading Prometheus"
 # Ensure volume has the correct permissions
 docker run --rm \
-    -v "${PROMETHEUS_DATA_VOLUME_NAME}:/prometheus" \
-    --user="root" \
-    --entrypoint="" \
-    "${PROMETHEUS_IMAGE_NAME}:${PROMETHEUS_VERSION}" chown -R prometheus:0 "/prometheus"
+  -v "${PROMETHEUS_DATA_VOLUME_NAME}:/prometheus" \
+  --user="root" \
+  --entrypoint="" \
+  "${PROMETHEUS_IMAGE_NAME}:${PROMETHEUS_VERSION}" chown -R prometheus:0 "/prometheus"
 configure_prometheus_for_pre_prod
 run_prometheus
 wait_for_prometheus_server_to_be_live

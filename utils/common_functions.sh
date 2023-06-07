@@ -650,8 +650,27 @@ function check_liberty_status() {
   # Check or Wait for a known I2ANALYZE_STATUS code:
   #  0002 is success
   #  0005 is exception on startup
+  #  0065 is entering leader mode
   #  0068 is waiting for component availability
-  if docker exec -i "${LIBERTY1_CONTAINER_NAME}" bash -c "grep -q '0002\|0005\|0068' <(cat ${status_log_path})" || docker exec -i "${LIBERTY1_CONTAINER_NAME}" bash -c "timeout 3m grep -q '0002\|0005\|0068' <(tail -f ${status_log_path})"; then
+  if docker exec -i "${LIBERTY1_CONTAINER_NAME}" bash -c "grep -q '0002\|0005\|0065\|0068' <(cat ${status_log_path})" || docker exec -i "${LIBERTY1_CONTAINER_NAME}" bash -c "timeout 3m grep -q '0002\|0005\|0068' <(tail -f ${status_log_path})"; then
+    # Wait for liberty to become a leader
+    local tries=1
+    local max_tries=5
+    print_info "Waiting for Liberty to become a leader"
+    while [[ "${tries}" -le "${max_tries}" ]]; do
+      if docker exec -i "${LIBERTY1_CONTAINER_NAME}" bash -c "grep -q '0065' <(cat ${status_log_path})"; then
+        print_info "Application is entering leader mode"
+        break
+      fi
+      echo "There is no leader Liberty registered."
+      echo "Waiting..."
+      sleep 5
+      if [[ "${tries}" -ge "${max_tries}" ]]; then
+        print_error_and_exit "The leader Liberty was not elected in time."
+      fi
+      tries=$((tries + 1))
+    done
+
     validation_messages=$(docker exec "${LIBERTY1_CONTAINER_NAME}" cat "${validation_log_path}")
     if docker exec -i "${LIBERTY1_CONTAINER_NAME}" bash -c "grep -q '0002' <(cat ${status_log_path})"; then
       if [[ -n "${validation_messages}" ]]; then
@@ -1179,6 +1198,20 @@ function print_error_and_exit() {
 }
 
 #######################################
+# Prints error messages to the console,
+# then exit 1.
+# Arguments:
+#   1: The array of messages
+#######################################
+function print_error_array_and_exit() {
+  local error_array=("$@")
+  for message in "${error_array[@]}"; do
+    print_error "${message}"
+  done
+  exit 1
+}
+
+#######################################
 # Prints a success message to the console if no errors.
 # Arguments:
 #   1: The message
@@ -1588,15 +1621,17 @@ function backup_database() {
   case "${DB_DIALECT}" in
   db2)
     print "Backing up the ${DB_NAME} database for container: ${DB2_SERVER_CONTAINER_NAME}"
-    # Ensure to close all connections
-    docker exec "${DB2_SERVER_CONTAINER_NAME}" bash -c "su - db2inst1 -c \"${SQLCMD} FORCE APPLICATION ALL\""
-    sleep 30
 
     # Db2 doesn't use named file
     backup_file_path="${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
     update_volume "${BACKUP_DIR}" "${DB2_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
     run_db_container_with_backup_volume chown -R 1000:1000 "${backup_file_path}"
+    # Stop liberty container before taking db2 database backup.
+    # We can't use 'FORCE APPLICATION ALL' as it disconnects applications for a second(s) and then applications go back to being active.
+    stop_container "$LIBERTY1_CONTAINER_NAME"
     run_db2_server_command_as_db2inst1 "/opt/db-scripts/backup_database.sh" "${backup_file_path}"
+    # Start liberty container after db backup.
+    start_container "$LIBERTY1_CONTAINER_NAME"
     get_volume "${BACKUP_DIR}" "${DB2_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
     ;;
   sqlserver)
@@ -1844,6 +1879,26 @@ function check_containers_exist() {
   done
 
   return "${all_present}"
+}
+
+#######################################
+# Checks at least one container for the deploy exist to identify unhealthy deployed config.
+# Arguments:
+#   None
+# Returns:
+#   0 - if at least 1 exists
+#   1 - if not exist
+#######################################
+function check_some_containers_exist() {
+  local some_present=1
+  local containers=("${SOLR1_CONTAINER_NAME}" "${ZK1_CONTAINER_NAME}" "${LIBERTY1_CONTAINER_NAME}" "${PROMETHEUS_CONTAINER_NAME}" "${GRAFANA_CONTAINER_NAME}")
+  for container in "${containers[@]}"; do
+    if [[ -n "$(docker ps -aq -f name="^${container}$")" ]]; then
+      some_present=0
+      return "${some_present}"
+    fi
+  done
+  return "${some_present}"
 }
 
 #######################################
@@ -2863,6 +2918,20 @@ function check_valid_config_name() {
       "${config_name}" "${root_dir}/configs" >&2
     printf "\e[0m" >&2
     print_usage 1
+  fi
+}
+
+function extract_synonyms_file_name() {
+  local file_path="$1"
+  # Extract synonyms file name if available from the schema-template-definition.xml
+  local synonyms_file_count
+  local synonyms_file
+  synonyms_file_count="$(xmlstarlet sel -t -v "count(/tns:SolrSchemaTemplate/SynonymsFile)" "${file_path}")"
+  if [[ "${synonyms_file_count}" -gt 0 ]]; then
+    synonyms_file="$(xmlstarlet sel -t -v "/tns:SolrSchemaTemplate/SynonymsFile/@Path" "${file_path}")"
+    if [[ -n "${synonyms_file}" ]]; then
+      echo "${synonyms_file}"
+    fi
   fi
 }
 ###############################################################################

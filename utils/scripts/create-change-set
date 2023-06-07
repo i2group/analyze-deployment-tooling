@@ -155,8 +155,26 @@ function create_upgrade_change_set() {
 }
 
 function create_update_change_set() {
-  print "Creating Change-Set: ${CHANGE_SET_DIR}"
+  identify_type_of_change_set
+  create_update_security_schema_change_set
   create_update_schema_change_set
+}
+
+function identify_type_of_change_set() {
+  if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
+    if ! run_i2_analyze_tool "/opt/i2-tools/scripts/validateSchemaAndSecuritySchema.sh" >'/tmp/result_validate_security_schema'; then
+      if grep -q 'ERROR: The new Schema file is not valid, see the summary for more details.' '/tmp/result_validate_security_schema'; then
+        set_environment_variables "reset"
+      fi
+    elif ! run_i2_analyze_tool "/opt/i2-tools/scripts/updateSecuritySchema.sh" >'/tmp/result_update_security_schema'; then
+      if grep -q 'ILLEGAL STATE: The new security schema has incompatible differences with the existing one' '/tmp/result_update_security_schema'; then
+        set_environment_variables "reset"
+      fi
+    else
+      set_environment_variables "update"
+    fi
+    print "Creating Change-Set: ${CHANGE_SET_DIR}"
+  fi
 }
 
 function create_update_schema_change_set() {
@@ -175,7 +193,6 @@ function create_update_schema_change_set() {
       # a destructive change to the ISTORE database.
       if grep -q 'ERROR: The new Schema file is not valid, see the summary for more details.' '/tmp/result_validate_security_schema'; then
         echo "[WARN] Destructive Schema change(s) detected"
-        set_environment_variables "reset"
 
         run_i2_analyze_tool "/opt/i2-tools/scripts/generateInfoStoreToolScripts.sh"
         run_i2_analyze_tool "/opt/i2-tools/scripts/generateStaticInfoStoreCreationScripts.sh"
@@ -213,6 +230,44 @@ function create_update_schema_change_set() {
         fi
       else
         print_info "Update schema scripts folder doesn't exist"
+      fi
+    fi
+  fi
+}
+
+function create_update_security_schema_change_set() {
+  if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
+    # TODO: Fix the code once the task CIR-528 is complete.
+    # Use tool to validate the security schema
+
+    if ! run_i2_analyze_tool "/opt/i2-tools/scripts/updateSecuritySchema.sh" >'/tmp/result_update_security_schema'; then
+      # check i2 Analyze Tool for output indicating a Security Schema change has occurred
+      if grep -q 'ILLEGAL STATE: The new security schema has incompatible differences with the existing one' '/tmp/result_update_security_schema'; then
+        echo "[WARN] Destructive Security Schema change(s) detected"
+        create_folder "${CONFIG_CHANGE_SET_DIR}"
+        cp "${CONFIG_DIR}/security-schema.xml" "${CONFIG_CHANGE_SET_DIR}"
+      else
+        print_error_and_exit "[INFO] Response from i2 Analyze Tool: $(cat '/tmp/result_update_security_schema')"
+      fi
+    else
+      # Temporary fix to identify non-destructive changes to the security schema
+      # Fix once the task CIR-528 is complete
+      if [ "$(docker container inspect -f '{{.State.Running}}' "${LIBERTY1_CONTAINER_NAME}")" == "true" ]; then
+        docker cp "${LIBERTY1_CONTAINER_NAME}:/opt/ol/wlp/usr/servers/defaultServer/apps/opal-services.war/WEB-INF/classes/security-schema.xml" \
+          '/tmp/security-schema.xml' >/dev/null 2>&1
+        cp "${CONFIG_DIR}/security-schema.xml" '/tmp/security-schema-local.xml'
+        xmlstarlet edit -L -d "/tns:SecuritySchema/SecurityPermissions/GroupPermissions[last()]" '/tmp/security-schema.xml'
+        xmlstarlet edit -L -O '/tmp/security-schema.xml'
+        xmlstarlet edit -L -O '/tmp/security-schema-local.xml'
+
+        result="$(cmp --silent '/tmp/security-schema-local.xml' '/tmp/security-schema.xml' && echo "true" || echo "false")"
+        if [[ "${result}" == "false" ]]; then
+          print_info "Update changes detected in the i2 Analyze security schema"
+          create_folder "${CONFIG_CHANGE_SET_DIR}"
+          cp "${CONFIG_DIR}/security-schema.xml" "${CONFIG_CHANGE_SET_DIR}"
+        else
+          print_info "No changes detected in the i2 Analyze security schema"
+        fi
       fi
     fi
   fi
