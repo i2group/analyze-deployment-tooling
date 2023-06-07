@@ -84,8 +84,8 @@
 <p>The ETL Client image is built from the Dockerfile in <code>images/etl_client</code>. It uses the i2 Analyze Tools image as the base image.</p>
 <h3 id="docker-build-command">Docker build command</h3>
 <p>The following <code>docker build</code> command builds the ETL Client image:</p>
-<pre><code class="lang-bash">docker build -t &quot;etlclient_redhat:{{i2analyze_version}}&quot; &quot;images/etl_client&quot; \
-    --build-arg BASE_IMAGE=&quot;i2a_tools_redhat:{{i2analyze_version}}&quot;
+<pre><code class="lang-bash">docker build -t &quot;etlclient_redhat:4.4.0&quot; &quot;images/etl_client&quot; \
+    --build-arg BASE_IMAGE=&quot;i2a_tools_redhat:4.4.0&quot;
 </code></pre><p>The <code>--build-arg</code> flag is used to provide your local user ID to the Docker image when it is built. The value of <code>$USER</code> comes from your shell.</p>
 <p>For examples of the build commands, see the <a href="https://github.com/i2group/analyze-containers/blob/main/utils/scripts/build-images">build-images</a> script.</p>
 <h2 id="running-an-etl-client-container">Running an ETL Client container</h2>
@@ -110,7 +110,7 @@
     -e DB_PASSWORD=&quot;DB_PASSWORD&quot; \
     -e DB_SSL_CONNECTION=&quot;true&quot; \
     -e SSL_CA_CERTIFICATE=&quot;SSL_CA_CERTIFICATE&quot; \
-    &quot;etlclient_redhat:{{i2analyze_version}}&quot; &quot;$@&quot;
+    &quot;etlclient_redhat:4.4.0&quot; &quot;$@&quot;
 </code></pre><p>For an example of the <code>docker run</code> command, see <code>run_etl_toolkit_tool_as_i2_etl</code> function in the <a href="https://github.com/i2group/analyze-containers/blob/main/utils/client_functions.sh">client_functions.sh</a> script.
 For an example of how to use <code>run_etl_toolkit_tool_as_i2_etl</code> function, see <a href="../tools%20and%20functions/client_functions.html#run_etl_toolkit_tool_as_i2_etl">run_etl_toolkit_tool_as_i2_etl</a>.</p>
 <h3 id="bind-mounts">Bind mounts</h3>
@@ -155,7 +155,7 @@ For an example of how to use <code>run_etl_toolkit_tool_as_i2_etl</code> functio
 </table>
 <h2 id="useful-links">Useful links</h2>
 <ul>
-<li><a href="https://docs.i2group.com/analyze4.4.0/define_ingestion_source.html">Defining an ingestion source</a></li>
+<li><a href="https://docs.i2group.com/analyze/4.4.0/define_ingestion_source.html">Defining an ingestion source</a></li>
 </ul>
 </article>
           </div>

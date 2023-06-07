@@ -100,7 +100,7 @@
    -e SERVER_SSL=true \
    -e SSL_PRIVATE_KEY_FILE=&quot;/run/secrets/server.key&quot; \
    -e SSL_CERTIFICATE_FILE=&quot;/run/secrets/server.cer&quot; \
-   &quot;i2group/i2eng-postgres:{{i2analyze_version}}&quot;
+   &quot;i2group/i2eng-postgres:4.4.1&quot;
 </code></pre><p>For an example of the <code>docker run</code> command, see <a href="https://github.com/i2group/analyze-containers/blob/main/utils/server_functions.sh">server_functions.sh</a>. The <code>run_postgres_server</code> does not take any arguments.</p>
 <h3 id="volumes">Volumes</h3>
 <p>Named volumes are used to persist data and logs that are generated and used in the Postgres container, as well as a separate volume for backups, outside of the container.</p>

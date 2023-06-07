@@ -98,7 +98,7 @@
     -v &quot;examples/pre-prod/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml&quot; \
     -v &quot;prometheus_data:/prometheus&quot; \
     -v &quot;prometheus_secrets:/run/secrets&quot; \
-    &quot;i2group/i2eng-prometheus:{{prometheus_version}}&quot;
+    &quot;i2group/i2eng-prometheus:2.36&quot;
 </code></pre><p>For an example of the <code>docker run</code> command, see <a href="https://github.com/i2group/analyze-containers/blob/main/utils/server_functions.sh">server_functions.sh</a>. The <code>runPrometheus</code> function does not take any arguments.</p>
 <h3 id="volumes">Volumes</h3>
 <p>A named volume or a bind mount can be used to persist data and logs that are generated and used in the Prometheus container.</p>

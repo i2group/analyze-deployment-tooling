@@ -85,41 +85,41 @@
 <p>Make a copy of your existing <code>analyze-containers</code> directory as a backup.</p>
 <h2 id="prerequisites">Prerequisites</h2>
 <ol>
-<li>Download the <code>tar.gz</code> from <a href="https://github.com/i2group/analyze-containers/releases/tag/v{{version}}">https://github.com/i2group/analyze-containers/releases/tag/v{{version}}</a>.</li>
+<li>Download the <code>tar.gz</code> from <a href="https://github.com/i2group/analyze-containers/releases/tag/v2.5.0">https://github.com/i2group/analyze-containers/releases/tag/v2.5.0</a>.</li>
 <li><p>Extract the <code>tar.gz</code> file by using the following steps:</p>
 <ol>
-<li>On Windows, copy the <code>analyze-containers-{{version}}.tar.gz</code> file to your WSL filesystem. For example: <code>Z:\home\&lt;user&gt;</code></li>
+<li>On Windows, copy the <code>analyze-containers-2.5.0.tar.gz</code> file to your WSL filesystem. For example: <code>Z:\home\&lt;user&gt;</code></li>
 <li><p>Extract the <code>tar.gz</code> file (On Windows, run the commands from a WSL terminal. <strong>Start</strong> &gt; <strong>wsl</strong>):</p>
 <pre><code class="lang-sh">cd /home/&lt;user&gt;
-</code></pre><pre><code class="lang-sh">tar -xvzf analyze-containers-{{version}}.tar.gz
-</code></pre><pre><code class="lang-sh">mv analyze-containers-{{version}}/ analyze-containers-{{version_short}}
+</code></pre><pre><code class="lang-sh">tar -xvzf analyze-containers-2.5.0.tar.gz
+</code></pre><pre><code class="lang-sh">mv analyze-containers-2.5.0/ analyze-containers-250
 </code></pre></li>
 </ol>
 </li>
-<li><p>If the version of i2 Analyze has not changed, you can copy the <code>i2analyzeMinimal.tar.gz</code>, any fix packs, and <code>jdbc-drivers</code> from your <code>analyze-containers</code> directory to the <code>analyze-containers-{{version_short}}/pre-reqs</code> directory. To see which version of i2 Analyze is required by each version of analyze-containers, see <a href="https://i2group.github.io/analyze-containers/guidetoc/index.html#compatibility">compatibility table</a>.</p>
+<li><p>If the version of i2 Analyze has not changed, you can copy the <code>i2analyzeMinimal.tar.gz</code>, any fix packs, and <code>jdbc-drivers</code> from your <code>analyze-containers</code> directory to the <code>analyze-containers-250/pre-reqs</code> directory. To see which version of i2 Analyze is required by each version of analyze-containers, see <a href="https://i2group.github.io/analyze-containers/guidetoc/index.html#compatibility">compatibility table</a>.</p>
 <ol>
-<li>Download the i2 Analyze V{{i2analyze_version}} Minimal for Linux.<ul>
+<li>Download the i2 Analyze V4.4.1 Minimal for Linux.<ul>
 <li>To download i2 Analyze, follow the procedure described in <a href="https://support.i2group.com/s/article/2290">Where can I download the latest i2 Products?</a></li>
-<li>Populate the subject of the form with <code>Request for i2 Analyze {{i2analyze_version}} minimal toolkit for Linux</code>.</li>
+<li>Populate the subject of the form with <code>Request for i2 Analyze 4.4.1 minimal toolkit for Linux</code>.</li>
 </ul>
 </li>
-<li>Rename the downloaded file to <code>i2analyzeMinimal.tar.gz</code>, then copy it to the <code>analyze-containers-{{version_short}}/pre-reqs</code> directory.</li>
-<li>Download the Microsoft JDBC Driver {{mssql_jdbc_version}} for SQL Server from <a href="https://github.com/microsoft/mssql-jdbc/releases/tag/v{{mssql_jdbc_version}}">https://github.com/microsoft/mssql-jdbc/releases/tag/v{{mssql_jdbc_version}}</a> by clicking the <code>mssql-jdbc-{{mssql_jdbc_version}}.jre11.jar</code> asset.<ul>
-<li>Copy the <code>mssql-jdbc-{{mssql_jdbc_version}}.jre11.jar</code> file to the <code>pre-reqs/jdbc-drivers</code> directory.</li>
+<li>Rename the downloaded file to <code>i2analyzeMinimal.tar.gz</code>, then copy it to the <code>analyze-containers-250/pre-reqs</code> directory.</li>
+<li>Download the Microsoft JDBC Driver 9.4.1 for SQL Server from <a href="https://github.com/microsoft/mssql-jdbc/releases/tag/v9.4.1">https://github.com/microsoft/mssql-jdbc/releases/tag/v9.4.1</a> by clicking the <code>mssql-jdbc-9.4.1.jre11.jar</code> asset.<ul>
+<li>Copy the <code>mssql-jdbc-9.4.1.jre11.jar</code> file to the <code>pre-reqs/jdbc-drivers</code> directory.</li>
 </ul>
 </li>
-<li>Download the PostgreSQL JDBC Driver for PostgreSQL from <a href="https://jdbc.postgresql.org/download/">https://jdbc.postgresql.org/download/</a> by clicking the <code>download</code> button for {{postgres_jdbc_version}} or later Java 8 asset.<ul>
+<li>Download the PostgreSQL JDBC Driver for PostgreSQL from <a href="https://jdbc.postgresql.org/download/">https://jdbc.postgresql.org/download/</a> by clicking the <code>download</code> button for 42.5.1 or later Java 8 asset.<ul>
 <li>Copy the <code>postgresql-x.x.x.jar</code> file to the <code>analyze-containers/pre-reqs/jdbc-drivers</code> directory.</li>
 </ul>
 </li>
 </ol>
 </li>
-<li><p>Open a new VS Code window, press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS) and type <code>Dev Containers: Open Folder in Container</code> and select it. In the file explorer, navigate to your newly created <code>analyze-containers-{{version_short}}</code> directory.</p>
+<li><p>Open a new VS Code window, press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS) and type <code>Dev Containers: Open Folder in Container</code> and select it. In the file explorer, navigate to your newly created <code>analyze-containers-250</code> directory.</p>
 <ul>
 <li>You might see a prompt is displayed, this means a new dev environment is available, click rebuild to rebuild the remote dev container.</li>
 </ul>
 </li>
-<li><p>To create the configuration development environment and template config, in the <code>analyze-containers-{{version_short}}/scripts</code> directory run:</p>
+<li><p>To create the configuration development environment and template config, in the <code>analyze-containers-250/scripts</code> directory run:</p>
 <pre><code class="lang-sh">create-dev-environment
 </code></pre><p> The script performs the following actions:</p>
 <ul>
@@ -147,14 +147,14 @@ ACCEPT_EULA=Y
 </code></pre></li>
 </ul>
 </li>
-<li><p>Update the <code>path-configuration.json</code> file inside <code>analyze-containers-{{version_short}}</code> directory to reference the path to your previous analyze-containers version:</p>
+<li><p>Update the <code>path-configuration.json</code> file inside <code>analyze-containers-250</code> directory to reference the path to your previous analyze-containers version:</p>
 <ol>
 <li><p>Open a terminal on your host machine.</p>
 <ul>
 <li>On Windows, use a WSL terminal. Press <strong>Start -&gt; wsl</strong></li>
 </ul>
 </li>
-<li><p>Navigate to the <code>analyze-containers-{{version_short}}/scripts</code> directory.</p>
+<li><p>Navigate to the <code>analyze-containers-250/scripts</code> directory.</p>
 </li>
 <li><p>Run the <code>configure-paths</code> script with the <code>upgrade</code> task.<br> For example:</p>
 <pre><code class="lang-sh">configure-paths -t upgrade
@@ -222,7 +222,7 @@ ACCEPT_EULA=Y
 <li><code>&lt;config-name&gt;</code> is the name of a config to copy. You can provide multiple <code>-i</code> options for each config you want to upgrade.</li>
 </ul>
 </li>
-<li><p>Run the <code>create-dev-environment</code> command to create the images for i2 Analyze {{i2analyze_version}}.</p>
+<li><p>Run the <code>create-dev-environment</code> command to create the images for i2 Analyze 4.4.1.</p>
 <pre><code class="lang-sh">create-dev-environment
 </code></pre></li>
 <li><p>Upgrades your configs to the latest version. For each config that you want to upgrade, run:</p>
@@ -238,7 +238,7 @@ ACCEPT_EULA=Y
 <h2 id="troubleshooting">Troubleshooting</h2>
 <p>If the upgrade process fails, you can use the following procedure to recover.</p>
 <ol>
-<li>Delete the <code>analyze-containers-{{version}}</code> folder.</li>
+<li>Delete the <code>analyze-containers-2.5.0</code> folder.</li>
 <li>In the backup from the previous version, ensure that you can deploy the configuration that failed.<br>If you cannot deploy in the previous version, fix the errors before you upgrade or remove the config so that it isn&#39;t upgraded.</li>
 <li>Restart the upgrade process from the beginning.</li>
 </ol>

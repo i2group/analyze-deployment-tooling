@@ -85,8 +85,8 @@
 <h3 id="docker-build-command">Docker build command</h3>
 <p>The <em>base image</em> is built from the Dockerfile in <code>images/liberty_ubi_base</code>.
 The following <code>docker build</code> command builds the Liberty base image:</p>
-<pre><code class="lang-bash">docker build -t &quot;liberty_ubi_base:{{i2analyze_version}}&quot; images/liberty_ubi_base \
-  --build-arg I2ANALYZE_VERSION=&quot;{{i2analyze_version}}&quot;
+<pre><code class="lang-bash">docker build -t &quot;liberty_ubi_base:4.4.0&quot; images/liberty_ubi_base \
+  --build-arg I2ANALYZE_VERSION=&quot;4.4.0&quot;
 </code></pre><p>For examples of the build commands, see <code>build-images</code> script.</p>
 <h2 id="configuring-the-liberty-server">Configuring the Liberty server</h2>
 <p>Liberty is configured by exception. The runtime environment operates from a set of built-in configuration default settings, and you only need to specify configuration that overrides those default settings. You do this by editing either the <code>server.xml</code> file or another XML file that is included in <code>server.xml</code> at run time.</p>
@@ -100,8 +100,8 @@ The following <code>docker build</code> command builds the Liberty base image:</
 <p>The <em>configured image</em> is built from the base image. The configured image contains the i2 Analyze application and Liberty configuration that is required to start the i2 Analyze application. When you change the configuration, the configured image must be rebuilt to reflect the changes.</p>
 <h3 id="docker-build-command-1">Docker build command</h3>
 <p>The configured image is built from the Dockerfile in <code>images/liberty_ubi_combined</code>. The following <code>docker build</code> command builds the configured image:</p>
-<pre><code class="lang-bash">docker build -t &quot;liberty_configured_redhat:{{i2analyze_version}}&quot; &quot;images/liberty_ubi_combined&quot; \
-    --build-arg BASE_IMAGE=&quot;liberty_redhat:{{i2analyze_version}}&quot;
+<pre><code class="lang-bash">docker build -t &quot;liberty_configured_redhat:4.4.0&quot; &quot;images/liberty_ubi_combined&quot; \
+    --build-arg BASE_IMAGE=&quot;liberty_redhat:4.4.0&quot;
 </code></pre><p>An example of providing the configuration to the classes directory and building the image is included in the <code>buildLibertyConfiguredImage</code> function in the <code>server_functions.sh</code> script.</p>
 <h2 id="running-a-liberty-container">Running a Liberty container</h2>
 <p>A Liberty container uses the configured image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to Liberty on the container. The environment variables are described in <a href="#environment-variables">environment variables</a></p>
@@ -170,7 +170,7 @@ The following <code>docker build</code> command builds the Liberty base image:</
 <tbody>
 <tr>
 <td><code>FRONT_END_URI</code></td>
-<td>The URI that clients use to connect to i2 Analyze. For more information, see <a href="https://docs.i2group.com/analyze4.4.0/t_edge_url.html">Specifying the connection URI</a>.</td>
+<td>The URI that clients use to connect to i2 Analyze. For more information, see <a href="https://docs.i2group.com/analyze/4.4.0/t_edge_url.html">Specifying the connection URI</a>.</td>
 </tr>
 <tr>
 <td><code>DB_DIALECT</code></td>

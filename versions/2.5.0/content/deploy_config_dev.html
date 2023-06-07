@@ -79,7 +79,7 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="configuration-development-environment">Configuration development environment</h1>
 
-<p>To create a production deployment of i2 Analyze, you must develop the i2 Analyze configuration. The production deployment process describes a process of using different development environments to produce your i2 Analyze configuration. For more information about the environments, see <a href="https://docs.i2group.com/analyze4.4.1/c_plan_deploy.html">Deployment phases and environments</a>.</p>
+<p>To create a production deployment of i2 Analyze, you must develop the i2 Analyze configuration. The production deployment process describes a process of using different development environments to produce your i2 Analyze configuration. For more information about the environments, see <a href="https://docs.i2group.com/analyze/4.4.1/c_plan_deploy.html">Deployment phases and environments</a>.</p>
 <p>The analyze-containers repository enables you to create a development environment that comprises a containerized deployment of i2 Analyze. The containerized deployment enables you to switch between deployment patterns easily and redeploy changes in a consistent manner.</p>
 <p>Process overview:</p>
 <ul>
@@ -166,7 +166,7 @@ ACCEPT_EULA=Y
 <li><code>cstore</code> - Chart Store</li>
 <li><code>i2c_istore</code> - i2 Connect gateway and Information Store</li>
 <li><p><code>i2c_cstore</code> - i2 Connect gateway and Chart Store  </p>
-<p>For more information about the i2 Analyze deployment patterns, see: <a href="https://docs.i2group.com/analyze4.4.1/components.html">Components</a>.</p>
+<p>For more information about the i2 Analyze deployment patterns, see: <a href="https://docs.i2group.com/analyze/4.4.1/components.html">Components</a>.</p>
 </li>
 </ul>
 </li>
@@ -199,7 +199,7 @@ HOST_PORT_GRAFANA=3500
 <h2 id="specifying-the-schema-and-charting-schemes-files">Specifying the schema and charting schemes files</h2>
 <p>To deploy i2 Analyze, you must provide a schema and charting scheme.
 The i2 Analyze toolkit includes example files that you can use as a starting point, or you can use existing files.</p>
-<p>For more information about the example schemas, see <a href="https://docs.i2group.com/analyze4.4.1/example_schemes.html">Example schemas</a>.</p>
+<p>For more information about the example schemas, see <a href="https://docs.i2group.com/analyze/4.4.1/example_schemes.html">Example schemas</a>.</p>
 <ol>
 <li>Choose an example schema and associated charting scheme as your starting point from the <code>pre-reqs/i2analyze/toolkit/examples/schemas</code> directory.</li>
 <li>Copy the chosen schema and charting scheme to your <code>configs/&lt;config_name&gt;/configuration</code> directory.</li>
@@ -208,7 +208,7 @@ The i2 Analyze toolkit includes example files that you can use as a starting poi
 <h2 id="specifying-the-security-schema-user-registry-and-command-access-control-files">Specifying the security schema, user registry, and command access control files</h2>
 <p>To connect to an i2 Analyze deployment, you must provide a security schema and user registry. To control access to features and enable to use of the administrator endpoints, provide a command access control file.</p>
 <p>The i2 Analyze toolkit includes example files that you can use as a starting point.</p>
-<p>For more information about the example files, see <a href="https://docs.i2group.com/analyze4.4.1/example_schemes.html">Example schemas</a>.</p>
+<p>For more information about the example files, see <a href="https://docs.i2group.com/analyze/4.4.1/example_schemes.html">Example schemas</a>.</p>
 <ol>
 <li>Copy and overwrite the example <code>security-schema.xml</code>, <code>user-registry.xml</code>, and <code>command-access-control.xml</code> files from the <code>pre-reqs/i2analyze/toolkit/examples/security</code> directory to your <code>configs/&lt;config_name&gt;/configuration</code> directory.</li>
 </ol>

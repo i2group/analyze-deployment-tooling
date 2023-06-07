@@ -401,7 +401,7 @@ Note: The <code>configure_dba_roles_and_permissions.sh</code> script is run duri
 <p>The <code>sa</code> user is used to run the <code>create_db_roles.sh</code> client function that creates the <code>i2Analyze_Role</code>, <code>External_ETL_Role</code>, <code>i2_ETL_Role</code>, <code>i2_Public_Role</code> and <code>DBA_Role</code> roles.</p>
 <p>To create the roles, the <code>create_db_roles.sh</code> script is run using the <code>run_sql_server_command_as_sa</code> client function. This function uses an ephemeral SQL Server client container to create the database roles. For more information about the client function, see:</p>
 <ul>
-<li><a href="../tools%20and%20functions/client_functions.md#run-sql-server-command-as-sa">run_sql_server_command_as_sa</a></li>
+<li><a href="../tools%20and%20functions/client_functions.html#run-sql-server-command-as-sa">run_sql_server_command_as_sa</a></li>
 <li><a href="https://github.com/i2group/analyze-containers/blob/main/images/sql_client/db-scripts/create_db_roles.sh">create_db_roles.sh</a></li>
 </ul>
 <p>In the example, the <code>create_db_roles.sh</code> script is called in <code>deploy</code>.</p>

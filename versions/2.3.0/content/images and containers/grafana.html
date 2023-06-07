@@ -106,7 +106,7 @@
     -e PROMETHEUS_USERNAME=&quot;prometheus&quot; \
     -e PROMETHEUS_PASSWORD=&quot;prometheus&quot; \
     -e SSL_CA_CERTIFICATE=&quot;SSL_CA_CERTIFICATE&quot; \
-    &quot;grafana/grafana-oss:{{grafana_version}}&quot; 
+    &quot;grafana/grafana-oss:8.5.3&quot; 
 </code></pre><p>For an example of the <code>docker run</code> command, see <a href="https://github.com/i2group/analyze-containers/blob/main/utils/serverFunctions.sh">serverFunctions.sh</a>. The <code>runGrafana</code> function does not take any arguments.</p>
 <h3 id="volumes">Volumes</h3>
 <p>A named volume or a bind mount can be used to persist data and logs that are generated and used in the Grafana container.</p>

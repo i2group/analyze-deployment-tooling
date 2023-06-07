@@ -99,7 +99,7 @@ referenced in path-configuration.json file). The user that gets read, write, and
 <h2 id="ssl-certificates-in-the-deployment">SSL certificates in the deployment</h2>
 <p>The example deployment is configured to use SSL connections for communication between clients and i2 Analyze, and between the components of i2 Analyze.</p>
 <p>To achieve this, the appropriate certificate authorities and certificates are used. The <code>create-dev-environment</code> script is used to simulate the process of creating the required keys and acquiring certificate authority-signed certificates.</p>
-<blockquote><p>Note: The keys and certificates used are set to expire after 90 days. To use the certificates for longer than this, you must run the <code>create-dev-environment</code> script again.</p>
+<blockquote><p>Note: The keys and certificates used are set to expire after 365 days. To regenerate the certificates, delete the <code>dev-environment-secrets</code> folder and its contents. Then run the <code>create-dev-environment</code> again. Finally, run the deploy script with the <code>-t clean</code> option and then redeploy. You must also reinstall your certificates on Windows, Mac, and Firefox.</p>
 </blockquote>
 <h2 id="certificate-authorities-ca">Certificate Authorities (CA)</h2>
 <p>In the example, two CAs are used to provide trust:</p>
