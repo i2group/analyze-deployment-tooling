@@ -156,12 +156,7 @@ When you deploy, the system fails to start due to bad certificates.</p>
 <p><strong>Solution:</strong></p>
 <p>Recreate the secrets for your environment to generate new certificates.</p>
 <ol>
-<li>Delete the <code>dev-environment-secrets</code> folder and its contents.</li>
-<li>Run <code>create-dev-environment</code></li>
-<li>Run <code>deploy -c &lt;config-name&gt; -t clean</code><ol>
-<li>You need to do this for all configs.</li>
-</ol>
-</li>
+<li>Run <code>manage-environment -t renew-secrets</code> to recreate secrets.</li>
 <li>Run <code>deploy -c &lt;config-name&gt;</code> to redeploy with the new certificates.</li>
 <li>Reinstall the certificates in your operating system and browser.</li>
 </ol>

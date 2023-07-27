@@ -128,23 +128,23 @@ from an environment without an internet connection, see <a href="reference%20arc
 </ol>
 <h3 id="code">Code</h3>
 <ol>
-<li>Download the <code>tar.gz</code> from <a href="https://github.com/i2group/analyze-containers/releases/tag/v2.5.3">https://github.com/i2group/analyze-containers/releases/tag/v2.5.3</a>.</li>
+<li>Download the <code>tar.gz</code> from <a href="https://github.com/i2group/analyze-containers/releases/tag/v2.6.0">https://github.com/i2group/analyze-containers/releases/tag/v2.6.0</a>.</li>
 <li><p>Extract the <code>tar.gz</code> file by using the following steps:</p>
 <ol>
-<li>On Windows, copy the <code>analyze-containers-2.5.3.tar.gz</code> file to your WSL filesystem. For example: <code>Z:\home\&lt;user&gt;</code></li>
+<li>On Windows, copy the <code>analyze-containers-2.6.0.tar.gz</code> file to your WSL filesystem. For example: <code>Z:\home\&lt;user&gt;</code></li>
 <li><p>Extract the <code>tar.gz</code> file (On Windows, run the commands from a WSL terminal. <strong>Start</strong> &gt; <strong>wsl</strong>):</p>
 <pre><code class="lang-sh">cd /home/&lt;user&gt;
-</code></pre><pre><code class="lang-sh">tar -xvzf analyze-containers-2.5.3.tar.gz
-</code></pre><pre><code class="lang-sh">mv analyze-containers-2.5.3/ analyze-containers
+</code></pre><pre><code class="lang-sh">tar -xvzf analyze-containers-2.6.0.tar.gz
+</code></pre><pre><code class="lang-sh">mv analyze-containers-2.6.0/ analyze-containers
 </code></pre></li>
 </ol>
 </li>
 </ol>
 <h3 id="i2-analyze-minimal-toolkit">i2 Analyze minimal toolkit</h3>
 <ol>
-<li>Download the i2 Analyze V4.4.1 Minimal for Linux.<ul>
+<li>Download the i2 Analyze V4.4.2 Minimal for Linux.<ul>
 <li>To download i2 Analyze, follow the procedure described in <a href="https://support.i2group.com/s/article/2290">Where can I download the latest i2 Products?</a></li>
-<li>Populate the subject of the form with <code>Request for i2 Analyze 4.4.1 minimal toolkit for Linux</code>.</li>
+<li>Populate the subject of the form with <code>Request for i2 Analyze 4.4.2 minimal toolkit for Linux</code>.</li>
 </ul>
 </li>
 <li>Rename the <code>i2analyzeMinimal_440.tar.gz</code> file to <code>i2analyzeMinimal.tar.gz</code>, then copy it to the <code>analyze-containers/pre-reqs</code> directory.</li>
@@ -157,23 +157,23 @@ from an environment without an internet connection, see <a href="reference%20arc
 <p><strong>Note:</strong> If you used the <code>analyze-containers</code> repository with a previous fix pack version of i2 Analyze, overwrite the existing fix pack file.</p>
 <h3 id="analysts-notebook-premium">Analyst&#39;s Notebook Premium</h3>
 <ol>
-<li><p>Download <em>i2 Analyst&#39;s Notebook Premium</em> version 9.4.0.</p>
+<li><p>Download <em>i2 Analyst&#39;s Notebook Premium</em> version 10.0.0.</p>
 <ul>
 <li>To download i2 Analyst&#39;s Notebook Premium, follow the procedure described in <a href="https://support.i2group.com/s/article/2290">Where can I download the latest i2 Products?</a></li>
-<li>Populate the subject of the form with <code>Request for i2 Analyst&#39;s Notebook Premium 9.4.0</code>.</li>
+<li>Populate the subject of the form with <code>Request for i2 Analyst&#39;s Notebook Premium 10.0.0</code>.</li>
 </ul>
 </li>
 <li><p>Install i2 Analyst&#39;s Notebook Premium on a Windows machine.</p>
 <blockquote><p>Note: If you are running Docker on MacOS, you can install Analyst&#39;s Notebook Premium on a Windows virtual machine.</p>
 </blockquote>
-<p> For more information, see <a href="https://docs.i2group.com/anbp/9.4.0/installing_anbp.html">Installing i2 Analyst&#39;s Notebook Premium</a>.</p>
+<p> For more information, see <!-- markdown-link-check-disable --><a href="https://docs.i2group.com/anbp/10.0.0/installing_anbp.html">Installing i2 Analyst&#39;s Notebook Premium</a><!-- markdown-link-check-enable -->.</p>
 </li>
 </ol>
 <h3 id="jdbc-drivers">JDBC drivers</h3>
 <p>You must provide the JDBC driver to enable the application to communicate with the database.</p>
 <ol>
-<li>Download the Microsoft JDBC Driver 9.4.1 for SQL Server from <a href="https://github.com/microsoft/mssql-jdbc/releases/tag/v9.4.1">https://github.com/microsoft/mssql-jdbc/releases/tag/v9.4.1</a> by clicking the <code>mssql-jdbc-9.4.1.jre11.jar</code> asset.</li>
-<li><p>Copy the <code>mssql-jdbc-9.4.1.jre11.jar</code> file to the <code>analyze-containers/pre-reqs/jdbc-drivers</code> directory.</p>
+<li>Download the Microsoft JDBC Driver 12.2.0 for SQL Server from <a href="https://github.com/microsoft/mssql-jdbc/releases/tag/v12.2.0">https://github.com/microsoft/mssql-jdbc/releases/tag/v12.2.0</a> by clicking the <code>mssql-jdbc-12.2.0.jre11.jar</code> asset.</li>
+<li><p>Copy the <code>mssql-jdbc-12.2.0.jre11.jar</code> file to the <code>analyze-containers/pre-reqs/jdbc-drivers</code> directory.</p>
 </li>
 <li><p>Download the PostgreSQL JDBC Driver for PostgreSQL from <a href="https://jdbc.postgresql.org/download/">https://jdbc.postgresql.org/download/</a> by clicking the <code>download</code> button for the 42.5.1 or later Java 8 asset.</p>
 </li>

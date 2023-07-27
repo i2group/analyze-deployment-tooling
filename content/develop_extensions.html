@@ -117,15 +117,22 @@
 <li>Add any settings that are required by the extension to the <code>analyze-settings.properties</code> file.</li>
 <li>Add any resources that are required by the extension to the <code>/configs/&lt;config_name&gt;/configuration</code> directory. For example, the <code>group-based-default-security-dimension-values.xml</code> file.</li>
 </ol>
-<p>If your extension depends on <em>external</em> dependencies you need to add them to your project. For information on how to add external dependencies from Maven Central, check <a href="https://code.visualstudio.com/docs/java/java-project#_add-a-maven-dependency">Add a Maven dependency</a></p>
-<p>If your extension depends on other extensions (not in Maven Central), you must add them to your <code>pom.xml</code> file manually under the comment: <code>&lt;!-- Extension specific dependencies --&gt;</code>.</p>
+<p>If your extension depends on <em>external</em> dependencies you need to add them to your project. To do this, open the <strong>JAVA PROJECTS</strong> tab view and expand your extension. Mouse-over the <strong>Maven Dependencies</strong> section and click &#39;+&#39;. Search for your dependency in the search bar at the top of the VS Code window. When you select your dependency, it is added to the <code>pom.xml</code> file for your extension. For information on how to add external dependencies from Maven Central, check <a href="https://code.visualstudio.com/docs/java/java-project#_add-a-maven-dependency">Add a Maven dependency</a>.</p>
+<p>The <code>liberty-apis</code> are published to Maven central. For example, the principal propagation extension from analyze-connect depends on the <code>liberty-apis</code> libraries. You can add these using the method mentioned previously, or by copying the following section into the <code>pom.xml</code> file.</p>
+<pre><code class="lang-xml">  &lt;dependency&gt;
+    &lt;groupId&gt;net.wasdev.maven.tools.targets&lt;/groupId&gt;
+    &lt;artifactId&gt;liberty-apis&lt;/artifactId&gt;
+    &lt;version&gt;LATEST&lt;/version&gt;
+    &lt;type&gt;pom&lt;/type&gt;
+  &lt;/dependency&gt;
+</code></pre><p>If your extension depends on other extensions (not in Maven Central), you must add them to your <code>pom.xml</code> file manually under the comment: <code>&lt;!-- Extension specific dependencies --&gt;</code>.</p>
 <p>For example, the auditing extensions in Developer Essentials depend on the <code>opal-audit-example-common</code> extension. To add it as a dependency, populate the values of the <code>pom.xml</code> file as follows:</p>
-<pre><code class="lang-xml">    &lt;!-- Extension specific dependencies --&gt;
-    &lt;dependency&gt;
-        &lt;groupId&gt;com.i2group&lt;/groupId&gt;
-        &lt;artifactId&gt;opal-audit-example-common&lt;/artifactId&gt;
-        &lt;version&gt;1.0.0&lt;/version&gt;
-    &lt;/dependency&gt;
+<pre><code class="lang-xml">  &lt;!-- Extension specific dependencies --&gt;
+  &lt;dependency&gt;
+      &lt;groupId&gt;com.i2group&lt;/groupId&gt;
+      &lt;artifactId&gt;opal-audit-example-common&lt;/artifactId&gt;
+      &lt;version&gt;1.0.0&lt;/version&gt;
+  &lt;/dependency&gt;
 </code></pre><p>You will also need to populate the <code>i2a-extensions/extension-dependencies.json</code> file with the extensions that you depend on, for example:</p>
 <pre><code class="lang-json">[
   {

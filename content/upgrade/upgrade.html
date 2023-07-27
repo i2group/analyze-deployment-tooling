@@ -82,7 +82,6 @@
 <p>This section describes an example of the process to upgrade i2 Analyze in a containerized environment.
 Updating the configuration includes the following high-level steps:</p>
 <ul>
-<li>Backing up Solr and the database</li>
 <li>Rebuilding the Docker images for the new version of i2 Analyze</li>
 <li>Create the upgrade change set</li>
 <li>Remove the previous containers and volumes</li>
@@ -92,6 +91,7 @@ Updating the configuration includes the following high-level steps:</p>
 <blockquote><p><strong>Note:</strong> Before you complete this walkthrough:</p>
 <ul>
 <li>Upgrade your environment using the instructions in <a href="../managing_upgrade_env.html">Upgrading your environment</a>.<ul>
+<li>You must run <code>examples/pre-prod/walkthroughs/backup-restore/backup.sh</code> walkthrough.</li>
 <li>You must run the <code>manage-environment -t upgrade</code> command.</li>
 </ul>
 </li>
@@ -99,10 +99,6 @@ Updating the configuration includes the following high-level steps:</p>
 </ul>
 </blockquote>
 <p>The <code>examples/pre-prod/walkthroughs/upgrade/upgradeWalkthrough.sh</code> script is a worked example that demonstrates how to upgrade a deployment in a containerized environment.</p>
-<h2 id="creating-the-solr-backup">Creating the Solr backup</h2>
-<p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Backing up Solr</code> section demonstrates the commands that are used to back up the Solr collections and system match rules. For more information about backing up Solr, see <a href="../backup%20and%20restore/backup.html#BackingUpTheSolrCollections">Backing up Solr</a>.</p>
-<h2 id="creating-sql-server-backups">Creating SQL Server backups</h2>
-<p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Backing up SQL Server</code> section demonstrates the commands that are used to back up the SQL Server Information Store database. For more information about backing up the database, see <a href="../backup%20and%20restore/backup.html#BackingUpTheInformationStoreDatabase">Backing up the Information Store database</a>.</p>
 <h2 id="rebuilding-the-images">Rebuilding the images</h2>
 <p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Rebuilding images</code> section demonstrates running the <code>build-images</code> script to build images with for the new version of i2 Analyze.</p>
 <h2 id="creating-the-change-set">Creating the change set</h2>
@@ -116,7 +112,7 @@ Updating the configuration includes the following high-level steps:</p>
 <p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Removing the previous containers</code> section demonstrates the commands to delete the previous containers and remove any Docker volumes.</p>
 <h2 id="upgrading-solr">Upgrading Solr</h2>
 <p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Upgrading Solr</code> section demonstrates the commands that are used to run the new Solr and ZooKeeper containers.</p>
-<p>The 3 ZooKeeper containers and 2 Solr containers are started. The Solr collections are configured, including the new <code>vq_index</code> collection.</p>
+<p>The 3 ZooKeeper containers and 2 Solr containers are started. The Solr collections are configured, including the new <code>recordshare_index</code> collection.</p>
 <h2 id="restoring-the-solr-collections">Restoring the Solr collections</h2>
 <p>In the <code>upgradeWalkthrough.sh</code> script, the <code>Restore Solr</code> section demonstrates the commands that are used to restore the Solr Collections.</p>
 <p>For more information about restoring Solr, see [Restoring Solr](../backup and restore/restore.md#RestoreSolr).</p>
