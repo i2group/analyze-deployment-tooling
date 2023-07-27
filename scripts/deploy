@@ -19,6 +19,7 @@ USAGE="""
 Usage:
   deploy -c <config_name> [-t {clean}] [-v] [-y]
   deploy -c <config_name> [-t {backup|restore} [-b <backup_name>]] [-v] [-y]
+  deploy -c <config_name> [-r <release_number>] [-v] [-y]
   deploy -h
 
 Options:
@@ -29,6 +30,8 @@ Will permanently remove all containers and data.
   -t {restore}                           Restore the database.
   -b <backup_name>                       Name of the backup to create or \
 restore. If not specified, the default backup is used.
+  -r <release_number>                    Creates a 'release' change-set, \
+with the specified release number.  
   -v                                     Verbose output.
   -y                                     Answer 'yes' to all prompts.
   -h                                     Display the help.
@@ -42,15 +45,16 @@ parse_arguments "$@"
 [[ "${TASK}" == "clean" || "${TASK}" == "backup" || "${TASK}" == "restore" ||
   "${TASK}" == "package" || -z "${TASK}" ]] || print_usage 1
 
+if [[ -n "${CHANGE_SET_NUMBER}" ]]; then
+  TASK="release"
+fi
+
 check_valid_config_name "${CONFIG_NAME}"
 
-# Only set if the var isn't already available
-if [[ -z "${DEV_LIBERTY_SERVER_EXTENSIONS}" ]]; then
-  if [[ "${TASK}" == "package" ]]; then
-    DEV_LIBERTY_SERVER_EXTENSIONS="false"
-  else
-    DEV_LIBERTY_SERVER_EXTENSIONS="true"
-  fi
+if [[ "${TASK}" == "package" ]]; then
+  EXTENSIONS_DEV="false"
+else
+  EXTENSIONS_DEV="true"
 fi
 
 if [[ -z "${YES_FLAG}" ]]; then
@@ -73,8 +77,7 @@ set_dependencies_tag_if_necessary
 
 RELOAD_GATEWAY_REQUIRED="false"
 CHANGE_SET_EXISTS="false"
-# TODO: DESTRUCTIVE_CHANGE_COMPLETED variable should be removed when we split the i2 Tool for validating the schema and security schema, task CIR-528
-DESTRUCTIVE_CHANGE_COMPLETED="false"
+IS_DESTRUCTIVE_CHANGE="false"
 
 ###############################################################################
 # Create Helper Functions                                                     #
@@ -83,7 +86,7 @@ DESTRUCTIVE_CHANGE_COMPLETED="false"
 #######################################
 # Bash Array pretending to be a dict (using Parameter Substitution)
 # Note we cannot use Bash Associative Arrays as Mac OSX is stuck on Bash 3.x
-# Variable 'configFinalActionCode' defines the action to take, values are:
+# Variable 'config_final_action_code' defines the action to take, values are:
 # 0 = default, no files changed
 # 1 = live, web ui reload
 # 2 = requires warm restart
@@ -93,14 +96,13 @@ DESTRUCTIVE_CHANGE_COMPLETED="false"
 #   None
 #######################################
 function compare_current_configuration() {
-  declare -A checkFilesArray
-  checkFilesArray=(["fmr-match-rules.xml"]=1
+  declare -A check_files_array
+  check_files_array=(["fmr-match-rules.xml"]=1
     ["system-match-rules.xml"]=1
     ["geospatial-configuration.json"]=1
     ["highlight-queries-configuration.xml"]=1
     ["type-access-configuration.xml"]=1
     ["user.registry.xml"]=1
-    ["privacyagreement.html"]=1
     ["mapping-configuration.json"]=2
     ["analyze-settings.properties"]=2
     ["analyze-connect.properties"]=2
@@ -125,71 +127,109 @@ function compare_current_configuration() {
 
   # Add gateway schemas
   for gateway_short_name in "${!GATEWAY_SHORT_NAME_SET[@]}"; do
-    checkFilesArray+=(["${gateway_short_name}-schema.xml"]=1)
-    checkFilesArray+=(["${gateway_short_name}-schema-charting-schemes.xml"]=1)
+    check_files_array+=(["${gateway_short_name}-schema.xml"]=1)
+    check_files_array+=(["${gateway_short_name}-schema-charting-schemes.xml"]=1)
   done
 
   # Extract synonyms file name (could be only one) from the schema-template-definition.xml
   local synonyms_file
   synonyms_file="$(extract_synonyms_file_name "${CURRENT_CONFIGURATION_PATH}/solr/schema-template-definition.xml")"
   if [[ -n "${synonyms_file}" ]]; then
-    checkFilesArray+=(["solr/${synonyms_file}"]=3)
+    check_files_array+=(["solr/${synonyms_file}"]=3)
   fi
 
   # array used to store file changes (if any)
-  configFinalActionCode=0
-  filesChangedArray=()
+  config_final_action_code=0
+  files_changed_array=()
   print_info "Checking configuration for '${CONFIG_NAME}' ..."
 
   if [ ! -d "${CURRENT_CONFIGURATION_PATH}" ]; then
     print_error_and_exit "Current configuration path '${CURRENT_CONFIGURATION_PATH}' is not valid (no configuration folder present)"
   fi
   if [ ! -d "${PREVIOUS_CONFIGURATION_PATH}" ]; then
-    print_error_and_exit "Previous configuration path '${PREVIOUS_CONFIGURATION_PATH}' is not valid (no configuration folder present)"
+    print_warn "Previous configuration path '${PREVIOUS_CONFIGURATION_PATH}' is not valid (no configuration folder present)"
+    return
   fi
 
-  for filename in "${!checkFilesArray[@]}"; do
+  for filename in "${!check_files_array[@]}"; do
     # get action code
-    configActionCode="${checkFilesArray["${filename}"]}"
+    config_action_code="${check_files_array["${filename}"]}"
 
     # check if filename exists in previous, if so then calc checksum
     if [ -f "${PREVIOUS_CONFIGURATION_PATH}/${filename}" ]; then
-      checksumPrevious=$(shasum "${PREVIOUS_CONFIGURATION_PATH}/${filename}" | cut -d ' ' -f 1)
+      checksum_previous=$(shasum "${PREVIOUS_CONFIGURATION_PATH}/${filename}" | cut -d ' ' -f 1)
     else
       continue
     fi
     # check if filename exists in current, if so then calc checksum
     if [ -f "${CURRENT_CONFIGURATION_PATH}/${filename}" ]; then
-      checksumCurrent=$(shasum "${CURRENT_CONFIGURATION_PATH}/${filename}" | cut -d ' ' -f 1)
+      checksum_current=$(shasum "${CURRENT_CONFIGURATION_PATH}/${filename}" | cut -d ' ' -f 1)
     else
       continue
     fi
     # if checksums different then store filename changed and action
-    if [[ "$checksumPrevious" != "$checksumCurrent" ]]; then
-      print_info "Previous checksum '${checksumPrevious}' and current checksum '${checksumCurrent}' do not match for filename '${filename}'"
-      filesChangedArray+=("${filename}")
+    if [[ "$checksum_previous" != "$checksum_current" ]]; then
+      print_info "Previous checksum '${checksum_previous}' and current checksum '${checksum_current}' do not match for filename '${filename}'"
+      files_changed_array+=("${filename}")
       # set action if higher severity code
-      if [[ "${configActionCode}" -gt "${configFinalActionCode}" ]]; then
-        configFinalActionCode="${configActionCode}"
+      if [[ "${config_action_code}" -gt "${config_final_action_code}" ]]; then
+        config_final_action_code="${config_action_code}"
       fi
     fi
   done
 
   # count number of files changed (elements) in the array
-  if [ "${#filesChangedArray[@]}" -eq 0 ]; then
+  if [ "${#files_changed_array[@]}" -eq 0 ]; then
     print_info "No checksum differences found, configuration files are in sync"
   else
-    print_info "File changes detected, action code is '${configFinalActionCode}'"
+    print_info "File changes detected, action code is '${config_final_action_code}'"
   fi
-  print_info "Results in array '${filesChangedArray[*]}'"
+  print_info "Results in array '${files_changed_array[*]}'"
+}
+
+function compare_current_web_dir_extensions() {
+  local checksum_previous checksum_current
+  local changes_detected="false"
+  # Any change to web-dir-extensions require the same action code 1
+  local config_action_code=1
+
+  print_info "Checking web-dir-extensions for '${CONFIG_NAME}' ..."
+
+  if ! [ -d "${PREVIOUS_CONFIGURATION_PATH}/web-dir-extensions" ]; then
+    return
+  fi
+  if ! [ -d "${CURRENT_CONFIGURATION_PATH}/web-dir-extensions" ]; then
+    return
+  fi
+  checksum_previous=$(get_check_sum_of_dir "${PREVIOUS_CONFIGURATION_PATH}/web-dir-extensions")
+  checksum_current=$(get_check_sum_of_dir "${CURRENT_CONFIGURATION_PATH}/web-dir-extensions")
+
+  # if checksums different then store dir changed and action
+  if [[ "${checksum_previous}" != "${checksum_current}" ]]; then
+    print_info "Previous checksum '${checksum_previous}' and current checksum '${checksum_current}' do not match for directory 'web-dir-extensions'"
+    files_changed_array+=("web-dir-extensions")
+    changes_detected="true"
+    # set action if higher severity code
+    if [[ "${config_action_code}" -gt "${config_final_action_code}" ]]; then
+      config_final_action_code="${config_action_code}"
+    fi
+  fi
+
+  # count number of files changed (elements) in the array
+  if [ "${changes_detected}" == "false" ]; then
+    print_info "No checksum differences found, web-dir-extensions are in sync"
+  else
+    print_info "web-dir-extensions changes detected, action code is '${config_final_action_code}'"
+  fi
 }
 
 function compare_current_extensions() {
+  local changes_detected="false"
   local extension_references_file="${LOCAL_USER_CONFIG_DIR}/extension-references.json"
   local extension_dependencies_path="${EXTENSIONS_DIR}/extension-dependencies.json"
   local extension_names
   # Any change to extensions require the same action code 2
-  local configActionCode=2
+  local config_action_code=2
 
   print_info "Checking extensions for '${CONFIG_NAME}' ..."
   readarray -t extension_names < <(jq -r '.extensions[] | .name' <"${extension_references_file}")
@@ -204,72 +244,71 @@ function compare_current_extensions() {
 
   for filename in "${extension_names[@]}"; do
     if [ -f "${PREVIOUS_CONFIGURATION_LIB_PATH}/${filename}.sha512" ]; then
-      checksumPrevious=$(cat "${PREVIOUS_CONFIGURATION_LIB_PATH}/${filename}.sha512")
+      checksum_previous=$(cat "${PREVIOUS_CONFIGURATION_LIB_PATH}/${filename}.sha512")
     else
       continue
     fi
     if [ -f "${PREVIOUS_EXTENSIONS_DIR}/${filename}.sha512" ]; then
-      checksumCurrent=$(cat "${PREVIOUS_EXTENSIONS_DIR}/${filename}.sha512")
+      checksum_current=$(cat "${PREVIOUS_EXTENSIONS_DIR}/${filename}.sha512")
     else
       continue
     fi
     # if checksums different then store filename changed and action
-    if [[ "${checksumPrevious}" != "${checksumCurrent}" ]]; then
-      print_info "Previous checksum '${checksumPrevious}' and current checksum '${checksumCurrent}' do not match for filename '${filename}.sha512'"
-      filesChangedArray+=("lib/${filename}.sha512")
+    if [[ "${checksum_previous}" != "${checksum_current}" ]]; then
+      print_info "Previous checksum '${checksum_previous}' and current checksum '${checksum_current}' do not match for filename '${filename}.sha512'"
+      files_changed_array+=("lib/${filename}.sha512")
+      changes_detected="true"
       # set action if higher severity code
-      if [[ "${configActionCode}" -gt "${configFinalActionCode}" ]]; then
-        configFinalActionCode="${configActionCode}"
+      if [[ "${config_action_code}" -gt "${config_final_action_code}" ]]; then
+        config_final_action_code="${config_action_code}"
       fi
     fi
   done
 
-  # count number of files changed (elements) in the array
-  if [ "${#filesChangedArray[@]}" -eq 0 ]; then
+  if [[ "${changes_detected}" == "false" ]]; then
     print_info "No checksum differences found, extension jars are in sync"
   else
-    print_info "Jar changes detected, action code is '${configFinalActionCode}'"
+    print_info "Jar changes detected, action code is '${config_final_action_code}'"
   fi
-  print_info "Results in array '${filesChangedArray[*]}'"
 }
 
 function compare_current_plugins() {
+  local changes_detected="false"
   local plugin_references_file="${LOCAL_USER_CONFIG_DIR}/plugin-references.json"
   local plugin_files
   # Any change to plugins require the same action code 2
-  local configActionCode=2
+  local config_action_code=2
 
   print_info "Checking plugins for '${CONFIG_NAME}' ..."
   readarray -t plugin_files < <(jq -r '.plugins[] | .name' <"${plugin_references_file}")
   for filename in "${plugin_files[@]}"; do
     if [ -f "${PREVIOUS_CONFIGURATION_PLUGINS_PATH}/${filename}.sha512" ]; then
-      checksumPrevious=$(cat "${PREVIOUS_CONFIGURATION_PLUGINS_PATH}/${filename}.sha512")
+      checksum_previous=$(cat "${PREVIOUS_CONFIGURATION_PLUGINS_PATH}/${filename}.sha512")
     else
       continue
     fi
     if [ -f "${PREVIOUS_PLUGINS_DIR}/${filename}.sha512" ]; then
-      checksumCurrent=$(cat "${PREVIOUS_PLUGINS_DIR}/${filename}.sha512")
+      checksum_current=$(cat "${PREVIOUS_PLUGINS_DIR}/${filename}.sha512")
     else
       continue
     fi
     # if checksums different then store filename changed and action
-    if [[ "${checksumPrevious}" != "${checksumCurrent}" ]]; then
-      print_info "Previous checksum '${checksumPrevious}' and current checksum '${checksumCurrent}' do not match for filename '${filename}.sha512'"
-      filesChangedArray+=("plugins/${filename}.sha512")
+    if [[ "${checksum_previous}" != "${checksum_current}" ]]; then
+      print_info "Previous checksum '${checksum_previous}' and current checksum '${checksum_current}' do not match for filename '${filename}.sha512'"
+      files_changed_array+=("plugins/${filename}.sha512")
       # set action if higher severity code
-      if [[ "${configActionCode}" -gt "${configFinalActionCode}" ]]; then
-        configFinalActionCode="${configActionCode}"
+      if [[ "${config_action_code}" -gt "${config_final_action_code}" ]]; then
+        config_final_action_code="${config_action_code}"
       fi
     fi
   done
 
   # count number of files changed (elements) in the array
-  if [ "${#filesChangedArray[@]}" -eq 0 ]; then
+  if [[ "${changes_detected}" == "false" ]]; then
     print_info "No checksum differences found, plugin files are in sync"
   else
-    print_info "Plugin file changes detected, action code is '${configFinalActionCode}'"
+    print_info "Plugin file changes detected, action code is '${config_final_action_code}'"
   fi
-  print_info "Results in array '${filesChangedArray[*]}'"
 }
 
 function compare_current_prometheus_config() {
@@ -280,16 +319,16 @@ function compare_current_prometheus_config() {
 
   # check if filename exists in previous, if so then calc checksum
   if [ -f "${PREVIOUS_CONFIGURATION_PATH}/prometheus/${prometheus_template_file}" ]; then
-    checksumPrevious=$(shasum "${PREVIOUS_CONFIGURATION_PATH}/prometheus/${prometheus_template_file}" | cut -d ' ' -f 1)
+    checksum_previous=$(shasum "${PREVIOUS_CONFIGURATION_PATH}/prometheus/${prometheus_template_file}" | cut -d ' ' -f 1)
   fi
   # check if filename exists in current, if so then calc checksum
   if [ -f "${CURRENT_CONFIGURATION_PATH}/prometheus/${prometheus_template_file}" ]; then
-    checksumCurrent=$(shasum "${CURRENT_CONFIGURATION_PATH}/prometheus/${prometheus_template_file}" | cut -d ' ' -f 1)
+    checksum_current=$(shasum "${CURRENT_CONFIGURATION_PATH}/prometheus/${prometheus_template_file}" | cut -d ' ' -f 1)
   fi
 
   # if checksums different then store filename changed and action
-  if [[ "${checksumPrevious}" != "${checksumCurrent}" ]]; then
-    print_info "Previous checksum '${checksumPrevious}' and current checksum '${checksumCurrent}' do not match for filename '${prometheus_template_file}'"
+  if [[ "${checksum_previous}" != "${checksum_current}" ]]; then
+    print_info "Previous checksum '${checksum_previous}' and current checksum '${checksum_current}' do not match for filename '${prometheus_template_file}'"
     # set prometheus action to 1
     PROMETHEUS_ACTION_CODE=1
   else
@@ -312,19 +351,19 @@ function compare_current_grafana_dashboards() {
       filename="${file##*/}"
       # check if filename exists in previous, if so then calc checksum
       if [ -f "${PREVIOUS_CONFIGURATION_PATH}/grafana/dashboards/${filename}" ]; then
-        checksumPrevious=$(shasum "${PREVIOUS_CONFIGURATION_PATH}/grafana/dashboards/${filename}" | cut -d ' ' -f 1)
+        checksum_previous=$(shasum "${PREVIOUS_CONFIGURATION_PATH}/grafana/dashboards/${filename}" | cut -d ' ' -f 1)
       else
         continue
       fi
       # check if filename exists in current, if so then calc checksum
       if [ -f "${CURRENT_CONFIGURATION_PATH}/grafana/dashboards/${filename}" ]; then
-        checksumCurrent=$(shasum "${CURRENT_CONFIGURATION_PATH}/grafana/dashboards/${filename}" | cut -d ' ' -f 1)
+        checksum_current=$(shasum "${CURRENT_CONFIGURATION_PATH}/grafana/dashboards/${filename}" | cut -d ' ' -f 1)
       else
         continue
       fi
       # if checksums different then store filename changed and action
-      if [[ "$checksumPrevious" != "$checksumCurrent" ]]; then
-        print_info "Previous checksum '${checksumPrevious}' and current checksum '${checksumCurrent}' do not match for filename '${filename}'"
+      if [[ "$checksum_previous" != "$checksum_current" ]]; then
+        print_info "Previous checksum '${checksum_previous}' and current checksum '${checksum_current}' do not match for filename '${filename}'"
       fi
     done
   else
@@ -357,57 +396,54 @@ function configure_solr_collections() {
   run_i2_analyze_tool "/opt/i2-tools/scripts/generateSolrSchemas.sh"
   delete_folder_if_exists "${LOCAL_USER_CONFIG_DIR}/solr/generated_config"
   cp -Rp "${LOCAL_CONFIG_DIR}/solr/generated_config" "${LOCAL_USER_CONFIG_DIR}/solr/generated_config"
-  run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n daod_index -d /opt/configuration/solr/generated_config/daod_index
-  run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n main_index -d /opt/configuration/solr/generated_config/main_index
-  run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n chart_index -d /opt/configuration/solr/generated_config/chart_index
-  run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n highlight_index -d /opt/configuration/solr/generated_config/highlight_index
-  run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n match_index1 -d /opt/configuration/solr/generated_config/match_index
-  run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n match_index2 -d /opt/configuration/solr/generated_config/match_index
-  run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n vq_index -d /opt/configuration/solr/generated_config/vq_index
+  configure_solr_collection "daod_index"
+  configure_solr_collection "main_index"
+  configure_solr_collection "chart_index"
+  configure_solr_collection "highlight_index"
+  configure_solr_collection "match_index1" "match_index"
+  configure_solr_collection "match_index2" "match_index"
+  configure_solr_collection "vq_index"
+  configure_solr_collection "recordshare_index"
   if [[ "${DEV_BUILD}" == "true" ]]; then
-    run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n main_index_test -d /opt/configuration/solr/generated_config/main_index
+    configure_solr_collection "main_index_test" "main_index"
   fi
 }
 
 function delete_solr_collections() {
   print "Deleting Solr collections"
-  # The curl command uses the container's local environment variables to obtain the SOLR_ADMIN_DIGEST_USERNAME and SOLR_ADMIN_DIGEST_PASSWORD.
-  # To stop the variables being evaluated in this script, the variables are escaped using backslashes (\) and surrounded in double quotes (").
-  # Any double quotes in the curl command are also escaped by a leading backslash.
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=DELETE&name=main_index\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=DELETE&name=match_index1\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=DELETE&name=match_index2\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=DELETE&name=chart_index\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=DELETE&name=daod_index\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=DELETE&name=highlight_index\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=DELETE&name=vq_index\""
+  delete_solr_collection "main_index"
+  delete_solr_collection "match_index1"
+  delete_solr_collection "match_index2"
+  delete_solr_collection "chart_index"
+  delete_solr_collection "daod_index"
+  delete_solr_collection "highlight_index"
+  delete_solr_collection "vq_index"
+  delete_solr_collection "recordshare_index"
   if [[ "${DEV_BUILD}" == "true" ]]; then
-    run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=DELETE&name=main_index_test\""
+    delete_solr_collection "main_index_test"
   fi
 
-  run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/main_index/collectionprops.json"
-  run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/match_index1/collectionprops.json"
-  run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/match_index2/collectionprops.json"
-  run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/chart_index/collectionprops.json"
+  delete_solr_collection_properties "main_index"
+  delete_solr_collection_properties "match_index1"
+  delete_solr_collection_properties "match_index2"
+  delete_solr_collection_properties "chart_index"
   if [[ "${DEV_BUILD}" == "true" ]]; then
-    run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/main_index_test/collectionprops.json"
+    delete_solr_collection_properties "main_index_test"
   fi
 }
 
 function create_solr_collections() {
   print "Creating Solr collections"
-  # The curl command uses the container's local environment variables to obtain the SOLR_ADMIN_DIGEST_USERNAME and SOLR_ADMIN_DIGEST_PASSWORD.
-  # To stop the variables being evaluated in this script, the variables are escaped using backslashes (\) and surrounded in double quotes (").
-  # Any double quotes in the curl command are also escaped by a leading backslash.
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=main_index&collection.configName=main_index&numShards=1&maxShardsPerNode=4&replicationFactor=1\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=match_index1&collection.configName=match_index1&numShards=1&maxShardsPerNode=4&replicationFactor=1\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=match_index2&collection.configName=match_index2&numShards=1&maxShardsPerNode=4&replicationFactor=1\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=chart_index&collection.configName=chart_index&numShards=1&maxShardsPerNode=4&replicationFactor=1\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=daod_index&collection.configName=daod_index&numShards=1&maxShardsPerNode=4&replicationFactor=1\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=highlight_index&collection.configName=highlight_index&numShards=1&maxShardsPerNode=4&replicationFactor=1\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=vq_index&collection.configName=vq_index&numShards=1&maxShardsPerNode=4&replicationFactor=1\""
+  create_solr_collection "main_index"
+  create_solr_collection "match_index1"
+  create_solr_collection "match_index2"
+  create_solr_collection "chart_index"
+  create_solr_collection "daod_index"
+  create_solr_collection "highlight_index"
+  create_solr_collection "vq_index"
+  create_solr_collection "recordshare_index"
   if [[ "${DEV_BUILD}" == "true" ]]; then
-    run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=main_index_test&collection.configName=main_index_test&numShards=1&maxShardsPerNode=4&replicationFactor=1\""
+    create_solr_collection "main_index_test"
   fi
 }
 
@@ -758,16 +794,18 @@ function create_deployment() {
   start_connectors_for_config
 
   if [[ "${STATE}" == 0 || "${STATE}" == 1 ]]; then
-    # Deploying Prometheus
-    delete_container "${PROMETHEUS_CONTAINER_NAME}"
-    run_prometheus
-    wait_for_prometheus_server_to_be_live
 
-    # Deploying Grafana
-    delete_container "${GRAFANA_CONTAINER_NAME}"
-    run_grafana
-    wait_for_grafana_server_to_be_live
+    if [[ "${DEV_DISABLE_METRICS}" != "true" ]]; then
+      # Deploying Prometheus
+      delete_container "${PROMETHEUS_CONTAINER_NAME}"
+      run_prometheus
+      wait_for_prometheus_server_to_be_live
 
+      # Deploying Grafana
+      delete_container "${GRAFANA_CONTAINER_NAME}"
+      run_grafana
+      wait_for_grafana_server_to_be_live
+    fi
     # Configuring ISTORE
     if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
       if [[ "${TASK}" == "create" ]]; then
@@ -795,8 +833,6 @@ function create_deployment() {
     fi
 
     deploy_liberty
-    update_log4j_file
-    add_config_admin
 
     update_state_file 3
     # Creating a copy of the configuration that was deployed originally
@@ -815,8 +851,26 @@ function create_deployment() {
     echo "${liberty_msg}"
   fi
 
+  local extra_args=()
+  if [[ "${VERBOSE}" == "true" ]]; then
+    extra_args+=("-v")
+  fi
+  if [[ "${YES_FLAG}" == "true" ]]; then
+    extra_args+=("-y")
+  fi
+
+  "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/create-change-set" \
+    -e "${ENVIRONMENT}" -c "${CONFIG_NAME}" -t "initial" -n 0 "${extra_args[@]}"
+  update_change_sets_to_new_folder
+
   print "Deployed Successfully"
   echo "This application is configured for access on ${FRONT_END_URI}"
+}
+
+function update_change_sets_to_new_folder() {
+  # create-change-sets script will always create a new change set as a copy of the old one then modify accordingly
+  delete_folder_if_exists "${LOCAL_USER_CHANGE_SETS_DIR}"
+  mv "${NEW_LOCAL_CHANGE_SETS_DIR}" "${LOCAL_USER_CHANGE_SETS_DIR}"
 }
 
 ###############################################################################
@@ -838,8 +892,11 @@ function upgrade() {
   if [[ "${VERBOSE}" == "true" ]]; then
     extra_args+=("-v")
   fi
-
-  "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/create-change-set" -e "${ENVIRONMENT}" -c "${CONFIG_NAME}" -t "upgrade" "${extra_args[@]}"
+  if [[ "${YES_FLAG}" == "true" ]]; then
+    extra_args+=("-y")
+  fi
+  "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/create-change-set" \
+    -e "${ENVIRONMENT}" -c "${CONFIG_NAME}" -t "upgrade-release" "${extra_args[@]}"
 
   update_config_version "${CURRENT_SUPPORTED_I2ANALYZE_VERSION}"
 
@@ -857,6 +914,7 @@ function upgrade() {
   # Required to fix text search
   # TODO: Look into what specifically is required  to repeat inside this function (CIR-2285)
   initialize_deployment
+  run_i2_analyze_tool "/opt/i2-tools/scripts/generateChangeLog.sh"
 
   validate_json_files
 
@@ -872,16 +930,20 @@ function upgrade() {
   update_state_file 1
 
   if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
-    BACKUP_NAME="global-upgrade"
+    if [[ -z "${BACKUP_NAME}" ]]; then
+      BACKUP_NAME="global-upgrade"
+    fi
     restore_database
     upgrade_database
   fi
 
-  run_prometheus
-  wait_for_prometheus_server_to_be_live
+  if [[ "${DEV_DISABLE_METRICS}" != "true" ]]; then
+    run_prometheus
+    wait_for_prometheus_server_to_be_live
 
-  run_grafana
-  wait_for_grafana_server_to_be_live
+    run_grafana
+    wait_for_grafana_server_to_be_live
+  fi
 
   update_state_file 2
 
@@ -894,8 +956,14 @@ function upgrade() {
   update_state_file 4
 
   update_previous_configuration_with_current
-  update_previous_grafana_configuration_with_current
-  update_previous_prometheus_configuration_with_current
+  if [[ "${DEV_DISABLE_METRICS}" != "true" ]]; then
+    update_previous_grafana_configuration_with_current
+    update_previous_prometheus_configuration_with_current
+  fi
+  update_change_sets_to_new_folder
+
+  # Copy upgrade-history.json to config
+  mv "${LOCAL_CONFIG_DIR}/environment/upgrade-history.json" "${LOCAL_USER_CONFIG_DIR}/environment/upgrade-history.json"
 
   print "Upgraded Successfully"
   echo "This application is configured for access on ${FRONT_END_URI}"
@@ -919,36 +987,77 @@ function upgrade_database() {
 
 function upgrade_liberty() {
   deploy_liberty
-  update_log4j_file
-  add_config_admin
   login_to_liberty
 }
 
 function upgrade_extension_pom_xml() {
   local pom_path="$1"
+  local template_pom_path="${ANALYZE_CONTAINERS_ROOT_DIR}/templates/extension-development/pom.xml"
+  local temp_upgraded_pom_path="${ANALYZE_CONTAINERS_ROOT_DIR}/i2a-extensions/temp-upgraded-pom.xml"
+  local groupId artifactId version
+  local extension_specific_dependencies
+  local extension_specific_dependencies_arr=()
 
-  # Rename dependency 'guice-throwing-providers' to 'guice-throwingproviders'
-  xmlstarlet edit -L \
-    --update "/project/dependencies/dependency[artifactId='guice-throwing-providers']/artifactId" --value "guice-throwingproviders" \
-    "${pom_path}"
+  # Copy the template_pom to the updated_pom
+  cp "$template_pom_path" "$temp_upgraded_pom_path"
 
-  # Delete dependency icu4j
-  xmlstarlet edit -L \
-    --delete "/project/dependencies/dependency[artifactId='icu4j']" \
-    "${pom_path}"
+  # Retrieve groupId, artifactId, and version from the old pom.xml
+  groupId=$(xmlstarlet sel -t -v "/project/groupId" "${pom_path}")
+  artifactId=$(xmlstarlet sel -t -v "/project/artifactId" "${pom_path}")
+  version=$(xmlstarlet sel -t -v "/project/version" "${pom_path}")
 
-  # Delete dependency liberty-apis
-  xmlstarlet edit -L \
-    --delete "/project/dependencies/dependency[artifactId='liberty-apis']" \
-    "${pom_path}"
+  # Update the group ID, artifact ID, and version in the temp_upgraded_pom file
+  xmlstarlet ed -L -u "/project/groupId" -v "${groupId}" \
+    -u "/project/artifactId" -v "${artifactId}" \
+    -u "/project/version" -v "${version}" \
+    "$temp_upgraded_pom_path"
+
+  # Retrieves extension specific dependencies
+  extension_specific_dependencies=$(xmlstarlet sel -t -c "//*[preceding-sibling::comment()[.=' Extension specific dependencies ']]/*[not(self::comment())]" "$pom_path" | sed 's/<\/version>/<\/version>\n/g')
+
+  if [[ -n "$extension_specific_dependencies" ]]; then
+    # Split the extension_specific_dependencies on new lines and populate the extension_specific_dependencies_arr array
+    while IFS= read -r line; do
+      extension_specific_dependencies_arr+=("$line")
+    done <<<"$extension_specific_dependencies"
+
+    # Insert each dependency into the temp_upgraded_pom file
+    for dependency in "${extension_specific_dependencies[@]}"; do
+      # Extract the groupId, artifactId, and version from the dependency using xmlstarlet
+      xml_string="<dependency>${dependency}</dependency>"
+      groupId=$(xmlstarlet sel -t -v "//dependency/groupId" <<<"$xml_string")
+      artifactId=$(xmlstarlet sel -t -v "//dependency/artifactId" <<<"$xml_string")
+      version=$(xmlstarlet sel -t -v "//dependency/version" <<<"$xml_string")
+
+      # Insert the dependency into the temp_upgraded_pom file
+      xmlstarlet ed -L -s "/project/dependencies" -t elem -n "dependency" \
+        -s "//dependency[last()]" -t elem -n "groupId" -v "$groupId" \
+        -s "//dependency[last()]" -t elem -n "artifactId" -v "$artifactId" \
+        -s "//dependency[last()]" -t elem -n "version" -v "$version" \
+        "$temp_upgraded_pom_path"
+    done
+  fi
+
+  mv "${temp_upgraded_pom_path}" "${pom_path}"
 }
 
 function upgrade_extensions() {
   local extension_references_file="${LOCAL_USER_CONFIG_DIR}/extension-references.json"
+  local extension_dependencies_path="${EXTENSIONS_DIR}/extension-dependencies.json"
+  local extension_names
 
   print "Upgrading Extensions"
 
-  readarray -t extension_names < <(jq -r '.extensions[].name' <"${extension_references_file}")
+  readarray -t extension_names < <(jq -r '.extensions[] | .name' <"${extension_references_file}")
+  for extension in "${extension_names[@]}"; do
+    IFS=' ' read -ra dependencies <<<"$(jq -r --arg name "${extension}" '.[] | select(.name == $name) | .dependencies[]' "${extension_dependencies_path}" | xargs)"
+    for dependency in "${dependencies[@]}"; do
+      if ! is_string_in_array "${dependency}" extension_names; then
+        extension_names+=("${dependencies[@]}")
+      fi
+    done
+  done
+
   for extension_name in "${extension_names[@]}"; do
     upgrade_extension_pom_xml "${ANALYZE_CONTAINERS_ROOT_DIR}/i2a-extensions/${extension_name}/pom.xml"
     delete_file_if_exists "${PREVIOUS_EXTENSIONS_DIR}/${extension_name}.sha512"
@@ -1013,7 +1122,8 @@ function notify_update_server_configuration() {
 
 function update_live_configuration() {
   local errors_message="Validation errors detected, please review the above message(s)."
-  if [[ " ${filesChangedArray[*]} " == *" user.registry.xml "* ]]; then
+  local success_message="No Validation errors detected."
+  if [[ " ${files_changed_array[*]} " == *" user.registry.xml "* ]]; then
     notify_update_server_configuration
     return
   fi
@@ -1032,12 +1142,33 @@ function update_live_configuration() {
       --request POST "${FRONT_END_URI}/api/v1/admin/config/reload" >/tmp/http_code.txt; then
       http_code=$(cat /tmp/http_code.txt)
       if [[ "${http_code}" == 200 ]]; then
-        validation_messages=$(docker exec "${LIBERTY1_CONTAINER_NAME}" cat "/logs/opal-services/i2_Validation.log")
+        # sed '/^\s*$/d' will remove empty line
+        validation_messages=$(docker exec "${LIBERTY1_CONTAINER_NAME}" cat "/logs/opal-services/i2_Validation.log" | sed '/^\s*$/d')
         if [[ -n "${validation_messages}" ]]; then
-          echo "${validation_messages}" >&2
-          print_error_and_exit "Validation errors detected, please review the above message(s)."
+          if [[ "${DEV_BUILD}" != "true" ]]; then
+            echo "${validation_messages}" >&2
+            print_error_and_exit "${errors_message}"
+          else
+            local unexpected_warn_found=false
+            local expected_warn_message="InfoStore consistency validation is disabled, skipping validation..."
+            # check for unexpected errors line by line
+            while IFS= read -r line; do
+              if [[ "${line}" != *"${expected_warn_message}"* ]]; then
+                unexpected_warn_found=true
+                break
+              fi
+            done <<<"${validation_messages}"
+
+            if [[ "${unexpected_warn_found}" == true ]]; then
+              echo "${validation_messages}" >&2
+              print_error_and_exit "${errors_message}"
+            else
+              echo "${success_message}"
+              return 0
+            fi
+          fi
         else
-          echo "No Validation errors detected."
+          echo "${success_message}"
           return 0
         fi
       fi
@@ -1184,7 +1315,7 @@ function copy_local_config_to_the_liberty_container() {
   # All other configuration is copied to the application WEB-INF/classes directory.
   local tmp_classes_dir="${ANALYZE_CONTAINERS_ROOT_DIR}/.tmp_classes"
   create_folder "${tmp_classes_dir}"
-  find "${GENERATED_LOCAL_CONFIG_DIR}" -maxdepth 1 -type f ! -name privacyagreement.html ! -name user.registry.xml ! -name extension-references.json ! -name plugin-references.json ! -name connector-references.json ! -name '*.xsd' ! -name server.extensions.xml ! -name server.extensions.dev.xml -exec cp -t "${tmp_classes_dir}" {} \;
+  find "${GENERATED_LOCAL_CONFIG_DIR}" -maxdepth 1 -type f ! -name user.registry.xml ! -name extension-references.json ! -name plugin-references.json ! -name connector-references.json ! -name '*.xsd' ! -name server.xml ! -name server.extensions.xml ! -name server.extensions.dev.xml -exec cp -t "${tmp_classes_dir}" {} \;
 
   # In the schema_dev deployment point Gateway schemes to the ISTORE schemes
   if [[ "${DEPLOYMENT_PATTERN}" == "schema_dev" ]]; then
@@ -1203,19 +1334,19 @@ function copy_local_config_to_the_liberty_container() {
     docker cp "${GENERATED_LOCAL_CONFIG_DIR}/web.xml" "${LIBERTY1_CONTAINER_NAME}:${liberty_app_war_path}/WEB-INF"
   fi
   if [[ -f "${GENERATED_LOCAL_CONFIG_DIR}/jvm.options" ]]; then
-    docker cp "${GENERATED_LOCAL_CONFIG_DIR}/jvm.options" "${LIBERTY1_CONTAINER_NAME}:/config"
+    docker cp "${GENERATED_LOCAL_CONFIG_DIR}/jvm.options" "${LIBERTY1_CONTAINER_NAME}:${liberty_server_path}"
   fi
   rm -rf "${tmp_classes_dir}"
 
-  docker cp "${GENERATED_LOCAL_CONFIG_DIR}/privacyagreement.html" "${LIBERTY1_CONTAINER_NAME}:${liberty_app_war_path}/privacyagreement.html"
-  update_log4j_file
-  add_config_admin
+  docker cp "${GENERATED_LOCAL_CONFIG_DIR}/user.registry.xml" "${LIBERTY1_CONTAINER_NAME}:/liberty/usr/shared/config"
+  docker cp "${GENERATED_LOCAL_CONFIG_DIR}/server.xml" "${LIBERTY1_CONTAINER_NAME}:${liberty_server_path}"
+  docker cp "${GENERATED_LOCAL_CONFIG_DIR}/web-dir-extensions/." "${LIBERTY1_CONTAINER_NAME}:${liberty_app_war_path}"
 
   connector_url_map_new=$(cat "${CONNECTOR_IMAGES_DIR}"/connector-url-mappings-file.json)
 
   docker exec "${LIBERTY1_CONTAINER_NAME}" bash -c "export CONNECTOR_URL_MAP='${connector_url_map_new}'; \
-    rm /config/apps/opal-services.war/WEB-INF/classes/connectors.json; \
-    rm /config/apps/opal-services.war/already_run; \
+    rm ${liberty_app_war_path}/WEB-INF/classes/connectors.json; \
+    rm ${liberty_app_war_path}/already_run; \
     /opt/entrypoint.d/create-connector-config"
 }
 
@@ -1311,74 +1442,65 @@ function update_schema() {
   local errors_message="Validation errors detected, please review the above message(s)"
   print "Updating the deployed schema"
 
-  if [[ "${DEPLOYMENT_PATTERN}" == *"store"* && "${DESTRUCTIVE_CHANGE_COMPLETED}" == "false" ]]; then
-
+  if [[ "${DEPLOYMENT_PATTERN}" == *"store"* && "${IS_DESTRUCTIVE_CHANGE}" == "false" ]]; then
     print_info "Stopping Liberty container"
     stop_application
 
     if [[ "${CHANGE_SET_EXISTS}" == "false" ]]; then
-      "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/create-change-set" -c "${CONFIG_NAME}" -t "update"
+      local extra_args=()
+      if [[ "${VERBOSE}" == "true" ]]; then
+        extra_args+=("-v")
+      fi
+      if [[ "${YES_FLAG}" == "true" ]]; then
+        extra_args+=("-y")
+      fi
+      "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/create-change-set" \
+        -e "${ENVIRONMENT}" -c "${CONFIG_NAME}" -t "additive" "${extra_args[@]}"
       CHANGE_SET_EXISTS="true"
+      run_destructive_change_if_destructive_change_set
     fi
 
-    if ! run_i2_analyze_tool "/opt/i2-tools/scripts/validateSchemaAndSecuritySchema.sh" >'/tmp/result_validate_security_schema'; then
-      start_application
-      if grep -q 'ERROR: The new Schema file is not valid, see the summary for more details.' '/tmp/result_validate_security_schema'; then
-        destructive_schema_or_security_schema_change
-      else
-        echo "Response from i2 Analyze Tool: $(cat '/tmp/result_validate_security_schema')"
-        print_error_and_exit "${errors_message}"
-      fi
-    elif [ -d "${LOCAL_GENERATED_DIR}/update" ]; then
-      if [ "$(ls -A "${LOCAL_GENERATED_DIR}/update")" ]; then
-        print "Running the generated scripts"
-        case "${DB_DIALECT}" in
-        db2)
-          run_db2_server_command_as_db2inst1 "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
-          ;;
-        sqlserver)
-          run_sql_server_command_as_dba "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
-          ;;
-        postgres)
-          run_postgres_server_command_as_dba "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
-          ;;
-        esac
-      else
-        print "No files present in update schema scripts folder"
-      fi
-    else
-      print "Update schema scripts folder doesn't exist"
+    if [[ "${IS_DESTRUCTIVE_CHANGE}" == "false" && -d "${LOCAL_GENERATED_DIR}/update" && "$(ls -A "${LOCAL_GENERATED_DIR}/update")" ]]; then
+      print "Running the generated scripts"
+      case "${DB_DIALECT}" in
+      db2)
+        run_db2_server_command_as_db2inst1 "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
+        ;;
+      sqlserver)
+        run_sql_server_command_as_dba "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
+        ;;
+      postgres)
+        run_postgres_server_command_as_dba "/opt/databaseScripts/generated/runDatabaseScripts.sh" "/opt/databaseScripts/generated/update"
+        ;;
+      esac
     fi
   fi
 }
 
 function update_security_schema() {
-  local result_update_security_schema
-  local result_update_security_schema_exitcode
   local errors_message="Validation errors detected, please review the above message(s)"
-  print "Updating the deployed security schema"
 
-  if [[ "${DEPLOYMENT_PATTERN}" == *"store"* && "${DESTRUCTIVE_CHANGE_COMPLETED}" == "false" ]]; then
-
+  if [[ "${DEPLOYMENT_PATTERN}" == *"store"* && "${IS_DESTRUCTIVE_CHANGE}" == "false" ]]; then
     print_info "Stopping Liberty application"
     stop_application
 
-    print_info "Updating security schema"
-
     if [[ "${CHANGE_SET_EXISTS}" == "false" ]]; then
-      "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/create-change-set" -c "${CONFIG_NAME}" -t "update"
+      local extra_args=()
+      if [[ "${VERBOSE}" == "true" ]]; then
+        extra_args+=("-v")
+      fi
+      if [[ "${YES_FLAG}" == "true" ]]; then
+        extra_args+=("-y")
+      fi
+      "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/create-change-set" \
+        -e "${ENVIRONMENT}" -c "${CONFIG_NAME}" -t "additive" "${extra_args[@]}"
       CHANGE_SET_EXISTS="true"
+      run_destructive_change_if_destructive_change_set
     fi
-    if ! run_i2_analyze_tool "/opt/i2-tools/scripts/updateSecuritySchema.sh" >'/tmp/result_update_security_schema'; then
-      start_application
-      echo "[INFO] Response from i2 Analyze Tool: $(cat '/tmp/result_update_security_schema')"
-      # check i2 Analyze Tool for output indicating a Security Schema change has occurred, if so then prompt user for destructive
-      # rebuild of ISTORE database.
-      if grep -q 'ILLEGAL STATE: The new security schema has incompatible differences with the existing one' '/tmp/result_update_security_schema'; then
-        echo "[WARN] Destructive Security Schema change(s) detected"
-        destructive_schema_or_security_schema_change
-        echo "[INFO] Destructive Security Schema change(s) complete"
-      else
+
+    if [[ "${IS_DESTRUCTIVE_CHANGE}" == "false" ]]; then
+      print "Updating the deployed security schema"
+      if ! run_i2_analyze_tool "/opt/i2-tools/scripts/updateSecuritySchema.sh"; then
         print_error_and_exit "${errors_message}"
       fi
     fi
@@ -1409,11 +1531,28 @@ function solr_synonyms_change() {
   wait_for_solr_to_be_live "${SOLR1_FQDN}"
 }
 
+function run_destructive_change_if_destructive_change_set() {
+  last_change_set_folder=$(find -L "${NEW_LOCAL_CHANGE_SETS_DIR}" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -V | tail -n 1)
+  if [[ "${last_change_set_folder}" == *"-destructive-"* ]]; then
+    destructive_schema_or_security_schema_change
+  fi
+}
+
 function destructive_schema_or_security_schema_change() {
+  local release_change_set_path release_change_set_name
+  print_warn "Destructive Security Schema change(s) detected"
+  IS_DESTRUCTIVE_CHANGE="true"
+
   rebuild_database
   delete_solr_collections
   create_solr_collections
-  DESTRUCTIVE_CHANGE_COMPLETED="true"
+  release_change_set_path="$(find "${NEW_LOCAL_CHANGE_SETS_DIR}" \
+    -mindepth 1 -maxdepth 1 -type d -name "1-release*")"
+  release_change_set_name="$(basename "${release_change_set_path}")"
+  BACKUP_NAME="${release_change_set_name}"
+  create_folder "${BACKUP_DIR}/${BACKUP_NAME}"
+  backup_database
+  print_info "Destructive Security Schema change(s) complete"
 }
 
 function update_data_source_id_file() {
@@ -1425,17 +1564,20 @@ function update_data_source_id_file() {
 
 function handle_configuration_change() {
   compare_current_configuration
+  compare_current_web_dir_extensions
   compare_current_extensions
   compare_current_plugins
 
-  if [[ "${configFinalActionCode}" == 0 ]]; then
+  print_info "Results in array '${files_changed_array[*]}'"
+
+  if [[ "${config_final_action_code}" == 0 ]]; then
     print_info "No updates to the configuration"
     return
   fi
 
   # Make sure update will be re-run if anything fails
   update_state_file 3
-  for fileName in "${filesChangedArray[@]}"; do
+  for fileName in "${files_changed_array[@]}"; do
     if [[ "${fileName}" == "system-match-rules.xml" ]]; then
       if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
         update_match_rules
@@ -1444,13 +1586,13 @@ function handle_configuration_change() {
       update_schema
     elif [[ "${fileName}" == "security-schema.xml" ]]; then
       update_security_schema
-    elif [[ "${fileName}" == "user.registry.xml" ]]; then
-      add_config_admin_to_user_registry
     elif [[ "${fileName}" == "environment/dsid/dsid.properties" ]]; then
       update_data_source_id_file
       if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
         destructive_schema_or_security_schema_change
       fi
+    elif [[ "${fileName}" == "web-dir-extensions" ]]; then
+      handle_web_dir_extensions_change
     elif [[ "${fileName}" == "extension-references.json" || "${fileName}" = lib/*.sha512 ]]; then
       handle_extension_change
     elif [[ "${fileName}" == "plugin-references.json" || "${fileName}" = plugins/*.sha512 ]]; then
@@ -1458,13 +1600,13 @@ function handle_configuration_change() {
     elif [[ "${fileName}" == "solr/schema-template-definition.xml" ]]; then
       solr_schema_change
     elif [[ "${fileName}" == solr/*.txt ]]; then
-      if ! is_string_in_array "solr/schema-template-definition.xml" filesChangedArray; then
+      if ! is_string_in_array "solr/schema-template-definition.xml" files_changed_array; then
         solr_synonyms_change
       fi
     fi
   done
 
-  if [[ "${configFinalActionCode}" == 3 ]] && [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
+  if [[ "${config_final_action_code}" == 3 ]] && [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
     print_info "Starting i2 Analyze application"
     start_application
 
@@ -1474,7 +1616,7 @@ function handle_configuration_change() {
 
   clear_liberty_validation_log
   copy_local_config_to_the_liberty_container
-  case "${configFinalActionCode}" in
+  case "${config_final_action_code}" in
   1)
     update_live_configuration
     ;;
@@ -1482,7 +1624,7 @@ function handle_configuration_change() {
     # Fallthrough
   3)
     print_info "Restarting i2 Analyze application"
-    if [[ " ${filesChangedArray[*]} " == *" user.registry.xml "* ]]; then
+    if [[ " ${files_changed_array[*]} " == *" user.registry.xml "* ]]; then
       notify_update_server_configuration
     fi
     restart_application
@@ -1495,10 +1637,9 @@ function handle_configuration_change() {
     ;;
   esac
 
-  if [[ " ${filesChangedArray[*]} " == *" schema.xml "* && "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
+  if [[ " ${files_changed_array[*]} " == *" schema.xml "* && "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
     download_highlight_queries_xsd
   fi
-  update_previous_configuration_with_current
 }
 
 function handle_deployment_pattern_change() {
@@ -1512,8 +1653,6 @@ function handle_deployment_pattern_change() {
     print "Removing Liberty container"
     delete_container "${LIBERTY1_CONTAINER_NAME}"
     deploy_liberty
-    update_log4j_file
-    add_config_admin
     login_to_liberty
 
     if [[ "${PREVIOUS_DEPLOYMENT_PATTERN}" == *"store"* ]] && [[ "${CURRENT_DEPLOYMENT_PATTERN}" != *"store"* ]]; then
@@ -1545,8 +1684,6 @@ function handle_dialect_change() {
     print "Removing Liberty container"
     delete_container "${LIBERTY1_CONTAINER_NAME}"
     deploy_liberty
-    update_log4j_file
-    add_config_admin
     login_to_liberty
 
     if [[ "${PREVIOUS_DEPLOYMENT_PATTERN}" == *"store"* ]]; then
@@ -1562,6 +1699,21 @@ function handle_dialect_change() {
   else
     print_info "DB_DIALECT is unchanged: ${DB_DIALECT}"
   fi
+}
+
+function handle_web_dir_extensions_change() {
+  local web_liberty_path="/config/apps/opal-services.war"
+  local extension_dir
+  print "Updating web directory extensions"
+
+  while read -r path; do
+    extension_dir="${path#"${PREVIOUS_CONFIGURATION_PATH}/web-dir-extensions"}"
+    print_info "Delete old web directory extension ${extension_dir}"
+    docker exec "${LIBERTY1_CONTAINER_NAME}" bash -c "rm -rf ${web_liberty_path}/${extension_dir} > /dev/null" || true
+  done <<<"$(find "${PREVIOUS_CONFIGURATION_PATH}/web-dir-extensions" -maxdepth 1 -mindepth 1)"
+
+  # The update to these files will be done as part of the copy_local_config_to_the_liberty_container
+  # so it isn't needed here
 }
 
 function handle_extension_change() {
@@ -1729,11 +1881,13 @@ function update_deployment() {
   build_extensions
   build_plugins
 
-  # Handling Prometheus Configuration Change
-  handle_prometheus_configuration_change
+  if [[ "${DEV_DISABLE_METRICS}" != "true" ]]; then
+    # Handling Prometheus Configuration Change
+    handle_prometheus_configuration_change
 
-  # Handling Grafana Configuration Change
-  handle_grafana_dashboards_change
+    # Handling Grafana Configuration Change
+    handle_grafana_dashboards_change
+  fi
 
   # Handling Connectors Change
   handle_connectors_change
@@ -1743,8 +1897,11 @@ function update_deployment() {
 
   update_state_file 4
 
-  # Update configuration
   update_previous_configuration_with_current
+
+  if [[ "${CHANGE_SET_EXISTS}" == "true" ]]; then
+    update_change_sets_to_new_folder
+  fi
 
   print "Updated Successfully"
   echo "This application is configured for access on ${FRONT_END_URI}"
@@ -1816,11 +1973,25 @@ function restore_from_backup() {
   create_deployment
 }
 
+function check_no_change_set_changes_pending() {
+  generate_artifacts
+
+  # Required to ensure comparison works
+  add_config_admin
+  update_log4j_file
+
+  compare_current_configuration
+  if is_string_in_array "schema.xml" files_changed_array || is_string_in_array "security-schema.xml" files_changed_array; then
+    print_error_and_exit "There are changes to the schema or security schema files. Please revert the changes before running this task again."
+  fi
+}
+
 ###############################################################################
 # Clean Helper Functions                                                      #
 ###############################################################################
 
 function clean_deployment() {
+  check_no_change_set_changes_pending
   wait_for_user_reply "Are you sure you want to run the 'clean' task? This will permanently remove data from the deployment."
 
   local all_container_ids
@@ -1893,7 +2064,10 @@ function initialize_deployment() {
     fi
   done
 
-  add_config_admin_to_security_schema
+  if [[ "${EXTENSIONS_DEV}" == "true" ]]; then
+    add_config_admin
+    update_log4j_file
+  fi
   create_mounted_config_structure
 
   if [[ ! -f "${PREVIOUS_STATE_FILE_PATH}" && "${TASK}" != "package" ]]; then
@@ -1902,6 +2076,10 @@ function initialize_deployment() {
 }
 
 function validate_json_files() {
+  if [[ "${DEV_SKIP_VALIDATION}" == "true" ]]; then
+    return
+  fi
+
   local -A json_files_with_schema_map=(
     ["${LOCAL_USER_CONFIG_DIR}/connector-references.json"]="${ANALYZE_CONTAINERS_ROOT_DIR}/utils/schemas/connector-references-schema.json"
     ["${LOCAL_USER_CONFIG_DIR}/extension-references.json"]="${ANALYZE_CONTAINERS_ROOT_DIR}/utils/schemas/extension-references-schema.json"
@@ -1947,6 +2125,10 @@ function validate_mandatory_files_present() {
     "schema-vq-configuration.xml"
     "user.registry.xml"
   )
+
+  if [[ "${DEV_SKIP_VALIDATION}" == "true" ]]; then
+    return
+  fi
 
   for mandatory_file in "${mandatory_files[@]}"; do
     if [[ ! -f "${LOCAL_USER_CONFIG_DIR}/${mandatory_file}" ]]; then
@@ -2044,8 +2226,10 @@ function run_top_level_checks() {
   check_variable_is_set "${HOST_PORT_SOLR}" "HOST_PORT_SOLR environment variable is not set"
   check_variable_is_set "${HOST_PORT_I2ANALYZE_SERVICE}" "HOST_PORT_I2ANALYZE_SERVICE environment variable is not set"
   check_variable_is_set "${HOST_PORT_DB}" "HOST_PORT_DB environment variable is not set"
-  check_variable_is_set "${HOST_PORT_PROMETHEUS}" "HOST_PORT_PROMETHEUS environment variable is not set"
-  check_variable_is_set "${HOST_PORT_GRAFANA}" "HOST_PORT_GRAFANA environment variable is not set"
+  if [[ "${DEV_DISABLE_METRICS}" != "true" ]]; then
+    check_variable_is_set "${HOST_PORT_PROMETHEUS}" "HOST_PORT_PROMETHEUS environment variable is not set"
+    check_variable_is_set "${HOST_PORT_GRAFANA}" "HOST_PORT_GRAFANA environment variable is not set"
+  fi
 }
 
 function print_deployment_information() {
@@ -2054,6 +2238,62 @@ function print_deployment_information() {
   echo "CONFIG_NAME: ${CONFIG_NAME}"
   echo "DEPLOYMENT_PATTERN: ${DEPLOYMENT_PATTERN}"
   echo "I2A_DEPENDENCIES_IMAGES_TAG: ${I2A_DEPENDENCIES_IMAGES_TAG}"
+}
+
+function create_release_change_set() {
+  local extra_args=()
+  if [[ "${VERBOSE}" == "true" ]]; then
+    extra_args+=("-v")
+  fi
+  if [[ "${YES_FLAG}" == "true" ]]; then
+    extra_args+=("-y")
+  fi
+
+  check_no_change_set_changes_pending
+  "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/create-change-set" \
+    -e "${ENVIRONMENT}" -c "${CONFIG_NAME}" -t "release" "${extra_args[@]}"
+  update_change_sets_to_new_folder
+}
+
+function validate_release_number() {
+  # Find the latest upgrade release
+  local latest_upgrade_release=""
+  latest_upgrade_release=$(find -L "${LOCAL_USER_CHANGE_SETS_DIR}" -mindepth 1 -maxdepth 1 -type d -name "*upgrade-release*" -printf '%f\n' | sort -V | tail -n 1)
+
+  local latest_upgrade_release_number="${latest_upgrade_release:0:1}"
+  if [[ "${CHANGE_SET_NUMBER}" -lt "${latest_upgrade_release_number}" ]]; then
+    print_error_and_exit "Invalid release change-set number. You can only restore to '${latest_upgrade_release}' change-set or later."
+  fi
+}
+
+function create_or_restore_release_change_set() {
+  local change_set_path
+
+  if [[ "${CHANGE_SET_NUMBER}" == "next" ]]; then
+    create_release_change_set
+  else
+    validate_release_number
+    # There shouldn't be more than 1 release with same change set number so take the full output
+    change_set_path=$(find "${LOCAL_USER_CHANGE_SETS_DIR}" -mindepth 1 -maxdepth 1 -type d -name "${CHANGE_SET_NUMBER}-release*")
+    if [[ -z "${change_set_path}" || ! -d "${change_set_path}" ]]; then
+      print_error_and_exit "Unknown release change-set: ${CHANGE_SET_NUMBER}"
+    fi
+
+    change_set_name=$(basename "${change_set_path}")
+    wait_for_user_reply "Are you sure you want to restore the system to the ${change_set_name} change-set?"
+
+    # Restore schemas
+    cp "${change_set_path}configuration/schema.xml" "${LOCAL_USER_CONFIG_DIR}"
+    cp "${change_set_path}configuration/security-schema.xml" "${LOCAL_USER_CONFIG_DIR}"
+    if [[ "${change_set_name}" == *"upgrade-release"* ]]; then
+      BACKUP_NAME="global-upgrade"
+    else
+      BACKUP_NAME="${change_set_name}"
+    fi
+    TASK="restore"
+    YES_FLAG="true" # Given the user has already answered "yes", don't ask again on restore
+    restore_from_backup
+  fi
 }
 
 function run_task() {
@@ -2078,6 +2318,9 @@ function run_task() {
     ;;
   "package")
     package
+    ;;
+  "release")
+    create_or_restore_release_change_set
     ;;
   esac
 }
@@ -2105,7 +2348,14 @@ function main() {
   clean_up_docker_resources
   create_docker_network "${DOMAIN_NAME}"
 
-  "${ANALYZE_CONTAINERS_ROOT_DIR}/scripts/manage-environment" -t link
+  local extra_args=()
+  if [[ "${YES_FLAG}" == "true" ]]; then
+    extra_args+=("-y")
+  fi
+  if [[ "${VERBOSE}" == "true" ]]; then
+    extra_args+=("-v")
+  fi
+  "${ANALYZE_CONTAINERS_ROOT_DIR}/scripts/manage-environment" -t link "${extra_args[@]}"
   if [[ "${TASK}" != "clean" && "${TASK}" != "package" ]]; then
     if [[ ! -f "${PREVIOUS_STATE_FILE_PATH}" ]]; then
       # The deployment is not healthy, if generated config doesn't exist and at least 1 config container present

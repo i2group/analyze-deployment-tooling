@@ -37,9 +37,9 @@ fi
 # If user not root ensure to give correct permissions before start
 if [ -n "$GROUP_ID" ] && [ "$GROUP_ID" != "0" ]; then
   if [ "$(getent group "${USER}")" ]; then
-    groupmod -g "$GROUP_ID" "${USER}" &>/dev/null
+    groupmod -o -g "$GROUP_ID" "${USER}" &>/dev/null
   else
-    groupadd -g "$GROUP_ID" "${USER}" &>/dev/null
+    groupadd -o -g "$GROUP_ID" "${USER}" &>/dev/null
   fi
   usermod -u "$USER_ID" -g "$GROUP_ID" "${USER}" &>/dev/null
   chown -R "${USER_ID}:0" "/opt/databaseScripts/generated" \

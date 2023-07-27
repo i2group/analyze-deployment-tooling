@@ -119,6 +119,7 @@ elif [[ "${ENVIRONMENT}" == "config-dev" ]]; then
   LOCAL_ISTORE_NAMES_SQL_SERVER_PROPERTIES_FILE="${LOCAL_CONFIGURATION_DIR}/InfoStoreNamesSQLServer.properties"
   LOCAL_ISTORE_NAMES_DB2_PROPERTIES_FILE="${LOCAL_CONFIGURATION_DIR}/InfoStoreNamesDb2.properties"
   LOCAL_ISTORE_NAMES_POSTGRES_PROPERTIES_FILE="${LOCAL_CONFIGURATION_DIR}/InfoStoreNamesPostgres.properties"
+  LOCAL_WEB_EXT_DIR="${LOCAL_CONFIGURATION_DIR}/web-dir-extensions"
   LOCAL_DATABASE_SCRIPTS_DIR="${LOCAL_CONFIG_DEV_DIR}/database-scripts"
   LOCAL_PROMETHEUS_CONFIG_DIR="${LOCAL_CONFIG_DIR}/prometheus"
   LOCAL_GRAFANA_CONFIG_DIR="${LOCAL_CONFIG_DIR}/grafana"
@@ -153,10 +154,11 @@ LOCAL_CONFIG_LIVE_DIR="${LOCAL_CONFIGURATION_DIR}/live"
 ###############################################################################
 # Security paths                                                              #
 ###############################################################################
-LOCAL_KEYS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/dev-environment-secrets/simulated-secret-store"
-GENERATED_SECRETS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/dev-environment-secrets/generated-secrets"
-LOCAL_CA_CERT_DIR="${GENERATED_SECRETS_DIR}/certificates/CA"
-LOCAL_EXTERNAL_CA_CERT_DIR="${GENERATED_SECRETS_DIR}/certificates/externalCA"
+LOCAL_DEV_ENV_SECRETS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/dev-environment-secrets"
+LOCAL_KEYS_DIR="${LOCAL_DEV_ENV_SECRETS_DIR}/simulated-secret-store"
+LOCAL_GENERATED_SECRETS_DIR="${LOCAL_DEV_ENV_SECRETS_DIR}/generated-secrets"
+LOCAL_CA_CERT_DIR="${LOCAL_GENERATED_SECRETS_DIR}/certificates/CA"
+LOCAL_EXTERNAL_CA_CERT_DIR="${LOCAL_GENERATED_SECRETS_DIR}/certificates/externalCA"
 # TODO: Remove when version < 2.1 of SDK is out of support
 OLD_CONNECTOR_CONFIG_FILE="connector.conf.json"
 OLD_CONNECTOR_SECRETS_FILE="connector.secrets.json"
@@ -180,6 +182,7 @@ SOLR_LOCALE="en_US"
 ###############################################################################
 CONTAINER_SECRETS_DIR="/run/secrets"
 CONTAINER_CERTS_DIR="/tmp/i2acerts"
+JAVA_CONTAINER_VOLUME_DIR="/simulatedKeyStore"
 
 ###############################################################################
 # Connector variables                                                         #

@@ -51,7 +51,7 @@ function get_i2_connect_server_version() {
   local npm_output
   local version
 
-  npm_output=$(npm view "@i2analyze/i2connect@${semantic_version}" version | tail -n1)
+  npm_output=$(npm view "@i2analyze/i2connect@${semantic_version}" version | sort | tail -n1)
   if [[ -z "${npm_output}" ]]; then
     print_error_and_exit "An i2 Connect Server version compatible with ${semantic_version} does NOT exist"
   fi

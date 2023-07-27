@@ -118,7 +118,7 @@ fi
 
 # If user not root ensure to give correct permissions before start
 if [ -n "$GROUP_ID" ] && [ "$GROUP_ID" != "0" ]; then
-  groupmod -g "$GROUP_ID" "${USER}" &>/dev/null
+  groupmod -o -g "$GROUP_ID" "${USER}" &>/dev/null
   usermod -u "$USER_ID" -g "$GROUP_ID" "${USER}" &>/dev/null
   chown -R "${USER_ID}:${GROUP_ID}" "/simulatedKeyStore" \
     "/opt/configuration" \

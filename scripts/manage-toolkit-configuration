@@ -138,20 +138,6 @@ function source_common_variables_and_scripts() {
   set_dependencies_tag_if_necessary
 }
 
-function check_file_exists_or_error() {
-  local file="${1}"
-  if [[ ! -f "${file}" ]]; then
-    print_error_and_exit "The \"${file}\" file does not exist. Ensure that it is in the configuration directory and has the correct name."
-  fi
-}
-
-function check_directory_exists_or_error() {
-  local directory="${1}"
-  if [[ ! -d "${directory}" ]]; then
-    print_error_and_exit "The \"${directory}\" directory does not exist."
-  fi
-}
-
 function check_is_valid_toolkit() {
   for directory in "${REQUIRED_ON_PREM_TOOLKIT_DIRS[@]}"; do
     if [[ ! -d "${ON_PREM_TOOLKIT_DIR}/${directory}" ]]; then
@@ -161,8 +147,8 @@ function check_is_valid_toolkit() {
 }
 
 function run_top_level_checks() {
-  check_directory_exists_or_error "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/configuration"
-  check_directory_exists_or_error "${ON_PREM_TOOLKIT_DIR}"
+  check_directory_exists "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/configuration"
+  check_directory_exists "${ON_PREM_TOOLKIT_DIR}"
 }
 
 function run_low_level_checks() {
@@ -571,12 +557,14 @@ function import_config() {
 
   import_plugins
 
+  print "Importing Liberty configuration"
   # Copy liberty configuration files
   cp -pr "${ON_PREM_CONFIG_DIR}/liberty"/*.* "${LOCAL_USER_CONFIG_DIR}"
 
-  if [[ -f "${FRAGMENTS_DIR}/common/privacyagreement.html" ]]; then
-    cp -p "${FRAGMENTS_DIR}/common/privacyagreement.html" "${LOCAL_USER_CONFIG_DIR}/privacyagreement.html"
-  fi
+  # Import web-dir-extensions
+  print "Importing web dir extensions"
+  create_folder "${LOCAL_USER_WEB_EXT_DIR}"
+  find "${FRAGMENTS_DIR}/common" -maxdepth 1 -mindepth 1 ! -name WEB-INF -exec cp -r -t "${LOCAL_USER_WEB_EXT_DIR}" {} \;
 
   print_success "configuration updated"
 
@@ -588,7 +576,6 @@ function import_config() {
 }
 
 function export_config() {
-  local apollo_server_settings_file_path
   print "Running export task"
 
   # Creating transient .configuration and .configuration-generated directories

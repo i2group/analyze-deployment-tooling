@@ -117,8 +117,6 @@ function remove_liberty_container() {
 function start_liberty_container() {
   print_info "Starting up new Liberty container"
   run_liberty "${LIBERTY1_CONTAINER_NAME}" "${I2_ANALYZE_FQDN}" "${LIBERTY1_VOLUME_NAME}" "${LIBERTY1_SECRETS_VOLUME_NAME}" "${HOST_PORT_I2ANALYZE_SERVICE}" "${I2_ANALYZE_CERT_FOLDER_NAME}" "${LIBERTY1_DEBUG_PORT}"
-  update_log4j_file
-  add_config_admin
   check_liberty_status
 }
 

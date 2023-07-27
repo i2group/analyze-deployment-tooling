@@ -8,14 +8,10 @@ set -e
 
 USAGE="""
 Usage:
-  build-connector-images
-  build-connector-images -a -d <deployment_name>
-  build-connector-images [-i <connector1_name>] [-e <connector1_name>]
+  build-connector-images [-i <connector1_name>] [-e <connector1_name>] [-y] [-v]
   build-connector-images -h
 
 Options:
-  -a Produce or use artifacts on AWS.
-  -d <deployment_name>  Name of deployment to use on AWS.
   -i <connector_name>   Names of the connectors to deploy and update. To specify multiple connectors, add additional -i options.
   -e <connector_name>   Names of the connectors to deploy and update. To specify multiple connectors, add additional -e options.
   -v                    Verbose output.
@@ -66,16 +62,20 @@ function validate_connector_version() {
   config_i2connect_server_version=$(jq -r '.version' <"${i2connect_version_file_path}")
   declared_i2connect_server_version=$(jq -r '.dependencies."@i2analyze/i2connect"' <"${package_json_file_path}")
 
+  if [[ "${DEV_SKIP_VALIDATION}" == "true" ]]; then
+    return
+  fi
+
   print "Running validatei2ConnectVersions tool"
 
   local extra_args=()
   if [[ "${YES_FLAG}" != "true" ]]; then
     extra_args+=("-it")
   fi
-  
+
   docker run \
     --rm \
-   "${extra_args[@]}" \
+    "${extra_args[@]}" \
     -e "CONNECTOR_NAME=${connector_name}" \
     -e "CONNECTOR_TYPE=${connector_type}" \
     -e "CONFIG_I2CONNECT_SERVER_VERSION=${config_i2connect_server_version}" \

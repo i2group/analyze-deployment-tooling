@@ -162,20 +162,22 @@ function create_clean_base_configuration_for_config_dev() {
   local toolkit_opal_services_classes_dir="${ALL_PATTERNS_CONFIG_DIR}/fragments/opal-services/WEB-INF/classes"
   local toolkit_required_config_dir="${LOCAL_TOOLKIT_DIR}/application/required/configuration"
   local toolkit_examples_dir="${LOCAL_TOOLKIT_DIR}/examples"
-  local license_prompt_file="${ALL_PATTERNS_CONFIG_DIR}/fragments/common/privacyagreement.html"
 
   print "Clearing down configuration"
   delete_folder_if_exists "${LOCAL_CONFIGURATION_DIR}"
 
   print "Copying all-patterns Configuration to ${LOCAL_CONFIGURATION_DIR}"
-  mkdir -p "${LOCAL_CONFIGURATION_DIR}"
+  create_folder "${LOCAL_CONFIGURATION_DIR}"
 
   cp -pr "${ALL_PATTERNS_CONFIG_DIR}/i2-tools" "${LOCAL_CONFIGURATION_DIR}"
 
   cp -p "${toolkit_common_classes_dir}/analyze-settings.properties" "${LOCAL_CONFIGURATION_DIR}"
   cp -p "${ALL_PATTERNS_CONFIG_DIR}/liberty/server.extensions.xml" "${LOCAL_CONFIGURATION_DIR}"
   cp -p "${toolkit_common_classes_dir}/log4j2.xml" "${LOCAL_CONFIGURATION_DIR}"
-  cp -p "${license_prompt_file}" "${LOCAL_CONFIGURATION_DIR}"
+
+  # Copy all other files like privacyagreement and welcomepage
+  create_folder "${LOCAL_WEB_EXT_DIR}"
+  find "${ALL_PATTERNS_CONFIG_DIR}/fragments/common" -maxdepth 1 -mindepth 1 ! -name WEB-INF -exec cp -r -t "${LOCAL_WEB_EXT_DIR}" {} \;
 
   cp -p "${toolkit_opal_services_classes_dir}/schema-results-configuration.xml" "${LOCAL_CONFIGURATION_DIR}"
   cp -p "${toolkit_opal_services_classes_dir}/schema-source-reference-schema.xml" "${LOCAL_CONFIGURATION_DIR}"
@@ -192,8 +194,10 @@ function create_clean_base_configuration_for_config_dev() {
   cp "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/templates/extension-references.json" "${LOCAL_CONFIGURATION_DIR}"
   cp "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/templates/plugin-references.json" "${LOCAL_CONFIGURATION_DIR}"
   cp "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/templates/mapping-configuration.json" "${LOCAL_CONFIGURATION_DIR}"
-  cp "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/templates/pom.xml" "${EXTENSIONS_DIR}/pom.xml"
-  sed -i "s/{{VERSION}}/${SUPPORTED_I2ANALYZE_VERSION}/" "${EXTENSIONS_DIR}/pom.xml"
+
+  print "Configuring extensions"
+  cp "${toolkit_examples_dir}/extensions/parent-pom.xml" "${EXTENSIONS_DIR}/pom.xml"
+  cp "${toolkit_examples_dir}/extensions/child-pom.xml" "${ANALYZE_CONTAINERS_ROOT_DIR}/templates/extension-development/pom.xml"
   if [[ ! -f "${EXTENSIONS_DIR}/extension-dependencies.json" ]]; then
     echo "[]" >"${EXTENSIONS_DIR}/extension-dependencies.json"
   fi

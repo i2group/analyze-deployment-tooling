@@ -23,7 +23,7 @@ Options:
 """
 
 source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
-OPTIONS_FOR="build_plugins"
+OPTIONS_FOR="buildPlugins"
 parse_arguments "$@"
 
 if [[ "${INCLUDED_PLUGINS[*]}" && "${EXCLUDED_PLUGINS[*]}" ]]; then

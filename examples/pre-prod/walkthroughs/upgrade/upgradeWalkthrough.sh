@@ -25,57 +25,7 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/version.conf"
 
 warn_root_dir_not_in_path
 set_dependencies_tag_if_necessary
-backup_version=upgrade
-
-###############################################################################
-# Restart Pre-Prod Container                                                  #
-###############################################################################
-start_container "${ZK1_CONTAINER_NAME}"
-start_container "${ZK2_CONTAINER_NAME}"
-start_container "${ZK3_CONTAINER_NAME}"
-start_container "${SOLR1_CONTAINER_NAME}"
-start_container "${SOLR2_CONTAINER_NAME}"
-wait_for_solr_to_be_live "${SOLR1_FQDN}"
-start_container "${SQL_SERVER_CONTAINER_NAME}"
-wait_for_sql_server_to_be_live
-start_container "${CONNECTOR1_CONTAINER_NAME}"
-start_container "${LIBERTY1_CONTAINER_NAME}"
-start_container "${LIBERTY2_CONTAINER_NAME}"
-start_container "${LOAD_BALANCER_CONTAINER_NAME}"
-wait_for_i2_analyze_service_to_be_live
-
-###############################################################################
-# Backing up Solr                                                             #
-###############################################################################
-print "Backing up Solr"
-# Set up backup permission
-run_solr_container_with_backup_volume mkdir -p "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}"
-run_solr_container_with_backup_volume chown -R solr:0 "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}"
-
-# Backing up Solr
-run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=BACKUP&async=${MAIN_INDEX_BACKUP_NAME}&name=${MAIN_INDEX_BACKUP_NAME}&collection=main_index&location=${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}\""
-run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=BACKUP&async=${MATCH_INDEX_BACKUP_NAME}&name=${MATCH_INDEX_BACKUP_NAME}&collection=match_index1&location=${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}\""
-run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=BACKUP&async=${CHART_INDEX_BACKUP_NAME}&name=${CHART_INDEX_BACKUP_NAME}&collection=chart_index&location=${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}\""
-
-# Monitoring backup status
-wait_for_asynchronous_request_status_to_be_completed "${MATCH_INDEX_BACKUP_NAME}"
-wait_for_asynchronous_request_status_to_be_completed "${CHART_INDEX_BACKUP_NAME}"
-wait_for_asynchronous_request_status_to_be_completed "${MAIN_INDEX_BACKUP_NAME}"
-
-# Backup system-match-rules status
-run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd getfile /configs/match_index1/match_index1/app/match-rules.xml "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}/system-match-rules.xml"
-
-###############################################################################
-# Backing up SQL Server                                                       #
-###############################################################################
-print "Backing up the ISTORE database"
-sql_query="\
-      USE ISTORE;
-          BACKUP DATABASE ISTORE
-          TO DISK = '${DB_CONTAINER_BACKUP_DIR}/${backup_version}/${DB_BACKUP_FILE_NAME}'
-          WITH FORMAT;"
-
-run_sql_server_command_as_dbb run-sql-query "${sql_query}"
+backup_version=1
 
 ###############################################################################
 # Rebuilding images                                                           #
@@ -84,10 +34,16 @@ print "Running build-images"
 "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/build-images" -e "${ENVIRONMENT}"
 
 ###############################################################################
-# Run change set tool                                                         #
+# Run change log tool                                                         #
+###############################################################################
+print "Running change log CLI"
+run_i2_analyze_tool "/opt/i2-tools/scripts/generateChangeLog.sh"
+
+###############################################################################
+# Run change-set tool                                                         #
 ###############################################################################
 print "Running create-change-set"
-"${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/create-change-set" -e "${ENVIRONMENT}" -t "upgrade"
+"${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/create-change-set" -e "${ENVIRONMENT}" -t "upgrade-release"
 
 ###############################################################################
 # Removing the previous containers                                            #
@@ -142,6 +98,7 @@ run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n highlight_index -
 run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n match_index1 -d /opt/configuration/solr/generated_config/match_index
 run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n match_index2 -d /opt/configuration/solr/generated_config/match_index
 run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n vq_index -d /opt/configuration/solr/generated_config/vq_index
+run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n recordshare_index -d /opt/configuration/solr/generated_config/recordshare_index
 
 print "Running secure Solr containers"
 run_solr "${SOLR1_CONTAINER_NAME}" "${SOLR1_FQDN}" "${SOLR1_VOLUME_NAME}" 8983 "solr1" "${SOLR1_SECRETS_VOLUME_NAME}"
@@ -167,6 +124,7 @@ run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOL
 run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=highlight_index&collection.configName=highlight_index&numShards=1&maxShardsPerNode=4&replicationFactor=2\""
 run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=match_index2&collection.configName=match_index2&numShards=1&maxShardsPerNode=4&replicationFactor=2\""
 run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=vq_index&collection.configName=vq_index&numShards=1&maxShardsPerNode=4&replicationFactor=2\""
+run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=recordshare_index&collection.configName=recordshare_index&numShards=1&maxShardsPerNode=4&replicationFactor=2\""
 
 # Restoring system match rules
 run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd makepath /configs/match_index1/match_index1/app
@@ -257,5 +215,11 @@ wait_for_grafana_server_to_be_live
 ###############################################################################
 sed -i "s/^SUPPORTED_I2ANALYZE_VERSION=.*/SUPPORTED_I2ANALYZE_VERSION=${SUPPORTED_I2ANALYZE_VERSION}/g" \
   "${LOCAL_CONFIGURATION_DIR}/version.conf"
+
+###############################################################################
+# Move new change-sets                                                        #
+###############################################################################
+delete_folder_if_exists "${LOCAL_CHANGE_SETS_DIR}"
+mv -f "${NEW_LOCAL_CHANGE_SETS_DIR}" "${LOCAL_CHANGE_SETS_DIR}"
 
 print_success "upgradeWalkthrough.sh has run successfully"

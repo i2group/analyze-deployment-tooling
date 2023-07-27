@@ -3,7 +3,7 @@
 # © N.Harris Computer Corporation (2022-2023)
 #
 # SPDX short identifier: MIT
-ARG BASE_IMAGE="mcr.microsoft.com/mssql/rhel/server:2019-CU18-rhel-8.5"
+ARG BASE_IMAGE="mcr.microsoft.com/mssql/rhel/server:2022-CU4-rhel-8.7"
 FROM "${BASE_IMAGE}"
 
 USER root

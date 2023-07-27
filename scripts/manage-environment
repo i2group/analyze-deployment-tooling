@@ -3,7 +3,7 @@
 # © N.Harris Computer Corporation (2022-2023)
 #
 # SPDX short identifier: MIT
-
+# shellcheck disable=SC2034
 set -e
 
 if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
@@ -20,6 +20,7 @@ Usage:
   manage-environment -t update [-y]
   manage-environment -t link [-y]
   manage-environment -t stop [-y]
+  manage-environment -t renew-secrets [-y]
   manage-environment -t clean [-i <config_name>] [-e <config_name>] [-y]
   manage-environment -t connectors [-i <connector_name>] [-e <connector_name>] [-y]
   manage-environment -t extensions [-i <extension_name>] [-e <extension_name>] [-y]
@@ -33,6 +34,7 @@ Options:
   -t {link}                                                     Links shared configurations.
   -t {stop}                                                     Stops the running containers.
   -t {clean}                                                    Clean the deployment for a config. Will permanently remove all containers and data.
+  -t {renew-secrets}                                            Renews the secrets for the configuration development environment.
   -t {connectors}                                               Build all connector images.
   -t {extensions}                                               Build all extensions.
   -i <config_name|extension_name|connector_name>                Name of the config, connector or extension to include for the task. To specify multiple values, add additional -i options.
@@ -54,7 +56,8 @@ function validate_arguments() {
 
   [[ "${TASK}" == "backup" || "${TASK}" == "copy" || "${TASK}" == "upgrade" || "${TASK}" == "update" ||
     "${TASK}" == "connectors" || "${TASK}" == "extensions" || "${TASK}" == "clean" ||
-    "${TASK}" == "stop" || "${TASK}" == "link" ]] || print_error_and_usage "${TASK} is not supported."
+    "${TASK}" == "stop" || "${TASK}" == "link" || "${TASK}" == "renew-secrets" ]] ||
+    print_error_and_usage "${TASK} is not supported."
 
   if [[ "${TASK}" == "upgrade" ]]; then
     PREVIOUS_PROJECT_PATH="$(jq -r '.upgradeDirectory?' "${ANALYZE_CONTAINERS_ROOT_DIR}/path-configuration.json")"
@@ -126,6 +129,7 @@ function create_backup() {
   local version_paths=("${PREVIOUS_PROJECT_PATH}/configs/${CONFIG_NAME}/version.conf" "${PREVIOUS_PROJECT_PATH}/configs/${CONFIG_NAME}/version")
   local internal_variables_paths=("${PREVIOUS_PROJECT_PATH}/utils/internal_helper_variables.sh" "${PREVIOUS_PROJECT_PATH}/utils/internalHelperVariables.sh")
   if ! source "${PREVIOUS_PROJECT_PATH}/utils/common_functions.sh" >/dev/null 2>&1; then
+    # shellcheck disable=SC1091
     source "${PREVIOUS_PROJECT_PATH}/utils/commonFunctions.sh"
   fi
   source_file_or_next client_function_paths
@@ -182,7 +186,7 @@ function create_backup() {
   delete_folder_if_exists_and_create "${PREVIOUS_PROJECT_PATH}/backups/${CONFIG_NAME}/${BACKUP_NAME}"
 
   backup_database
-
+  # shellcheck disable=SC2119
   stop_db_server
 }
 
@@ -231,6 +235,9 @@ function copy_configurations() {
   local version_paths=("${PREVIOUS_PROJECT_PATH}/version.conf" "${PREVIOUS_PROJECT_PATH}/version")
   source_file_or_next version_paths
 
+  delete_folder_if_exists_and_create "${PREVIOUS_PROJECT_PATH}/configs/.configs"
+  delete_folder_if_exists_and_create "${CURRENT_PROJECT_PATH}/configs/.configs"
+
   for config_name in "${CONFIGS_ARRAY[@]}"; do
     check_valid_config_name "${config_name}" "${PREVIOUS_PROJECT_PATH}"
     local prev_config_path="${PREVIOUS_PROJECT_PATH}/configs/${config_name}"
@@ -239,6 +246,8 @@ function copy_configurations() {
     if [[ -d "${current_config_path}" && ! -L "${current_config_path}" ]]; then
       print_error_and_exit "Config folder already exists: ${current_config_path}"
     else
+      # Create a copy of the previous config
+      cp -p -R -L "${prev_config_path}" "${PREVIOUS_PROJECT_PATH}/configs/.configs/${config_name}-previous"
       # Do not copy if the directory is a symlink
       if [[ ! -d "${current_config_path}" || ! -L "${prev_config_path}" ]]; then
         cp -pr "${prev_config_path}" "${CURRENT_PROJECT_PATH}/configs"
@@ -246,6 +255,11 @@ function copy_configurations() {
       # Rename to version.conf if required
       if [[ -f "${current_config_path}/version" && ! -f "${current_config_path}/version.conf" ]]; then
         mv "${current_config_path}/version" "${current_config_path}/version.conf"
+      fi
+      create_folder "${current_config_path}/configuration/web-dir-extensions"
+      # Move privacyagreement if required
+      if [[ -f "${current_config_path}/configuration/privacyagreement.html" ]]; then
+        mv "${current_config_path}/configuration/privacyagreement.html" "${current_config_path}/configuration/web-dir-extensions/privacyagreement.html"
       fi
 
       # Ensure the version file is present and upgraded
@@ -276,8 +290,8 @@ function copy_configurations() {
         cp -pr "${CURRENT_PROJECT_PATH}/templates/config-development/configuration/grafana/"* "${current_config_path}/configuration/grafana"
       fi
       # Add privacy agreement
-      if [[ ! -f "${current_config_path}/configuration/privacyagreement.html" ]]; then
-        cp -p "${CURRENT_PROJECT_PATH}/templates/config-development/configuration/privacyagreement.html" "${current_config_path}/configuration/privacyagreement.html"
+      if [[ ! -f "${current_config_path}/configuration/web-dir-extensions/privacyagreement.html" ]]; then
+        cp -p "${CURRENT_PROJECT_PATH}/templates/config-development/configuration/web-dir-extensions/privacyagreement.html" "${current_config_path}/configuration/web-dir-extensions/privacyagreement.html"
       fi
       # Add properties file
       if [[ ! -f "${current_config_path}/configuration/InfoStoreNamesPostgres.properties" ]]; then
@@ -301,6 +315,7 @@ function copy_configurations() {
         echo -e "\nHOST_PORT_GRAFANA=3500" >>"${current_config_path}/utils/variables.conf"
       fi
     fi
+    cp -p -R -L "${current_config_path}" "${CURRENT_PROJECT_PATH}/configs/.configs/${config_name}-current"
   done
 
   if [[ -d "${PREVIOUS_PROJECT_PATH}/examples/pre-prod/configuration" ]]; then
@@ -513,6 +528,12 @@ function run_upgrade_task() {
   if [[ -z "${OLD_SUPPORTED_I2ANALYZE_VERSION}" ]]; then
     OLD_SUPPORTED_I2ANALYZE_VERSION="${I2ANALYZE_VERSION%.*}"
   fi
+  local deploy_script_name
+  if [[ "${VERSION}" < "2.4.0" ]]; then
+    deploy_script_name="deploy.sh"
+  else
+    deploy_script_name="deploy"
+  fi
   local version_paths=("${CURRENT_PROJECT_PATH}/version.conf" "${CURRENT_PROJECT_PATH}/version")
   source_file_or_next version_paths
 
@@ -555,15 +576,101 @@ function run_upgrade_task() {
   if [[ "${VERBOSE}" == "true" ]]; then
     extra_args+=("-v")
   fi
+
+  # Create an empty string to store the summary
+  local summary=""
+
   for config_name in "${CONFIGS_ARRAY[@]}"; do
+    local backup_upgraded="false"
+    local config_summary=""
+
     stop_config_dev_containers
     stop_connector_containers
+
+    if wait_for_user_reply "Do you want to upgrade all backups" "false"; then
+      if [[ -d "${ANALYZE_CONTAINERS_ROOT_DIR}/backups/${config_name}" && -n $(ls -A "${ANALYZE_CONTAINERS_ROOT_DIR}/backups/${config_name}") ]]; then
+        # Create an empty array to store folder names
+        local backup_folders=()
+        # Use the find command to retrieve directory names and populate the array
+        while IFS= read -r -d '' folder; do
+          backup_folders+=("${folder}")
+        done < <(find "${ANALYZE_CONTAINERS_ROOT_DIR}/backups/${config_name}" -mindepth 1 -maxdepth 1 -type d -print0)
+        # Iterate over each backup folder
+        for backup in "${backup_folders[@]}"; do
+          backup_name=$(basename "${backup}")
+          if [[ "${backup_name}" == "global-upgrade" ]]; then
+            continue
+          fi
+          # restore previous deployment to the <backup_name>
+          rsync -aqprKl \
+            --delete \
+            "${PREVIOUS_PROJECT_PATH}/configs/.configs/${config_name}-previous/" \
+            "${PREVIOUS_PROJECT_PATH}/configs/${config_name}"
+          source_file_or_next version_paths
+          unset I2A_DEPENDENCIES_IMAGES_TAG
+          export ANALYZE_CONTAINERS_ROOT_DIR="${PREVIOUS_PROJECT_PATH}"
+          "${PREVIOUS_PROJECT_PATH}/scripts/${deploy_script_name}" -c "${config_name}" -t restore -b "${backup_name}" "${extra_args[@]}"
+          # upgrade previous deployment with the <backup_name>
+          export ANALYZE_CONTAINERS_ROOT_DIR="${CURRENT_PROJECT_PATH}"
+          rsync -aqprKl \
+            --delete \
+            "${CURRENT_PROJECT_PATH}/configs/.configs/${config_name}-current/" \
+            "${CURRENT_PROJECT_PATH}/configs/${config_name}"
+          source "${CURRENT_PROJECT_PATH}/version.conf"
+          "${CURRENT_PROJECT_PATH}/scripts/deploy" -c "${config_name}" -b "${backup_name}" "${extra_args[@]}"
+          "${CURRENT_PROJECT_PATH}/scripts/deploy" -c "${config_name}" -t backup -b "${backup_name}.tmp" "${extra_args[@]}"
+          "${CURRENT_PROJECT_PATH}/scripts/deploy" -c "${config_name}" -t clean "${extra_args[@]}"
+          # clean up
+          delete_folder_if_exists "${backup}"
+          mv "${backup}.tmp" "${backup}"
+          backup_upgraded="true"
+          config_summary+="  - \"${backup_name}\"\n"
+        done
+
+        # backup_upgraded could still be false
+        # if there was no other backups other then 'global-upgrade'
+        if [[ "${backup_upgraded}" == "true" ]]; then
+          stop_config_dev_containers
+          stop_connector_containers
+          # delete change-sets generated for upgrading previous backups
+          rsync -aqprKl \
+            --delete \
+            "${PREVIOUS_PROJECT_PATH}/configs/.configs/${config_name}-previous/" \
+            "${PREVIOUS_PROJECT_PATH}/configs/${config_name}"
+          # update variables to previous
+          source_file_or_next version_paths
+          unset I2A_DEPENDENCIES_IMAGES_TAG
+          export ANALYZE_CONTAINERS_ROOT_DIR="${PREVIOUS_PROJECT_PATH}"
+          # restore to global-upgrade
+          "${PREVIOUS_PROJECT_PATH}/scripts/${deploy_script_name}" -c "${config_name}" -t restore -b "global-upgrade" "${extra_args[@]}"
+          # update variables to current
+          export ANALYZE_CONTAINERS_ROOT_DIR="${CURRENT_PROJECT_PATH}"
+          source "${CURRENT_PROJECT_PATH}/version.conf"
+
+          rsync -aqprKl \
+            --delete \
+            "${CURRENT_PROJECT_PATH}/configs/.configs/${config_name}-current/" \
+            "${CURRENT_PROJECT_PATH}/configs/${config_name}"
+        fi
+      fi
+    fi
+
     "${ANALYZE_CONTAINERS_ROOT_DIR}/scripts/deploy" -c "${config_name}" "${extra_args[@]}"
+    summary+="---\n"
+    summary+="Config \"${config_name}\" successfully upgraded.\n"
+    if [[ "${backup_upgraded}" == "true" ]]; then
+      summary+="Associated backups successfully upgraded:\n"
+      summary+="${config_summary}"
+    fi
   done
 
   "${ANALYZE_CONTAINERS_ROOT_DIR}/scripts/configure-paths" -t upgrade -d
 
-  print "All configurations have been upgraded"
+  # Print the summary
+  summary+="---\n"
+  print "Upgrade summary"
+  echo -e "${summary}"
+
   if [[ "${same_version}" == "false" ]]; then
     wait_for_user_reply "To replace the contents of ${PREVIOUS_PROJECT_PATH} with the upgraded version, enter 'y'. To continue working with ${PREVIOUS_PROJECT_PATH} and ${CURRENT_PROJECT_PATH} at the same time, enter 'n' and rebuild the Dev Container."
   fi
@@ -573,7 +680,6 @@ function run_upgrade_task() {
   # cspell:ignore aqprKl
   rsync -aqprKl --exclude='dev' --delete "${ANALYZE_CONTAINERS_ROOT_DIR}/" "${PREVIOUS_PROJECT_PATH}"
 
-  echo "Done"
   echo "Please delete ${CURRENT_PROJECT_PATH} and open ${PREVIOUS_PROJECT_PATH} in a new VSCode window."
 }
 
@@ -652,8 +758,9 @@ function run_update_task() {
 
 function clean_deployment() {
   CONFIG_NAME="$1"
-
+  # shellcheck disable=SC1090
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/version.conf"
+  # shellcheck disable=SC1090
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/utils/variables.conf"
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internal_helper_variables.sh"
@@ -713,6 +820,36 @@ function run_stop_task() {
   echo "Done"
 }
 
+function remove_all_volumes() {
+  print "Removing all volumes"
+  VOLUME_NAME_PREFIX=("zk" "solr" "sqlserver" "db2server" "liberty" "i2a_data" "load_balancer")
+
+  for volume_prefix in "${VOLUME_NAME_PREFIX[@]}"; do
+    readarray -t volumes < <(docker volume ls -q --filter "name=^${volume_prefix}" --format "{{.Name}}")
+    if [[ "${#volumes[@]}" -ne 0 ]]; then
+      docker volume rm "${volumes[@]}"
+    fi
+  done
+}
+
+function run_renew_secrets_task() {
+  run_clean_task
+  delete_all_containers "true"
+  remove_all_volumes
+
+  extra_args=()
+  if [[ "${VERBOSE}" == "true" ]]; then
+    extra_args+=("-v")
+  fi
+  if [[ "${YES_FLAG}" == "true" ]]; then
+    extra_args+=("-y")
+  fi
+
+  print "Running generate-secrets"
+  "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/generate-secrets" -t clean "${extra_args[@]}"
+  "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/generate-secrets" "${extra_args[@]}"
+}
+
 function run_prune_task() {
   wait_for_user_reply "Are you sure you want to run the 'prune' task? This will permanently remove data and images from the deployment."
 
@@ -730,21 +867,13 @@ function run_prune_task() {
 
   delete_all_containers
 
-  print "Removing all volumes"
-  VOLUME_NAME_PREFIX=("zk" "solr" "sqlserver" "db2server" "liberty" "i2a_data" "load_balancer")
-
-  for volume_prefix in "${VOLUME_NAME_PREFIX[@]}"; do
-    readarray -t volumes < <(docker volume ls -q --filter "name=^${volume_prefix}" --format "{{.Name}}")
-    if [[ "${#volumes[@]}" -ne 0 ]]; then
-      docker volume rm "${volumes[@]}"
-    fi
-  done
+  remove_all_volumes
 
   print "Removing all images"
   IMAGE_NAME_PREFIX=("zookeeper_" "solr_" "sqlserver_" "db2_" "liberty_" "etlclient_" "i2a_tools_" "ha_proxy_" "example_connector" "i2connect_sdk")
 
   for image_prefix in "${IMAGE_NAME_PREFIX[@]}"; do
-    readarray -t images < <(docker image ls -q --filter "reference=${image_prefix}*" --format "{{.Repository}}:{{.Tag}}")
+    readarray -t images < <(docker image ls --filter "reference=${image_prefix}*" --format "{{.Repository}}:{{.Tag}}")
     if [[ "${#images[@]}" -ne 0 ]]; then
       docker rmi "${images[@]}"
     fi
@@ -952,7 +1081,15 @@ function create_symlinks() {
       fi
       ;;
     "i2a-extensions")
-      if [[ ! -f "${from_path}/pom.xml" ]]; then
+      no_jars="true"
+      for jar_file in "${from_path}/"*.jar; do
+        if [[ -f "${jar_file}" ]]; then
+          # We only need to check for the existence of one
+          no_jars="false"
+          break
+        fi
+      done
+      if [[ ! -f "${from_path}/pom.xml" && "${no_jars}" == "true" ]]; then
         print_warn "Shared extension '${asset_name}' configured incorrectly. Skipping."
         continue
       fi
@@ -1066,7 +1203,7 @@ not) | "\($root)/" + "\($path)") | .[]' <"${path_configuration_file}")
     if [[ ! -f "${schema_path}" ]]; then
       print_path_not_found_and_exit "${schema_path}"
     fi
-    referenced_gateway_schemas[$i]="${schema_path}"
+    referenced_gateway_schemas["${i}"]="${schema_path}"
     if [[ ! -f "${charting_schemes_path}" ]]; then
       print_path_not_found_and_exit "${charting_schemes_path}"
     fi
@@ -1154,6 +1291,9 @@ function run_task() {
     ;;
   link)
     run_link_task
+    ;;
+  renew-secrets)
+    run_renew_secrets_task
     ;;
   esac
 }

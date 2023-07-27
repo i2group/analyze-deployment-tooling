@@ -48,7 +48,7 @@ function get_secret() {
   validate_parameters 1 "$@"
 
   local secret="$1"
-  local filePath="${GENERATED_SECRETS_DIR}/${secret}"
+  local filePath="${LOCAL_GENERATED_SECRETS_DIR}/${secret}"
   if [[ ! -f "${filePath}" ]]; then
     print_error_and_exit "${filePath} does not exist"
   fi

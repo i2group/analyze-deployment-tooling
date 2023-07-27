@@ -445,6 +445,7 @@ function build_liberty_configured_image() {
   local liberty_configured_lib_folder_path="${liberty_configured_path}/lib"
   local liberty_configured_plugins_folder_path="${liberty_configured_path}/plugins"
   local liberty_configured_web_app_files_folder_path="${liberty_configured_path}/application/web-app-files"
+  local liberty_configured_web_dir_extensions_path="${liberty_configured_path}/web-dir-extensions"
   local extension_references_file="${LOCAL_USER_CONFIG_DIR}/extension-references.json"
   local extension_dependencies_path="${EXTENSIONS_DIR}/extension-dependencies.json"
   local plugin_references_file="${LOCAL_USER_CONFIG_DIR}/plugin-references.json"
@@ -455,6 +456,7 @@ function build_liberty_configured_image() {
   delete_folder_if_exists_and_create "${liberty_configured_lib_folder_path}"
   delete_folder_if_exists_and_create "${liberty_configured_plugins_folder_path}"
   delete_folder_if_exists_and_create "${liberty_configured_web_app_files_folder_path}"
+  delete_folder_if_exists_and_create "${liberty_configured_web_dir_extensions_path}"
 
   create_data_source_properties "${liberty_configured_classes_folder_path}"
 
@@ -463,17 +465,18 @@ function build_liberty_configured_image() {
   cp -r "${LOCAL_CONFIG_DIR}/fragments/opal-services-is/WEB-INF/classes/." "${liberty_configured_classes_folder_path}"
   cp -r "${LOCAL_CONFIG_DIR}/live/." "${liberty_configured_classes_folder_path}"
   cp -r "${LOCAL_CONFIG_DIR}/liberty/user.registry.xml" "${liberty_configured_path}/"
-  cp -r "${LOCAL_CONFIG_DIR}/fragments/common/privacyagreement.html" "${liberty_configured_path}/"
+
+  find "${LOCAL_CONFIG_DIR}/fragments/common" -maxdepth 1 -mindepth 1 ! -name WEB-INF -exec cp -r -t "${liberty_configured_web_dir_extensions_path}" {} \;
 
   # Copy extra configuration files into the classes directory
   find "${LOCAL_CONFIG_DIR}" -maxdepth 1 -type f \
-    ! -name privacyagreement.html \
     ! -name user.registry.xml \
     ! -name extension-references.json \
     ! -name plugin-references.json \
     ! -name connector-references.json \
     ! -name server.extensions.xml \
     ! -name server.extensions.dev.xml \
+    ! -name server.xml \
     ! -name web.xml \
     ! -name jvm.options \
     ! -name '*.bak' \
@@ -534,13 +537,16 @@ function build_liberty_configured_image() {
     cp -p "${PREVIOUS_PLUGINS_DIR}/${plugin}.sha512" "${PREVIOUS_CONFIGURATION_DIR}/plugins"
   done
 
-  # Copy server extensions
+  # Copy server files
+  if [[ -f "${LOCAL_CONFIG_DIR}/liberty/server.xml" ]]; then
+    cp -r "${LOCAL_CONFIG_DIR}/liberty/server.xml" "${liberty_configured_path}/"
+  fi
   if [[ -f "${LOCAL_CONFIG_DIR}/liberty/server.extensions.xml" ]]; then
     cp -r "${LOCAL_CONFIG_DIR}/liberty/server.extensions.xml" "${liberty_configured_path}/"
   else
     echo '<?xml version="1.0" encoding="UTF-8"?><server/>' >"${liberty_configured_path}/server.extensions.xml"
   fi
-  if [[ "${DEV_LIBERTY_SERVER_EXTENSIONS}" == "true" ]]; then
+  if [[ "${EXTENSIONS_DEV}" == "true" ]]; then
     cp -r "${LOCAL_CONFIG_DIR}/liberty/server.extensions.dev.xml" "${liberty_configured_path}/"
   else
     echo '<?xml version="1.0" encoding="UTF-8"?><server/>' >"${liberty_configured_path}/server.extensions.dev.xml"
@@ -583,6 +589,7 @@ function build_liberty_configured_image_for_pre_prod() {
   local liberty_configured_lib_folder_path="${liberty_configured_path}/lib"
   local liberty_configured_plugins_folder_path="${liberty_configured_path}/plugins"
   local liberty_configured_web_app_files_folder_path="${liberty_configured_path}/application/web-app-files"
+  local liberty_configured_web_dir_extensions_path="${liberty_configured_path}/web-dir-extensions"
 
   print "Building Liberty image"
 
@@ -590,6 +597,7 @@ function build_liberty_configured_image_for_pre_prod() {
   delete_folder_if_exists_and_create "${liberty_configured_lib_folder_path}"
   delete_folder_if_exists_and_create "${liberty_configured_plugins_folder_path}"
   delete_folder_if_exists_and_create "${liberty_configured_web_app_files_folder_path}"
+  delete_folder_if_exists_and_create "${liberty_configured_web_dir_extensions_path}"
 
   create_data_source_properties "${liberty_configured_classes_folder_path}"
 
@@ -604,7 +612,8 @@ function build_liberty_configured_image_for_pre_prod() {
   cp -r "${LOCAL_CONFIG_DIR}/live/." "${liberty_configured_classes_folder_path}"
   cp -r "${LOCAL_CONFIG_DIR}/liberty/server.extensions.xml" "${liberty_configured_path}/"
   cp -r "${LOCAL_CONFIG_DIR}/user.registry.xml" "${liberty_configured_path}/"
-  cp -r "${LOCAL_CONFIG_DIR}/fragments/common/privacyagreement.html" "${liberty_configured_path}/"
+
+  find "${LOCAL_CONFIG_DIR}/fragments/common" -maxdepth 1 -mindepth 1 ! -name WEB-INF -exec cp -r -t "${liberty_configured_web_dir_extensions_path}" {} \;
 
   # Copy catalog.json & web.xml specific to the DEPLOYMENT_PATTERN
   cp -pr "${TOOLKIT_APPLICATION_DIR}/target-mods/${CATALOGUE_TYPE}/catalog.json" "${liberty_configured_classes_folder_path}"

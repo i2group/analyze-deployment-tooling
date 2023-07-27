@@ -54,16 +54,23 @@ function configure_zk_for_solr_cluster() {
   run_solr_client_command bash -c "echo \"\${SECURITY_JSON}\" > /tmp/security.json && solr zk cp /tmp/security.json zk:/security.json -z ${ZK_HOST}"
 }
 
+function configure_solr_collection() {
+  local collection_name="$1"
+  local collection_type="${2:-$1}"
+  run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n "${collection_name}" -d /opt/configuration/solr/generated_config/"${collection_type}"
+}
+
 function configure_solr_collections() {
   print "Configuring Solr collections"
   run_i2_analyze_tool "/opt/i2-tools/scripts/generateSolrSchemas.sh"
-  run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n daod_index -d /opt/configuration/solr/generated_config/daod_index
-  run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n main_index -d /opt/configuration/solr/generated_config/main_index
-  run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n chart_index -d /opt/configuration/solr/generated_config/chart_index
-  run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n highlight_index -d /opt/configuration/solr/generated_config/highlight_index
-  run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n match_index1 -d /opt/configuration/solr/generated_config/match_index
-  run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n match_index2 -d /opt/configuration/solr/generated_config/match_index
-  run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n vq_index -d /opt/configuration/solr/generated_config/vq_index
+  configure_solr_collection "daod_index"
+  configure_solr_collection "main_index"
+  configure_solr_collection "chart_index"
+  configure_solr_collection "highlight_index"
+  configure_solr_collection "match_index1" "match_index"
+  configure_solr_collection "match_index2" "match_index"
+  configure_solr_collection "vq_index"
+  configure_solr_collection "recordshare_index"
 }
 
 function create_solr_cluster_policy() {
@@ -74,18 +81,33 @@ function create_solr_cluster_policy() {
   run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer -X POST -H Content-Type:text/xml -d '{ \"set-cluster-policy\": [ {\"replica\": \"<2\", \"shard\": \"#EACH\", \"host\": \"#EACH\"}]}' \"${SOLR1_BASE_URL}/api/cluster/autoscaling\""
 }
 
-function create_solr_collections() {
-  print "Creating Solr collections"
+function create_solr_collection() {
+  local collection_name="$1"
   # The curl command uses the container's local environment variables to obtain the SOLR_ADMIN_DIGEST_USERNAME and SOLR_ADMIN_DIGEST_PASSWORD.
   # To stop the variables being evaluated in this script, the variables are escaped using backslashes (\) and surrounded in double quotes (").
   # Any double quotes in the curl command are also escaped by a leading backslash.
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=main_index&collection.configName=main_index&numShards=1&maxShardsPerNode=4&replicationFactor=2\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=match_index1&collection.configName=match_index1&numShards=1&maxShardsPerNode=4&replicationFactor=2\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=match_index2&collection.configName=match_index2&numShards=1&maxShardsPerNode=4&replicationFactor=2\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=chart_index&collection.configName=chart_index&numShards=1&maxShardsPerNode=4&replicationFactor=2\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=daod_index&collection.configName=daod_index&numShards=1&maxShardsPerNode=4&replicationFactor=2\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=highlight_index&collection.configName=highlight_index&numShards=1&maxShardsPerNode=4&replicationFactor=2\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=vq_index&collection.configName=vq_index&numShards=1&maxShardsPerNode=4&replicationFactor=2\""
+  local expected_status=0
+  local response
+  local status
+
+  response=$(run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=${collection_name}&collection.configName=${collection_name}&numShards=1&maxShardsPerNode=4&replicationFactor=2\"")
+  echo "${response}"
+  status=$(echo "${response}" | jq -r '.responseHeader.status')
+  if [[ "${status}" != "${expected_status}" ]]; then
+    print_error_and_exit "Failed to create Solr Collection ${collection_name}"
+  fi
+}
+
+function create_solr_collections() {
+  print "Creating Solr collections"
+  create_solr_collection "main_index"
+  create_solr_collection "match_index1"
+  create_solr_collection "match_index2"
+  create_solr_collection "chart_index"
+  create_solr_collection "daod_index"
+  create_solr_collection "highlight_index"
+  create_solr_collection "vq_index"
+  create_solr_collection "recordshare_index"
 }
 
 function initialize_istore_database() {
@@ -166,7 +188,7 @@ function create_data_source_id() {
   create_dsid_properties_file "${dsid_properties_file_path}"
 }
 
-DEV_LIBERTY_SERVER_EXTENSIONS="true"
+EXTENSIONS_DEV="true"
 ###############################################################################
 # Cleaning up Docker resources                                                #
 ###############################################################################

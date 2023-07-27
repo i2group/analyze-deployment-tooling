@@ -8,14 +8,13 @@ set -e
 
 USAGE="""
 Usage:
-  create-change-set -e {pre-prod|config-dev} -t {upgrade|update} [-c <config_name>] [-n <change_set_number>]
-  create-change-set -e pre-prod -t upgrade [-n <change_set_number>]
-  create-change-set -e config-dev -t {upgrade|update} [-n <change_set_number>]
+  create-change-set -e pre-prod -t upgrade-release [-n <change_set_number>]
+  create-change-set -e config-dev -c <config_name> -t {upgrade-release|additive|release} [-n <change_set_number>]
   create-change-set -h
 
 Options:
-  -e {pre-prod}             Used to generate images for the pre-prod example.
-  -e {config-dev}           Used to generate images for the configuration development.
+  -e {pre-prod}             Used to generate change-set for the pre-prod example.
+  -e {config-dev}           Used to generate change-set for the configuration development environment.
   -c <config_name>          Name of the config to use.
   -t <type>                 The type of the config-set.
   -n <change_set_number>    The number of config-set to be created.
@@ -27,6 +26,10 @@ source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
 OPTIONS_FOR="createChangeSet"
 parse_arguments "$@"
 
+IS_SCHEMA_CHANGED="false"
+IS_SECURITY_SCHEMA_CHANGED="false"
+IS_DESTRUCTIVE_CHANGE="false"
+
 function source_common_variables_and_scripts() {
   # Load common functions
   source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/server_functions.sh"
@@ -36,6 +39,7 @@ function source_common_variables_and_scripts() {
   if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
     source "${ANALYZE_CONTAINERS_ROOT_DIR}/examples/pre-prod/utils/simulated_external_variables.sh"
   else
+    # shellcheck disable=SC1090
     source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/utils/variables.conf"
     source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulated_external_variables.sh"
   fi
@@ -46,8 +50,13 @@ function source_common_variables_and_scripts() {
 function next_change_set_number() {
   local next_change_set_number
   # shellcheck disable=SC2012
-  if [[ -d ${CHANGE_SETS_DIR} && $(ls -A "${CHANGE_SETS_DIR}") ]]; then
-    next_change_set_number=$(ls "${CHANGE_SETS_DIR}" | sort -V | tail -n 1 | sed 's/-.*//')
+  if [[ -d ${NEW_LOCAL_CHANGE_SETS_DIR} && $(ls -A "${NEW_LOCAL_CHANGE_SETS_DIR}") ]]; then
+    if [[ "${TYPE}" == "release" || "${TYPE}" == "upgrade-release" ]]; then
+      last_release_folder=$(find -L "${NEW_LOCAL_CHANGE_SETS_DIR}" -mindepth 1 -maxdepth 1 -type d \( -name "*release*" -o -name "*initial*" \) -printf '%f\n' | sort -V | tail -n 1)
+      next_change_set_number="${last_release_folder:0:1}"
+    else
+      next_change_set_number=$(ls "${NEW_LOCAL_CHANGE_SETS_DIR}" | sort -V | tail -n 1 | sed 's/-.*//')
+    fi
     ((next_change_set_number++))
     echo "${next_change_set_number}"
   else
@@ -62,32 +71,33 @@ function validate_arguments() {
   [[ "${ENVIRONMENT}" == "pre-prod" || "${ENVIRONMENT}" == "config-dev" ]] || print_usage 1
 
   if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
-    [[ "${TYPE}" == "upgrade" || "${TYPE}" == "update" ]] || print_usage 1
+    [[ "${TYPE}" == "upgrade-release" || "${TYPE}" == "additive" ]] || print_usage 1
   else
     if [[ -z "${CONFIG_NAME}" ]]; then
       print_usage 1
     fi
-    [[ "${TYPE}" == "upgrade" || "${TYPE}" == "update" ]] || print_usage 1
+    [[ "${TYPE}" == "upgrade-release" || "${TYPE}" == "additive" || "${TYPE}" == "initial" || "${TYPE}" == "release" ]] || print_usage 1
+  fi
+  if [[ "${TYPE}" == "initial" ]]; then
+    if [[ -n "$(find -L "${NEW_LOCAL_CHANGE_SETS_DIR}" -mindepth 1 -maxdepth 1 -type d \( -name "*release*" -o -name "*initial*" \))" ]]; then
+      print_info "A release change-set already exists. Skipping creating the initial change-set."
+      exit 0
+    fi
   fi
 }
 
-function set_environment_variables() {
-  local dir_name="${1:-${TYPE}}"
-
+function set_defaults() {
   if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
     CHANGE_SETS_DIR="${LOCAL_CHANGE_SETS_DIR}"
   else
     CHANGE_SETS_DIR="${LOCAL_USER_CHANGE_SETS_DIR}"
   fi
-
-  if [[ -z "${CHANGE_SET_NUMBER}" ]]; then
-    CHANGE_SET_NUMBER=$(next_change_set_number)
+  delete_folder_if_exists "${NEW_LOCAL_CHANGE_SETS_DIR}"
+  if [[ -d "${CHANGE_SETS_DIR}" ]]; then
+    cp -r "${CHANGE_SETS_DIR}" "${NEW_LOCAL_CHANGE_SETS_DIR}"
+  else
+    create_folder "${NEW_LOCAL_CHANGE_SETS_DIR}"
   fi
-
-  CHANGE_SET_DIR="${CHANGE_SETS_DIR}/${CHANGE_SET_NUMBER}-${dir_name}-$(date "+%Y.%m.%d-%H.%M")"
-
-  CONFIG_CHANGE_SET_DIR="${CHANGE_SET_DIR}/configuration"
-  DB_CHANGE_SET_DIR="${CHANGE_SET_DIR}/database-scripts/generated"
 
   if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
     CONFIG_DIR="${LOCAL_CONFIG_DIR}"
@@ -102,14 +112,32 @@ function set_environment_variables() {
     "InfoStoreNamesPostgres.properties"
     "DiscoSolrConfiguration.properties"
   )
+}
 
-  ALL_PATTERNS_CONFIG_DIR="${LOCAL_TOOLKIT_DIR}/examples/configurations/all-patterns/configuration"
+function set_change_set_type() {
+  local dir_name="${1:-${TYPE}}"
+
+  if [[ "${dir_name}" == "destructive" ]]; then
+    IS_DESTRUCTIVE_CHANGE="true"
+  fi
+
+  if [[ -z "${CHANGE_SET_NUMBER}" ]]; then
+    CHANGE_SET_NUMBER=$(next_change_set_number)
+  fi
+  CHANGE_SET_DATE_AND_TIME="$(date "+%Y.%m.%d-%H.%M")"
+  CHANGE_SET_NAME="${CHANGE_SET_NUMBER}-${dir_name}-${CHANGE_SET_DATE_AND_TIME}"
+  BACKUP_NAME="${CHANGE_SET_NAME}"
+  CHANGE_SET_DIR="${NEW_LOCAL_CHANGE_SETS_DIR}/${CHANGE_SET_NAME}"
+
+  CONFIG_CHANGE_SET_DIR="${CHANGE_SET_DIR}/configuration"
+  DB_CHANGE_SET_DIR="${CHANGE_SET_DIR}/database-scripts/generated"
 }
 
 function set_supported_versions() {
   if [[ "${ENVIRONMENT}" == "pre-prod" ]]; then
     source "${LOCAL_CONFIG_DIR}/version.conf"
   else
+    # shellcheck disable=SC1090
     source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/version.conf"
   fi
   CONFIG_SUPPORTED_I2ANALYZE_VERSION="${SUPPORTED_I2ANALYZE_VERSION}"
@@ -152,9 +180,11 @@ function create_upgrade_change_set() {
   else
     create_change_set_version_file
   fi
+
+  delete_non_release_change_sets
 }
 
-function create_update_change_set() {
+function create_additive_change_set() {
   identify_type_of_change_set
   create_update_security_schema_change_set
   create_update_schema_change_set
@@ -162,19 +192,118 @@ function create_update_change_set() {
 
 function identify_type_of_change_set() {
   if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
-    if ! run_i2_analyze_tool "/opt/i2-tools/scripts/validateSchemaAndSecuritySchema.sh" >'/tmp/result_validate_security_schema'; then
-      if grep -q 'ERROR: The new Schema file is not valid, see the summary for more details.' '/tmp/result_validate_security_schema'; then
-        set_environment_variables "reset"
+    print "Validating the schema and security schema"
+    if output=$(run_i2_analyze_tool "/opt/i2-tools/scripts/validateSchemaAndSecuritySchema.sh"); then
+      if echo "${output}" | grep -qE "ADDED ITEM TYPES|MODIFIED ITEM TYPES"; then
+        print_info "schema.xml has changed"
+        IS_SCHEMA_CHANGED="true"
+      else
+        print_info "schema.xml is unchanged"
       fi
-    elif ! run_i2_analyze_tool "/opt/i2-tools/scripts/updateSecuritySchema.sh" >'/tmp/result_update_security_schema'; then
-      if grep -q 'ILLEGAL STATE: The new security schema has incompatible differences with the existing one' '/tmp/result_update_security_schema'; then
-        set_environment_variables "reset"
+
+      if echo "${output}" | grep -qE "security schema is different"; then
+        IS_SECURITY_SCHEMA_CHANGED="true"
+        print_info "security-schema.xml has changed"
+      else
+        print_info "security-schema.xml is unchanged"
       fi
     else
-      set_environment_variables "update"
+      if echo "${output}" | grep -qE "VALIDATION ERROR:"; then
+        echo "Response from i2 Analyze Tool: ${output}"
+        print_error_and_exit "Validation errors detected, please review the above message(s)"
+      elif echo "${output}" | grep -q 'ILLEGAL STATE: The new security schema has incompatible differences with the existing one'; then
+        print_info "destructive security-schema.xml detected"
+        set_change_set_type "destructive"
+      else
+        print_info "destructive schema.xml detected"
+        set_change_set_type "destructive"
+      fi
     fi
+
     print "Creating Change-Set: ${CHANGE_SET_DIR}"
   fi
+}
+
+function delete_non_release_change_sets() {
+  local folders_to_delete
+  folders_to_delete=$(find -L "${NEW_LOCAL_CHANGE_SETS_DIR}" -mindepth 1 -maxdepth 1 -type d ! -name "*release*")
+
+  if [[ -n "${folders_to_delete}" ]]; then
+    print_info "Intermediate change-sets to be deleted:"
+    print_info "${folders_to_delete[@]}"
+    while IFS= read -r folder; do
+      rm -rf "${folder}"
+    done <<<"$folders_to_delete"
+  fi
+}
+
+function run_db_script() {
+  local script_location="$1"
+  case "${DB_DIALECT}" in
+  db2)
+    echo "db2 -tsf ${script_location}"
+    ;;
+  sqlserver)
+    echo "${SQLCMD} ${SQLCMD_FLAGS} -S \"\${DB_SERVER},\${DB_PORT}\" -U \"\${DB_USERNAME}\" -P \"\${DB_PASSWORD}\" -r -d ${DB_NAME} -i ${script_location} -I"
+    ;;
+  postgres)
+    echo "${SQLCMD} ${SQLCMD_FLAGS} -h \"\${DB_SERVER}\" -p \"\${DB_PORT}\" -f ${script_location}"
+    ;;
+  esac
+}
+
+function generate_rapid_script() {
+  local change_type="$1" # Allowed values: "update" | "new" | "upgrade"
+
+  if [[ ! -d "${DB_CHANGE_SET_DIR}" ]]; then
+    print_info "No database changes. Skipping run-database-scripts generation"
+    return
+  fi
+
+  local rapid_script_file="${DB_CHANGE_SET_DIR}/run-database-scripts"
+  cp "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/templates/run-database-scripts" "${rapid_script_file}"
+  local script_list=""
+  local tmp_script_file="/tmp/db-scripts"
+
+  case "${change_type}" in
+  update) ;&
+    # Fallthrough
+  upgrade)
+    if [[ "${DB_DIALECT}" == "db2" ]]; then
+      script_list+="\ndb2 \"CATALOG TCPIP node \"${DB_NODE}\" REMOTE \\\"\${DB_SERVER}\\\" SERVER \\\"\${DB_PORT}\\\"\"\n\
+        db2 \"CATALOG DATABASE \"${DB_NAME}\" at node \"${DB_NODE}\"\"\n\
+        db2 \"CONNECT TO \"${DB_NAME}\" USER \\\"\${DB_USERNAME}\\\" USING \\\"\${DB_PASSWORD}\\\"\""
+    elif [[ "${DB_DIALECT}" == "postgres" ]]; then
+      script_list+="\necho \"\${DB_PASSWORD}\" | psql -h \"\${DB_SERVER}\" -p \"\${DB_PORT}\" -U \"\${DB_USERNAME}\""
+    fi
+    while read -r file_name; do
+      print_info "Add database file: $file_name"
+      script_list+="\n$(run_db_script "${file_name#"${DB_CHANGE_SET_DIR}/"}")"
+    done <<<"$(find -L "${DB_CHANGE_SET_DIR}/${change_type}" -type f | sort)"
+    ;;
+  new)
+    if [[ "${DB_DIALECT}" == "postgres" ]]; then
+      # shellcheck disable=SC2028
+      echo "\necho \"\${DB_PASSWORD}\" | psql -h \"\${DB_SERVER}\" -p \"\${DB_PORT}\" -U \"\${DB_USERNAME}\"" >>"${tmp_script_file}"
+    fi
+    sed -n '/set -e/,$p' "${ANALYZE_CONTAINERS_ROOT_DIR}/images/i2a_tools/tools/i2-tools/scripts/database-templates/${DB_DIALECT}/runDatabaseCreationScripts.sh" >>"${tmp_script_file}"
+    sed -n '/set -e/,$p' "${ANALYZE_CONTAINERS_ROOT_DIR}/images/i2a_tools/tools/i2-tools/scripts/database-templates/${DB_DIALECT}/runStaticScripts.sh" >>"${tmp_script_file}"
+    sed -n '/set -e/,$p' "${ANALYZE_CONTAINERS_ROOT_DIR}/images/i2a_tools/tools/i2-tools/scripts/database-templates/${DB_DIALECT}/runDynamicScripts.sh" >>"${tmp_script_file}"
+
+    sed -i "s|\${GENERATED_DIR}/||g" "${tmp_script_file}"
+    sed -i "s|\${SQLCMD}|${SQLCMD_EXE}|g" "${tmp_script_file}" # We don't want the full path since it could be different
+    sed -i "s|\${SQLCMD_FLAGS}|${SQLCMD_FLAGS}|g" "${tmp_script_file}"
+    sed -i "s|\${DB_NAME}|${DB_NAME}|g" "${tmp_script_file}"
+    sed -i "s|\${DB_NODE}|${DB_NODE}|g" "${tmp_script_file}"
+
+    script_list=$(cat "${tmp_script_file}")
+    ;;
+  esac
+
+  awk -v r="$script_list" '{gsub(/### HERE ###/,r)}1' "${rapid_script_file}" >"${tmp_script_file}"
+  mv "${tmp_script_file}" "${rapid_script_file}"
+  chmod +x "${rapid_script_file}"
+  print_info "Script ${rapid_script_file} generated."
 }
 
 function create_update_schema_change_set() {
@@ -182,34 +311,22 @@ function create_update_schema_change_set() {
   local db_update_dir="${DB_CHANGE_SET_DIR}/update"
 
   if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
-    print "Validating the schema"
-    if ! run_i2_analyze_tool "/opt/i2-tools/scripts/validateSchemaAndSecuritySchema.sh" >'/tmp/result_validate_security_schema'; then
-      echo "[INFO] Response from i2 Analyze Tool: $(cat '/tmp/result_validate_security_schema')"
-      # check i2 Analyze Tool for output indicating a Schema change has occurred, if so then prompt user for destructive
-      # rebuild of ISTORE database.
-      #
-      # Note the error message from i2 Analyze is currently not great and incorrectly indicates that the 'Schema file
-      # is not valid', what it really means is its not valid for the current deployment and thus must be re-deployed via
-      # a destructive change to the ISTORE database.
-      if grep -q 'ERROR: The new Schema file is not valid, see the summary for more details.' '/tmp/result_validate_security_schema'; then
-        echo "[WARN] Destructive Schema change(s) detected"
+    if [[ "${IS_DESTRUCTIVE_CHANGE}" == "true" ]]; then
+      print_info "Destructive Schema change(s) detected"
 
-        run_i2_analyze_tool "/opt/i2-tools/scripts/generateInfoStoreToolScripts.sh"
-        run_i2_analyze_tool "/opt/i2-tools/scripts/generateStaticInfoStoreCreationScripts.sh"
-        run_i2_analyze_tool "/opt/i2-tools/scripts/generateDynamicInfoStoreCreationScripts.sh"
+      run_i2_analyze_tool "/opt/i2-tools/scripts/generateInfoStoreToolScripts.sh"
+      run_i2_analyze_tool "/opt/i2-tools/scripts/generateStaticInfoStoreCreationScripts.sh"
+      run_i2_analyze_tool "/opt/i2-tools/scripts/generateDynamicInfoStoreCreationScripts.sh"
 
-        create_folder "${DB_CHANGE_SET_DIR}/static"
-        create_folder "${DB_CHANGE_SET_DIR}/dynamic"
+      create_folder "${DB_CHANGE_SET_DIR}/static"
+      create_folder "${DB_CHANGE_SET_DIR}/dynamic"
 
-        cp -Rp "${LOCAL_GENERATED_DIR}/static/." "${DB_CHANGE_SET_DIR}/static"
-        cp -Rp "${LOCAL_GENERATED_DIR}/dynamic/." "${DB_CHANGE_SET_DIR}/dynamic"
+      cp -Rp "${LOCAL_GENERATED_DIR}/static/." "${DB_CHANGE_SET_DIR}/static"
+      cp -Rp "${LOCAL_GENERATED_DIR}/dynamic/." "${DB_CHANGE_SET_DIR}/dynamic"
 
-        create_folder "${CONFIG_CHANGE_SET_DIR}"
-        cp "${CONFIG_DIR}/schema.xml" "${CONFIG_CHANGE_SET_DIR}"
-      else
-        print_error_and_exit "[INFO] Response from i2 Analyze Tool: $(cat '/tmp/result_validate_security_schema')"
-      fi
-    else
+      create_folder "${CONFIG_CHANGE_SET_DIR}"
+      cp "${CONFIG_DIR}/schema.xml" "${CONFIG_CHANGE_SET_DIR}"
+    elif [[ "${IS_SCHEMA_CHANGED}" == "true" ]]; then
       delete_folder_if_exists "${LOCAL_GENERATED_DIR}/update"
 
       print "Generating update schema scripts"
@@ -218,7 +335,8 @@ function create_update_schema_change_set() {
         if [ "$(ls -A "${LOCAL_GENERATED_DIR}/update")" ]; then
           create_folder "${db_update_dir}"
           cp "${LOCAL_GENERATED_DIR}/update/"* "${db_update_dir}"
-          for file in "${db_update_dir}/"*; do
+          # Clean empty files
+          for file in "${DB_CHANGE_SET_DIR}/update/"*; do
             if [[ ! -s "${file}" ]]; then
               rm "${file}"
             fi
@@ -226,10 +344,10 @@ function create_update_schema_change_set() {
           create_folder "${CONFIG_CHANGE_SET_DIR}"
           cp "${CONFIG_DIR}/schema.xml" "${CONFIG_CHANGE_SET_DIR}"
         else
-          print_info "No files present in update schema scripts folder"
+          print_info "IS_META updated. No 'update' files generated"
         fi
       else
-        print_info "Update schema scripts folder doesn't exist"
+        print_info "IS_META updated. No 'update' files generated"
       fi
     fi
   fi
@@ -237,47 +355,135 @@ function create_update_schema_change_set() {
 
 function create_update_security_schema_change_set() {
   if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
-    # TODO: Fix the code once the task CIR-528 is complete.
-    # Use tool to validate the security schema
-
-    if ! run_i2_analyze_tool "/opt/i2-tools/scripts/updateSecuritySchema.sh" >'/tmp/result_update_security_schema'; then
-      # check i2 Analyze Tool for output indicating a Security Schema change has occurred
-      if grep -q 'ILLEGAL STATE: The new security schema has incompatible differences with the existing one' '/tmp/result_update_security_schema'; then
-        echo "[WARN] Destructive Security Schema change(s) detected"
-        create_folder "${CONFIG_CHANGE_SET_DIR}"
-        cp "${CONFIG_DIR}/security-schema.xml" "${CONFIG_CHANGE_SET_DIR}"
-      else
-        print_error_and_exit "[INFO] Response from i2 Analyze Tool: $(cat '/tmp/result_update_security_schema')"
-      fi
-    else
-      # Temporary fix to identify non-destructive changes to the security schema
-      # Fix once the task CIR-528 is complete
-      if [ "$(docker container inspect -f '{{.State.Running}}' "${LIBERTY1_CONTAINER_NAME}")" == "true" ]; then
-        docker cp "${LIBERTY1_CONTAINER_NAME}:/opt/ol/wlp/usr/servers/defaultServer/apps/opal-services.war/WEB-INF/classes/security-schema.xml" \
-          '/tmp/security-schema.xml' >/dev/null 2>&1
-        cp "${CONFIG_DIR}/security-schema.xml" '/tmp/security-schema-local.xml'
-        xmlstarlet edit -L -d "/tns:SecuritySchema/SecurityPermissions/GroupPermissions[last()]" '/tmp/security-schema.xml'
-        xmlstarlet edit -L -O '/tmp/security-schema.xml'
-        xmlstarlet edit -L -O '/tmp/security-schema-local.xml'
-
-        result="$(cmp --silent '/tmp/security-schema-local.xml' '/tmp/security-schema.xml' && echo "true" || echo "false")"
-        if [[ "${result}" == "false" ]]; then
-          print_info "Update changes detected in the i2 Analyze security schema"
-          create_folder "${CONFIG_CHANGE_SET_DIR}"
-          cp "${CONFIG_DIR}/security-schema.xml" "${CONFIG_CHANGE_SET_DIR}"
-        else
-          print_info "No changes detected in the i2 Analyze security schema"
-        fi
-      fi
+    if [[ "${IS_DESTRUCTIVE_CHANGE}" == "true" || "${IS_SECURITY_SCHEMA_CHANGED}" == "true" ]]; then
+      create_folder "${CONFIG_CHANGE_SET_DIR}"
+      cp "${CONFIG_DIR}/security-schema.xml" "${CONFIG_CHANGE_SET_DIR}"
     fi
   fi
 }
 
+function create_initial_change_set() {
+  print "Creating change-set $(basename "${CHANGE_SET_DIR}")"
+  create_folder "${CONFIG_CHANGE_SET_DIR}"
+
+  find -L "${LOCAL_USER_CONFIG_DIR}" -maxdepth 1 -type f \
+    \( -name "schema.xml" -o -name "security-schema.xml" \) \
+    -exec cp -t "${CONFIG_CHANGE_SET_DIR}" {} \;
+
+  if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
+    create_folder "${DB_CHANGE_SET_DIR}/static"
+    create_folder "${DB_CHANGE_SET_DIR}/dynamic"
+
+    cp -Rp "${LOCAL_GENERATED_DIR}/static/." "${DB_CHANGE_SET_DIR}/static"
+    cp -Rp "${LOCAL_GENERATED_DIR}/dynamic/." "${DB_CHANGE_SET_DIR}/dynamic"
+  fi
+}
+
+function generate_new_release_db_scripts() {
+  run_i2_analyze_tool "/opt/i2-tools/scripts/generateInfoStoreToolScripts.sh"
+  run_i2_analyze_tool "/opt/i2-tools/scripts/generateStaticInfoStoreCreationScripts.sh"
+  run_i2_analyze_tool "/opt/i2-tools/scripts/generateDynamicInfoStoreCreationScripts.sh"
+  create_folder "${DB_CHANGE_SET_DIR}/static"
+  create_folder "${DB_CHANGE_SET_DIR}/dynamic"
+  cp -Rp "${LOCAL_GENERATED_DIR}/static/." "${DB_CHANGE_SET_DIR}/static"
+  cp -Rp "${LOCAL_GENERATED_DIR}/dynamic/." "${DB_CHANGE_SET_DIR}/dynamic"
+}
+
+function delete_all_change_sets_and_their_backups() {
+  local folders_to_delete
+  folders_to_delete=$(find -L "${NEW_LOCAL_CHANGE_SETS_DIR}" -mindepth 1 -maxdepth 1 -type d)
+  if [[ -n "${folders_to_delete}" ]]; then
+    print_info "Change-sets to be deleted:"
+    print_info "${folders_to_delete[@]}"
+    while IFS= read -r folder; do
+      folder_name="$(basename "${folder}")"
+      rm -rf "${folder}"
+      rm -rf "${BACKUP_DIR:?}/${folder_name}"
+    done <<<"$folders_to_delete"
+  fi
+}
+
+function create_release_change_set() {
+  set_change_set_type "release"
+  change_set_name="$(basename "${CHANGE_SET_DIR}")"
+
+  print "Creating change-set ${change_set_name}"
+
+  if [[ "${change_set_name}" == "1-release"* ]]; then
+    generate_new_release_db_scripts
+  else
+    last_release_folder=$(find -L "${NEW_LOCAL_CHANGE_SETS_DIR}" -mindepth 1 -maxdepth 1 -type d \( -name "*release*" -o -name "*initial*" \) -printf '%f\n' | sort -V | tail -n 1)
+    last_release_number="${last_release_folder:0:1}"
+
+    last_change_set_folder=$(find -L "${NEW_LOCAL_CHANGE_SETS_DIR}" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -V | tail -n 1)
+    last_change_set_number="${last_change_set_folder:0:1}"
+
+    if [[ "${last_change_set_number}" == "${last_release_number}" ]]; then
+      print_error_and_exit "No intermediate change-set found after last release change-set. Cannot create '${change_set_name}'."
+    fi
+
+    current_change_set_number="${last_release_number}"
+    ((current_change_set_number++))
+
+    while [[ $current_change_set_number -le $last_change_set_number ]]; do
+      change_set_path="$(find -L "${NEW_LOCAL_CHANGE_SETS_DIR}" -mindepth 1 -maxdepth 1 -type d -regex ".*/${current_change_set_number}-.*")"
+      change_set_name="$(basename "${change_set_path}")"
+      if [[ "${change_set_name}" == *"-destructive-"* ]]; then
+        echo "A destructive change-set has been detected after the last release change-set. Destructive change-set: ${change_set_name}"
+        wait_for_user_reply "Do you want to delete ALL existing change-sets and create a first release ('1-release') change-set?"
+        delete_all_change_sets_and_their_backups
+        unset CHANGE_SET_NUMBER
+        set_change_set_type "release"
+        generate_new_release_db_scripts
+      elif [[ "${change_set_name}" == *"-additive-"* ]]; then
+        if [[ ! -d "${change_set_path}/database-scripts/generated/update" ]]; then
+          print_warn "${change_set_path} doesn't have 'update' scripts. Ignoring..."
+          ((current_change_set_number++))
+          continue
+        fi
+        create_folder "${DB_CHANGE_SET_DIR}/update"
+        for file in "${change_set_path}/database-scripts/generated/update/"*; do
+          file_name="$(basename "${file}")"
+          cat "${file}" >>"${DB_CHANGE_SET_DIR}/update/${file_name}"
+        done
+      else
+        print_error_and_exit "Unexpected change-set name ${change_set_name}. Please delete the specified change-set and rerun the task."
+      fi
+      ((current_change_set_number++))
+    done
+  fi
+
+  # config
+  create_folder "${CONFIG_CHANGE_SET_DIR}"
+  find -L "${LOCAL_USER_CONFIG_DIR}" -maxdepth 1 -type f \
+    \( -name "schema.xml" -o -name "security-schema.xml" \) \
+    -exec cp -t "${CONFIG_CHANGE_SET_DIR}" {} \;
+
+  create_folder "${BACKUP_DIR}/${BACKUP_NAME}"
+  backup_database
+
+  delete_non_release_change_sets
+  print_success "Release change-set created in ${CHANGE_SET_DIR}"
+}
+
 function create_change_set() {
-  if [[ "${TYPE}" == "upgrade" ]]; then
+  if [[ "${TYPE}" == "upgrade-release" ]]; then
     create_upgrade_change_set
-  elif [[ "${TYPE}" == "update" ]]; then
-    create_update_change_set
+  elif [[ "${TYPE}" == "additive" ]]; then
+    create_additive_change_set
+  elif [[ "${TYPE}" == "initial" ]]; then
+    create_initial_change_set
+  elif [[ "${TYPE}" == "release" ]]; then
+    create_release_change_set
+  fi
+
+  # Generate script if initial, first release or destructive
+  if [[ "${CHANGE_SET_NUMBER}" == "0" || ("${CHANGE_SET_NUMBER}" == "1" && "${TYPE}" == "release") || "${IS_DESTRUCTIVE_CHANGE}" == "true" ]]; then
+    generate_rapid_script "new"
+  elif [[ "${TYPE}" == "upgrade-release" ]]; then
+    generate_rapid_script "upgrade"
+  else
+    generate_rapid_script "update"
   fi
 }
 
@@ -289,7 +495,7 @@ function create_database_upgrade_change_set() {
   run_i2_analyze_tool "/opt/i2-tools/scripts/generateStaticInfoStoreCreationScripts.sh"
   run_i2_analyze_tool "/opt/i2-tools/scripts/generateDynamicInfoStoreCreationScripts.sh"
 
-  find "${LOCAL_GENERATED_DIR}/static/" -maxdepth 1 -type f -exec cp {} "${LOCAL_GENERATED_DIR}" \;
+  find -L "${LOCAL_GENERATED_DIR}/static/" -maxdepth 1 -type f -exec cp {} "${LOCAL_GENERATED_DIR}" \;
   mkdir -p "${LOCAL_GENERATED_DIR}/upgrade"
   cp "${LOCAL_GENERATED_DIR}/static/2020-create-deletion-by-rule-routines.sql" "${LOCAL_GENERATED_DIR}/upgrade"
 
@@ -336,7 +542,7 @@ function create_configuration_upgrade_change_set() {
     cp -Rp "${PRE_PROD_DIR}/.configuration_old/." "${CONFIG_DIR}"
 
     for file in "${FILES_TO_UPGRADE[@]}"; do
-      filepath=$(find "${CONFIG_DIR}" -type f -name "${file}" -print0 | xargs -0)
+      filepath=$(find -L "${CONFIG_DIR}" -type f -name "${file}" -print0 | xargs -0)
 
       checksumPrevious=$(shasum "${PRE_PROD_DIR}/.configuration_new/${filepath//${CONFIG_DIR}/}" | cut -d ' ' -f 1)
       checksumCurrent=$(shasum "${filepath}" | cut -d ' ' -f 1)
@@ -415,10 +621,10 @@ function create_configuration_upgrade_change_set() {
     fi
   done
 
-  if [[ $(find "${CONFIG_DIR}/solr/.generated_config" -type f -print0 | xargs -0) ]]; then
+  if [[ $(find -L "${CONFIG_DIR}/solr/.generated_config" -type f -print0 | xargs -0) ]]; then
     create_folder "${CONFIG_CHANGE_SET_DIR}/solr/generated_config"
     cp -Rp "${CONFIG_DIR}/solr/.generated_config/." "${CONFIG_CHANGE_SET_DIR}/solr/generated_config"
-    find "${CONFIG_DIR}/solr/.generated_config/" -empty -type d -delete
+    find -L "${CONFIG_DIR}/solr/.generated_config/" -empty -type d -delete
   else
     echo "Solr configuration is already at the latest version"
   fi
@@ -428,8 +634,9 @@ function create_configuration_upgrade_change_set() {
 function main() {
   parse_arguments "$@"
   source_common_variables_and_scripts
+  set_defaults # This should always be called before validate_arguments because the new change set folder needs creating
   validate_arguments
-  set_environment_variables
+  set_change_set_type
   create_change_set
 }
 

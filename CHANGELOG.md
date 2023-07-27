@@ -11,6 +11,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
 
+## 2.6.0 - 24/07/2023
+
+### Added
+
+* Updated for compatibility with i2 Analyze 4.4.2
+* Ability to add additional web content to the Liberty server.
+* Support for upgrading all previous backups during the upgrade process.
+
+### Changed
+
+* Update SQL Server version to 2022. *Important: This requires JDBC driver version 12.2.0 (minimum)*
+* Improved database configuration UX for change sets.
+
+### Fixed
+
+* Incorrect warnings for i2 Connect server version validation are no longer displayed.
+* A config that includes `overrideHttpAuthMethod="CLIENT_CERT"` in the `server.extensions.xml` can be deployed successfully.
+* Fixed JDBC driver version validation for `create-environment` script
+
+[2.6.0]: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.6.0><!-- markdown-link-check-enable -->
+
 ## 2.5.3 - 07/06/2023
 
 ### Added
@@ -27,7 +48,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * The pre-prod example deployment now backs up the match_index2
 * Versions are correctly resolved in documentation
 
-[2.5.3]: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.5.3><!-- markdown-link-check-enable -->
+[2.5.3]: <https://github.com/i2group/analyze-containers/tree/v2.5.3>
 
 ## 2.5.2 - 31/03/2023
 

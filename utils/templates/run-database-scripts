@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022-2023)
+#
+# SPDX short identifier: MIT
+
+set -e
+
+USAGE="""
+Usage:
+  run-database-scripts [-s <db-server>] [-p <db-port>] [-U <db-username>] [-P <db-password>]
+  run-database-scripts -h
+
+Options:
+  -s <db-server>            The hostname of the database server. Alternative env var: DB_SERVER.
+  -p <db-port>              The port number of the database server. Alternative env var: DB_PORT.
+  -U <db-username>          The username of the DBA for the database server. Alternative env var: DB_USERNAME.
+  -P <db-password>          The password of the DBA for the database server. Alternative env var: DB_PASSWORD.
+  -v                        Verbose output.
+  -h                        Display the help.
+"""
+
+function usage() {
+  echo "${USAGE}" >&2
+  exit 1
+}
+
+function print_with_code() {
+  local msg="$1"
+  local code="$2"
+
+  printf "\n\e[%s%s\n" "$code" "$msg" >&2
+  printf "\e[0m" >&2
+}
+
+function print_error() {
+  print_with_code "ERROR: $1" "31m"
+}
+
+function print_error_and_exit() {
+  print_error "$1"
+  exit 1
+}
+
+function parse_arguments() {
+  while getopts ":s:p:U:P:h" flag; do
+    case "${flag}" in
+    s)
+      DB_SERVER="${OPTARG}"
+      ;;
+    p)
+      DB_PORT="${OPTARG}"
+      ;;
+    U)
+      DB_USERNAME="${OPTARG}"
+      ;;
+    P)
+      DB_PASSWORD="${OPTARG}"
+      ;;
+    h)
+      usage
+      ;;
+    \?)
+      usage
+      ;;
+    :)
+      echo "Invalid option: ${OPTARG} requires an argument"
+      ;;
+    esac
+  done
+}
+
+function validate_arguments() {
+  if [[ -z "${DB_SERVER}" ]]; then
+    print_error_and_exit "Missing -s flag. See help for options (-h)."
+  fi
+  if [[ -z "${DB_PORT}" ]]; then
+    print_error_and_exit "Missing -p flag. See help for options (-h)."
+  fi
+  if [[ -z "${DB_USERNAME}" ]]; then
+    print_error_and_exit "Missing -U flag. See help for options (-h)."
+  fi
+  if [[ -z "${DB_PASSWORD}" ]]; then
+    print_error_and_exit "Missing -P flag. See help for options (-h)."
+  fi
+}
+
+# Executable main code
+parse_arguments "$@"
+validate_arguments
+### HERE ###

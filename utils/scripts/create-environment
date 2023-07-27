@@ -162,12 +162,12 @@ function create_liberty_static_application() {
 
   # Copy jdbc-drivers and verify they exist in the liberty image folder
   cp -pr "${PRE_REQS_DIR}/jdbc-drivers/." "${LIBERTY_CONFIG_APP}/third-party-dependencies/resources/jdbc/"
-  if [ "$(ls -A "${LIBERTY_CONFIG_APP}/third-party-dependencies/resources/jdbc/mssql-jdbc-9."*".jre11.jar")" ]; then
+  if [ "$(ls -A "${LIBERTY_CONFIG_APP}/third-party-dependencies/resources/jdbc/mssql-jdbc-"*".jre11.jar")" ]; then
     print_info "${LIBERTY_CONFIG_APP}/third-party-dependencies/resources/jdbc has the mssql jdbc drivers"
-  elif [ "$(ls -A "${LIBERTY_CONFIG_APP}/third-party-dependencies/resources/jdbc/postgresql-42."*".jar")" ]; then
+  elif [ "$(ls -A "${LIBERTY_CONFIG_APP}/third-party-dependencies/resources/jdbc/postgresql-"*".jar")" ]; then
     print_info "${LIBERTY_CONFIG_APP}/third-party-dependencies/resources/jdbc has the postgres jdbc drivers"
   else
-    print_error_and_exit "${PRE_REQS_DIR}/jdbc-drivers does NOT have the correct mssql or postgres jdbc drivers, expecting: mssql-jdbc-9.*.jre11.jar or postgresql-42.*.jar"
+    print_error_and_exit "${PRE_REQS_DIR}/jdbc-drivers does NOT have the correct mssql or postgres jdbc drivers, expecting: mssql-jdbc-*.jre11.jar or postgresql-*.jar"
   fi
 }
 
@@ -223,16 +223,13 @@ function main() {
   ###############################################################################
   populate_image_folder_with_tools_resources "i2a_tools"
   populate_image_folder_with_tools_resources "sql_client"
-  # TODO: Remove after upgrade to 4.4.2
-  # - Start -
-  cp -r "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/overrides/sqlserver/." "${IMAGES_DIR}/i2a_tools/tools/i2-tools/scripts/database-templates/sqlserver"
-  cp -r "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/overrides/sqlserver/." "${IMAGES_DIR}/sql_client/tools/i2-tools/scripts/database-templates/sqlserver"
-  # - End -
-
+  populate_image_folder_with_tools_resources "postgres_client"
   if [[ "${DEV_DB2_BUILD}" == "true" ]]; then
     populate_image_folder_with_tools_resources "db2_client"
   fi
-  populate_image_folder_with_tools_resources "postgres_client"
+
+  # Copy changelog.json to correct folder
+  cp "${LOCAL_TOOLKIT_DIR}/scripts/changelog.json" "${IMAGES_DIR}/i2a_tools"
 
   ###############################################################################
   # Creating Example connector application                                      #

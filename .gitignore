@@ -4,6 +4,7 @@ examples/pre-prod/configuration
 examples/pre-prod/database-scripts
 examples/pre-prod/deploy-test.sh
 examples/pre-prod/walkthroughs/change-management/clearDataWalkthrough-test.sh
+examples/pre-prod/**/change-sets/**
 
 examples/aws/configuration
 examples/aws/database-scripts
@@ -13,11 +14,12 @@ images/liberty_ubi_combined/application/**
 images/liberty_ubi_combined/classes/**
 images/liberty_ubi_combined/lib/**
 images/liberty_ubi_combined/plugins/**
+images/liberty_ubi_combined/server.xml
 images/liberty_ubi_combined/server.extensions.xml
 images/liberty_ubi_combined/server.extensions.dev.xml
 images/liberty_ubi_combined/jvm.options
 images/liberty_ubi_combined/user.registry.xml
-images/liberty_ubi_combined/privacyagreement.html
+images/liberty_ubi_combined/web-dir-extensions/**
 images/solr_redhat/jars/**
 images/example_connector/app/**
 images/etl_client/etltoolkit/**
@@ -26,6 +28,7 @@ images/i2a_tools/tools
 images/sql_client/tools
 images/db2_client/tools
 images/postgres_client/tools
+images/**/changelog.json
 images/**/environment.sh
 
 pre-reqs/i2analyze
@@ -34,12 +37,10 @@ pre-reqs/**/*.jar
 pre-reqs/**/*.tar.gz
 pre-reqs/**/*.zip
 
-dev/test/resources/extensions
-dev/test/resources/plugins
-
 **/logs
 **/.configuration
 **/.configuration-generated
+**/.change-sets
 **/.i2a-extensions
 **/.i2a-plugins
 **/.tmp_classes
@@ -54,17 +55,17 @@ dev/test/resources/plugins
 report/
 megalinter-reports/
 
-**/change-sets/**
-
 templates/**/configuration
 templates/**/database-scripts
 templates/**/environment.sh
 templates/**/version.conf
 templates/extension-development/.*
+templates/extension-development/pom.xml
 templates/toolkit-config-mod/**/
 templates/toolkit-config-mod/?*.*
 
 configs/*
+configs/**/change-sets/**
 i2a-data/*
 backups/*
 

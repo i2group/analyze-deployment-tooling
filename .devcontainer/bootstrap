@@ -30,29 +30,34 @@ function init() {
   mkdir -p "${HOME}/.m2" "${HOME}/.config/gh"
 }
 
+function install_analyze_containers_deps() {
+  if [[ -d "${ANALYZE_CONTAINERS_ROOT_DIR}/pre-reqs/i2analyze/toolkit" ]]; then
+    # Ensure to install the maven dependencies and images
+    source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
+    source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
+    pull_base_images
+    setup_i2_analyze_maven_local
+  fi
+}
+
 function create() {
   if [[ -z $(docker network ls -q --filter name="^eia$") ]]; then
     docker network create eia
   fi
   docker network connect eia "${HOSTNAME}"
-
   echo "VSCode dev container connected to docker network: eia"
 
-  export ANALYZE_CONTAINERS_ROOT_DIR="${WORKSPACE}"
-  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
-  source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulated_external_variables.sh"
-  if [[ -d "${LOCAL_TOOLKIT_DIR}" ]]; then
-    # Ensure to install the maven dependencies
-    source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
-    setup_i2_analyze_maven_local
-  fi
+  # This takes some time so slows down the first start of the devcontainer
+  install_analyze_containers_deps
   echo "Done"
 }
 
 function post_start() {
   export ANALYZE_CONTAINERS_ROOT_DIR="${WORKSPACE}"
   export CONTINUE_ON_ERROR="true"
-  "${WORKSPACE}/scripts/manage-environment" -t link
+
+  "${ANALYZE_CONTAINERS_ROOT_DIR}/scripts/manage-environment" -t link
+  install_analyze_containers_deps
 
   echo "Dev Container is ready"
 }

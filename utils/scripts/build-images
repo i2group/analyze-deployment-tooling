@@ -8,7 +8,6 @@ set -e
 
 USAGE="""
 Usage:
-  build-images
   build-images [-e {pre-prod|config-dev}]
   build-images -h
 

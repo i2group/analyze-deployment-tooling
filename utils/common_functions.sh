@@ -61,7 +61,8 @@ function set_options() {
     OPTIONS="vhy"
     ;;
   "deploy")
-    OPTIONS="c:t:b:vhy"
+    # cspell:ignore rvhy
+    OPTIONS="c:t:b:rvhy"
     ;;
   "manageData")
     OPTIONS="c:t:d:s:vhy"
@@ -75,9 +76,9 @@ function set_options() {
   "buildConnectorImages")
     OPTIONS="i:e:vhy"
     ;;
-  "build_extensions") ;&
+  "buildExtensions") ;&
     # Fallthrough
-  "build_plugins")
+  "buildPlugins")
     OPTIONS="c:i:e:vhy"
     ;;
   "buildImages") ;&
@@ -153,6 +154,23 @@ function parse_arguments() {
           CHANGE_SET_NUMBER="${OPTARG}"
         elif [[ "${OPTIONS_FOR}" == "configurePaths" || "${OPTIONS_FOR}" == "manageToolkitConfig" ]]; then
           PATH_NAME="${OPTARG}"
+        fi
+        ;;
+      r)
+        if [[ "${OPTIONS_FOR}" == "deploy" ]]; then
+          local next_opt
+          # Check next positional parameter
+          next_opt=${!OPTIND}
+          # existing or starting with dash?
+          if [[ -n $next_opt && $next_opt != -* ]]; then
+            OPTIND=$((OPTIND + 1))
+            if ! [[ $next_opt =~ ^[0-9]+$ ]]; then
+              print_error_and_usage "Specified release is not a number."
+            fi
+            CHANGE_SET_NUMBER=$next_opt
+          else
+            CHANGE_SET_NUMBER="next"
+          fi
         fi
         ;;
       b)
@@ -235,7 +253,7 @@ function delete_container() {
       return 0
     fi
   fi
-  container_name="$(docker ps -aq --format "{{.Names}}" -f id="${container_id}")"
+  container_name="$(docker ps -a --format "{{.Names}}" -f id="${container_id}")"
   print "Stopping ${container_name} container"
   while ! docker stop "${container_name_or_id}"; do
     if ((max_retries == 0)); then
@@ -261,6 +279,13 @@ function check_file_exists() {
 
   if [[ ! -f "${file_path}" ]]; then
     print_error_and_exit "File does NOT exist: ${file_path}"
+  fi
+}
+
+function check_directory_exists() {
+  local directory="$1"
+  if [[ ! -d "${directory}" ]]; then
+    print_error_and_exit "Directory does NOT exists: \"${directory}\"."
   fi
 }
 
@@ -325,20 +350,21 @@ function append_logging_xml_element_with_here_doc() {
   local loggers_heredoc_file_path="$2"
   local loggers_level="$3"
   local loggers_appender_ref="$4"
-  local tmp_log4j2_file_path="/tmp/log4j2.xml"
+  local log4j2_file_path="$5"
 
-  if grep -q -E -o -m 1 "${loggers_name}" <"${tmp_log4j2_file_path}"; then
+  if grep -q -E -o -m 1 "${loggers_name}" <"${log4j2_file_path}"; then
     # Force set logging level
-    sed -i -E "s~(${loggers_name} level=\")[^\"]+~\1${loggers_level}~g" "${tmp_log4j2_file_path}"
+    sed -i -E "s~(${loggers_name} level=\")[^\"]+~\1${loggers_level}~g" "${log4j2_file_path}"
     # Append AppenderRef for logger
-    sed -i -E "/${loggers_name}/a \      <AppenderRef ref=\"${loggers_appender_ref}\" \/>" "${tmp_log4j2_file_path}"
+    sed -i -E "/${loggers_name}/a \      <AppenderRef ref=\"${loggers_appender_ref}\" \/>" "${log4j2_file_path}"
   else
-    replace_xml_element_with_here_doc "<\/Loggers>" "${loggers_heredoc_file_path}" "${tmp_log4j2_file_path}"
+    replace_xml_element_with_here_doc "<\/Loggers>" "${loggers_heredoc_file_path}" "${log4j2_file_path}"
   fi
 }
 
 function add_config_admin() {
   print_info "Adding config dev environment administrator user to the system"
+  add_config_admin_to_security_schema
   add_config_admin_to_user_registry
   add_config_admin_to_command_access_control
   add_config_admin_to_server_xml
@@ -346,7 +372,6 @@ function add_config_admin() {
 
 function add_config_admin_to_security_schema() {
   local security_schema_file_path="${GENERATED_LOCAL_CONFIG_DIR}/security-schema.xml"
-  local security_schema_container_path="/config/apps/opal-services.war/WEB-INF/classes"
   local security_dimension_ids dimension_id
   local security_dimension_values dimension_value
   declare -A security_value_map
@@ -364,6 +389,11 @@ function add_config_admin_to_security_schema() {
 
   for dimension_id in "${!security_value_map[@]}"; do
     IFS=' ' read -r -a dimension_values <<<"${security_value_map["${dimension_id}"]}"
+    if [[ "${#dimension_values[@]}" == 0 ]]; then
+      # Don't add the group permission if no mappings found.
+      # This could happen on dynamic permissions
+      continue
+    fi
     xmlstarlet edit -L \
       --subnode "/tns:SecuritySchema/SecurityPermissions/GroupPermissions[last()]" --type elem -n "Permissions" \
       --insert "/tns:SecuritySchema/SecurityPermissions/GroupPermissions[last()]/Permissions[last()]" --type attr -n "Dimension" --value "${dimension_id}" \
@@ -380,37 +410,27 @@ function add_config_admin_to_security_schema() {
 }
 
 function add_config_admin_to_command_access_control() {
-  local tmp_command_access_control_file_path="/tmp/command-access-control.xml"
-  local command_access_control_file_path="${LOCAL_USER_CONFIG_DIR}/command-access-control.xml"
-  local command_access_control_container_path="/config/apps/opal-services.war/WEB-INF/classes"
-
-  # Create tmp command-access-control file
-  cp "${command_access_control_file_path}" "${tmp_command_access_control_file_path}"
+  local command_access_control_file_path="${GENERATED_LOCAL_CONFIG_DIR}/command-access-control.xml"
 
   xmlstarlet edit -L \
     --subnode "/tns:CommandAccessControl" --type elem -n "CommandAccessPermissions" \
     --insert "/tns:CommandAccessControl/CommandAccessPermissions[last()]" --type attr -n "UserGroup" --value "${I2_ANALYZE_ADMIN}" \
-    "${tmp_command_access_control_file_path}"
+    "${command_access_control_file_path}"
 
   for permission in "${ADMIN_ACCESS_PERMISSIONS[@]}"; do
     xmlstarlet edit -L \
       --subnode "/tns:CommandAccessControl/CommandAccessPermissions[last()]" --type elem -n "Permission" \
       --insert "/tns:CommandAccessControl/CommandAccessPermissions[last()]/Permission[last()]" --type attr -n "Value" --value "${permission}" \
-      "${tmp_command_access_control_file_path}"
+      "${command_access_control_file_path}"
   done
 
   # Copy modified file to container
-  docker cp "${tmp_command_access_control_file_path}" "${LIBERTY1_CONTAINER_NAME}:${command_access_control_container_path}"
+  #docker cp "${tmp_command_access_control_file_path}" "${LIBERTY1_CONTAINER_NAME}:/config/apps/opal-services.war/WEB-INF/classes"
 }
 
 function add_config_admin_to_user_registry() {
-  local tmp_user_registry_file_path="/tmp/user.registry.xml"
-  local user_registry_file_path="${LOCAL_USER_CONFIG_DIR}/user.registry.xml"
-  local user_registry_container_path="/liberty/usr/shared/config"
+  local user_registry_file_path="${GENERATED_LOCAL_CONFIG_DIR}/user.registry.xml"
   local app_admin_password
-
-  # Create tmp user.registry file
-  cp "${user_registry_file_path}" "${tmp_user_registry_file_path}"
 
   app_admin_password=$(get_application_admin_password)
   xmlstarlet edit -L \
@@ -421,27 +441,18 @@ function add_config_admin_to_user_registry() {
     --insert "/server/basicRegistry/group[last()]" --type attr -n "name" --value "${I2_ANALYZE_ADMIN}" \
     --subnode "/server/basicRegistry/group[@name='${I2_ANALYZE_ADMIN}']" --type elem -n "member" \
     --insert "/server/basicRegistry/group[@name='${I2_ANALYZE_ADMIN}']/member[last()]" --type attr -n "name" --value "${I2_ANALYZE_ADMIN}" \
-    "${tmp_user_registry_file_path}"
-
-  # Copy modified registry to container
-  docker cp "${tmp_user_registry_file_path}" "${LIBERTY1_CONTAINER_NAME}:${user_registry_container_path}"
+    "${user_registry_file_path}"
 }
 
 function add_config_admin_to_server_xml() {
-  local tmp_server_xml_file_path="/tmp/server.xml"
-  local server_xml_file_path="${LOCAL_USER_CONFIG_DIR}/server.xml"
-  local server_xml_container_path="/config"
+  local server_xml_file_path="${GENERATED_LOCAL_CONFIG_DIR}/server.xml"
 
-  # Create tmp server.xml file
-  docker cp "${LIBERTY1_CONTAINER_NAME}:${server_xml_container_path}/server.xml" "${tmp_server_xml_file_path}"
+  cp "${IMAGES_DIR}/liberty_ubi_base/application/server-config/server.xml" "${server_xml_file_path}"
 
   xmlstarlet edit -L \
     --subnode "/server/application/application-bnd/security-role[@name='Administrator']" --type elem -n "group" \
     --insert "/server/application/application-bnd/security-role[@name='Administrator']/group[last()]" --type attr -n "name" --value "${I2_ANALYZE_ADMIN}" \
-    "${tmp_server_xml_file_path}"
-
-  # Copy modified server.xml to container
-  docker cp "${tmp_server_xml_file_path}" "${LIBERTY1_CONTAINER_NAME}:${server_xml_container_path}"
+    "${server_xml_file_path}"
 }
 
 function add_class_to_validation_logger() {
@@ -458,9 +469,7 @@ function add_class_to_validation_logger() {
 }
 
 function update_log4j_file() {
-  local tmp_log4j2_file_path="/tmp/log4j2.xml"
-  local log4j2_file_path="${LOCAL_USER_CONFIG_DIR}/log4j2.xml"
-  local log4j2_container_path="/config/apps/opal-services.war/WEB-INF/classes"
+  local log4j2_file_path="${GENERATED_LOCAL_CONFIG_DIR}/log4j2.xml"
   local properties_heredoc_file_path="/tmp/properties_heredoc"
   local appenders_heredoc_file_path="/tmp/appenders_heredoc"
   local loggers_heredoc_console_file_path="/tmp/loggers_console_heredoc"
@@ -486,11 +495,8 @@ function update_log4j_file() {
 
   print_info "Updating Log4j2.xml file"
 
-  # Create tmp log4j2 file
-  cp "${log4j2_file_path}" "${tmp_log4j2_file_path}"
-
   # Remove any new line breaking xml element
-  xmlstarlet edit -L -u '//text()' -x 'normalize-space()' "${tmp_log4j2_file_path}"
+  xmlstarlet edit -L -u '//text()' -x 'normalize-space()' "${log4j2_file_path}"
 
   # Creating heredocs
   cat >"${properties_heredoc_file_path}" <<'EOF'
@@ -556,22 +562,19 @@ EOF
 EOF
 
   # Update temporary Log4j2 file with 'i2_' prefixed properties and appenders from heredoc
-  replace_xml_element_with_here_doc "<\/Properties>" "${properties_heredoc_file_path}" "${tmp_log4j2_file_path}"
-  replace_xml_element_with_here_doc "<\/Appenders>" "${appenders_heredoc_file_path}" "${tmp_log4j2_file_path}"
+  replace_xml_element_with_here_doc "<\/Properties>" "${properties_heredoc_file_path}" "${log4j2_file_path}"
+  replace_xml_element_with_here_doc "<\/Appenders>" "${appenders_heredoc_file_path}" "${log4j2_file_path}"
 
   # If logger already exists then force set 'level' and append 'AppenderRef', else if
   # logger does not exist then append entire heredoc block for each logger.
-  append_logging_xml_element_with_here_doc "${loggers_console_name}" "${loggers_heredoc_console_file_path}" "${loggers_console_level}" "${loggers_console_appender_ref}"
-  append_logging_xml_element_with_here_doc "${loggers_availability_name}" "${loggers_heredoc_availability_file_path}" "${loggers_availability_level}" "${loggers_availability_appender_ref}"
-  append_logging_xml_element_with_here_doc "${loggers_mapping_name}" "${loggers_heredoc_mapping_file_path}" "${loggers_mapping_level}" "${loggers_mapping_appender_ref}"
-  append_logging_xml_element_with_here_doc "${loggers_lifecycle_name}" "${loggers_heredoc_lifecycle_file_path}" "${loggers_lifecycle_level}" "${loggers_lifecycle_appender_ref}"
-  append_logging_xml_element_with_here_doc "${loggers_statehandler_name}" "${loggers_heredoc_statehandler_file_path}" "${loggers_statehandler_level}" "${loggers_statehandler_appender_ref}"
+  append_logging_xml_element_with_here_doc "${loggers_console_name}" "${loggers_heredoc_console_file_path}" "${loggers_console_level}" "${loggers_console_appender_ref}" "${log4j2_file_path}"
+  append_logging_xml_element_with_here_doc "${loggers_availability_name}" "${loggers_heredoc_availability_file_path}" "${loggers_availability_level}" "${loggers_availability_appender_ref}" "${log4j2_file_path}"
+  append_logging_xml_element_with_here_doc "${loggers_mapping_name}" "${loggers_heredoc_mapping_file_path}" "${loggers_mapping_level}" "${loggers_mapping_appender_ref}" "${log4j2_file_path}"
+  append_logging_xml_element_with_here_doc "${loggers_lifecycle_name}" "${loggers_heredoc_lifecycle_file_path}" "${loggers_lifecycle_level}" "${loggers_lifecycle_appender_ref}" "${log4j2_file_path}"
+  append_logging_xml_element_with_here_doc "${loggers_statehandler_name}" "${loggers_heredoc_statehandler_file_path}" "${loggers_statehandler_level}" "${loggers_statehandler_appender_ref}" "${log4j2_file_path}"
 
-  add_class_to_validation_logger "com.i2group.opal.daod.resultsets.search.internal.DaodFacetSummaryConfigurationValidation" "${tmp_log4j2_file_path}"
-  add_class_to_validation_logger "com.i2group.disco.security.typeaccess.internal.TypeAccessPermissionsValidator" "${tmp_log4j2_file_path}"
-
-  # Copy modified Logger to container
-  docker cp "${tmp_log4j2_file_path}" "${LIBERTY1_CONTAINER_NAME}:${log4j2_container_path}"
+  add_class_to_validation_logger "com.i2group.opal.daod.resultsets.search.internal.DaodFacetSummaryConfigurationValidation" "${log4j2_file_path}"
+  add_class_to_validation_logger "com.i2group.disco.security.typeaccess.internal.TypeAccessPermissionsValidator" "${log4j2_file_path}"
 
   # Remove tmp heredoc files
   rm "${properties_heredoc_file_path}" \
@@ -589,16 +592,6 @@ function get_health_live_endpoint_status() {
   app_admin_password=$(get_application_admin_password)
   run_i2_analyze_tool_as_external_user bash -c "curl \
           --silent \
-          --cookie-jar /tmp/cookie.txt \
-          --cacert /tmp/i2acerts/CA.cer \
-          --request POST \"${FRONT_END_URI}/j_security_check\" \
-          --header 'Origin: ${FRONT_END_URI}' \
-          --header 'Content-Type: application/x-www-form-urlencoded' \
-          --data-urlencode 'j_username=${I2_ANALYZE_ADMIN}' \
-          --data-urlencode 'j_password=${app_admin_password}' \
-        && curl \
-          --silent \
-          --cookie /tmp/cookie.txt \
           --output /dev/null \
           --cacert /tmp/i2acerts/CA.cer \
           --write-out \"%{http_code}\" \
@@ -1430,8 +1423,13 @@ function delete_all_pre_prod_containers() {
 
 function delete_all_containers() {
   local container_names container_name prefix
+  local include_connectors="$1"
 
   CONTAINER_NAMES_PREFIX=("etlclient" "i2atool" "zk" "solr" "sql" "db2" "liberty" "load_balancer" "exampleconnector" "prometheus" "grafana" "postgres")
+
+  if [[ "${include_connectors}" == "true" ]]; then
+    CONTAINER_NAMES_PREFIX+=("connector")
+  fi
 
   print "Removing all containers"
 
@@ -1538,6 +1536,8 @@ function restart_docker_containers_for_config() {
 #######################################
 function wait_for_user_reply() {
   local question="$1"
+  local fail_on_negative_reply="${2:-"true"}"
+
   echo "" # print an empty line
 
   if [[ "${YES_FLAG}" == "true" ]]; then
@@ -1549,8 +1549,8 @@ function wait_for_user_reply() {
   while true; do
     read -r -p "${question} (y/n) " yn
     case $yn in
-    [Yy]*) echo "" && break ;;
-    [Nn]*) exit 1 ;;
+    [Yy]*) break ;;
+    [Nn]*) [[ "${fail_on_negative_reply}" == "false" ]] && return 1 || exit 1 ;;
     *) ;;
     esac
   done
@@ -1640,7 +1640,6 @@ function backup_database() {
       updateVolume "${BACKUP_DIR}" "${SQL_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
     else
       update_volume "${BACKUP_DIR}" "${SQL_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
-      echo "Debug: Updating permission"
     fi
     if [[ "${VERSION}" < "2.3.0" ]]; then
       run_db_container_with_backup_volume chown -R root "${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
@@ -1867,7 +1866,18 @@ function check_db_container_exist() {
 #######################################
 function check_containers_exist() {
   local all_present=0
-  local containers=("${SOLR1_CONTAINER_NAME}" "${ZK1_CONTAINER_NAME}" "${LIBERTY1_CONTAINER_NAME}" "${PROMETHEUS_CONTAINER_NAME}" "${GRAFANA_CONTAINER_NAME}")
+  local containers=(
+    "${SOLR1_CONTAINER_NAME}"
+    "${ZK1_CONTAINER_NAME}"
+    "${LIBERTY1_CONTAINER_NAME}"
+  )
+
+  if [[ "${DEV_DISABLE_METRICS}" != "true" ]]; then
+    containers+=(
+      "${PROMETHEUS_CONTAINER_NAME}"
+      "${GRAFANA_CONTAINER_NAME}"
+    )
+  fi
 
   print "Checking all containers required for the deployment exist"
 
@@ -1891,7 +1901,18 @@ function check_containers_exist() {
 #######################################
 function check_some_containers_exist() {
   local some_present=1
-  local containers=("${SOLR1_CONTAINER_NAME}" "${ZK1_CONTAINER_NAME}" "${LIBERTY1_CONTAINER_NAME}" "${PROMETHEUS_CONTAINER_NAME}" "${GRAFANA_CONTAINER_NAME}")
+  local containers=(
+    "${SOLR1_CONTAINER_NAME}"
+    "${ZK1_CONTAINER_NAME}"
+    "${LIBERTY1_CONTAINER_NAME}"
+  )
+
+  if [[ "${DEV_DISABLE_METRICS}" != "true" ]]; then
+    containers+=(
+      "${PROMETHEUS_CONTAINER_NAME}"
+      "${GRAFANA_CONTAINER_NAME}"
+    )
+  fi
   for container in "${containers[@]}"; do
     if [[ -n "$(docker ps -aq -f name="^${container}$")" ]]; then
       some_present=0
@@ -2057,7 +2078,11 @@ function create_mounted_config_structure() {
     "${mounted_folder_path}/highlight-queries-configuration.xml" "${mounted_folder_path}/geospatial-configuration.json" \
     "${mounted_folder_path}/type-access-configuration.xml" \
     "${LIVE_PATH}"
-  mv "${mounted_folder_path}/privacyagreement.html" "${COMMON_PATH}"
+  cp -pr "${mounted_folder_path}/web-dir-extensions/." "${COMMON_PATH}"
+  rm -rf "${mounted_folder_path}/web-dir-extensions"
+  if [[ -f "${mounted_folder_path}/server.xml" ]]; then
+    mv "${mounted_folder_path}/server.xml" "${LIBERTY_PATH}"
+  fi
   if [[ -f "${mounted_folder_path}/server.extensions.xml" ]]; then
     mv "${mounted_folder_path}/server.extensions.xml" "${LIBERTY_PATH}"
   fi
@@ -2078,8 +2103,8 @@ function create_mounted_config_structure() {
 
   create_dsid_properties_for_deployment_pattern "${mounted_folder_path}"
 
-  # Move all outstanding .properties files into the common classes dir
-  find "${mounted_folder_path}" -maxdepth 1 -name "*.properties" -exec mv -t "${COMMON_CLASSES_PATH}" {} +
+  # Move all outstanding .properties, .json and .jsonc files into the common classes dir
+  find "${mounted_folder_path}" -maxdepth 1 \( -name "*.properties" -o -name "*.json*" \) -exec mv -t "${COMMON_CLASSES_PATH}" {} +
 
   # Add gateway schemas
   for gateway_short_name in "${!GATEWAY_SHORT_NAME_SET[@]}"; do
@@ -2123,21 +2148,16 @@ function generate_boiler_plate_files() {
   cp -p "${toolkit_common_classes_dir}/ApolloServerSettingsMandatory.properties" "${GENERATED_LOCAL_CONFIG_DIR}"
   cp -p "${toolkit_common_classes_dir}/ApolloServerSettingsConfigurationSet.properties" "${GENERATED_LOCAL_CONFIG_DIR}"
 
-  if [[ "${DEV_LIBERTY_SERVER_EXTENSIONS}" == "true" ]]; then
-    echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?><server>
-      <webAppSecurity overrideHttpAuthMethod=\"FORM\" allowAuthenticationFailOverToAuthMethod=\"FORM\"  loginFormURL=\"opal/login.html\" loginErrorURL=\"opal/login.html?failed\"/>
-      <featureManager>
-          <feature>restConnector-2.0</feature>
-      </featureManager>
-      <applicationMonitor updateTrigger=\"mbean\" dropinsEnabled=\"false\"/>
-      <config updateTrigger=\"mbean\"/>
-      <administrator-role>
-          <user>${I2_ANALYZE_ADMIN}</user>
-      </administrator-role>
-    </server>" >"${GENERATED_LOCAL_CONFIG_DIR}/server.extensions.dev.xml"
-  else
-    echo '<?xml version="1.0" encoding="UTF-8"?><server/>' >"${GENERATED_LOCAL_CONFIG_DIR}/server.extensions.dev.xml"
-  fi
+  echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?><server>
+    <featureManager>
+        <feature>restConnector-2.0</feature>
+    </featureManager>
+    <applicationMonitor updateTrigger=\"mbean\" dropinsEnabled=\"false\"/>
+    <config updateTrigger=\"mbean\"/>
+    <administrator-role>
+        <user>${I2_ANALYZE_ADMIN}</user>
+    </administrator-role>
+  </server>" >"${GENERATED_LOCAL_CONFIG_DIR}/server.extensions.dev.xml"
 
   mkdir -p "${GENERATED_LOCAL_CONFIG_DIR}/grafana/provisioning/datasources"
   mkdir -p "${GENERATED_LOCAL_CONFIG_DIR}/grafana/provisioning/plugins"
@@ -2389,6 +2409,10 @@ function check_licenses_accepted_if_required() {
   local deployment_pattern="$2"
   local db_dialect="$3"
 
+  if [[ "${DEV_SKIP_VALIDATION}" == "true" ]]; then
+    return
+  fi
+
   print "Checking Licenses Accepted"
   ensure_license_accepted "LIC_AGREEMENT"
   if [[ "${environment}" == "config-dev" ]]; then
@@ -2579,6 +2603,10 @@ function validate_connector_definition() {
   local not_valid_error_message="${connector_definition_file_path} is NOT valid"
   local valid_json
 
+  if [[ "${DEV_SKIP_VALIDATION}" == "true" ]]; then
+    return
+  fi
+
   print "Validating ${connector_definition_file_path}"
 
   type="$(jq -r type <"${connector_definition_file_path}" || true)"
@@ -2598,6 +2626,10 @@ function validate_connector_secrets() {
   local connector_secrets_file_path="${LOCAL_KEYS_DIR}/${connector_name}"
   local not_valid_error_message="Secrets have not been created for the ${connector_name} connector"
 
+  if [[ "${DEV_SKIP_VALIDATION}" == "true" ]]; then
+    return
+  fi
+
   print "Validating ${connector_secrets_file_path}"
   if [ ! -d "${connector_secrets_file_path}" ]; then
     print_error_and_exit "${not_valid_error_message}"
@@ -2608,6 +2640,10 @@ function validate_connector_url_mappings() {
   local connector_url_mappings_file="${CONNECTOR_IMAGES_DIR}/connector-url-mappings-file.json"
   local not_valid_error_message="${connector_url_mappings_file} is NOT valid"
   local valid_json json_type json_length
+
+  if [[ "${DEV_SKIP_VALIDATION}" == "true" ]]; then
+    return
+  fi
 
   print "Validating ${connector_url_mappings_file}"
 
@@ -2625,6 +2661,7 @@ function validate_connector_url_mappings() {
   else
     print_error_and_exit "${not_valid_error_message}"
   fi
+
 }
 
 function validate_parameters_not_empty() {
@@ -2716,6 +2753,71 @@ function pull_base_images() {
   docker pull "${POSTGRES_SERVER_IMAGE_NAME}:${POSTGRES_IMAGE_VERSION}"
   docker pull "${NODEJS_IMAGE_NAME}:${NODEJS_IMAGE_VERSION}"
   docker pull "${SPRINGBOOT_IMAGE_NAME}:${SPRINGBOOT_IMAGE_VERSION}"
+}
+
+function run_java() {
+  local secrets_dir="${LOCAL_GENERATED_SECRETS_DIR}/certificates"
+  # Ensure to canonicalise if it is pointing to a symlink
+  host_secrets_dir=$(readlink -f "${secrets_dir}")
+
+  docker run \
+    --rm \
+    -a stderr \
+    -a stdout \
+    -a stdin \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
+    -v "${host_secrets_dir}:${JAVA_CONTAINER_VOLUME_DIR}" \
+    "${I2A_TOOLS_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "$@"
+}
+
+function check_secret_does_not_exist() {
+  local secret_name="$1"
+  local file_path="$2"
+
+  if [[ -d "${file_path}" ]]; then
+    echo "Secrets for ${secret_name} already exist."
+    echo "If you would like to regenerate the secrets, delete the ${file_path} folder."
+    return 1
+  fi
+
+  return 0
+}
+
+function create_certificates() {
+  local HOST_NAME="$1"
+  local FQDN="$2"
+  local TYPE="$3"
+  local CONTEXT="$4"
+
+  local KEY="${JAVA_CONTAINER_VOLUME_DIR}/${HOST_NAME}/server.key"
+  local CER="${JAVA_CONTAINER_VOLUME_DIR}/${HOST_NAME}/server.cer"
+  local TMP="${JAVA_CONTAINER_VOLUME_DIR}/${HOST_NAME}-key.csr"
+  local CA_CER="${JAVA_CONTAINER_VOLUME_DIR}/${CONTEXT}CA/CA.cer"
+  local CA_KEY="${JAVA_CONTAINER_VOLUME_DIR}/${CONTEXT}CA/CA.key"
+  local CA_SRL="${JAVA_CONTAINER_VOLUME_DIR}/CA.srl"
+  local EXT="${JAVA_CONTAINER_VOLUME_DIR}/${CONTEXT}CA/x509.ext"
+
+  print "Create Raw Certificates"
+
+  check_secret_does_not_exist "${HOST_NAME}" "${LOCAL_GENERATED_SECRETS_DIR}/certificates/${HOST_NAME}" || return 0
+  delete_folder_if_exists_and_create "${LOCAL_GENERATED_SECRETS_DIR}/certificates/${HOST_NAME}"
+
+  if [[ "${CONTEXT}" == external ]]; then
+    sed "s/HOST_NAME/${FQDN}/" "${LOCAL_EXTERNAL_CA_CERT_DIR}/x509.ext.template" >"${LOCAL_EXTERNAL_CA_CERT_DIR}/x509.ext"
+  else
+    sed "s/HOST_NAME/${FQDN}/" "${LOCAL_CA_CERT_DIR}/x509.ext.template" >"${LOCAL_CA_CERT_DIR}/x509.ext"
+  fi
+
+  # Generate key
+  run_java openssl genrsa -out "${KEY}" "${CERTIFICATE_KEY_SIZE}"
+  # Generate certificate signing request
+  run_java openssl req -new -key "${KEY}" -subj "/CN=${FQDN}" -out "${TMP}"
+  # Generate certificate
+  run_java openssl x509 -req -sha256 -CA "${CA_CER}" -CAkey "${CA_KEY}" -days "${CERTIFICATE_DURATION}" -CAcreateserial -CAserial "${CA_SRL}" -extfile "${EXT}" -extensions "${TYPE}" -in "${TMP}" -out "${CER}"
+
+  # Clean up
+  chmod a+r "${LOCAL_GENERATED_SECRETS_DIR}/certificates/${HOST_NAME}/server.key" "${LOCAL_GENERATED_SECRETS_DIR}/certificates/${HOST_NAME}/server.cer"
+  rm "${LOCAL_GENERATED_SECRETS_DIR}/certificates/${HOST_NAME}-key.csr" "${LOCAL_GENERATED_SECRETS_DIR}/certificates/${CONTEXT}CA/x509.ext"
 }
 
 # @description Checks if a string is contained in an array of strings.
@@ -2880,24 +2982,71 @@ function handle_db_initiation_on_pattern_change() {
   fi
 }
 
-function clear_search_index() {
-  print "Clearing the search index"
+function configure_solr_collection() {
+  local collection_name="$1"
+  local collection_type="${2:-$collection_name}"
+  run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n "${collection_name}" -d /opt/configuration/solr/generated_config/"${collection_type}"
+}
+
+function delete_solr_collection() {
+  local collection_name="$1"
   # The curl command uses the container's local environment variables to obtain the SOLR_ADMIN_DIGEST_USERNAME and SOLR_ADMIN_DIGEST_PASSWORD.
   # To stop the variables being evaluated in this script, the variables are escaped using backslashes (\) and surrounded in double quotes (").
   # Any double quotes in the curl command are also escaped by a leading backslash.
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/main_index/update?commit=true\" -H Content-Type:text/xml --data-binary \"<delete><query>*:*</query></delete>\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/match_index1/update?commit=true\" -H Content-Type:text/xml --data-binary \"<delete><query>*:*</query></delete>\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/match_index2/update?commit=true\" -H Content-Type:text/xml --data-binary \"<delete><query>*:*</query></delete>\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/chart_index/update?commit=true\" -H Content-Type:text/xml --data-binary \"<delete><query>*:*</query></delete>\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/daod_index/update?commit=true\" -H Content-Type:text/xml --data-binary \"<delete><query>*:*</query></delete>\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/highlight_index/update?commit=true\" -H Content-Type:text/xml --data-binary \"<delete><query>*:*</query></delete>\""
-  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/vq_index/update?commit=true\" -H Content-Type:text/xml --data-binary \"<delete><query>*:*</query></delete>\""
+  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=DELETE&name=${collection_name}\""
+}
+
+function delete_solr_collection_properties() {
+  local collection_name="$1"
+  run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/${collection_name}/collectionprops.json"
+}
+
+function create_solr_collection() {
+  local collection_name="$1"
+  local expected_status=0
+  local response
+  local status
+  # The curl command uses the container's local environment variables to obtain the SOLR_ADMIN_DIGEST_USERNAME and SOLR_ADMIN_DIGEST_PASSWORD.
+  # To stop the variables being evaluated in this script, the variables are escaped using backslashes (\) and surrounded in double quotes (").
+  # Any double quotes in the curl command are also escaped by a leading backslash.
+  response=$(run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&name=${collection_name}&collection.configName=${collection_name}&numShards=1&maxShardsPerNode=4&replicationFactor=2\"")
+  echo "${response}"
+  status=$(echo "${response}" | jq -r '.responseHeader.status')
+  if [[ "${status}" != "${expected_status}" ]]; then
+    print_error_and_exit "Failed to create Solr Collection ${collection_name}"
+  fi
+}
+
+function delete_solr_collection_data() {
+  local collection_name="$1"
+  # The curl command uses the container's local environment variables to obtain the SOLR_ADMIN_DIGEST_USERNAME and SOLR_ADMIN_DIGEST_PASSWORD.
+  # To stop the variables being evaluated in this script, the variables are escaped using backslashes (\) and surrounded in double quotes (").
+  # Any double quotes in the curl command are also escaped by a leading backslash.
+  run_solr_client_command bash -c "curl -u \"\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\" --cacert ${CONTAINER_CERTS_DIR}/CA.cer \"${SOLR1_BASE_URL}/solr/${collection_name}/update?commit=true\" -H Content-Type:text/xml --data-binary \"<delete><query>*:*</query></delete>\""
+}
+
+function clear_search_index() {
+  print "Clearing the search index"
+  delete_solr_collection_data "main_index"
+  delete_solr_collection_data "match_index1"
+  delete_solr_collection_data "match_index2"
+  delete_solr_collection_data "chart_index"
+  delete_solr_collection_data "daod_index"
+  delete_solr_collection_data "highlight_index"
+  delete_solr_collection_data "vq_index"
+  delete_solr_collection_data "recordshare_index"
+  if [[ "${DEV_BUILD}" == "true" ]]; then
+    delete_solr_collection_data "main_index_test"
+  fi
 
   # Remove the collection properties from ZooKeeper
-  run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/main_index/collectionprops.json"
-  run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/match_index1/collectionprops.json"
-  run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/match_index2/collectionprops.json"
-  run_solr_client_command "/opt/solr/server/scripts/cloud-scripts/zkcli.sh" -zkhost "${ZK_HOST}" -cmd clear "/collections/chart_index/collectionprops.json"
+  delete_solr_collection_properties "main_index"
+  delete_solr_collection_properties "match_index1"
+  delete_solr_collection_properties "match_index2"
+  delete_solr_collection_properties "chart_index"
+  if [[ "${DEV_BUILD}" == "true" ]]; then
+    delete_solr_collection_properties "main_index_test"
+  fi
 }
 
 function check_valid_config_name() {

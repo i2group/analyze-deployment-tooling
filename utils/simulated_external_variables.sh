@@ -160,7 +160,7 @@ db2)
   DB_INSTALL_DIR="/opt/ibm/db2/V11.5"
   DB_LOCATION_DIR="/database/config/db2inst1"
   DB_BACKUP_FILE_NAME="ISTORE"
-  SQLCMD="${DB_INSTALL_DIR}/bin/db2"
+  SQLCMD_EXE="db2"
   SQLCMD_FLAGS="-tsvmf"
   DB_NODE="dbnode"
   ;;
@@ -168,7 +168,7 @@ sqlserver)
   DB_INSTALL_DIR="/opt/mssql-tools"
   DB_LOCATION_DIR="/var/opt/mssql/data"
   DB_BACKUP_FILE_NAME="ISTORE.bak"
-  SQLCMD="${DB_INSTALL_DIR}/bin/sqlcmd"
+  SQLCMD_EXE="sqlcmd"
   if [[ "$DB_SSL_CONNECTION" == true ]]; then
     SQLCMD_FLAGS="-N -b"
   else
@@ -179,7 +179,7 @@ postgres)
   DB_INSTALL_DIR="/usr/lib/postgresql"
   DB_LOCATION_DIR="/var/lib/postgresql/data"
   DB_BACKUP_FILE_NAME="ISTORE.pgb"
-  SQLCMD="${DB_INSTALL_DIR}/bin/psql"
+  SQLCMD_EXE="psql"
   SQLCMD_FLAGS="-w -X -q --set=client_min_messages=warning"
   if [[ "$DB_SSL_CONNECTION" == true ]]; then
     SQLCMD_FLAGS+=" --set=sslmode=require"
@@ -193,6 +193,7 @@ postgres)
   ;;
 esac
 
+SQLCMD="${DB_INSTALL_DIR}/bin/${SQLCMD_EXE}"
 DB_NAME="ISTORE"
 DB_OS_TYPE="UNIX"
 DB_CONTAINER_BACKUP_DIR="/backup"
@@ -212,7 +213,9 @@ I2_ANALYZE_ADMIN="I2AnalyzeConfigDevAdmin"
 # Root Paths                                                                  #
 ###############################################################################
 LOCAL_USER_CHANGE_SETS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/change-sets"
+NEW_LOCAL_CHANGE_SETS_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/.change-sets"
 LOCAL_USER_CONFIG_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${CONFIG_NAME}/configuration"
+LOCAL_USER_WEB_EXT_DIR="${LOCAL_USER_CONFIG_DIR}/web-dir-extensions"
 LOCAL_CUSTOM_DB_SCRIPTS_DIR="${LOCAL_USER_CONFIG_DIR}/database-scripts"
 LOCAL_CONFIG_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/.configuration"
 GENERATED_LOCAL_CONFIG_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}/.configuration-generated"

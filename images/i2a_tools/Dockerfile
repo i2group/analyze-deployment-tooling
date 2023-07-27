@@ -11,8 +11,6 @@ ARG I2ANALYZE_VERSION
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-ARG I2ANALYZE_VERSION
-
 LABEL maintainer="i2 Group" \
   com.i2group.i2analyze-version="${I2ANALYZE_VERSION}"
 
@@ -47,6 +45,7 @@ RUN useradd "$USERNAME" \
 COPY --chown=$USERNAME docker-entrypoint.sh /opt/docker-entrypoint.sh
 COPY --chown=$USERNAME environment.sh /opt/environment.sh
 COPY --chown=$USERNAME tools/ /opt/
+COPY --chown=$USERNAME changelog.json /opt/changelog.json
 
 RUN mkdir -p /opt/configuration /opt/databaseScripts/generated /var/i2a-data /tmp/i2acerts \
   && chown -R $USERNAME /opt/configuration \

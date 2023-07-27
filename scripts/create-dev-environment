@@ -51,7 +51,6 @@ print "Running create-configuration"
 "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/create-configuration" -e "${ENVIRONMENT}" "${extra_args[@]}"
 
 set_dependencies_tag_if_necessary
-pull_base_images
 
 print "Running build-images"
 "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/build-images" "${extra_args[@]}"
