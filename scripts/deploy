@@ -373,12 +373,12 @@ function compare_current_grafana_dashboards() {
 
 function deploy_zk_cluster() {
   print "Running ZooKeeper container"
-  run_zk "${ZK1_CONTAINER_NAME}" "${ZK1_FQDN}" "${ZK1_DATA_VOLUME_NAME}" "${ZK1_DATALOG_VOLUME_NAME}" "${ZK1_LOG_VOLUME_NAME}" 1 "zk1" "${ZK1_SECRETS_VOLUME_NAME}"
+  run_zk "${ZK1_CONTAINER_NAME}" "${ZK1_FQDN}" "${ZK1_DATA_VOLUME_NAME}" "${ZK1_DATALOG_VOLUME_NAME}" "${ZK1_LOG_VOLUME_NAME}" 1 "zk1"
 }
 
 function deploy_solr_cluster() {
   print "Running Solr container"
-  run_solr "${SOLR1_CONTAINER_NAME}" "${SOLR1_FQDN}" "${SOLR1_VOLUME_NAME}" "${HOST_PORT_SOLR}" "solr1" "${SOLR1_SECRETS_VOLUME_NAME}" "${SOLR_DEBUG_PORT}"
+  run_solr "${SOLR1_CONTAINER_NAME}" "${SOLR1_FQDN}" "${SOLR1_VOLUME_NAME}" "${HOST_PORT_SOLR}" "solr1" "${SOLR_DEBUG_PORT}"
 }
 
 function configure_zk_for_solr_cluster() {
@@ -734,7 +734,7 @@ function deploy_liberty() {
   print "Building Liberty Configured image"
   build_liberty_configured_image
   print "Running Liberty container"
-  run_liberty "${LIBERTY1_CONTAINER_NAME}" "${I2_ANALYZE_FQDN}" "${LIBERTY1_VOLUME_NAME}" "${LIBERTY1_SECRETS_VOLUME_NAME}" "${HOST_PORT_I2ANALYZE_SERVICE}" "${I2_ANALYZE_CERT_FOLDER_NAME}" "${LIBERTY1_DEBUG_PORT}"
+  run_liberty "${LIBERTY1_CONTAINER_NAME}" "${I2_ANALYZE_FQDN}" "${LIBERTY1_VOLUME_NAME}" "${HOST_PORT_I2ANALYZE_SERVICE}" "${I2_ANALYZE_CERT_FOLDER_NAME}" "${LIBERTY1_DEBUG_PORT}"
 }
 
 function restart_connectors_for_config() {
@@ -768,6 +768,48 @@ function start_connectors_for_config() {
   update_connector_url_mappings
 }
 
+function recreate_deployment() {
+  initialize_deployment
+  remove_all_containers_for_the_config "${CONFIG_NAME}"
+
+  deploy_zk_cluster
+  deploy_solr_cluster
+  update_solr_jars_for_dev
+  wait_for_solr_to_be_live "${SOLR1_FQDN}"
+
+  build_connectors
+  start_connectors_for_config
+  deploy_metrics
+
+  case "${DB_DIALECT}" in
+  db2)
+    print_error_and_exit "DB2 is not supported. You will need to clean your deployment first."
+    ;;
+  sqlserver)
+    run_sql_server
+    wait_for_sql_server_to_be_live
+    ;;
+  postgres)
+    run_postgres_server
+    wait_for_postgres_server_to_be_live
+    ;;
+  esac
+
+  build_extensions
+  build_plugins
+  deploy_liberty
+  liberty_msg=$(check_liberty_status)
+  if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
+    update_match_rules
+    download_highlight_queries_xsd
+  fi
+  update_state_file 4
+
+  echo "${liberty_msg}"
+  print "Recreated deployment successfully"
+  echo "This application is configured for access on ${FRONT_END_URI}"
+}
+
 function create_deployment() {
   local liberty_msg
 
@@ -782,6 +824,7 @@ function create_deployment() {
     deploy_zk_cluster
     configure_zk_for_solr_cluster
     deploy_solr_cluster
+    update_solr_jars_for_dev
 
     # Configuring Solr and ZooKeeper
     wait_for_solr_to_be_live "${SOLR1_FQDN}"
@@ -795,17 +838,7 @@ function create_deployment() {
 
   if [[ "${STATE}" == 0 || "${STATE}" == 1 ]]; then
 
-    if [[ "${DEV_DISABLE_METRICS}" != "true" ]]; then
-      # Deploying Prometheus
-      delete_container "${PROMETHEUS_CONTAINER_NAME}"
-      run_prometheus
-      wait_for_prometheus_server_to_be_live
-
-      # Deploying Grafana
-      delete_container "${GRAFANA_CONTAINER_NAME}"
-      run_grafana
-      wait_for_grafana_server_to_be_live
-    fi
+    deploy_metrics
     # Configuring ISTORE
     if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
       if [[ "${TASK}" == "create" ]]; then
@@ -871,6 +904,20 @@ function update_change_sets_to_new_folder() {
   # create-change-sets script will always create a new change set as a copy of the old one then modify accordingly
   delete_folder_if_exists "${LOCAL_USER_CHANGE_SETS_DIR}"
   mv "${NEW_LOCAL_CHANGE_SETS_DIR}" "${LOCAL_USER_CHANGE_SETS_DIR}"
+}
+
+function deploy_metrics() {
+  if [[ "${DEV_DISABLE_METRICS}" != "true" ]]; then
+    # Deploying Prometheus
+    delete_container "${PROMETHEUS_CONTAINER_NAME}"
+    run_prometheus
+    wait_for_prometheus_server_to_be_live
+
+    # Deploying Grafana
+    delete_container "${GRAFANA_CONTAINER_NAME}"
+    run_grafana
+    wait_for_grafana_server_to_be_live
+  fi
 }
 
 ###############################################################################
@@ -1521,14 +1568,43 @@ function solr_schema_change() {
   print_info "Destructive Solr indexes change(s) complete"
 }
 
+function restart_solr_node() {
+  stop_container "${SOLR1_CONTAINER_NAME}"
+  start_container "${SOLR1_CONTAINER_NAME}"
+  wait_for_solr_to_be_live "${SOLR1_FQDN}"
+}
+
+function update_solr_jars_for_dev() {
+  if [[ "${DEV_BUILD}" == "true" ]]; then
+    local extension_references_file="${LOCAL_USER_CONFIG_DIR}/extension-references.json"
+    local extension_files
+    readarray -t extension_files < <(jq -r '.extensions[] | .name' <"${extension_references_file}")
+    local solr_jars_updated="false"
+    local solr_jars=("ApolloLegacy.jar" "DiscoUtils.jar" "SolrCommon.jar" "SolrExtension.jar")
+    local solr_jars_container_path="/opt/i2-plugin/lib"
+    for extension_name in "${extension_files[@]}"; do
+      if [[ ! -f "${EXTENSIONS_DIR}/${extension_name}/pom.xml" ]]; then
+        while read -r file_name; do
+          if [[ -f "${file_name}" ]]; then
+            if [[ " ${solr_jars[*]} " == *" ${file_name##*/} "* ]]; then
+              docker cp "${file_name}" "${SOLR1_CONTAINER_NAME}:${solr_jars_container_path}"
+              solr_jars_updated="true"
+            fi
+          fi
+        done <<<"$(find -L "${EXTENSIONS_DIR}/${extension_name}" -mindepth 1 -maxdepth 1 -type f -name "*.jar")"
+      fi
+    done
+    if [[ "${solr_jars_updated}" == "true" ]]; then
+      restart_solr_node
+    fi
+  fi
+}
+
 function solr_synonyms_change() {
   print_info "Updating the deployed Solr synonyms"
 
   configure_solr_collections
-  # Restart solr node
-  stop_container "${SOLR1_CONTAINER_NAME}"
-  start_container "${SOLR1_CONTAINER_NAME}"
-  wait_for_solr_to_be_live "${SOLR1_FQDN}"
+  restart_solr_node
 }
 
 function run_destructive_change_if_destructive_change_set() {
@@ -1770,6 +1846,7 @@ function handle_extension_change() {
       extension_version="$(xmlstarlet sel -t -v "/project/version" "${EXTENSIONS_DIR}/${extension_name}/pom.xml")"
       docker cp "${EXTENSIONS_DIR}/${extension_name}/target/${extension_name}-${extension_version}.jar" "${LIBERTY1_CONTAINER_NAME}:${jars_liberty_path}"
     else
+      update_solr_jars_for_dev
       while read -r file_name; do
         if [[ -f "${file_name}" ]]; then
           docker cp "${file_name}" "${LIBERTY1_CONTAINER_NAME}:${jars_liberty_path}"
@@ -1947,6 +2024,7 @@ function create_backup() {
   create_folder "${BACKUP_DIR}/${BACKUP_NAME}"
 
   backup_database
+  print_success "Database backup completed"
 }
 
 function restore_from_backup() {
@@ -2193,6 +2271,9 @@ function work_out_task_to_run() {
   elif [[ "${STATE}" == 4 && "${CONFIG_SUPPORTED_I2ANALYZE_VERSION}" == "${CURRENT_SUPPORTED_I2ANALYZE_VERSION}" ]]; then
     print "Updating deployment"
     TASK="update"
+  elif [[ "${STATE}" == 5 ]]; then
+    print "Recreating deployment with persisted data"
+    TASK="recreate"
   fi
 
   if [[ "${TASK}" == "update" ]]; then
@@ -2298,6 +2379,9 @@ function create_or_restore_release_change_set() {
 
 function run_task() {
   case "${TASK}" in
+  "recreate")
+    recreate_deployment
+    ;;
   "create")
     create_deployment
     ;;

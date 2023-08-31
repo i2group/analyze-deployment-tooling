@@ -4,7 +4,7 @@
 #
 # SPDX short identifier: MIT
 
-ARG BASE_IMAGE="mcr.microsoft.com/mssql/rhel/server:2022-CU4-rhel-8.7"
+ARG BASE_IMAGE="i2group/i2eng-sqlserver:2022"
 FROM "${BASE_IMAGE}"
 
 # Change to root to install necessary packages
@@ -13,7 +13,7 @@ USER root
 
 # User mssql is created by the base image
 ARG USERNAME=mssql
-ARG GOSU_VERSION=1.14
+ARG GOSU_VERSION=1.16
 
 RUN ACCEPT_EULA=Y yum update -y --nobest \
   mssql-tools \

@@ -20,7 +20,7 @@ Usage:
   manage-environment -t update [-y]
   manage-environment -t link [-y]
   manage-environment -t stop [-y]
-  manage-environment -t renew-secrets [-y]
+  manage-environment -t renew-certificates [-y]
   manage-environment -t clean [-i <config_name>] [-e <config_name>] [-y]
   manage-environment -t connectors [-i <connector_name>] [-e <connector_name>] [-y]
   manage-environment -t extensions [-i <extension_name>] [-e <extension_name>] [-y]
@@ -34,7 +34,7 @@ Options:
   -t {link}                                                     Links shared configurations.
   -t {stop}                                                     Stops the running containers.
   -t {clean}                                                    Clean the deployment for a config. Will permanently remove all containers and data.
-  -t {renew-secrets}                                            Renews the secrets for the configuration development environment.
+  -t {renew-certificates}                                            Renews the secrets for the configuration development environment.
   -t {connectors}                                               Build all connector images.
   -t {extensions}                                               Build all extensions.
   -i <config_name|extension_name|connector_name>                Name of the config, connector or extension to include for the task. To specify multiple values, add additional -i options.
@@ -56,7 +56,7 @@ function validate_arguments() {
 
   [[ "${TASK}" == "backup" || "${TASK}" == "copy" || "${TASK}" == "upgrade" || "${TASK}" == "update" ||
     "${TASK}" == "connectors" || "${TASK}" == "extensions" || "${TASK}" == "clean" ||
-    "${TASK}" == "stop" || "${TASK}" == "link" || "${TASK}" == "renew-secrets" ]] ||
+    "${TASK}" == "stop" || "${TASK}" == "link" || "${TASK}" == "renew-certificates" ]] ||
     print_error_and_usage "${TASK} is not supported."
 
   if [[ "${TASK}" == "upgrade" ]]; then
@@ -144,6 +144,10 @@ function create_backup() {
     set_dependencies_tag_if_necessary
   fi
 
+  if [[ "${VERSION}" < "2.6.1" ]]; then
+    SQL_SERVER_IMAGE_VERSION="${I2A_DEPENDENCIES_IMAGES_TAG}"
+  fi
+
   if [[ "${DEPLOYMENT_PATTERN}" != *"store"* ]]; then
     # Cannot print and exit since this is done for <all> configs and we want it to continue
     echo "${CONFIG_NAME} does not contain an ISTORE database to backup. It uses the ${DEPLOYMENT_PATTERN} deployment pattern."
@@ -209,7 +213,7 @@ function build_connectors_array() {
 }
 
 function build_extensions_array() {
-  build_asset_array "extension" "i2a-extensions" "target"
+  build_asset_array "extension" "i2a-extensions"
 }
 
 function run_backup_task() {
@@ -437,8 +441,6 @@ function copy_secrets() {
 
   print_info "Generating missing secrets"
   "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/generate-secrets"
-
-  update_core_secrets_volumes
 }
 
 function copy_connectors() {
@@ -699,9 +701,9 @@ function get_base_image_ids() {
   image_ids+=$(get_image_id "i2group/i2eng-solr:${SOLR_VERSION}")
   image_ids+=$(get_image_id "${ZOOKEEPER_IMAGE_NAME}:${ZOOKEEPER_VERSION}")
   image_ids+=$(get_image_id "i2group/i2eng-prometheus:${PROMETHEUS_VERSION}")
-  image_ids+=$(get_image_id "grafana/grafana-oss:${GRAFANA_VERSION}")
-  image_ids+=$(get_image_id "mcr.microsoft.com/mssql/rhel/server:${SQL_SERVER_IMAGE_VERSION}")
+  image_ids+=$(get_image_id "${GRAFANA_IMAGE_NAME}:${GRAFANA_VERSION}")
   image_ids+=$(get_image_id "${POSTGRES_SERVER_IMAGE_NAME}:${POSTGRES_IMAGE_VERSION}")
+  image_ids+=$(get_image_id "${SQL_SERVER_IMAGE_NAME}:${SQL_SERVER_IMAGE_VERSION}")
   image_ids+=$(get_image_id "${NODEJS_IMAGE_NAME}:${NODEJS_IMAGE_VERSION}")
   image_ids+=$(get_image_id "${SPRINGBOOT_IMAGE_NAME}:${SPRINGBOOT_IMAGE_VERSION}")
 
@@ -714,7 +716,6 @@ function get_image_ids() {
   image_ids+=$(get_image_id "${LOAD_BALANCER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
   image_ids+=$(get_image_id "${LIBERTY_BASE_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
   image_ids+=$(get_image_id "${SOLR_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
-  image_ids+=$(get_image_id "${SQL_SERVER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
   image_ids+=$(get_image_id "${SQL_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
   image_ids+=$(get_image_id "${POSTGRES_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
   image_ids+=$(get_image_id "${I2A_TOOLS_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}")
@@ -787,6 +788,10 @@ function run_clean_task() {
     clean_deployment "${config_name}"
   done
 
+  # Reset assets since they are specific for configs only in this task
+  INCLUDED_ASSETS=()
+  EXCLUDED_ASSETS=()
+
   build_connectors_array
   for connector in "${CONNECTORS_ARRAY[@]}"; do
     delete_file_if_exists "${PREVIOUS_CONNECTOR_IMAGES_DIR}/${connector}.sha512"
@@ -832,10 +837,25 @@ function remove_all_volumes() {
   done
 }
 
-function run_renew_secrets_task() {
-  run_clean_task
+function run_renew_certificates_task() {
+  build_config_array
+  for config_name in "${CONFIGS_ARRAY[@]}"; do
+    source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${config_name}/version.conf"
+    source "${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${config_name}/utils/variables.conf"
+    source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulated_external_variables.sh"
+    source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
+    source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/internal_helper_variables.sh"
+
+    PREVIOUS_STATE_FILE_PATH="${ANALYZE_CONTAINERS_ROOT_DIR}/configs/${config_name}/.${config_name}/.state.conf"
+    if [[ -f "${PREVIOUS_STATE_FILE_PATH}" ]]; then
+      source "${PREVIOUS_STATE_FILE_PATH}"
+      if [[ "${STATE}" -ge "3" ]]; then
+        update_state_file 5
+      fi
+    fi
+  done
+
   delete_all_containers "true"
-  remove_all_volumes
 
   extra_args=()
   if [[ "${VERBOSE}" == "true" ]]; then
@@ -845,8 +865,10 @@ function run_renew_secrets_task() {
     extra_args+=("-y")
   fi
 
+  print "Deleting old certificates"
+  delete_folder_if_exists "${LOCAL_GENERATED_SECRETS_DIR}/certificates"
+  delete_folder_if_exists "${LOCAL_KEYS_DIR}"
   print "Running generate-secrets"
-  "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/generate-secrets" -t clean "${extra_args[@]}"
   "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/scripts/generate-secrets" "${extra_args[@]}"
 }
 
@@ -1292,8 +1314,8 @@ function run_task() {
   link)
     run_link_task
     ;;
-  renew-secrets)
-    run_renew_secrets_task
+  renew-certificates)
+    run_renew_certificates_task
     ;;
   esac
 }

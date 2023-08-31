@@ -21,7 +21,7 @@
 #   8. ZK secret volume
 #######################################
 function run_zk() {
-  validate_parameters 8 "$@"
+  validate_parameters 7 "$@"
 
   local CONTAINER="$1"
   local FQDN="$2"
@@ -30,7 +30,6 @@ function run_zk() {
   local LOG_VOLUME="$5"
   local ZOO_ID="$6"
   local SECRET_LOCATION="$7"
-  local SECRETS_VOLUME="$8"
 
   local ssl_private_key
   ssl_private_key=$(get_secret "certificates/${SECRET_LOCATION}/server.key")
@@ -54,7 +53,6 @@ function run_zk() {
     -v "${DATA_VOLUME}:/data" \
     -v "${DATALOG_VOLUME}:/datalog" \
     -v "${LOG_VOLUME}:/logs" \
-    -v "${SECRETS_VOLUME}:${CONTAINER_SECRETS_DIR}" \
     -e "ZOO_SERVERS=${ZOO_SERVERS}" \
     -e "ZOO_MY_ID=${ZOO_ID}" \
     -e "ZOO_SECURE_CLIENT_PORT=${ZK_SECURE_CLIENT_PORT}" \
@@ -79,15 +77,14 @@ function run_zk() {
 #   6. Solr secret volume
 #######################################
 function run_solr() {
-  validate_parameters 6 "$@"
+  validate_parameters 5 "$@"
 
   local CONTAINER="$1"
   local FQDN="$2"
   local VOLUME="$3"
   local HOST_PORT="$4"
   local SECRET_LOCATION="$5"
-  local SECRETS_VOLUME="$6"
-  local DEBUG_PORT="$7"
+  local DEBUG_PORT="$6"
 
   local ssl_private_key
   ssl_private_key=$(get_secret "certificates/${SECRET_LOCATION}/server.key")
@@ -116,7 +113,6 @@ function run_solr() {
     -p "${HOST_PORT}":8983 \
     -v "${VOLUME}:/var/solr" \
     -v "${SOLR_BACKUP_VOLUME_NAME}:${SOLR_BACKUP_VOLUME_LOCATION}" \
-    -v "${SECRETS_VOLUME}:${CONTAINER_SECRETS_DIR}" \
     -e SOLR_OPTS="-Dsolr.allowPaths=${SOLR_BACKUP_VOLUME_LOCATION} ${SOLR_OPTS}" \
     -e "ZK_HOST=${ZK_HOST}" \
     -e "SOLR_HOST=${FQDN}" \
@@ -159,7 +155,6 @@ function run_sql_server() {
     -p "${HOST_PORT_DB}:1433" \
     -v "${SQL_SERVER_VOLUME_NAME}:/var/opt/mssql" \
     -v "${SQL_SERVER_BACKUP_VOLUME_NAME}:${DB_CONTAINER_BACKUP_DIR}" \
-    -v "${SQL_SERVER_SECRETS_VOLUME_NAME}:${CONTAINER_SECRETS_DIR}" \
     -v "${I2A_DATA_SERVER_VOLUME_NAME}:${container_data_dir}" \
     -e "ACCEPT_EULA=${ACCEPT_EULA}" \
     -e "MSSQL_AGENT_ENABLED=true" \
@@ -168,7 +163,7 @@ function run_sql_server() {
     -e "SERVER_SSL=${DB_SSL_CONNECTION}" \
     -e "SSL_PRIVATE_KEY=${ssl_private_key}" \
     -e "SSL_CERTIFICATE=${ssl_certificate}" \
-    "${SQL_SERVER_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}"
+    "${SQL_SERVER_IMAGE_NAME}:${SQL_SERVER_IMAGE_VERSION}"
 }
 
 #######################################
@@ -196,10 +191,10 @@ function run_postgres_server() {
     --network "${DOMAIN_NAME}" \
     --net-alias "${POSTGRES_SERVER_FQDN}" \
     -p "${HOST_PORT_DB}:5432" \
-    -v "${POSTGRES_SERVER_VOLUME_NAME}:/var/lib/postgresql" \
+    -v "${POSTGRES_SERVER_VOLUME_NAME}:/var/lib/postgresql/data" \
     -v "${POSTGRES_SERVER_BACKUP_VOLUME_NAME}:${DB_CONTAINER_BACKUP_DIR}" \
-    -v "${POSTGRES_SERVER_SECRETS_VOLUME_NAME}:${CONTAINER_SECRETS_DIR}" \
     -v "${I2A_DATA_SERVER_VOLUME_NAME}:${container_data_dir}" \
+    -e "PGDATA=/var/lib/postgresql/data" \
     -e "POSTGRES_USER=${POSTGRES_USER}" \
     -e "POSTGRES_PASSWORD=${postgres_initial_password}" \
     -e "SERVER_SSL=${DB_SSL_CONNECTION}" \
@@ -235,7 +230,6 @@ function run_db2_server() {
     --net-alias "${DB2_SERVER_FQDN}" \
     -p "${HOST_PORT_DB}:50000" \
     -v "${DB2_SERVER_BACKUP_VOLUME_NAME}:${DB_CONTAINER_BACKUP_DIR}" \
-    -v "${DB2_SERVER_SECRETS_VOLUME_NAME}:${CONTAINER_SECRETS_DIR}" \
     -v "${DB2_SERVER_VOLUME_NAME}:/database/data" \
     -v "${I2A_DATA_SERVER_VOLUME_NAME}:${container_data_dir}" \
     -e "LICENSE=${DB2_LICENSE}" \
@@ -259,15 +253,14 @@ function run_db2_server() {
 #   7. (Optional) Liberty debug port (will be exposed as the same port)
 #######################################
 function run_liberty() {
-  validate_parameters 6 "$@"
+  validate_parameters 5 "$@"
 
   local CONTAINER="$1"
   local FQDN="$2"
   local VOLUME="$3"
-  local SECRET_VOLUME="$4"
-  local HOST_PORT="$5"
-  local KEY_FOLDER="$6"
-  local DEBUG_PORT="$7"
+  local HOST_PORT="$4"
+  local KEY_FOLDER="$5"
+  local DEBUG_PORT="$6"
 
   local liberty_start_command=()
   local db_environment=("-e" "DB_DIALECT=${DB_DIALECT}" "-e" "DB_PORT=${DB_PORT}")
@@ -376,7 +369,6 @@ function run_liberty() {
     --network "${DOMAIN_NAME}" \
     --net-alias "${FQDN}" \
     -p "${HOST_PORT}:${CONTAINER_PORT}" \
-    -v "${SECRET_VOLUME}:${CONTAINER_SECRETS_DIR}" \
     -v "${VOLUME}:/data" \
     -e "LICENSE=${LIC_AGREEMENT}" \
     "${db_environment[@]}" \
@@ -661,7 +653,6 @@ function run_load_balancer() {
     --net-alias "${I2_ANALYZE_FQDN}" \
     -p "9046:9046" \
     -v "${LOAD_BALANCER_VOLUME_NAME}:${load_balancer_config_dir}" \
-    -v "${LOAD_BALANCER_SECRETS_VOLUME_NAME}:${CONTAINER_SECRETS_DIR}" \
     -e "LIBERTY1_LB_STANZA=${LIBERTY1_LB_STANZA}" \
     -e "LIBERTY2_LB_STANZA=${LIBERTY2_LB_STANZA}" \
     -e "LIBERTY_SSL_CONNECTION=${LIBERTY_SSL_CONNECTION}" \
@@ -674,12 +665,11 @@ function run_load_balancer() {
 }
 
 function run_example_connector() {
-  validate_parameters 4 "$@"
+  validate_parameters 3 "$@"
 
   local CONTAINER="$1"
   local FQDN="$2"
   local KEY_FOLDER="$3"
-  local SECRET_VOLUME="$4"
 
   local ssl_private_key
   ssl_private_key=$(get_secret "certificates/${KEY_FOLDER}/server.key")
@@ -693,7 +683,6 @@ function run_example_connector() {
     --name "${CONTAINER}" \
     --network "${DOMAIN_NAME}" \
     --net-alias "${FQDN}" \
-    -v "${SECRET_VOLUME}:${CONTAINER_SECRETS_DIR}" \
     -e "SSL_ENABLED=${GATEWAY_SSL_CONNECTION}" \
     -e "SSL_PRIVATE_KEY=${ssl_private_key}" \
     -e "SSL_CERTIFICATE=${ssl_certificate}" \
@@ -762,15 +751,15 @@ function run_prometheus() {
     prometheus_start_command+=("-e" "PROMETHEUS_PASSWORD=${prometheus_password}")
     prometheus_start_command+=("-e" "LIBERTY_ADMIN_USERNAME=${I2_ANALYZE_ADMIN}")
     prometheus_start_command+=("-e" "LIBERTY_ADMIN_PASSWORD=${liberty_admin_password}")
-    prometheus_start_command+=("-e" "LIBERTY_SSL_CONNECTION=${LIBERTY_SSL_CONNECTION}")
-    prometheus_start_command+=("-e" "SERVER_SSL=${PROMETHEUS_SSL_CONNECTION}")
-    prometheus_start_command+=("-e" "SSL_PRIVATE_KEY=${ssl_private_key}")
-    prometheus_start_command+=("-e" "SSL_CERTIFICATE=${ssl_certificate}")
-    prometheus_start_command+=("-e" "SSL_CA_CERTIFICATE=${ssl_ca_certificate}")
-    prometheus_start_command+=("-e" "SSL_OUTBOUND_PRIVATE_KEY=${ssl_outbound_private_key}")
-    prometheus_start_command+=("-e" "SSL_OUTBOUND_CERTIFICATE=${ssl_outbound_certificate}")
-    prometheus_start_command+=("-e" "SSL_OUTBOUND_CA_CERTIFICATE=${ssl_outbound_ca_certificate}")
   fi
+  prometheus_start_command+=("-e" "LIBERTY_SSL_CONNECTION=${LIBERTY_SSL_CONNECTION}")
+  prometheus_start_command+=("-e" "SERVER_SSL=${PROMETHEUS_SSL_CONNECTION}")
+  prometheus_start_command+=("-e" "SSL_PRIVATE_KEY=${ssl_private_key}")
+  prometheus_start_command+=("-e" "SSL_CERTIFICATE=${ssl_certificate}")
+  prometheus_start_command+=("-e" "SSL_CA_CERTIFICATE=${ssl_ca_certificate}")
+  prometheus_start_command+=("-e" "SSL_OUTBOUND_PRIVATE_KEY=${ssl_outbound_private_key}")
+  prometheus_start_command+=("-e" "SSL_OUTBOUND_CERTIFICATE=${ssl_outbound_certificate}")
+  prometheus_start_command+=("-e" "SSL_OUTBOUND_CA_CERTIFICATE=${ssl_outbound_ca_certificate}")
 
   check_file_exists "${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml"
   update_volume "${LOCAL_PROMETHEUS_CONFIG_DIR}" "${PROMETHEUS_CONFIG_VOLUME_NAME}" "${prometheus_tmp_config_dir}"
@@ -783,7 +772,6 @@ function run_prometheus() {
     -p "${HOST_PORT_PROMETHEUS}:9090" \
     -v "${PROMETHEUS_CONFIG_VOLUME_NAME}:${prometheus_tmp_config_dir}" \
     -v "${PROMETHEUS_DATA_VOLUME_NAME}:/prometheus" \
-    -v "${PROMETHEUS_SECRETS_VOLUME_NAME}:${CONTAINER_SECRETS_DIR}" \
     "${prometheus_start_command[@]}" \
     "${PROMETHEUS_IMAGE_NAME}:${PROMETHEUS_VERSION}"
 }
@@ -800,6 +788,10 @@ function run_grafana() {
   local prometheus_password
   prometheus_password=$(get_prometheus_admin_password)
 
+  local ssl_private_key
+  ssl_private_key=$(get_secret "certificates/grafana/server.key")
+  local ssl_certificate
+  ssl_certificate=$(get_secret "certificates/grafana/server.cer")
   local ssl_ca_certificate
   ssl_ca_certificate=$(get_secret "certificates/externalCA/CA.cer")
 
@@ -818,12 +810,11 @@ function run_grafana() {
     -v "${GRAFANA_DATA_VOLUME_NAME}:/var/lib/grafana" \
     -v "${GRAFANA_DASHBOARDS_VOLUME_NAME}:${grafana_dashboards_dir}" \
     -v "${GRAFANA_PROVISIONING_VOLUME_NAME}:${grafana_provisioning_dir}" \
-    -v "${GRAFANA_SECRETS_VOLUME_NAME}:${CONTAINER_SECRETS_DIR}" \
     -e "GF_SECURITY_ADMIN_USER=${GRAFANA_USERNAME}" \
     -e "GF_SECURITY_ADMIN_PASSWORD=${grafana_password}" \
-    -e "GF_SERVER_PROTOCOL=https" \
-    -e "GF_SERVER_CERT_FILE=/run/secrets/server.cer" \
-    -e "GF_SERVER_CERT_KEY=/run/secrets/server.key" \
+    -e "SSL_ENABLED=true" \
+    -e "SSL_CERTIFICATE=${ssl_certificate}" \
+    -e "SSL_PRIVATE_KEY=${ssl_private_key}" \
     -e "PROMETHEUS_URL=${prometheus_url}" \
     -e "PROMETHEUS_USERNAME=${PROMETHEUS_USERNAME}" \
     -e "PROMETHEUS_PASSWORD=${prometheus_password}" \

@@ -11,6 +11,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
 
+## 2.7.0
+
+### Added
+
+* Ability to backup and restore the database to S3 and shared file systems
+
+### Changed
+
+* The default authentication mechanism is Form-Based Auth
+
+### Fixed
+
+* `renew-certificates` task updates connector secrets
+* Secret expiry no longer causes data loss since last backup
+
+[2.7.0]: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.7.0><!-- markdown-link-check-enable -->
 ## 2.6.0 - 24/07/2023
 
 ### Added
@@ -30,7 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * A config that includes `overrideHttpAuthMethod="CLIENT_CERT"` in the `server.extensions.xml` can be deployed successfully.
 * Fixed JDBC driver version validation for `create-environment` script
 
-[2.6.0]: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.6.0><!-- markdown-link-check-enable -->
+[2.6.0]: <https://github.com/i2group/analyze-containers/tree/v2.6.0>
 
 ## 2.5.3 - 07/06/2023
 

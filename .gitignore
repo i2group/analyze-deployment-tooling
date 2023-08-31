@@ -82,6 +82,7 @@ dev-environment-secrets-copy/*
 /licenses.conf
 /path-configuration.json
 /.devcontainer/devcontainer.json
+/.s3cfg
 
 !.gitignore
 !.gitattributes

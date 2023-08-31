@@ -1,0 +1,251 @@
+#!/usr/bin/env bash
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022-2023)
+#
+# SPDX short identifier: MIT
+
+set -e
+
+if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
+  ANALYZE_CONTAINERS_ROOT_DIR=$(
+    pushd . 1>/dev/null
+    while [ "$(pwd)" != "/" ]; do
+      test -e .root && grep -q 'Analyze-Containers-Root-Dir' <'.root' && {
+        pwd
+        break
+      }
+      cd ..
+    done
+    popd 1>/dev/null || exit
+  )
+  export ANALYZE_CONTAINERS_ROOT_DIR
+fi
+
+# TODO: Doc review
+USAGE="""
+Usage:
+  backup-database-utility -t {backup|restore} -s {s3cmd|filesystem} -c <config_name> -b <backup_name> -p <path> [-v] [-y]
+  backup-database-utility -c <config_name> -b <backup_name> -t {s3cmd|filesystem} -p <path> [-v] [-y]
+  backup-database-utility -h
+
+Options:
+  -t {configure-s3cmd}                   Runs the S3cmd interactive configuration tool.
+  -t {backup}                            Copies/upload a backup in the location specified. If backup name not known then it creates new backup.
+  -t {restore}                           Copies/download and restore a backup from the location specified.
+  -s {filesystem}                        Performs the task in the file system.
+  -s {s3cmd}                             Performs the task in an S3-like system.
+  -p <path>                              The full path to the directory or S3 URL.
+  -c <config_name>                       Name of the config to use.
+  -b <backup_name>                       Name of the backup to create or copy.
+  -v                                     Verbose output.
+  -y                                     Answer 'yes' to all prompts.
+  -h                                     Display the help.
+"""
+
+source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
+
+OPTIONS_FOR="backupDatabase"
+parse_arguments "$@"
+
+function validate_arguments() {
+  [[ -z "${TASK}" ]] && print_usage 1
+  [[ "${TASK}" == "backup" || "${TASK}" == "restore" || "${TASK}" == "configure-s3cmd" ]] || print_error_and_usage "${TASK} is not supported."
+
+  # Filesystem type should always run externally
+  if [[ "${DEVCONTAINER}" == "true" && "${STORAGE_TYPE}" == "filesystem" ]]; then
+    if [[ "${DEV_MODE}" == "true" ]]; then
+      print_warn "[Dev Mode] This script should run in your local shell"
+    else
+      # TODO: Doc review
+      print_error_and_exit "You must run this script from your local shell."
+    fi
+  fi
+
+  if [[ "${TASK}" != "configure-s3cmd" ]]; then
+    [[ -z "${STORAGE_TYPE}" ]] && print_usage 1
+    [[ "${STORAGE_TYPE}" == "s3cmd" || "${STORAGE_TYPE}" == "filesystem" ]] || print_error_and_usage "${STORAGE_TYPE} is not supported."
+
+    [[ -z "${PATH_TO_DIR}" || -z "${CONFIG_NAME}" || -z "${BACKUP_NAME}" ]] && print_usage 1
+
+    check_valid_config_name "${CONFIG_NAME}"
+  fi
+}
+
+function get_bind_mounts() {
+  # Get all mounts in case backup is in a symlink
+  local mount_list
+  if [[ -f "${ANALYZE_CONTAINERS_ROOT_DIR}/path-configuration.json" ]]; then
+    mount_list=$(
+      docker run \
+        --rm \
+        -v "${ANALYZE_CONTAINERS_ROOT_DIR}:${ANALYZE_CONTAINERS_ROOT_DIR}" \
+        -e ANALYZE_CONTAINERS_ROOT_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}" \
+        i2group/i2eng-analyze-containers-dev:1.1 \
+        "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/containers/create-mounts" -t list
+    )
+  fi
+  BIND_MOUNTS=()
+  for mount in $mount_list; do
+    BIND_MOUNTS+=("-v" "${mount}:${mount}")
+  done
+}
+
+function run_s3cmd() {
+  extra_args=()
+  if [[ -n "${YES_FLAG}" ]]; then
+    extra_args+=("-f")
+  fi
+  if [[ -n "${VERBOSE}" ]]; then
+    extra_args+=("-v")
+  fi
+
+  # Ensures s3cfg file exists before mounting
+  touch "${ANALYZE_CONTAINERS_ROOT_DIR}/.s3cfg"
+
+  # Run command in docker
+  docker run -it \
+    --rm \
+    "${BIND_MOUNTS[@]}" \
+    -v "${ANALYZE_CONTAINERS_ROOT_DIR}:${ANALYZE_CONTAINERS_ROOT_DIR}" \
+    -e ANALYZE_CONTAINERS_ROOT_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}" \
+    -e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \
+    -e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
+    -e AWS_SESSION_TOKEN="${AWS_SESSION_TOKEN}" \
+    -e AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION}" \
+    -u "$(id -u):$(id -g)" \
+    --entrypoint "" \
+    i2group/i2eng-analyze-containers-dev:1.1 \
+    s3cmd "$@" "${extra_args[@]}"
+}
+
+function run_deploy_backup_task() {
+  local task="$1"
+  [[ "${task}" == "backup" || "${task}" == "restore" ]] || print_error_and_exit "Unsupported task $task"
+
+  local extra_args=()
+  if [[ "${YES_FLAG}" == "true" ]]; then
+    extra_args+=("-y")
+  fi
+  if [[ "${VERBOSE}" == "true" ]]; then
+    extra_args+=("-v")
+  fi
+
+  docker run -d \
+    --name ac-backup-utility-devcontainer \
+    "${BIND_MOUNTS[@]}" \
+    -v "${ANALYZE_CONTAINERS_ROOT_DIR}:${ANALYZE_CONTAINERS_ROOT_DIR}" \
+    -e ANALYZE_CONTAINERS_ROOT_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}" \
+    -v "/var/run/docker.sock:/var/run/docker-host.sock" \
+    -w "${ANALYZE_CONTAINERS_ROOT_DIR}" \
+    -e USER_ID="$(id -u)" \
+    -e GROUP_ID="$(id -g)" \
+    i2group/i2eng-analyze-containers-dev:1.1
+  sleep 10
+  docker exec -u vscode -it \
+    -e ANALYZE_CONTAINERS_ROOT_DIR="${ANALYZE_CONTAINERS_ROOT_DIR}" \
+    -w "${ANALYZE_CONTAINERS_ROOT_DIR}/scripts" \
+    ac-backup-utility-devcontainer \
+    "${ANALYZE_CONTAINERS_ROOT_DIR}/scripts/deploy" -c "${CONFIG_NAME}" -b "${BACKUP_NAME}" -t "${task}" "${extra_args[@]}"
+  docker rm -f ac-backup-utility-devcontainer
+}
+
+function copy_backup() {
+  local type="$1" # upload | download
+
+  [[ "${type}" == "upload" || "${type}" == "download" ]] || print_error_and_exit "Unsupported type $type"
+
+  local path_to_backup="${ANALYZE_CONTAINERS_ROOT_DIR}/backups/${CONFIG_NAME}/${BACKUP_NAME}"
+  if [[ "${type}" == "upload" ]]; then
+    from_path="${path_to_backup}"
+    to_path="${PATH_TO_DIR}/${BACKUP_NAME}"
+  else
+    from_path="${PATH_TO_DIR}/${BACKUP_NAME}"
+    to_path="${path_to_backup}"
+  fi
+
+  mkdir -p "${to_path}"
+
+  local extra_args
+  case "${STORAGE_TYPE}" in
+  "filesystem")
+    cp -RL "${from_path}/." "${to_path}"
+    ;;
+  "s3cmd")
+    extra_args=()
+    if [[ -n "${YES_FLAG}" ]]; then
+      extra_args+=("-f")
+    fi
+    if [[ -n "${VERBOSE}" ]]; then
+      extra_args+=("-v")
+    fi
+    if [[ "${YES_FLAG}" != "true" ]]; then
+      run_s3cmd sync --config="${ANALYZE_CONTAINERS_ROOT_DIR}/.s3cfg" -F --dry-run "${extra_args[@]}" "${from_path}/" "${to_path}/"
+      # TODO: Docs review
+      # type = upload | download
+      wait_for_user_reply "The above will be ${type}ed. Are you sure you want to continue?"
+    fi
+    run_s3cmd sync --config="${ANALYZE_CONTAINERS_ROOT_DIR}/.s3cfg" -F "${extra_args[@]}" "${from_path}/" "${to_path}/"
+    ;;
+  esac
+
+  print_info "Create gitignore file in internal backup directory"
+  echo "*" >"${path_to_backup}/.gitignore"
+}
+
+function run_backup() {
+  if [[ ! -d "${ANALYZE_CONTAINERS_ROOT_DIR}/backups/${CONFIG_NAME}/${BACKUP_NAME}" ]]; then
+    # TODO: Doc review
+    wait_for_user_reply "Backup name ${BACKUP_NAME} does not exists. Do you want to create one?"
+    run_deploy_backup_task "backup"
+  fi
+  copy_backup "upload"
+
+  # TODO: Docs review
+  print_success "Backup has been copied to ${PATH_TO_DIR}"
+
+  # TODO: Doc review
+  wait_for_user_reply "Do you want to remove the backup from the '/backups' folder?"
+  find -L "${ANALYZE_CONTAINERS_ROOT_DIR}/backups/${CONFIG_NAME}/${BACKUP_NAME}" -type f -not -name ".gitignore" -exec rm -f {} \;
+}
+
+function run_restore() {
+  copy_backup "download"
+  run_deploy_backup_task "restore"
+  # TODO: Docs review
+  print_success "Restore completed from ${PATH_TO_DIR}"
+}
+
+function run_configure() {
+  # Runs configure only
+  run_s3cmd --config="${ANALYZE_CONTAINERS_ROOT_DIR}/.s3cfg" --configure | tee "${ANALYZE_CONTAINERS_ROOT_DIR}/.tmp/output"
+  configure_output="$(cat "${ANALYZE_CONTAINERS_ROOT_DIR}/.tmp/output")"
+  if [[ "${configure_output}" == *"Configuration saved to "* ]]; then
+    # TODO: Docs review
+    print_success "Tool configured successfully"
+    exit 0
+  else
+    print_error_and_exit "Please configure s3cmd and save configuration"
+  fi
+}
+###############################################################################
+# Function Definitions                                                        #
+###############################################################################
+
+function main() {
+  validate_arguments
+  get_bind_mounts
+
+  case "${TASK}" in
+  "backup")
+    run_backup
+    ;;
+  "restore")
+    run_restore
+    ;;
+  "configure-s3cmd")
+    run_configure
+    ;;
+  esac
+}
+
+main "$@"

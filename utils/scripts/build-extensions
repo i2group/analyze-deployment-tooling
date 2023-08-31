@@ -147,7 +147,7 @@ function main() {
   ###############################################################################
   # Build Extensions                                                            #
   ###############################################################################
-  build_asset_array "extension" "i2a-extensions" "target"
+  build_asset_array "extension" "i2a-extensions"
   for extension_name in "${EXTENSIONS_ARRAY[@]}"; do
     build_extension "${extension_name}"
   done

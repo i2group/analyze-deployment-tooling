@@ -50,23 +50,6 @@ else
   I2A_DATA_SERVER_VOLUME_NAME="i2a_data_server_${SUPPORTED_I2ANALYZE_VERSION}"
   I2A_DATA_CLIENT_VOLUME_NAME="i2a_data_client_${SUPPORTED_I2ANALYZE_VERSION}"
 fi
-SOLR_BACKUP_VOLUME_NAME="${SOLR1_CONTAINER_NAME}_solr_backup"
-LIBERTY1_SECRETS_VOLUME_NAME="${LIBERTY1_HOST_NAME}_secrets"
-LIBERTY2_SECRETS_VOLUME_NAME="${LIBERTY2_HOST_NAME}_secrets"
-ZK1_SECRETS_VOLUME_NAME="${ZK1_HOST_NAME}_secrets"
-ZK2_SECRETS_VOLUME_NAME="${ZK2_HOST_NAME}_secrets"
-ZK3_SECRETS_VOLUME_NAME="${ZK3_HOST_NAME}_secrets"
-SOLR1_SECRETS_VOLUME_NAME="${SOLR1_HOST_NAME}_secrets"
-SOLR2_SECRETS_VOLUME_NAME="${SOLR2_HOST_NAME}_secrets"
-SOLR3_SECRETS_VOLUME_NAME="${SOLR3_HOST_NAME}_secrets"
-CONNECTOR1_SECRETS_VOLUME_NAME="${CONNECTOR1_HOST_NAME}_secrets"
-CONNECTOR2_SECRETS_VOLUME_NAME="${CONNECTOR2_HOST_NAME}_secrets"
-SQL_SERVER_SECRETS_VOLUME_NAME="${SQL_SERVER_HOST_NAME}_secrets"
-DB2_SERVER_SECRETS_VOLUME_NAME="${DB2_SERVER_HOST_NAME}_secrets"
-POSTGRES_SERVER_SECRETS_VOLUME_NAME="${POSTGRES_SERVER_HOST_NAME}_secrets"
-LOAD_BALANCER_SECRETS_VOLUME_NAME="${LOAD_BALANCER_HOST_NAME}_secrets"
-PROMETHEUS_SECRETS_VOLUME_NAME="${PROMETHEUS_HOST_NAME}_secrets"
-GRAFANA_SECRETS_VOLUME_NAME="${GRAFANA_HOST_NAME}_secrets"
 
 ###############################################################################
 # Backup and restore variables                                                #
@@ -237,13 +220,6 @@ AWS_ENV_TYPE="test"
 ###############################################################################
 # Development variables                                                       #
 ###############################################################################
-USE_LOAD_BALANCER_FOR_ACCESS="true"
-
-if [ "${USE_LOAD_BALANCER_FOR_ACCESS}" == "true" ]; then
-  LOCAL_CA_CERT_DIR_FOR_CURL="${LOCAL_EXTERNAL_CA_CERT_DIR}"
-else
-  LOCAL_CA_CERT_DIR_FOR_CURL="${LOCAL_CA_CERT_DIR}"
-fi
 
 # Windows (WSL)
 DEVELOPMENT_JARS_DIR="/c/i2/iap-discovery/Liberty/wlp/usr/servers/is-daod/apps/opal-services-is-daod.war/WEB-INF/lib"

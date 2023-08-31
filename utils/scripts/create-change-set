@@ -496,6 +496,7 @@ function create_database_upgrade_change_set() {
   run_i2_analyze_tool "/opt/i2-tools/scripts/generateDynamicInfoStoreCreationScripts.sh"
 
   find -L "${LOCAL_GENERATED_DIR}/static/" -maxdepth 1 -type f -exec cp {} "${LOCAL_GENERATED_DIR}" \;
+  find -L "${LOCAL_GENERATED_DIR}/dynamic/" -maxdepth 1 -type f -exec cp {} "${LOCAL_GENERATED_DIR}" \;
   mkdir -p "${LOCAL_GENERATED_DIR}/upgrade"
   cp "${LOCAL_GENERATED_DIR}/static/2020-create-deletion-by-rule-routines.sql" "${LOCAL_GENERATED_DIR}/upgrade"
 

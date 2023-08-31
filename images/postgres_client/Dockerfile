@@ -7,7 +7,7 @@
 ARG BASE_IMAGE="i2group/i2eng-postgres:15"
 FROM ${BASE_IMAGE}
 
-ARG GOSU_VERSION=1.14
+ARG GOSU_VERSION=1.16
 
 COPY --chown="${USER}:0" docker-entrypoint.sh /opt/docker-entrypoint.sh
 COPY --chown="${USER}:0" db-scripts/ /opt/db-scripts
@@ -22,7 +22,9 @@ USER root
 RUN apt-get update \
   && apt-get install -y curl \
   && rm -rf /var/lib/apt/lists/* \
-  && curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-amd64" \
+  && [[ "$(uname -m)" != "aarch64" ]]; \
+  curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-amd64" \
+  || curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-arm64" \
   && chmod +x /usr/local/bin/gosu \
   # Verify that the binary works
   && gosu nobody true \

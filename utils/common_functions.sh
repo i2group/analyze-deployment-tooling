@@ -104,6 +104,10 @@ function set_options() {
     # cspell:disable-next-line
     OPTIONS="t:p:n:dvhy"
     ;;
+  "backupDatabase")
+    # cspell:disable-next-line
+    OPTIONS="c:b:t:s:p:vhy"
+    ;;
   *)
     print_error_and_exit "OPTIONS_FOR is not set"
     ;;
@@ -147,7 +151,11 @@ function parse_arguments() {
         fi
         ;;
       s)
-        SCRIPT_NAME="${OPTARG}"
+        if [[ "${OPTIONS_FOR}" == "backupDatabase" ]]; then
+          STORAGE_TYPE="${OPTARG}"
+        else
+          SCRIPT_NAME="${OPTARG}"
+        fi
         ;;
       n)
         if [[ "${OPTIONS_FOR}" == "createChangeSet" ]]; then
@@ -192,7 +200,7 @@ function parse_arguments() {
           PREVIOUS_PROJECT_PATH="${OPTARG}"
         elif [[ "${OPTIONS_FOR}" == "manageContainerConfig" ]]; then
           PATH_FOR_EXPORT="${OPTARG}"
-        elif [[ "${OPTIONS_FOR}" == "configurePaths" ]]; then
+        else
           PATH_TO_DIR="${OPTARG}"
         fi
         ;;
@@ -618,6 +626,7 @@ function wait_for_liberty_to_be_live() {
       fi
     fi
 
+    print_info "Health endpoint status code: $(get_health_live_endpoint_status)"
     echo "i2 Analyze service is NOT live (attempt: $i). Waiting..."
     sleep 5
   done
@@ -1433,7 +1442,7 @@ function delete_all_containers() {
 
   print "Removing all containers"
 
-  IFS=' ' read -ra container_names <<<"$(docker ps --format "{{.Names}}" -f network="${DOMAIN_NAME}" | xargs)"
+  IFS=' ' read -ra container_names <<<"$(docker ps -a --format "{{.Names}}" -f network="${DOMAIN_NAME}" | xargs)"
   for container_name in "${container_names[@]}"; do
     for prefix in "${CONTAINER_NAMES_PREFIX[@]}"; do
       if [[ "${container_name}" == "${prefix}"* ]]; then
@@ -1593,7 +1602,7 @@ function run_db_container_with_backup_volume() {
   case "${DB_DIALECT}" in
   sqlserver)
     image_name="${SQL_SERVER_IMAGE_NAME}"
-    image_tag="${I2A_DEPENDENCIES_IMAGES_TAG}"
+    image_tag="${SQL_SERVER_IMAGE_VERSION}"
     volume_name="${SQL_SERVER_BACKUP_VOLUME_NAME}"
     ;;
   db2)
@@ -2306,25 +2315,6 @@ function set_dependencies_tag_if_necessary() {
   fi
 }
 
-function update_core_secrets_volumes() {
-  update_volume "${LOCAL_KEYS_DIR}/${LIBERTY1_HOST_NAME}" "${LIBERTY1_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
-  update_volume "${LOCAL_KEYS_DIR}/${LIBERTY2_HOST_NAME}" "${LIBERTY2_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
-  update_volume "${LOCAL_KEYS_DIR}/${ZK1_HOST_NAME}" "${ZK1_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
-  update_volume "${LOCAL_KEYS_DIR}/${ZK2_HOST_NAME}" "${ZK2_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
-  update_volume "${LOCAL_KEYS_DIR}/${ZK3_HOST_NAME}" "${ZK3_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
-  update_volume "${LOCAL_KEYS_DIR}/${CONNECTOR1_HOST_NAME}" "${CONNECTOR1_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
-  update_volume "${LOCAL_KEYS_DIR}/${CONNECTOR2_HOST_NAME}" "${CONNECTOR2_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
-  update_volume "${LOCAL_KEYS_DIR}/${SOLR1_HOST_NAME}" "${SOLR1_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
-  update_volume "${LOCAL_KEYS_DIR}/${SOLR2_HOST_NAME}" "${SOLR2_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
-  update_volume "${LOCAL_KEYS_DIR}/${SOLR3_HOST_NAME}" "${SOLR3_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
-  update_volume "${LOCAL_KEYS_DIR}/${SQL_SERVER_HOST_NAME}" "${SQL_SERVER_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
-  update_volume "${LOCAL_KEYS_DIR}/${DB2_SERVER_HOST_NAME}" "${DB2_SERVER_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
-  update_volume "${LOCAL_KEYS_DIR}/${POSTGRES_SERVER_HOST_NAME}" "${POSTGRES_SERVER_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
-  update_volume "${LOCAL_KEYS_DIR}/${I2ANALYZE_HOST_NAME}" "${LOAD_BALANCER_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
-  update_volume "${LOCAL_KEYS_DIR}/${PROMETHEUS_HOST_NAME}" "${PROMETHEUS_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
-  update_volume "${LOCAL_KEYS_DIR}/${GRAFANA_HOST_NAME}" "${GRAFANA_SECRETS_VOLUME_NAME}" "${CONTAINER_SECRETS_DIR}"
-}
-
 function warn_root_dir_not_in_path() {
   local current_path
 
@@ -2437,21 +2427,46 @@ function check_licenses_accepted_if_required() {
 }
 
 function configure_prometheus_for_pre_prod() {
-  local prometheus_scheme="http"
-  local liberty_scheme="http"
-  if [[ "${PROMETHEUS_SSL_CONNECTION}" == "true" ]]; then
-    prometheus_scheme="https"
-  fi
-  if [[ "${LIBERTY_SSL_CONNECTION}" == "true" ]]; then
-    liberty_scheme="https"
-  fi
-
   sed \
-    -e "s/\${PROMETHEUS_SCHEME}/${prometheus_scheme}/g" \
-    -e "s/\${LIBERTY_SCHEME}/${liberty_scheme}/g" \
     -e "s/\${LIBERTY1_STANZA}/${LIBERTY1_STANZA}/g" \
     -e "s/\${LIBERTY2_STANZA}/${LIBERTY2_STANZA}/g" \
     "${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus-template.yml" >"${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml"
+
+  if [[ "${PROMETHEUS_SSL_CONNECTION}" == "true" ]]; then
+    sed \
+      -e "s/\${PROMETHEUS_SCHEME}/https/g" \
+      "${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml" >"${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml.tmp"
+    mv "${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml.tmp" "${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml"
+  else
+    sed \
+      -e "s/\${PROMETHEUS_SCHEME}/http/g" \
+      -e "s/cert_file: \/tmp\/i2acerts\/server.cer//g" \
+      -e "s/key_file: \/tmp\/i2acerts\/server.key//g" \
+      -e "s/ca_file: \/tmp\/i2acerts\/CA.cer//g" \
+      "${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml" >"${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml.tmp"
+    mv "${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml.tmp" "${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml"
+
+    sed \
+      -e "s/cert_file: \/tmp\/i2acerts\/server.cer//g" \
+      -e "s/key_file: \/tmp\/i2acerts\/server.key//g" \
+      -e "s/client_ca_file: \/tmp\/i2acerts\/CA.cer//g" \
+      "${LOCAL_PROMETHEUS_CONFIG_DIR}/web-config.yml" >"${LOCAL_PROMETHEUS_CONFIG_DIR}/web-config.yml.tmp"
+    mv "${LOCAL_PROMETHEUS_CONFIG_DIR}/web-config.yml.tmp" "${LOCAL_PROMETHEUS_CONFIG_DIR}/web-config.yml"
+  fi
+  if [[ "${LIBERTY_SSL_CONNECTION}" == "true" ]]; then
+    sed \
+      -e "s/\${LIBERTY_SCHEME}/https/g" \
+      "${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml" >"${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml.tmp"
+    mv "${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml.tmp" "${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml"
+  else
+    sed \
+      -e "s/\${LIBERTY_SCHEME}/http/g" \
+      -e "s/cert_file: \/tmp\/i2acerts\/out_server.cer//g" \
+      -e "s/key_file: \/tmp\/i2acerts\/out_server.key//g" \
+      -e "s/ca_file: \/tmp\/i2acerts\/out_CA.cer//g" \
+      "${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml" >"${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml.tmp"
+    mv "${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml.tmp" "${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml"
+  fi
 }
 
 function create_license_configuration() {
@@ -2690,12 +2705,10 @@ function validate_parameters() {
 # Arguments:
 #   1. The asset type e.g. "connector"
 #   2. The assets directory
-#   3. (Optional) Directory to be skipped
 #######################################
 function build_asset_array() {
   local asset_type="$1"
   local assets_dir="$2"
-  local skip_dir="$3"
 
   ASSETS_ARRAY=()
   if [[ "${INCLUDED_ASSETS[*]}" ]]; then
@@ -2703,14 +2716,11 @@ function build_asset_array() {
     ASSETS_ARRAY+=("${INCLUDED_ASSETS[@]}")
   else
     # All assets
-    for asset_dir in "${ANALYZE_CONTAINERS_ROOT_DIR}/${assets_dir}"/*; do
-      [[ ! -d "${asset_dir}" ]] && continue
+    while read -r asset_dir; do
       asset_name=$(basename "${asset_dir}")
-      if [[ -n "${skip_dir}" ]]; then
-        [[ "${asset_name}" == "${skip_dir}" ]] && continue
-      fi
+      [[ -z "${asset_name}" ]] && continue
       ASSETS_ARRAY+=("${asset_name}")
-    done
+    done <<<"$(find -L "${ANALYZE_CONTAINERS_ROOT_DIR}/${assets_dir}" -mindepth 1 -maxdepth 1 -not -name ".*" -not -name "target" -type d | sort)"
     # All assets minus excluded assets
     if [[ -n "${EXCLUDED_ASSETS[*]}" ]]; then
       for excluded_asset in "${EXCLUDED_ASSETS[@]}"; do
@@ -2748,8 +2758,8 @@ function pull_base_images() {
   docker pull "i2group/i2eng-solr:${SOLR_VERSION}"
   docker pull "${ZOOKEEPER_IMAGE_NAME}:${ZOOKEEPER_VERSION}"
   docker pull "i2group/i2eng-prometheus:${PROMETHEUS_VERSION}"
-  docker pull "grafana/grafana-oss:${GRAFANA_VERSION}"
-  docker pull "mcr.microsoft.com/mssql/rhel/server:${SQL_SERVER_IMAGE_VERSION}"
+  docker pull "${GRAFANA_IMAGE_NAME}:${GRAFANA_VERSION}"
+  docker pull "${SQL_SERVER_IMAGE_NAME}:${SQL_SERVER_IMAGE_VERSION}"
   docker pull "${POSTGRES_SERVER_IMAGE_NAME}:${POSTGRES_IMAGE_VERSION}"
   docker pull "${NODEJS_IMAGE_NAME}:${NODEJS_IMAGE_VERSION}"
   docker pull "${SPRINGBOOT_IMAGE_NAME}:${SPRINGBOOT_IMAGE_VERSION}"
@@ -2985,6 +2995,7 @@ function handle_db_initiation_on_pattern_change() {
 function configure_solr_collection() {
   local collection_name="$1"
   local collection_type="${2:-$collection_name}"
+  print_info "Configure ${collection_name} collection"
   run_solr_client_command solr zk upconfig -v -z "${ZK_HOST}" -n "${collection_name}" -d /opt/configuration/solr/generated_config/"${collection_type}"
 }
 

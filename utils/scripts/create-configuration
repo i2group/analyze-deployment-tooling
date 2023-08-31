@@ -195,6 +195,14 @@ function create_clean_base_configuration_for_config_dev() {
   cp "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/templates/plugin-references.json" "${LOCAL_CONFIGURATION_DIR}"
   cp "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/templates/mapping-configuration.json" "${LOCAL_CONFIGURATION_DIR}"
 
+  print "Configuring form based authentication"
+  xmlstarlet edit -L --subnode "//server" --type elem -n webAppSecurity \
+    --insert "// webAppSecurity" --type attr --name "overrideHttpAuthMethod" --value "FORM" \
+    --insert "// webAppSecurity" --type attr --name "allowAuthenticationFailOverToAuthMethod" --value "FORM" \
+    --insert "// webAppSecurity" --type attr --name "loginFormURL" --value "opal/login.html" \
+    --insert "// webAppSecurity" --type attr --name "loginErrorURL" --value "opal/login.html?failed" \
+    "${LOCAL_CONFIGURATION_DIR}/server.extensions.xml"
+
   print "Configuring extensions"
   cp "${toolkit_examples_dir}/extensions/parent-pom.xml" "${EXTENSIONS_DIR}/pom.xml"
   cp "${toolkit_examples_dir}/extensions/child-pom.xml" "${ANALYZE_CONTAINERS_ROOT_DIR}/templates/extension-development/pom.xml"

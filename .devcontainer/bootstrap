@@ -34,6 +34,7 @@ function install_analyze_containers_deps() {
   if [[ -d "${ANALYZE_CONTAINERS_ROOT_DIR}/pre-reqs/i2analyze/toolkit" ]]; then
     # Ensure to install the maven dependencies and images
     source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
+    source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulated_external_variables.sh"
     source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
     pull_base_images
     setup_i2_analyze_maven_local

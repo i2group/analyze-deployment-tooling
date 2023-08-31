@@ -30,9 +30,11 @@ ARG USERNAME=i2analyze
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-ARG GOSU_VERSION=1.14
+ARG GOSU_VERSION=1.16
 
-RUN curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-amd64" \
+RUN [[ "$(uname -m)" != "aarch64" ]]; \
+  curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-amd64" \
+  || curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-arm64" \
   && chmod +x /usr/local/bin/gosu \
   # Verify that the binary works
   && gosu nobody true
