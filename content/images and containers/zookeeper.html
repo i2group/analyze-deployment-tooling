@@ -98,7 +98,7 @@
    -v &quot;zk1_data:/data&quot; \
    -v &quot;zk1_datalog:/datalog&quot; \
    -v &quot;zk1_logs:/logs&quot; \
-   -v &quot;zk1_secrets:/run/secrets&quot; \
+   -v &quot;/dev-environment-secrets/simulated-secret-store/zk1:/run/secrets&quot; \
    -e &quot;ZOO_SERVERS=server.1=zk1.eia:2888:3888 server.2=zk2.eia:2888:3888 server.3=zk3.eia:2888:3888&quot; \
    -e &quot;ZOO_MY_ID=1&quot; \
    -e &quot;ZOO_SECURE_CLIENT_PORT=2281&quot; \
@@ -124,31 +124,24 @@
 <ol>
 <li><code>CONTAINER</code> - The name for the container.</li>
 <li><code>FQDN</code> - The fully qualified domain name for the container.</li>
-<li><code>DATA_VOLUME</code> - The name for the <code>data</code> named volume. For more information, see <a href="#volumes">Volumes</a>.</li>
-<li><code>DATALOG_VOLUME</code> - The name for the <code>datalog</code> named volume. For more information, see <a href="#volumes">Volumes</a>.</li>
-<li><code>LOG_VOLUME</code> - The name for the <code>log</code> named volume. For more information, see <a href="#volumes">Volumes</a>.</li>
+<li><code>DATA_VOLUME</code> - The name for the <code>data</code> named volume. For more information, see <a href="#storage">Storage</a>.</li>
+<li><code>DATALOG_VOLUME</code> - The name for the <code>datalog</code> named volume. For more information, see <a href="#storage">Storage</a>.</li>
+<li><code>LOG_VOLUME</code> - The name for the <code>log</code> named volume. For more information, see <a href="#storage">Storage</a>.</li>
 <li><code>HOST_PORT</code> - The port number on the host machine that is mapped to the port on the container.</li>
 <li><code>ZOO_ID</code> - An identifier for the ZooKeeper server. For more information, see <a href="#environment-variables">Environment variables</a>.</li>
 </ol>
 <p>An example of running Zookeeper container using <code>run_zk</code> function:</p>
 <pre><code class="lang-bash">run_zk zk1 zk1.eia zk1_data zk1_datalog zk1_logs 8080 1
-</code></pre><h3 id="volumes">Volumes</h3>
+</code></pre><h3 id="storage">Storage</h3>
 <p>A named volume or a bind mount can be used to persist data and logs that are generated and used in the ZooKeeper container, outside of the container.</p>
 <p>For more information, see <a href="https://hub.docker.com/_/zookeeper">Where to store data</a>.</p>
-<h3 id="named-volumes">Named Volumes</h3>
-<p>To configure the ZooKeeper container to use the named volume, specify the <code>-v</code> option with the name of the volume and the path where the directory is mounted in the container. By setting <code>-v</code> option in the docker run command, a named volume is created. For ZooKeeper, the directories that must be mounted are <code>/data</code>, <code>/datalog</code>, <code>/logs</code>.
+<p>To configure the ZooKeeper container to use these volumes, specify the <code>-v</code> option with the name of the volume and the path where the directory is mounted in the container. By setting <code>-v</code> option in the docker run command, a named volume is created. For ZooKeeper, the directories that must be mounted are <code>/data</code>, <code>/datalog</code>, <code>/logs</code>.
 For example:</p>
 <pre><code class="lang-sh">-v zk1_data:/data \
 -v zk1_datalog:/datalog \
 -v zk1_log:/logs \
--v zk1_secrets:/run/secrets
-</code></pre><p>A unique volume name must be used for each ZooKeeper container.</p>
-<p>A bind mount can be used instead of the named volume:
-For example:</p>
-<pre><code class="lang-sh">-v /var/zk/data:/data \
--v /var/zk/datalog:/datalog \
--v /var/zk/logs:/logs \
-</code></pre><p>A unique bind mount must be used for each ZooKeeper container.</p>
+-v /dev-environment-secrets/simulated-secret-store/zk1:/run/secrets
+</code></pre><p>A unique volume name or bind mount must be used for each ZooKeeper container.</p>
 <p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access zookeeper and certificates used in SSL.<br>The directory is used to update the named volume location defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>SSL_PRIVATE_KEY_FILE</code> to locate the secrets.
 In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files.</p>
 <h3 id="environment-variables">Environment variables</h3>

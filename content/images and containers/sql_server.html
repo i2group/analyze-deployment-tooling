@@ -79,14 +79,7 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="sql-server">SQL Server</h1>
 
-<p>In a containerized deployment, the database is located on a SQL Server container.</p>
-<h2 id="building-a-sql-server-image">Building a SQL Server image</h2>
-<p>SQL Server is built from a Dockerfile that is based on the Dockerfile from <a href="https://hub.docker.com/_/microsoft-mssql-server">Microsoft SQL Server</a>.</p>
-<p>The SQL Server image is built from the Dockerfile in <code>images/sql_server</code>.</p>
-<h3 id="docker-build-command">Docker build command</h3>
-<p>The following <code>docker build</code> command builds the SQL Server image:</p>
-<pre><code class="lang-bash">docker build -t &quot;sqlserver_redhat:4.4.2&quot; images/sqlserver
-</code></pre><p>For examples of the build commands, see <code>build-images</code> script.</p>
+<p>In a containerized deployment, the database is located on a SQL Server container which is run from a <a href="https://hub.docker.com/repository/docker/i2group/i2eng-sqlserver">SQL Server image</a> maintained by i2 Group on Docker Hub.</p>
 <h2 id="running-a-sql-server-container">Running a SQL Server container</h2>
 <p>The SQL Server container uses the SQL Server image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to the container. The environment variables are described in <a href="#environment-variables">environment variables</a>.</p>
 <p>The container will run with a User ID and Group ID of <code>10001</code>. All files in mounted directories will be created with these IDs. If files are manipulated externally these IDs must be retained or the container will not function correctly.</p>
@@ -100,7 +93,7 @@
    -p &quot;1433:1433&quot; \
    -v &quot;sqlserver_data:/var/opt/mssql&quot; \
    -v &quot;sqlserver_sqlbackup:/backup&quot; \
-   -v &quot;sqlserver_secrets:/run/secrets/&quot; \
+   -v &quot;/dev-environment-secrets/simulated-secret-store/sqlserver:/run/secrets/&quot; \
    -v &quot;/home/&lt;user-name&gt;/analyze-containers/prereqs/i2analyze/toolkit/examples/data:/var/i2a-data&quot; \
    -e ACCEPT_EULA=&quot;Y&quot; \
    -e MSSQL_AGENT_ENABLED=true \
@@ -109,9 +102,9 @@
    -e SERVER_SSL=true \
    -e SSL_PRIVATE_KEY_FILE=&quot;/run/secrets/server.key&quot; \
    -e SSL_CERTIFICATE_FILE=&quot;/run/secrets/server.cer&quot; \
-   &quot;sqlserver_redhat:4.4.2&quot;
+   &quot;i2group/i2eng-sqlserver:4.4.2&quot;
 </code></pre><p>For an example of the <code>docker run</code> command, see <a href="https://github.com/i2group/analyze-containers/blob/main/utils/server_functions.sh">server_functions.sh</a>. The <code>run_sql_server</code> does not take any arguments.</p>
-<h3 id="volumes">Volumes</h3>
+<h3 id="storage">Storage</h3>
 <p>Named volumes are used to persist data and logs that are generated and used in the SQL Server container, as well as a separate volume for backups, outside of the container.</p>
 <blockquote><p>Note: It is good practice to have a separate volume for the backup from the database storage. For more information, see <a href="https://docs.microsoft.com/en-us/sql/relational-databases/backup-restore/back-up-and-restore-of-sql-server-databases?view=sql-server-ver15#best-practice-recommendations">SQL Server Backup best practices</a>.</p>
 </blockquote>
@@ -119,6 +112,7 @@
 For example:</p>
 <pre><code class="lang-sh">-v sqlserver_data:/var/opt/mssql 
 -v sqlserver_sqlbackup:/backup
+-v /dev-environment-secrets/simulated-secret-store/sqlserver:/run/secrets
 </code></pre><p>For more information, see <a href="https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-docker-container-configure?view=sql-server-ver15&amp;pivots=cs1-bash#use-data-volume-containers">Use Data Volume Containers</a>.</p>
 <ul>
 <li><p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access the database and certificates used in SSL.<br>The directory is mounted to a location in the container defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>SSL_PRIVATE_KEY_FILE</code> to locate the secrets.<br>In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files. This is achieved by using a bind mount. In production this would not be required.</p>

@@ -101,6 +101,42 @@ The Information Store is contained in a Docker volume. Because Docker is not des
 <pre><code class="lang-sh">deploy -c &lt;config_name&gt; -t restore -b &lt;backup_name&gt;
 </code></pre><p>For example, to restore a backup called <code>test-1</code> for the <code>config-development</code> config:</p>
 <pre><code class="lang-sh">deploy -c config-development -t restore -b test-1
+</code></pre><h2 id="using-external-database-backups">Using external database backups</h2>
+<p>You can use the <code>backup-database-utility</code> to create and restore backups from outside of analyze-containers. This means that you can store your database backups separately from your configs by using S3-like storage or a shared drive.</p>
+<p>The <code>backup-database-utility</code> supports using <a href="#backup-and-restore-with-s3-like-storage">S3-like storage</a> or <a href="#backup-and-restore-with-filesystem-storage">filesystem storage</a>.</p>
+<h3 id="backup-and-restore-with-s3-like-storage">Backup and restore with S3-like storage</h3>
+<p>The <code>s3cmd</code> option allows you to backup to any S3-like system supported by the <a href="https://s3tools.org/s3cmd">S3cmd tool</a>. For example: AWS S3, Azure Blob Storage, Google Cloud Storage, and DigitalOcean Spaces.</p>
+<p>The following example describes how to configure AWS S3 to store your backups:</p>
+<ol>
+<li>In AWS, create a user with access to the following:<ul>
+<li>s3:ListAllMyBuckets</li>
+<li>s3:GetBucketLocation</li>
+<li>s3:ListBucket</li>
+<li>s3:GetObject</li>
+<li>s3:PutObject</li>
+</ul>
+</li>
+<li>Create an access key ID and secret access key for the user by following the steps in <a href="https://docs.aws.amazon.com/powershell/latest/userguide/pstools-appendix-sign-up.html">AWS Account and Access Keys</a>.</li>
+<li>Configure your local system to access your AWS S3 storage. You can either assign the user&#39;s access key ID and secret values to the environment variables <code>AWS_ACCESS_KEY_ID</code> and <code>AWS_SECRET_ACCESS_KEY</code>. Additionally, you can run <code>backup-database-utility -t configure-s3cmd</code> that creates the <code>.s3cfg</code> configuration file in the root of the project where you can specify the access key ID and secret.
+ &gt; <strong>Important:</strong> This file contains secrets in plain text. You must store this file appropriately.</li>
+<li>Create an S3 bucket to store your backups. For example, <code>analyze-containers-backups</code></li>
+</ol>
+<p>To create a backup, run the command with the following arguments:</p>
+<pre><code class="lang-sh">backup-database-utility -c &lt;config_name&gt; -s s3cmd -p &quot;s3://analyze-containers-backups/&quot; -t backup -b &lt;backup_name&gt;
+</code></pre><p>  If a backup with that name already exists for the config, it will be copied to the location specified for <code>-p</code>.</p>
+<p>For example, to create a backup named <code>fraud</code> for the <code>config-development</code> config in the <code>analyze-containers-backups</code> bucket:</p>
+<pre><code class="lang-sh">backup-database-utility -c config-development -s s3cmd -p &quot;s3://analyze-containers-backups/&quot; -t backup -b fraud
+</code></pre><p>You can restore the above backup by using the <code>-t restore</code> flag. For example:</p>
+<pre><code class="lang-sh">backup-database-utility -c config-development -s s3cmd -p &quot;s3://analyze-containers-backups/&quot; -t restore -b fraud
+</code></pre><h3 id="backup-and-restore-with-filesystem-storage">Backup and restore with filesystem storage</h3>
+<p>The filesystem option allows you to backup to a shared network drive or other filesystem outside of analyze-containers or your shared configs.</p>
+<p>To create a backup, run the command with the following arguments:</p>
+<pre><code class="lang-sh">backup-database-utility -c &lt;config_name&gt; -s filesystem -p &lt;path&gt; -t backup -b &lt;backup_name&gt;
+</code></pre><p>If a backup with that name already exists for the config, it will be copied to the location specified for <code>-p</code>. The utility attempts to create the folder if it does not already exist.</p>
+<p>For example, to create a backup named <code>fraud</code> for the <code>config-development</code> config in the user&#39;s OneDrive folder:</p>
+<pre><code class="lang-sh">backup-database-utility -c config-development -s filesystem -p &quot;/mnt/c/Users/&lt;user_name&gt;/OneDrive/backups&quot; -t backup -b fraud
+</code></pre><p>You can restore the above backup by using the <code>-t restore</code> flag. For example:</p>
+<pre><code class="lang-sh">backup-database-utility -c config-development -s filesystem -p &quot;/mnt/c/Users/&lt;user_name&gt;/OneDrive/backups&quot; -t restore -b fraud
 </code></pre></article>
           </div>
           

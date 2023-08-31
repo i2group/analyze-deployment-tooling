@@ -122,6 +122,7 @@
 <li><a href="#getvolume">get_volume</a></li>
 </ul>
 <h2 id="environment-utilities">Environment utilities</h2>
+<p>Checks if all required environment variables are set.</p>
 <h3 id="checkenvvarsareset">check_env_vars_are_set</h3>
 <p>Checks if all required environment variables are set.</p>
 <p><em>Function has no arguments.</em></p>
@@ -136,6 +137,7 @@
 <li><strong>$1</strong> (string): The partial path to secret</li>
 </ul>
 <h2 id="status-utilities">Status utilities</h2>
+<p>Get Solr component status from a certain point in time.</p>
 <h3 id="getsolrstatus">get_solr_status</h3>
 <p>Get Solr component status from a certain point in time.</p>
 <h4 id="example-1">Example</h4>
@@ -195,6 +197,10 @@ If the connector is not live after 10 retries the function will print an error a
 <li>Retry attempts, error messages or success message.</li>
 </ul>
 <h2 id="database-security-utilities">Database Security Utilities</h2>
+<p>Change the initial password for the SA user.
+Uses the generated secrets to call the change_sa_password.sh with the initial (generated)
+sa password and the new (generated) password.
+For more information, see <a href="../security%20and%20users/db_users.html#the-changesapassword-function">change_sa_password</a>.</p>
 <h3 id="changesapassword">change_sa_password</h3>
 <p>Change the initial password for the SA user.
 Uses the generated secrets to call the change_sa_password.sh with the initial (generated)
@@ -221,6 +227,10 @@ For more information, see <a href="../security%20and%20users/db_users.html#the-c
 <li><strong>$2</strong> (string): The database role name</li>
 </ul>
 <h2 id="execution-utilities">Execution Utilities</h2>
+<p>Use an ephemeral Solr client container to run commands against Solr.
+For more information about the environment variables and volume mounts that are required for the Solr client, see <a href="../images%20and%20containers/solr_client.html">Running a Solr client container</a>.
+The run_solr_client_command function takes the command you want to run as an argument.
+For more information about commands you can execute using the Solr zkcli, see <a href="https://lucene.apache.org/solr/guide/8_6/command-line-utilities.html">Solr ZK Command Line Utilities</a></p>
 <h3 id="runsolrclientcommand">run_solr_client_command</h3>
 <p>Use an ephemeral Solr client container to run commands against Solr.
 For more information about the environment variables and volume mounts that are required for the Solr client, see <a href="../images%20and%20containers/solr_client.html">Running a Solr client container</a>.
@@ -475,6 +485,8 @@ For more information about running the ETL toolkit container and the tasks that 
 <li><strong>1</strong>: If command was NOT executed successfully.</li>
 </ul>
 <h2 id="volume-utilities">Volume utilities</h2>
+<p>Uses an ephemeral Red Hat UBI Docker image to update a volume with the contents of a local directory.
+For example, to update the the run/secrets directory in the liberty1_secrets volume with the content of the local /dev-environment-secrets/simulated-secret-store directory, run:</p>
 <h3 id="updatevolume">update_volume</h3>
 <p>Uses an ephemeral Red Hat UBI Docker image to update a volume with the contents of a local directory.
 For example, to update the the run/secrets directory in the liberty1_secrets volume with the content of the local /dev-environment-secrets/simulated-secret-store directory, run:</p>

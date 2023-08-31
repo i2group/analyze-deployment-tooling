@@ -114,7 +114,7 @@ The following <code>docker build</code> command builds the Liberty base image:</
   --network &quot;eia&quot; \
   --net-alias &quot;liberty1.eia&quot; \
   -p &quot;9045:9443&quot; \
-  -v &quot;liberty1_secrets:/run/secrets&quot; \
+  -v &quot;/dev-environment-secrets/simulated-secret-store/liberty1:/run/secrets&quot; \
   -v &quot;liberty1_data:/data&quot; \
   -e LICENSE=&quot;accept&quot; \
   -e FRONT_END_URI=&quot;https://liberty.eia:9045/opal&quot; \
@@ -145,18 +145,18 @@ The following <code>docker build</code> command builds the Liberty base image:</
 <ol>
 <li><code>CONTAINER</code> - The name for the container.</li>
 <li><code>FQDN</code> - The fully qualified domain name for the container and the Solr host.</li>
-<li><code>VOLUME</code> - the name for the named volume of the Liberty container. For more information, see <a href="#volumes">Volumes</a>.</li>
+<li><code>VOLUME</code> - the name for the named volume of the Liberty container. For more information, see <a href="#storage">Storage</a>.</li>
 <li><code>HOST_PORT</code> - The port number on the host machine that is mapped to the port on the container.</li>
 <li><code>KEY_FOLDER</code> - The folder with keys and certificates for the container. For more information, see <a href="../security%20and%20users/security.html">Security</a>.</li>
 </ol>
 <p>An example of running Liberty container by using <code>run_liberty</code> function:</p>
 <pre><code class="lang-bash">run_liberty liberty1 liberty1.eia liberty1_data 9045 liberty1
-</code></pre><h3 id="volumes">Volumes</h3>
+</code></pre><h3 id="storage">Storage</h3>
 <p>A named volume or a bind mount can be used to persist data, which is generated and used in the Liberty container, outside of the container.</p>
 <p>To configure the Liberty container to use the volume, specify the <code>-v</code> option with the name of the volume and the path where the directory is mounted in the container. By setting <code>-v</code> option in the docker run command, a named volume is created. For Liberty, the directory that is mounted must be <code>/data</code>, this directory folder stores: jobs, record groups and charts.</p>
 <p>For example:</p>
 <pre><code class="lang-sh">-v liberty_data:/data \
--v liberty1_secrets:/run/secrets
+-v /dev-environment-secrets/simulated-secret-store/liberty1:/run/secrets
 </code></pre><p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access ZooKeeper, the database, and the certificates used in SSL.<br>The directory is used to update the named volume location defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>ZOO_DIGEST_USERNAME_FILE</code> to locate the secrets.<br>In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files.</p>
 <h3 id="environment-variables">Environment variables</h3>
 <p>To configure the Liberty server, you provide environment variables to the Docker container in the <code>docker run</code> command.</p>
