@@ -21,22 +21,20 @@ if [[ -z "${ANALYZE_CONTAINERS_ROOT_DIR}" ]]; then
   export ANALYZE_CONTAINERS_ROOT_DIR
 fi
 
-# TODO: Doc review
 USAGE="""
 Usage:
-  backup-database-utility -t {backup|restore} -s {s3cmd|filesystem} -c <config_name> -b <backup_name> -p <path> [-v] [-y]
-  backup-database-utility -c <config_name> -b <backup_name> -t {s3cmd|filesystem} -p <path> [-v] [-y]
+  backup-database-utility -c <config_name> -t {backup|restore} -s {s3cmd|filesystem} -b <backup_name> -p <path> [-v] [-y]
+  backup-database-utility -t {configure-s3cmd}
   backup-database-utility -h
 
 Options:
   -t {configure-s3cmd}                   Runs the S3cmd interactive configuration tool.
-  -t {backup}                            Copies/upload a backup in the location specified. If backup name not known then it creates new backup.
-  -t {restore}                           Copies/download and restore a backup from the location specified.
-  -s {filesystem}                        Performs the task in the file system.
-  -s {s3cmd}                             Performs the task in an S3-like system.
-  -p <path>                              The full path to the directory or S3 URL.
+  -t {backup}                            Create a database backup in the specified location. If a backup with the backup name already exists in analyze-containers, it is copied to the location.
+  -t {restore}                           Restore a database backup from the specified location.
+  -s {s3cmd|filesystem}                  Backup or restore using the s3cmd or to the file system.
+  -p <path>                              The full path to a directory or S3 URL to create the backup or restore from.
   -c <config_name>                       Name of the config to use.
-  -b <backup_name>                       Name of the backup to create or copy.
+  -b <backup_name>                       Name of the backup to create or restore.
   -v                                     Verbose output.
   -y                                     Answer 'yes' to all prompts.
   -h                                     Display the help.
@@ -56,7 +54,6 @@ function validate_arguments() {
     if [[ "${DEV_MODE}" == "true" ]]; then
       print_warn "[Dev Mode] This script should run in your local shell"
     else
-      # TODO: Doc review
       print_error_and_exit "You must run this script from your local shell."
     fi
   fi
@@ -180,7 +177,6 @@ function copy_backup() {
     fi
     if [[ "${YES_FLAG}" != "true" ]]; then
       run_s3cmd sync --config="${ANALYZE_CONTAINERS_ROOT_DIR}/.s3cfg" -F --dry-run "${extra_args[@]}" "${from_path}/" "${to_path}/"
-      # TODO: Docs review
       # type = upload | download
       wait_for_user_reply "The above will be ${type}ed. Are you sure you want to continue?"
     fi
@@ -194,24 +190,20 @@ function copy_backup() {
 
 function run_backup() {
   if [[ ! -d "${ANALYZE_CONTAINERS_ROOT_DIR}/backups/${CONFIG_NAME}/${BACKUP_NAME}" ]]; then
-    # TODO: Doc review
-    wait_for_user_reply "Backup name ${BACKUP_NAME} does not exists. Do you want to create one?"
+    wait_for_user_reply "Backup name ${BACKUP_NAME} does not exist. Do you want to create it?"
     run_deploy_backup_task "backup"
   fi
   copy_backup "upload"
 
-  # TODO: Docs review
   print_success "Backup has been copied to ${PATH_TO_DIR}"
 
-  # TODO: Doc review
-  wait_for_user_reply "Do you want to remove the backup from the '/backups' folder?"
+  wait_for_user_reply "Do you want to remove the backup from the local '/backups' folder?"
   find -L "${ANALYZE_CONTAINERS_ROOT_DIR}/backups/${CONFIG_NAME}/${BACKUP_NAME}" -type f -not -name ".gitignore" -exec rm -f {} \;
 }
 
 function run_restore() {
   copy_backup "download"
   run_deploy_backup_task "restore"
-  # TODO: Docs review
   print_success "Restore completed from ${PATH_TO_DIR}"
 }
 
@@ -220,7 +212,6 @@ function run_configure() {
   run_s3cmd --config="${ANALYZE_CONTAINERS_ROOT_DIR}/.s3cfg" --configure | tee "${ANALYZE_CONTAINERS_ROOT_DIR}/.tmp/output"
   configure_output="$(cat "${ANALYZE_CONTAINERS_ROOT_DIR}/.tmp/output")"
   if [[ "${configure_output}" == *"Configuration saved to "* ]]; then
-    # TODO: Docs review
     print_success "Tool configured successfully"
     exit 0
   else
