@@ -5,19 +5,19 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Compatibility and support </title>
+    <title>Common Variables </title>
     <meta name="viewport" content="width=device-width">
-    <meta name="title" content="Compatibility and support ">
+    <meta name="title" content="Common Variables ">
     <meta name="generator" content="docfx 2.56.2.0">
     
-    <link rel="shortcut icon" href="../images/favicon.png">
-    <link rel="stylesheet" href="../styles/docfx.vendor.css">
-    <link rel="stylesheet" href="../styles/docfx.css">
-    <link rel="stylesheet" href="../styles/main.css">
-    <meta property="docfx:navrel" content="../toc.html">
-    <meta property="docfx:tocrel" content="toc.html">
+    <link rel="shortcut icon" href="../../../../images/favicon.png">
+    <link rel="stylesheet" href="../../../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../../../styles/docfx.css">
+    <link rel="stylesheet" href="../../../../styles/main.css">
+    <meta property="docfx:navrel" content="../../../../toc.html">
+    <meta property="docfx:tocrel" content="../toc.html">
     
-    <meta property="docfx:rel" content="../">
+    <meta property="docfx:rel" content="../../../../">
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
@@ -34,7 +34,7 @@
                 <span class="icon-bar"></span>
               </button>
               
-              <a class="navbar-brand" href="../index.html">
+              <a class="navbar-brand" href="../../../../index.html">
                 i2 Analyze Containers
               </a>
             </div>
@@ -77,65 +77,23 @@
             </div>
           </div>
             <article class="content wrap" id="_content" data-uid="">
-<h1 id="compatibility-and-support">Compatibility and support</h1>
+<h1 id="common-variables">Common Variables</h1>
 
-<p>The release version of the analyze-containers repository varies independently from the i2 Analyze version.
-Each release works with a specific version of i2 Analyze, please refer to the <a href="#compatibility">compatibility table</a>.</p>
-<h2 id="compatibility">Compatibility</h2>
-<p>Each new version of analyze-containers adds features and functionality. The following table shows the relationship between a version of the analyze-containers repository and the version of i2 Analyze in which its new features are available:</p>
-<table>
-<thead>
-<tr>
-<th>analyze-containers version</th>
-<th>i2 Analyze version</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>2.3.0</td>
-<td>4.4.0</td>
-</tr>
-<tr>
-<td>2.4.0</td>
-<td>4.4.0</td>
-</tr>
-<tr>
-<td>2.5.x</td>
-<td>4.4.1</td>
-</tr>
-<tr>
-<td>2.6.0</td>
-<td>4.4.2</td>
-</tr>
-<tr>
-<td>2.7.x</td>
-<td>4.4.2</td>
-</tr>
-</tbody>
-</table>
-<h3 id="i2-sdk-compatibility">i2 SDK compatibility</h3>
-<p>The i2 Connect Node SDK version aligns to the i2 Analyze version. For more information about i2 Connect Node SDK and i2 Analyze compatibility, see <a href="https://i2group.github.io/analyze-connect-node-sdk/#compatibility">Compatibility</a></p>
-<p>i2 Notebook SDK support is introduced in version 2.4.0 of analyze-containers. For more information about the i2 Notebook SDK versioning, see <a href="https://i2group.github.io/notebook-sdk/guide/versioning.html">SDK and API versioning</a>.</p>
-<h2 id="support-policy">Support policy</h2>
-<p>i2&#39;s policy for supporting releases of the analyze-containers repository is as follows:</p>
-<ul>
-<li>Major version change:<ul>
-<li>Breaking change to the analyze-containers code</li>
-<li>Significant change to dependencies</li>
-</ul>
-</li>
-<li>Minor version change:<ul>
-<li>New functionality in analyze-containers</li>
-<li>New functionality in dependencies</li>
-</ul>
-</li>
-<li>Patch version change:<ul>
-<li>Bug fixes to analyze-containers project or dependencies</li>
-</ul>
-</li>
-</ul>
-<p>On releasing a new major version, we support the previous major version for a minimum of 2 years.</p>
-<p>We might deprecate versions given security issues or unsupported features (such as a vulnerable dependency) on a case-by-case basis.</p>
+<p>All scripts in the containerized environment use variables to configure the system such as location of file paths, host names, port etc</p>
+<p>These variables are all stored in a central script in <code>utils/common_variables.sh</code> script.</p>
+<p>The following descriptions explains the variables in the <code>common_variables.sh</code> script in more detail.</p>
+<h2 id="image-names">Image names</h2>
+<p>This section contains the image names for all the images built by the <code>build-images</code> script. These variables are also used by the <code>client_functions.sh</code> and <code>severFunctions.sh</code> scripts.</p>
+<h2 id="container-names">Container names</h2>
+<p>This section contains the container names for all the containers run in the environment.</p>
+<h2 id="user-names">User names</h2>
+<p>This section contains all the usernames used by the servers in the containerized environment.</p>
+<h2 id="liberty-variables">Liberty variables</h2>
+<p>This section contains the liberty variables for the chosen deployment pattern.</p>
+<h2 id="gateway-variables">Gateway variables</h2>
+<p>This section contains the variables definition for the i2Connect gateway configuration. The values of these variables are generated during deployment.</p>
+<h2 id="user-variables">User variables</h2>
+<p>This section contains user variables.</p>
 </article>
           </div>
           
@@ -163,8 +121,8 @@ Each release works with a specific version of i2 Analyze, please refer to the <a
       </footer>
     </div>
     
-    <script type="text/javascript" src="../styles/docfx.vendor.js"></script>
-    <script type="text/javascript" src="../styles/docfx.js"></script>
-    <script type="text/javascript" src="../styles/main.js"></script>
+    <script type="text/javascript" src="../../../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../../styles/main.js"></script>
   </body>
 </html>

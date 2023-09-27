@@ -5,19 +5,19 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Compatibility and support </title>
+    <title>Database roles, users, and logins </title>
     <meta name="viewport" content="width=device-width">
-    <meta name="title" content="Compatibility and support ">
+    <meta name="title" content="Database roles, users, and logins ">
     <meta name="generator" content="docfx 2.56.2.0">
     
-    <link rel="shortcut icon" href="../images/favicon.png">
-    <link rel="stylesheet" href="../styles/docfx.vendor.css">
-    <link rel="stylesheet" href="../styles/docfx.css">
-    <link rel="stylesheet" href="../styles/main.css">
-    <meta property="docfx:navrel" content="../toc.html">
-    <meta property="docfx:tocrel" content="toc.html">
+    <link rel="shortcut icon" href="../../../../images/favicon.png">
+    <link rel="stylesheet" href="../../../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../../../styles/docfx.css">
+    <link rel="stylesheet" href="../../../../styles/main.css">
+    <meta property="docfx:navrel" content="../../../../toc.html">
+    <meta property="docfx:tocrel" content="../toc.html">
     
-    <meta property="docfx:rel" content="../">
+    <meta property="docfx:rel" content="../../../../">
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
@@ -34,7 +34,7 @@
                 <span class="icon-bar"></span>
               </button>
               
-              <a class="navbar-brand" href="../index.html">
+              <a class="navbar-brand" href="../../../../index.html">
                 i2 Analyze Containers
               </a>
             </div>
@@ -77,65 +77,51 @@
             </div>
           </div>
             <article class="content wrap" id="_content" data-uid="">
-<h1 id="compatibility-and-support">Compatibility and support</h1>
+<h1 id="database-roles-users-and-logins">Database roles, users, and logins</h1>
 
-<p>The release version of the analyze-containers repository varies independently from the i2 Analyze version.
-Each release works with a specific version of i2 Analyze, please refer to the <a href="#compatibility">compatibility table</a>.</p>
-<h2 id="compatibility">Compatibility</h2>
-<p>Each new version of analyze-containers adds features and functionality. The following table shows the relationship between a version of the analyze-containers repository and the version of i2 Analyze in which its new features are available:</p>
+<p>During the deployment, administration, and use of i2 Analyze, a number of different actions are completed against the Information Store database. These actions can be separated into different categories that are usually completed by users with differing permissions.</p>
+<p>The database roles described below are high-level concepts. In the example deployment, a number of different roles and users are used to demonstrate the types of roles that might complete each action. The way these users and roles are implements depends on the database dialect that is used.</p>
+<h2 id="database-roles">Database roles</h2>
+<p>In the example, the following roles are used:</p>
 <table>
 <thead>
 <tr>
-<th>analyze-containers version</th>
-<th>i2 Analyze version</th>
+<th>Role</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>2.3.0</td>
-<td>4.4.0</td>
+<td>DBA_Role</td>
+<td>The <code>DBA_Role</code> is used to perform database administrative tasks.</td>
 </tr>
 <tr>
-<td>2.4.0</td>
-<td>4.4.0</td>
+<td>External_ETL_Role</td>
+<td>The <code>External_ETL_Role</code> is used to move data from an external system into the staging tables in the Information Store database.</td>
 </tr>
 <tr>
-<td>2.5.x</td>
-<td>4.4.1</td>
+<td>i2_ETL_Role</td>
+<td>The <code>i2_ETL_Role</code> is used to read data from the staging tables and ingest it into - and delete it from - the Information Store database.</td>
 </tr>
 <tr>
-<td>2.6.0</td>
-<td>4.4.2</td>
+<td>i2analyze_Role</td>
+<td>The <code>i2analyze_Role</code> is used to complete actions required by the Liberty application. For example, returning results for Visual Queries.</td>
 </tr>
 <tr>
-<td>2.7.x</td>
-<td>4.4.2</td>
+<td>i2_Public_Role</td>
+<td>The <code>i2_Public_Role</code> is used to complete actions against database objects in the Information Store public schema.</td>
+</tr>
+<tr>
+<td>Deletion_By_Rule</td>
+<td>The <code>Deletion_By_Rule</code> is used to access and run all of the views and procedures in the Information Store public schema.</td>
 </tr>
 </tbody>
 </table>
-<h3 id="i2-sdk-compatibility">i2 SDK compatibility</h3>
-<p>The i2 Connect Node SDK version aligns to the i2 Analyze version. For more information about i2 Connect Node SDK and i2 Analyze compatibility, see <a href="https://i2group.github.io/analyze-connect-node-sdk/#compatibility">Compatibility</a></p>
-<p>i2 Notebook SDK support is introduced in version 2.4.0 of analyze-containers. For more information about the i2 Notebook SDK versioning, see <a href="https://i2group.github.io/notebook-sdk/guide/versioning.html">SDK and API versioning</a>.</p>
-<h2 id="support-policy">Support policy</h2>
-<p>i2&#39;s policy for supporting releases of the analyze-containers repository is as follows:</p>
+<p>To understand how these roles are implemented in each database dialect, see:</p>
 <ul>
-<li>Major version change:<ul>
-<li>Breaking change to the analyze-containers code</li>
-<li>Significant change to dependencies</li>
+<li><a href="db_users_sqlserver.html">SQL Server database users</a></li>
+<li><a href="db_users_postgres.html">Postgres database users</a></li>
 </ul>
-</li>
-<li>Minor version change:<ul>
-<li>New functionality in analyze-containers</li>
-<li>New functionality in dependencies</li>
-</ul>
-</li>
-<li>Patch version change:<ul>
-<li>Bug fixes to analyze-containers project or dependencies</li>
-</ul>
-</li>
-</ul>
-<p>On releasing a new major version, we support the previous major version for a minimum of 2 years.</p>
-<p>We might deprecate versions given security issues or unsupported features (such as a vulnerable dependency) on a case-by-case basis.</p>
 </article>
           </div>
           
@@ -163,8 +149,8 @@ Each release works with a specific version of i2 Analyze, please refer to the <a
       </footer>
     </div>
     
-    <script type="text/javascript" src="../styles/docfx.vendor.js"></script>
-    <script type="text/javascript" src="../styles/docfx.js"></script>
-    <script type="text/javascript" src="../styles/main.js"></script>
+    <script type="text/javascript" src="../../../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../../styles/main.js"></script>
   </body>
 </html>
