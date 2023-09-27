@@ -514,7 +514,7 @@ function restore_istore_database() {
   case "${DB_DIALECT}" in
   db2)
     update_volume "${BACKUP_DIR}" "${DB2_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
-    run_db_container_with_backup_volume chown -R 1000:1000 "${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
+    run_db_container_as_root chown -R 1000:1000 "${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
 
     print "Restoring the ${DB_NAME} database"
     sql_query="\
@@ -523,7 +523,7 @@ function restore_istore_database() {
     ;;
   sqlserver)
     update_volume "${BACKUP_DIR}" "${SQL_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
-    run_db_container_with_backup_volume chown -R mssql:0 "${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
+    run_db_container_as_root chown -R mssql:0 "${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
 
     print "Restoring the ${DB_NAME} database"
     sql_query="\
@@ -532,7 +532,7 @@ function restore_istore_database() {
     ;;
   postgres)
     update_volume "${BACKUP_DIR}" "${POSTGRES_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
-    run_db_container_with_backup_volume chown -R postgres:0 "${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
+    run_db_container_as_root chown -R postgres:0 "${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
 
     print "Restoring the ${DB_NAME} database"
     docker exec "${POSTGRES_SERVER_CONTAINER_NAME}" bash -c "${SQLCMD} ${DB_NAME} < ${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}/${DB_BACKUP_FILE_NAME}"
@@ -1438,8 +1438,18 @@ function update_match_rules() {
   docker exec "${LIBERTY1_CONTAINER_NAME}" bash -c "rm ${stand_by_match_index_ready_file_path} > /dev/null 2>&1"
 }
 
+function update_dsid_file() {
+  delete_file_if_exists "${LOCAL_USER_CONFIG_DIR}/environment/dsid/dsid.properties"
+  create_data_source_id "${LOCAL_USER_CONFIG_DIR}"
+  delete_file_if_exists "${GENERATED_LOCAL_CONFIG_DIR}/environment/dsid/dsid.properties"
+  cp "${LOCAL_USER_CONFIG_DIR}/environment/dsid/dsid.properties" "${GENERATED_LOCAL_CONFIG_DIR}/environment/dsid/dsid.properties"
+  # shellcheck disable=SC2119
+  create_mounted_config_structure
+}
+
 function rebuild_database() {
   wait_for_user_reply "Do you wish to rebuild the ISTORE database? This will permanently remove data from the deployment."
+  update_dsid_file
   case "${DB_DIALECT}" in
   db2)
     print_info "Removing existing Db2 Server container"

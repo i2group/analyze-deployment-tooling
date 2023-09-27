@@ -1581,48 +1581,88 @@ function quietly_remove_docker_volume() {
 }
 
 #######################################
-# Runs a Solr container as root to change permissions on the Solr backup volume.
+# Runs a Solr container as root.
+# Example usage: change permissions on the Solr backup volume
 # Arguments:
 #   None
 #######################################
-function run_solr_container_with_backup_volume() {
+function run_solr_container_as_root() {
   docker run --rm \
     -v "${SOLR_BACKUP_VOLUME_NAME}:${SOLR_BACKUP_VOLUME_LOCATION}" \
+    -v "${TMP_VOLUME_NAME}:${TMP_ANALYZE_CONTAINERS_DIR}" \
     --user="root" \
+    --entrypoint="" \
     "${SOLR_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "$@"
 }
 
 #######################################
-# Runs a DB container as root to change permissions on the DB backup volume.
+# Runs a DB container as root.
+# Example usage: change permissions on the DB backup volume
 # Arguments:
 #   None
 #######################################
-function run_db_container_with_backup_volume() {
+function run_db_container_as_root() {
   local extra_args=()
   case "${DB_DIALECT}" in
   sqlserver)
     image_name="${SQL_SERVER_IMAGE_NAME}"
     image_tag="${SQL_SERVER_IMAGE_VERSION}"
-    volume_name="${SQL_SERVER_BACKUP_VOLUME_NAME}"
+    extra_args+=("-v" "${SQL_SERVER_BACKUP_VOLUME_NAME}:${DB_CONTAINER_BACKUP_DIR}")
+    extra_args+=("-v" "${SQL_SERVER_VOLUME_NAME}:/var/opt/mssql")
+    extra_args+=("-v" "${I2A_DATA_SERVER_VOLUME_NAME}:/var/i2a-data")
     ;;
   db2)
     image_name="${DB2_SERVER_IMAGE_NAME}"
     image_tag="${I2A_DEPENDENCIES_IMAGES_TAG}"
-    volume_name="${DB2_SERVER_BACKUP_VOLUME_NAME}"
-    extra_args+=("--entrypoint=")
+    extra_args+=("-v" "${DB2_SERVER_BACKUP_VOLUME_NAME}:${DB_CONTAINER_BACKUP_DIR}")
+    extra_args+=("-v" "${DB2_SERVER_VOLUME_NAME}:/database")
+    extra_args+=("-v" "${I2A_DATA_SERVER_VOLUME_NAME}:/var/i2a-data")
     ;;
   postgres)
     image_name="${POSTGRES_SERVER_IMAGE_NAME}"
     image_tag="${POSTGRES_IMAGE_VERSION}"
-    volume_name="${POSTGRES_SERVER_BACKUP_VOLUME_NAME}"
+    extra_args+=("-v" "${POSTGRES_SERVER_BACKUP_VOLUME_NAME}:${DB_CONTAINER_BACKUP_DIR}")
+    extra_args+=("-v" "${POSTGRES_SERVER_VOLUME_NAME}:/var/lib/postgresql/data")
+    extra_args+=("-v" "${I2A_DATA_SERVER_VOLUME_NAME}:/var/i2a-data")
     ;;
   esac
 
   docker run --rm \
-    -v "${volume_name}:${DB_CONTAINER_BACKUP_DIR}" \
-    --user="root" \
     "${extra_args[@]}" \
+    --user="root" \
+    --entrypoint="" \
     "${image_name}:${image_tag}" "$@"
+}
+
+#######################################
+# Runs a Prometheus container as root.
+# Example usage: change permissions on the config volume
+# Arguments:
+#   None
+#######################################
+function run_prometheus_container_as_root() {
+  docker run --rm \
+    -v "${PROMETHEUS_CONFIG_VOLUME_NAME}:/tmp/prometheus" \
+    -v "${PROMETHEUS_DATA_VOLUME_NAME}:/prometheus" \
+    --user="root" \
+    --entrypoint="" \
+    "${PROMETHEUS_IMAGE_NAME}:${PROMETHEUS_VERSION}" "$@"
+}
+
+#######################################
+# Runs a Grafana container as root.
+# Example usage: change permissions on the config volumes
+# Arguments:
+#   None
+#######################################
+function run_grafana_container_as_root() {
+  docker run --rm \
+    -v "${GRAFANA_DATA_VOLUME_NAME}:/var/lib/grafana" \
+    -v "${GRAFANA_DASHBOARDS_VOLUME_NAME}:/etc/grafana/dashboards" \
+    -v "${GRAFANA_PROVISIONING_VOLUME_NAME}:/etc/grafana/provisioning" \
+    --user="root" \
+    --entrypoint="" \
+    "${GRAFANA_IMAGE_NAME}:${GRAFANA_VERSION}" "$@"
 }
 
 function backup_database() {
@@ -1634,7 +1674,7 @@ function backup_database() {
     # Db2 doesn't use named file
     backup_file_path="${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
     update_volume "${BACKUP_DIR}" "${DB2_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
-    run_db_container_with_backup_volume chown -R 1000:1000 "${backup_file_path}"
+    run_db_container_as_root chown -R 1000:1000 "${backup_file_path}"
     # Stop liberty container before taking db2 database backup.
     # We can't use 'FORCE APPLICATION ALL' as it disconnects applications for a second(s) and then applications go back to being active.
     stop_container "$LIBERTY1_CONTAINER_NAME"
@@ -1651,9 +1691,9 @@ function backup_database() {
       update_volume "${BACKUP_DIR}" "${SQL_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
     fi
     if [[ "${VERSION}" < "2.3.0" ]]; then
-      run_db_container_with_backup_volume chown -R root "${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
+      run_db_container_as_root chown -R root "${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
     else
-      run_db_container_with_backup_volume chown -R mssql:0 "${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
+      run_db_container_as_root chown -R mssql:0 "${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
     fi
 
     local sql_query="\
@@ -1674,7 +1714,7 @@ function backup_database() {
   postgres)
     print "Backing up the ${DB_NAME} database for container: ${POSTGRES_SERVER_CONTAINER_NAME}"
     update_volume "${BACKUP_DIR}" "${POSTGRES_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
-    run_db_container_with_backup_volume chown -R postgres:0 "${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
+    run_db_container_as_root chown -R postgres:0 "${DB_CONTAINER_BACKUP_DIR}/${BACKUP_NAME}"
     docker exec "${POSTGRES_SERVER_CONTAINER_NAME}" bash -c "/usr/bin/pg_dump ${DB_NAME} > ${backup_file_path}"
     get_volume "${BACKUP_DIR}" "${POSTGRES_SERVER_BACKUP_VOLUME_NAME}" "${DB_CONTAINER_BACKUP_DIR}"
     ;;

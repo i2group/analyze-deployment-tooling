@@ -87,11 +87,13 @@ else
   # Building SQL Client image                                                   #
   ###############################################################################
   print "Building SQL Client image"
+  buildx_context_name="analyze-containers"
+  docker buildx ls | grep -q "${buildx_context_name}" && docker buildx rm "${buildx_context_name}"
+  docker buildx create --driver docker-container --use --name "${buildx_context_name}"
   docker buildx build -t "${SQL_CLIENT_IMAGE_NAME}:${I2A_DEPENDENCIES_IMAGES_TAG}" "${IMAGES_DIR}/sql_client" \
     --platform "linux/amd64" --load \
-    --cache-from type=local,src="/tmp/analyze-containers-cache/sql_client" --cache-to type=local,dest="/tmp/analyze-containers-cache/sql_client",mode=max \
     --build-arg BASE_IMAGE="${SQL_SERVER_IMAGE_NAME}:${SQL_SERVER_IMAGE_VERSION}"
-  docker buildx rm "analyze-containers"
+  docker buildx rm "${buildx_context_name}"
 fi
 ###############################################################################
 # Building Postgres Client image                                              #

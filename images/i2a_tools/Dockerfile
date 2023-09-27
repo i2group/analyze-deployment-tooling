@@ -32,9 +32,10 @@ ARG USER_GID=$USER_UID
 
 ARG GOSU_VERSION=1.16
 
-RUN [[ "$(uname -m)" != "aarch64" ]]; \
-  curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-amd64" \
-  || curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-arm64" \
+RUN ARCH="$(uname -m)" \
+  && if [ "${ARCH}" != "aarch64" ]; then \
+  curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-amd64"; \
+  else curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-arm64"; fi \
   && chmod +x /usr/local/bin/gosu \
   # Verify that the binary works
   && gosu nobody true

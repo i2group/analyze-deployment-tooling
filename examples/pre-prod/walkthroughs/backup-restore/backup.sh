@@ -31,8 +31,8 @@ backup_version=1
 ###############################################################################
 # Set up backup permission                                                    #
 ###############################################################################
-run_solr_container_with_backup_volume mkdir -p "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}"
-run_solr_container_with_backup_volume chown -R solr:0 "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}"
+run_solr_container_as_root mkdir -p "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}"
+run_solr_container_as_root chown -R solr:0 "${SOLR_BACKUP_VOLUME_LOCATION}/${backup_version}"
 
 ###############################################################################
 # Backing up Solr                                                             #

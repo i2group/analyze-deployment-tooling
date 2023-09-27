@@ -11,27 +11,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
 
-## 2.7.0
-
-### Added
-
-* Ability to backup and restore the database to S3 and shared file systems
-
-### Changed
-
-* The default authentication mechanism is Form-Based Auth
+## 2.7.1 - 27/09/2023
 
 ### Fixed
 
-* `renew-certificates` task updates connector secrets
-* Secret expiry no longer causes data loss since last backup
+* Multiple issues with schema update.
 
-[2.7.0]: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.7.0><!-- markdown-link-check-enable -->
+[2.7.1]: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.7.1><!-- markdown-link-check-enable -->
+
+## 2.7.0 - 01/09/2023
+
+### Added
+
+* Ability to backup and restore the database to S3 and shared file systems.
+
+### Changed
+
+* The default authentication mechanism is Form-Based Auth.
+* The SQL Server Docker image is no longer built locally. The image is pulled from [docker hub - i2group](https://hub.docker.com/u/i2group).
+
+### Fixed
+
+* `renew-certificates` task updates connector secrets.
+* Secret expiry no longer causes data loss since last backup.
+
+[2.7.0]: <https://github.com/i2group/analyze-containers/tree/v2.7.0>
+
 ## 2.6.0 - 24/07/2023
 
 ### Added
 
-* Updated for compatibility with i2 Analyze 4.4.2
+* Updated for compatibility with i2 Analyze 4.4.2.
 * Ability to add additional web content to the Liberty server.
 * Support for upgrading all previous backups during the upgrade process.
 
@@ -44,7 +54,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 * Incorrect warnings for i2 Connect server version validation are no longer displayed.
 * A config that includes `overrideHttpAuthMethod="CLIENT_CERT"` in the `server.extensions.xml` can be deployed successfully.
-* Fixed JDBC driver version validation for `create-environment` script
+* Fixed JDBC driver version validation for `create-environment` script.
 
 [2.6.0]: <https://github.com/i2group/analyze-containers/tree/v2.6.0>
 
@@ -60,9 +70,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
-* Security schema changes now included in change sets
-* The pre-prod example deployment now backs up the match_index2
-* Versions are correctly resolved in documentation
+* Security schema changes now included in change sets.
+* The pre-prod example deployment now backs up the match_index2.
+* Versions are correctly resolved in documentation.
 
 [2.5.3]: <https://github.com/i2group/analyze-containers/tree/v2.5.3>
 
@@ -83,7 +93,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * Can now create ingestion sources in an upgraded system.
 * The Liberty user registry is updated during a deploy.
 * Stopped repeating Liberty properties on start up.
-* Password generation issues on Mac OS
+* Password generation issues on Mac OS.
 
 [2.5.2]: <https://github.com/i2group/analyze-containers/tree/v2.5.2>
 
@@ -91,12 +101,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
-* Improved validation on scripts
+* Improved validation on scripts.
 
 ### Fixed
 
-* Fixed documentation Docker bind examples
-* Fixed pre-prod upgrade from v2.3.0
+* Fixed documentation Docker bind examples.
+* Fixed pre-prod upgrade from v2.3.0.
 
 ### Workaround
 
@@ -108,9 +118,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-* Updated for compatibility with i2 Analyze 4.4.1
-* Support for PostgreSQL
-* General documentation improvements and bug fixes
+* Updated for compatibility with i2 Analyze 4.4.1.
+* Support for PostgreSQL.
+* General documentation improvements and bug fixes.
 
 ### Changed
 
@@ -125,15 +135,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-* Support for sharing configurations between users and environments
-* Support for deploying i2 Notebook plugins
-* Support for stopping all running containers
+* Support for sharing configurations between users and environments.
+* Support for deploying i2 Notebook plugins.
+* Support for stopping all running containers.
 
 ### Changed
 
-* Scripts have been converted to commands
-  * For example, `deploy.sh` is now called using `deploy`
-* The client functions in `client_functions.sh` are renamed
+* Scripts have been converted to commands.
+  * For example, `deploy.sh` is now called using `deploy`.
+* The client functions in `client_functions.sh` are renamed.
 
 ### Deprecated
 
@@ -147,13 +157,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-* Updated for compatibility with i2 Analyze 4.4.0
-* Support for Prometheus and Grafana
+* Updated for compatibility with i2 Analyze 4.4.0.
+* Support for Prometheus and Grafana.
 
 ### Changed
 
-* The environment must be run inside a VS Code development container
-* The base Docker images are no longer built locally. The images are pulled from [docker hub - i2group](https://hub.docker.com/u/i2group)
+* The environment must be run inside a VS Code development container.
+* The base Docker images are no longer built locally. The images are pulled from [docker hub - i2group](https://hub.docker.com/u/i2group).
 
 [2.3.0]: <https://github.com/i2group/analyze-containers/tree/v2.3.0>
 
@@ -161,19 +171,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-* Updated for compatibility with i2 Analyze 4.3.5
-* Provided i2 Analyze Fix Pack support
-* Script to create database backups for all configs
+* Updated for compatibility with i2 Analyze 4.3.5.
+* Provided i2 Analyze Fix Pack support.
+* Script to create database backups for all configs.
 
 ### Removed
 
-* i2Connect SDK connector base image
+* i2Connect SDK connector base image.
 
 ## 2.1.3 [Deprecated] - 13/05/2022
 
 ### Added
 
-* Functionality to support upgrading to future releases of i2 Analyze
+* Functionality to support upgrading to future releases of i2 Analyze.
 
 ## 2.1.2 [Deprecated] - 31/03/2022
 
@@ -193,10 +203,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-* Support for i2 Connect server connectors developed using the i2 Connect SDK
-* Enabled connections to i2 Connect connectors hosted outside of the config development environment
-* Synchronize configuration between the config development environment and the i2 Analyze deployment toolkit
-* Deploy extensions to the config development environment from i2 Analyze Developer Essentials
+* Support for i2 Connect server connectors developed using the i2 Connect SDK.
+* Enabled connections to i2 Connect connectors hosted outside of the config development environment.
+* Synchronize configuration between the config development environment and the i2 Analyze deployment toolkit.
+* Deploy extensions to the config development environment from i2 Analyze Developer Essentials.
 
 ### Changed
 
@@ -207,43 +217,43 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-* Configuration development environment
+* Configuration development environment.
 * Documentation hosted at <https://i2group.github.io/analyze-containers/>
 * Updated for compatibility with i2 Analyze 4.3.4
 
 ### Changed
 
-* Moved `environments/pre-prod` to `examples/pre-prod`
+* Moved `environments/pre-prod` to `examples/pre-prod`.
 
 ## 1.1.0 [Deprecated] - 18/02/2021
 
 ### Added
 
-* Walkthroughs to demonstrate backup and restore procedure
-* Updated for compatibility with i2 Analyze 4.3.3.1
+* Walkthroughs to demonstrate backup and restore procedure.
+* Updated for compatibility with i2 Analyze 4.3.3.1.
 
 ## 1.0.1 [Deprecated] - 29/01/2021
 
 ### Added
 
-* Walkthroughs to demonstrate high availability and disaster recovery scenarios
-* New client functions added - getSolrStatus & runi2AnalyzeToolAsExternalUser
-* Documentation for the environments/pre-prod/resetRepository.sh script
+* Walkthroughs to demonstrate high availability and disaster recovery scenarios.
+* New client functions added - getSolrStatus & runi2AnalyzeToolAsExternalUser.
+* Documentation for the environments/pre-prod/resetRepository.sh script.
 
 ### Fixed
 
-* environments/pre-prod/walkthroughs/change-management/ingestDataWalkthrough.sh fixed to ingest all of the data in the example data set
-* Broken links in markdown documentation
+* environments/pre-prod/walkthroughs/change-management/ingestDataWalkthrough.sh fixed to ingest all of the data in the example data set.
+* Broken links in markdown documentation.
 
 ## 1.0.0 [Deprecated] - 17/12/2020
 
 ### Added
 
-* Initial public release
-* Docker image creation scripts
-* Scripts to deploy all EIA components in Docker containers
-* Scripts to demonstrate secrets management and full end to end encryption
-* Scripts to demonstrate configuration change management across the deployment
+* Initial public release.
+* Docker image creation scripts.
+* Scripts to deploy all EIA components in Docker containers.
+* Scripts to demonstrate secrets management and full end to end encryption.
+* Scripts to demonstrate configuration change management across the deployment.
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html

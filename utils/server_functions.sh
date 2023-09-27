@@ -146,9 +146,11 @@ function run_sql_server() {
 
   local container_data_dir="/var/i2a-data"
   update_volume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
+  run_db_container_as_root chown -R mssql:0 "/var/opt/mssql" "${container_data_dir}" "${DB_CONTAINER_BACKUP_DIR}"
 
   print "SQL Server container ${SQL_SERVER_CONTAINER_NAME} is starting"
   docker run -d \
+    --platform linux/amd64 \
     --name "${SQL_SERVER_CONTAINER_NAME}" \
     --network "${DOMAIN_NAME}" \
     --net-alias "${SQL_SERVER_FQDN}" \
@@ -184,6 +186,7 @@ function run_postgres_server() {
 
   local container_data_dir="/var/i2a-data"
   update_volume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
+  run_db_container_as_root chown -R postgres:0 "/var/lib/postgresql/data" "${container_data_dir}" "${DB_CONTAINER_BACKUP_DIR}"
 
   print "Postgres Server container ${POSTGRES_SERVER_CONTAINER_NAME} is starting"
   docker run -d \
@@ -221,6 +224,7 @@ function run_db2_server() {
 
   local container_data_dir="/var/i2a-data"
   update_volume "${DATA_DIR}" "${I2A_DATA_SERVER_VOLUME_NAME}" "${container_data_dir}"
+  run_db_container_as_root chown -R 1000:1000 "/database" "${container_data_dir}" "${DB_CONTAINER_BACKUP_DIR}"
 
   print "Db2 Server container ${DB2_SERVER_CONTAINER_NAME} is starting"
   docker run -d \
@@ -230,7 +234,7 @@ function run_db2_server() {
     --net-alias "${DB2_SERVER_FQDN}" \
     -p "${HOST_PORT_DB}:50000" \
     -v "${DB2_SERVER_BACKUP_VOLUME_NAME}:${DB_CONTAINER_BACKUP_DIR}" \
-    -v "${DB2_SERVER_VOLUME_NAME}:/database/data" \
+    -v "${DB2_SERVER_VOLUME_NAME}:/database" \
     -v "${I2A_DATA_SERVER_VOLUME_NAME}:${container_data_dir}" \
     -e "LICENSE=${DB2_LICENSE}" \
     -e "DB_INSTALL_DIR=${DB_INSTALL_DIR}" \
@@ -764,6 +768,8 @@ function run_prometheus() {
   check_file_exists "${LOCAL_PROMETHEUS_CONFIG_DIR}/prometheus.yml"
   update_volume "${LOCAL_PROMETHEUS_CONFIG_DIR}" "${PROMETHEUS_CONFIG_VOLUME_NAME}" "${prometheus_tmp_config_dir}"
 
+  run_prometheus_container_as_root chown -R prometheus:prometheus "/prometheus" "${prometheus_tmp_config_dir}"
+
   print "Prometheus container ${PROMETHEUS_CONTAINER_NAME} is starting"
   docker run -d \
     --name "${PROMETHEUS_CONTAINER_NAME}" \
@@ -800,6 +806,8 @@ function run_grafana() {
     prometheus_scheme="https"
   fi
   local prometheus_url="${prometheus_scheme}://${PROMETHEUS_FQDN}:9090"
+
+  run_grafana_container_as_root chown -R grafana:0 "/var/lib/grafana" "${grafana_provisioning_dir}" "${grafana_dashboards_dir}"
 
   print "Grafana container ${GRAFANA_CONTAINER_NAME} is starting"
   docker run -d \

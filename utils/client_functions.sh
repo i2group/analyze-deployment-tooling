@@ -232,6 +232,7 @@ function change_sa_password() {
   # shellcheck disable=SC2153
   docker run \
     --rm \
+    --platform linux/amd64 \
     "${EXTRA_ARGS[@]}" \
     -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SA_USERNAME=${SA_USERNAME}" \
@@ -322,7 +323,7 @@ function create_db_login_and_user() {
   local ssl_ca_certificate
   local image_name
   local db_server_fqdn
-  local auth_args=()
+  local other_args=()
 
   case "${DB_DIALECT}" in
   sqlserver)
@@ -330,24 +331,25 @@ function create_db_login_and_user() {
     user_password=$(get_secret sqlserver/"${user}"_PASSWORD)
     db_server_fqdn="${SQL_SERVER_FQDN}"
     image_name="${SQL_CLIENT_IMAGE_NAME}"
-    auth_args+=("-e" "SA_USERNAME=${SA_USERNAME}")
-    auth_args+=("-e" "SA_PASSWORD=${admin_password}")
+    other_args+=("-e" "SA_USERNAME=${SA_USERNAME}")
+    other_args+=("-e" "SA_PASSWORD=${admin_password}")
+    other_args+=("--platform" "linux/amd64")
     ;;
   db2)
     admin_password=$(get_secret db2server/db2inst1_PASSWORD)
     user_password=$(get_secret db2server/"${user}"_PASSWORD)
     db_server_fqdn="${DB2_SERVER_FQDN}"
     image_name="${DB2_CLIENT_IMAGE_NAME}"
-    auth_args+=("-e" "ADMIN_USERNAME=${DB2INST1_USERNAME}")
-    auth_args+=("-e" "ADMIN_PASSWORD=${admin_password}")
+    other_args+=("-e" "ADMIN_USERNAME=${DB2INST1_USERNAME}")
+    other_args+=("-e" "ADMIN_PASSWORD=${admin_password}")
     ;;
   postgres)
     admin_password=$(get_secret postgres/postgres_PASSWORD)
     user_password=$(get_secret postgres/"${user}"_PASSWORD)
     db_server_fqdn="${POSTGRES_SERVER_FQDN}"
     image_name="${POSTGRES_CLIENT_IMAGE_NAME}"
-    auth_args+=("-e" "PGUSER=${POSTGRES_USERNAME}")
-    auth_args+=("-e" "PGPASSWORD=${admin_password}")
+    other_args+=("-e" "PGUSER=${POSTGRES_USERNAME}")
+    other_args+=("-e" "PGPASSWORD=${admin_password}")
     ;;
   esac
 
@@ -361,7 +363,7 @@ function create_db_login_and_user() {
     -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
-    "${auth_args[@]}" \
+    "${other_args[@]}" \
     -e "DB_USERNAME=${user}" \
     -e "DB_PASSWORD=${user_password}" \
     -e "DB_SSL_CONNECTION=${DB_SSL_CONNECTION}" \
@@ -388,7 +390,7 @@ function add_user_to_role() {
   local ssl_ca_certificate
   local image_name
   local db_server_fqdn
-  local auth_args=()
+  local other_args=()
 
   case "${DB_DIALECT}" in
   sqlserver)
@@ -396,8 +398,9 @@ function add_user_to_role() {
     user_password=$(get_secret sqlserver/"${user}"_PASSWORD)
     db_server_fqdn="${SQL_SERVER_FQDN}"
     image_name="${SQL_CLIENT_IMAGE_NAME}"
-    auth_args+=("-e" "SA_USERNAME=${SA_USERNAME}")
-    auth_args+=("-e" "SA_PASSWORD=${admin_password}")
+    other_args+=("-e" "SA_USERNAME=${SA_USERNAME}")
+    other_args+=("-e" "SA_PASSWORD=${admin_password}")
+    other_args+=("--platform" "linux/amd64")
     ;;
   db2)
     # Db2 has only the admin user
@@ -408,8 +411,8 @@ function add_user_to_role() {
     user_password=$(get_secret postgres/"${user}"_PASSWORD)
     db_server_fqdn="${POSTGRES_SERVER_FQDN}"
     image_name="${POSTGRES_CLIENT_IMAGE_NAME}"
-    auth_args+=("-e" "PGUSER=${POSTGRES_USERNAME}")
-    auth_args+=("-e" "PGPASSWORD=${admin_password}")
+    other_args+=("-e" "PGUSER=${POSTGRES_USERNAME}")
+    other_args+=("-e" "PGPASSWORD=${admin_password}")
     ;;
   esac
 
@@ -423,7 +426,7 @@ function add_user_to_role() {
     -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     -e "SQLCMD=${SQLCMD}" \
     -e "SQLCMD_FLAGS=${SQLCMD_FLAGS}" \
-    "${auth_args[@]}" \
+    "${other_args[@]}" \
     -e "DB_USERNAME=${user}" \
     -e "DB_PASSWORD=${user_password}" \
     -e "DB_SSL_CONNECTION=${DB_SSL_CONNECTION}" \
@@ -630,6 +633,7 @@ function run_sql_server_command_as_etl() {
 
   docker run \
     --rm \
+    --platform linux/amd64 \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
     -v "${LOCAL_CUSTOM_DB_SCRIPTS_DIR}:/opt/customDatabaseScripts" \
@@ -835,6 +839,7 @@ function run_postgres_server_command_as_dbb() {
   # shellcheck disable=SC2153
   docker run \
     --rm \
+    --platform linux/amd64 \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
     -v "${LOCAL_CUSTOM_DB_SCRIPTS_DIR}:/opt/customDatabaseScripts" \
@@ -872,6 +877,7 @@ function run_sql_server_command_as_first_start_sa() {
 
   docker run \
     --rm \
+    --platform linux/amd64 \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
     -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
@@ -910,6 +916,7 @@ function run_sql_server_command_as_sa() {
 
   docker run \
     --rm \
+    --platform linux/amd64 \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
     -v "${LOCAL_CUSTOM_DB_SCRIPTS_DIR}:/opt/customDatabaseScripts" \
@@ -949,6 +956,7 @@ function run_sql_server_command_as_dba() {
 
   docker run \
     --rm \
+    --platform linux/amd64 \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
     -v "${LOCAL_CUSTOM_DB_SCRIPTS_DIR}:/opt/customDatabaseScripts" \
@@ -993,6 +1001,7 @@ function run_sql_server_command_as_dbb() {
   # shellcheck disable=SC2153
   docker run \
     --rm \
+    --platform linux/amd64 \
     "${EXTRA_ARGS[@]}" \
     -v "${LOCAL_GENERATED_DIR}:/opt/databaseScripts/generated" \
     -v "${LOCAL_CUSTOM_DB_SCRIPTS_DIR}:/opt/customDatabaseScripts" \

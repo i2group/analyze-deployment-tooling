@@ -42,9 +42,7 @@ if [ -n "$GROUP_ID" ] && [ "$GROUP_ID" != "0" ]; then
     groupadd -o -g "$GROUP_ID" "${USER}" &>/dev/null
   fi
   usermod -u "$USER_ID" -g "$GROUP_ID" "${USER}" &>/dev/null
-  chown -R "${USER_ID}:0" "/opt/databaseScripts/generated" \
-    "/opt/customDatabaseScripts" \
-    "/opt/toolkit" \
+  chown -R "${USER_ID}:0" "/opt" \
     "/etc/pki" \
     "${TMP_SECRETS}"
 fi

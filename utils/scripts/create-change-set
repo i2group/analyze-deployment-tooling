@@ -194,7 +194,7 @@ function identify_type_of_change_set() {
   if [[ "${DEPLOYMENT_PATTERN}" == *"store"* ]]; then
     print "Validating the schema and security schema"
     if output=$(run_i2_analyze_tool "/opt/i2-tools/scripts/validateSchemaAndSecuritySchema.sh"); then
-      if echo "${output}" | grep -qE "ADDED ITEM TYPES|MODIFIED ITEM TYPES"; then
+      if echo "${output}" | grep -qE "The following changes to the i2 Analyze schema have been detected:"; then
         print_info "schema.xml has changed"
         IS_SCHEMA_CHANGED="true"
       else

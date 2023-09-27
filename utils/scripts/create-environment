@@ -67,37 +67,6 @@ function extract_toolkit() {
   fi
 }
 
-function extract_fixpack_if_necessary() {
-  local fixpack_version
-
-  if [[ -f "${PRE_REQS_DIR}/i2analyzeFixPack.tar.gz" ]]; then
-    delete_folder_if_exists_and_create "${FIXPACK_DIR}"
-    tar -zxf "${PRE_REQS_DIR}/i2analyzeFixPack.tar.gz" -C "${FIXPACK_DIR}"
-    fixpack_version=$(cat "${FIXPACK_DIR}"/toolkit/version/*.txt)
-    if [[ "${fixpack_version%.*}" != "${SUPPORTED_I2ANALYZE_VERSION}" ]]; then
-      print_error_and_exit "Fix Pack version ${fixpack_version} is not compatible with i2 Analyze Toolkit Minimal version ${SUPPORTED_I2ANALYZE_VERSION}"
-    fi
-    print "Applying i2 Analyze Fix Pack ${fixpack_version}"
-    if [[ -d "${FIXPACK_DIR}/toolkit/application/dependencies/solr-extension" && "$(ls -A "${FIXPACK_DIR}/toolkit/application/dependencies/solr-extension")" ]]; then
-      cp -r "${FIXPACK_DIR}/toolkit/application/dependencies/solr-extension/." "${TOOLKIT_APPLICATION_DIR}/dependencies/solr-extension"
-    fi
-    if [[ -d "${FIXPACK_DIR}/toolkit/application/shared" && "$(ls -A "${FIXPACK_DIR}/toolkit/application/shared")" ]]; then
-      cp -r "${FIXPACK_DIR}/toolkit/application/shared/." "${TOOLKIT_APPLICATION_DIR}/shared"
-    fi
-    if [[ -d "${FIXPACK_DIR}/toolkit/application/targets/opal-services-is-daod" && "$(ls -A "${FIXPACK_DIR}/toolkit/application/targets/opal-services-is-daod")" ]]; then
-      cp -r "${FIXPACK_DIR}/toolkit/application/targets/opal-services-is-daod/." "${TOOLKIT_APPLICATION_DIR}/targets/opal-services"
-    fi
-    if [[ -d "${FIXPACK_DIR}/toolkit/scripts/xsd" && "$(ls -A "${FIXPACK_DIR}/toolkit/scripts/xsd")" ]]; then
-      cp -r "${FIXPACK_DIR}/toolkit/scripts/xsd/." "${LOCAL_TOOLKIT_DIR}/scripts/xsd"
-    fi
-    if [[ -d "${FIXPACK_DIR}/toolkit/scripts-bin/buildSrc" && "$(ls -A "${FIXPACK_DIR}/toolkit/scripts-bin/buildSrc")" ]]; then
-      cp -r "${FIXPACK_DIR}/toolkit/scripts-bin/buildSrc/." "${LOCAL_TOOLKIT_DIR}/i2-tools/jars"
-    fi
-    find "${FIXPACK_DIR}/toolkit/version/" -type f -name "*.txt" -print0 | xargs -I{} -0 cp {} "${LOCAL_TOOLKIT_DIR}/scripts/version.txt"
-  fi
-  delete_folder_if_exists "${FIXPACK_DIR}"
-}
-
 function populate_images_folders_with_environment_tool() {
   print "Adding environment variable resolution support"
   cp -p "${TOOLKIT_SCRIPTS_DIR}/utils/environment.sh" "${IMAGES_DIR}/sql_client/db-scripts"
@@ -200,7 +169,6 @@ function main() {
   # Setting up i2 Analyze toolkit                                               #
   ###############################################################################
   extract_toolkit
-  extract_fixpack_if_necessary
 
   ###############################################################################
   # Adding environment variable resolution support                              #
