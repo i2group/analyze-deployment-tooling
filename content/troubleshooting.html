@@ -160,6 +160,16 @@ When you deploy, the system fails to start due to bad certificates.</p>
 <li>Run <code>deploy -c &lt;config-name&gt;</code> to redeploy with the new certificates.</li>
 <li>Reinstall the certificates in your operating system and browser.</li>
 </ol>
+<h2 id="error-unable-to-open-vs-code-dev-container">Error: Unable to open VS Code dev container</h2>
+<p><strong>Scenario:</strong>
+If you are unable to open the VS Code development container and you have already tried to rebuild it, you can use the following procedure to remove the dev container image.</p>
+<p><strong>Solution:</strong></p>
+<ol>
+<li>In Docker Desktop, locate the Docker image.
+In the <strong>Images</strong> pane, find the image name that begins with <code>vsc</code> followed by the folder name for the upgrade. For example: <code>vsc-analyze-containers-280</code>. The rest of the image name is a GUID.</li>
+<li>Select the image by using the checkbox and click <strong>Delete</strong>.</li>
+<li>Try and reopen the VS Code development environment.</li>
+</ol>
 </article>
           </div>
           

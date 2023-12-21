@@ -79,22 +79,33 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="external-dependencies">External dependencies</h1>
 
-<p>The system requires access to the internet to download Docker images and Maven artifacts. In an air-gapped environment
+<p>The system requires access to the internet to download Docker images, Maven artifacts, and JDBC drivers. In an air-gapped environment
 the required images and artifacts have to be made available.</p>
+<p>To provide the required JDBC drivers:</p>
+<ol>
+<li>Download the Microsoft JDBC Driver 12.2.0 for SQL Server from <a href="https://github.com/microsoft/mssql-jdbc/releases/tag/v12.2.0">https://github.com/microsoft/mssql-jdbc/releases/tag/v12.2.0</a> by clicking the <code>mssql-jdbc-12.2.0.jre11.jar</code> asset.<ul>
+<li>Copy the <code>mssql-jdbc-12.2.0.jre11.jar</code> file to the <code>pre-reqs/jdbc-drivers</code> directory.<ol>
+<li>Download the PostgreSQL JDBC Driver for PostgreSQL from <a href="https://jdbc.postgresql.org/download/">https://jdbc.postgresql.org/download/</a> by clicking the <code>download</code> button for 42.5.1 or later Java 8 asset.</li>
+</ol>
+</li>
+<li>Copy the <code>postgresql-x.x.x.jar</code> file to the <code>analyze-containers/pre-reqs/jdbc-drivers</code> directory.</li>
+</ul>
+</li>
+</ol>
 <p>For information about deploying a Docker registry, see <a href="https://docs.docker.com/registry/deploying/">Deploy a registry server</a>.</p>
 <p>For information about deploying a Maven repository, see <a href="https://maven.apache.org/guides/introduction/introduction-to-repositories.html#internal-repositories">Internal Repositories</a>.</p>
 <h2 id="docker">Docker</h2>
 <p>The system requires access to the following images:</p>
 <ul>
 <li><a href="https://hub.docker.com/r/i2group/i2eng-analyze-containers-dev">i2group/i2eng-analyze-containers-dev</a></li>
-<li><a href="https://hub.docker.com/_/eclipse-temurin">eclipse-temurin:ubi-jre</a></li>
-<li><a href="https://catalog.redhat.com/software/containers/ubi9/ubi/615bcf606feffc5384e8452e?tag=all">registry.access.redhat.com/ubi9/ubi-minimal:8.6</a></li>
-<li><a href="https://hub.docker.com/r/i2group/i2eng-liberty">i2group/i2eng-liberty:ubi</a></li>
+<li><a href="https://hub.docker.com/_/eclipse-temurin">adoptopenjdk/openjdk11:ubi-jre</a></li>
+<li><a href="https://catalog.redhat.com/software/containers/ubi9/ubi/615bcf606feffc5384e8452e?tag=all">registry.access.redhat.com/ubi8/ubi-minimal:8.6:8.6</a></li>
+<li><a href="https://hub.docker.com/r/i2group/i2eng-liberty">i2group/i2eng-liberty:22</a></li>
 <li><a href="https://hub.docker.com/r/i2group/i2eng-solr">i2group/i2eng-solr:8.11</a></li>
 <li><a href="https://hub.docker.com/r/i2group/i2eng-postgres">i2group/i2eng-postgres:15</a></li>
 <li><a href="https://hub.docker.com/r/i2group/i2eng-sqlserver">i2group/i2eng-sqlserver:2019-CU11-rhel-8.3</a></li>
-<li><a href="https://hub.docker.com/r/i2group/i2eng-grafana">i2group/i2eng-grafana:10.0</a></li>
-<li><a href="https://hub.docker.com/r/i2group/i2eng-prometheus">i2group/i2eng-prometheus:2.40</a></li>
+<li><a href="https://hub.docker.com/r/i2group/i2eng-grafana">grafana/grafana-oss:8.5.3</a></li>
+<li><a href="https://hub.docker.com/r/i2group/i2eng-prometheus">i2group/i2eng-prometheus:2.36</a></li>
 <li><a href="https://hub.docker.com/_/haproxy">haproxy:2.2</a> (pre-prod only)</li>
 </ul>
 <h2 id="maven">Maven</h2>

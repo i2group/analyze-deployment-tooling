@@ -84,6 +84,12 @@
 <hr>
 <h2 id="creating-a-containerized-deployment">Creating a containerized deployment</h2>
 <p>After you have all of the prerequisites in place, use the example scripts and artifacts in the <code>examples/pre-prod</code> directory to create the reference pre-production containerized deployment.</p>
+<h3 id="install-pre-prod-example">Install pre-prod example</h3>
+<ol>
+<li><p>Run the command:</p>
+<pre><code class="lang-sh">install-analyze-containers -e pre-prod
+</code></pre></li>
+</ol>
 <h3 id="creating-the-environment-and-configuration">Creating the environment and configuration</h3>
 <p>The <code>create-environment</code> script performs a number of actions that ensure all of the artifacts for a deployment are created and in the correct locations. These actions include:</p>
 <ul>
@@ -103,7 +109,7 @@
 </code></pre></li>
 </ol>
 <p>The <code>configuration</code> directory is created in the <code>examples/pre-prod</code> directory.</p>
-<p>By default, the environment is created for an Information Store and i2 Connect gateway deployment.</p>
+<p>By default, the environment is created for an Information Store and i2 Connect gateway deployment for SQL Server.</p>
 <h3 id="accepting-the-licenses">Accepting the licenses</h3>
 <ul>
 <li><p>Before you can use i2 Analyze and the tools, you must read and accept the license agreement and copyright notices in the <code>pre-reqs/i2analyze/license</code> directory.<br>  To accept the license agreement, change the value of the <code>LIC_AGREEMENT</code> variable to <code>ACCEPT</code>. The variable is in the <code>licenses.conf</code> file.</p>

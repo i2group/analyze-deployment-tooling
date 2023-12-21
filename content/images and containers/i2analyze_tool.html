@@ -85,7 +85,7 @@
 <p>The image contains the <code>i2-tools</code> &amp; <code>scripts</code> folder from the toolkit.</p>
 <h3 id="docker-build-command">Docker build command</h3>
 <p>The following <code>docker build</code> command builds the i2 Analyze Tool image:</p>
-<pre><code class="lang-bash">docker image build -t &quot;i2a_tools_redhat:4.4.2&quot; &quot;images/i2a_tools&quot;
+<pre><code class="lang-bash">docker image build -t &quot;i2a_tools_redhat:4.4.3&quot; &quot;images/i2a_tools&quot;
 </code></pre><p>For examples of the build commands, see <code>build-images</code> script.</p>
 <h2 id="running-an-i2-analyze-tool-container">Running an i2 Analyze Tool container</h2>
 <p>An i2 Analyze Tool container uses the i2 Analyze Tool image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to the container. The environment variables are described in <a href="#environment-variables">environment variables</a></p>
@@ -123,7 +123,7 @@
     -e SSL_PRIVATE_KEY=&quot;SSL_PRIVATE_KEY&quot; \
     -e SSL_CERTIFICATE=&quot;SSL_CERTIFICATE&quot; \
     -e SSL_CA_CERTIFICATE=&quot;SSL_CA_CERTIFICATE&quot; \
-    &quot;i2a_tools_redhat:4.4.2&quot; &quot;$@&quot;
+    &quot;i2a_tools_redhat:4.4.3&quot; &quot;$@&quot;
 </code></pre><p>The local user ID is required so that a user is created in the Docker container with a <code>USER_ID</code> that is the same as the local user. The user is required to ensure that the local user can access any files that are generated on the container. The value of <code>$id</code> comes from your shell.</p>
 <h3 id="bind-mounts">Bind mounts</h3>
 <ul>

@@ -93,28 +93,14 @@ from an environment without an internet connection, see <a href="reference%20arc
 </li>
 <li>After you restart, open the distribution. Press <strong>Start -&gt; wsl</strong></li>
 <li>You will be asked to create a User Name and Password for your Linux distribution.<br> For more information, see <a href="https://docs.microsoft.com/en-gb/windows/wsl/setup/environment#set-up-your-linux-username-and-password">Set up your Linux username and password</a>.</li>
-<li><p>Create a mapped network drive in Windows for WSL.</p>
-<ol>
-<li><p>In a command prompt, run the following command to list your WSL distributions.</p>
-<pre><code class="lang-sh">wsl --list
-</code></pre></li>
-<li><p>Run the following command to map your WSL distribution to the Z: drive. Use the name of your default WSL distribution as displayed after running the previous command. You can use any drive letter.</p>
-<pre><code class="lang-sh">net use Z: \\wsl$\Ubuntu
-</code></pre><p>You can now access the WSL filesystem from Windows</p>
-</li>
-</ol>
-</li>
+<li>Ensure you can access the WSL filesystem from Windows explorer. In the address bar you can use <code>\\wsl.localhost\Ubuntu</code>. Additionally it is displayed in the Quick Access Toolbar, for example:<br> <img src="../images/filesystem.png" alt="Windows Quick Access Toolbar"></li>
 </ol>
 <h3 id="docker">Docker</h3>
 <ol>
-<li><p>Install Docker CE for your operating system. For more information about installing Docker CE, see <a href="https://docs.docker.com/engine/installation/">https://docs.docker.com/engine/installation/</a>.</p>
+<li><p>Install Docker Desktop for your operating system. For more information about installing Docker Desktop, see <a href="https://docs.docker.com/engine/install/#desktop">https://docs.docker.com/engine/install/#desktop</a>.</p>
 <ul>
-<li><em>Mac OS</em> : <a href="https://docs.docker.com/docker-for-mac/install/">Install Docker CE</a></li>
-<li><em>Windows</em> :  <ol>
-<li><a href="https://docs.docker.com/docker-for-windows/install/">Install Docker CE</a></li>
-<li><a href="https://docs.docker.com/docker-for-windows/wsl/">Set up Docker on WSL 2</a></li>
-</ol>
-</li>
+<li><em>Windows</em> : <a href="https://docs.docker.com/desktop/wsl/">Docker Desktop WSL 2 backend on Windows</a></li>
+<li><em>Mac OS</em> : <a href="https://docs.docker.com/desktop/install/mac-install/">Install Docker Desktop on Mac</a></li>
 </ul>
 </li>
 <li><p>After you install Docker, allocate at least 5GB of memory to Docker to run the containers in the example deployment.</p>
@@ -128,26 +114,26 @@ from an environment without an internet connection, see <a href="reference%20arc
 </ol>
 <h3 id="code">Code</h3>
 <ol>
-<li>Download the <code>tar.gz</code> from <a href="https://github.com/i2group/analyze-containers/releases/tag/v2.7.1">https://github.com/i2group/analyze-containers/releases/tag/v2.7.1</a>.</li>
+<li>Download the <code>tar.gz</code> from <a href="https://github.com/i2group/analyze-containers/releases/tag/v2.8.0">https://github.com/i2group/analyze-containers/releases/tag/v2.8.0</a>.</li>
 <li><p>Extract the <code>tar.gz</code> file by using the following steps:</p>
 <ol>
-<li>On Windows, copy the <code>analyze-containers-2.7.1.tar.gz</code> file to your WSL filesystem. For example: <code>Z:\home\&lt;user&gt;</code></li>
+<li>On Windows, copy the <code>analyze-containers-2.8.0.tar.gz</code> file to your WSL filesystem. For example: <code>\\wsl.localhost\Ubuntu\home\&lt;user&gt;</code></li>
 <li><p>Extract the <code>tar.gz</code> file (On Windows, run the commands from a WSL terminal. <strong>Start</strong> &gt; <strong>wsl</strong>):</p>
 <pre><code class="lang-sh">cd /home/&lt;user&gt;
-</code></pre><pre><code class="lang-sh">tar -xvzf analyze-containers-2.7.1.tar.gz
-</code></pre><pre><code class="lang-sh">mv analyze-containers-2.7.1/ analyze-containers
+</code></pre><pre><code class="lang-sh">tar -xzf analyze-containers-2.8.0.tar.gz
+</code></pre><pre><code class="lang-sh">mv analyze-containers-2.8.0/ analyze-containers
 </code></pre></li>
 </ol>
 </li>
 </ol>
 <h3 id="i2-analyze-minimal-toolkit">i2 Analyze minimal toolkit</h3>
 <ol>
-<li>Download the i2 Analyze V4.4.2 Minimal for Linux.<ul>
+<li>Download the i2 Analyze V4.4.3 Minimal for Linux.<ul>
 <li>To download i2 Analyze, follow the procedure described in <a href="https://support.i2group.com/s/article/2290">Where can I download the latest i2 Products?</a></li>
-<li>Populate the subject of the form with <code>Request for i2 Analyze 4.4.2 minimal toolkit for Linux</code>.</li>
+<li>Populate the subject of the form with <code>Request for i2 Analyze 4.4.3 minimal toolkit for Linux</code>.</li>
 </ul>
 </li>
-<li>Rename the <code>i2analyzeMinimal_442.tar.gz</code> file to <code>i2analyzeMinimal.tar.gz</code>, then copy it to the <code>analyze-containers/pre-reqs</code> directory.</li>
+<li>Rename the <code>i2analyzeMinimal_443.tar.gz</code> file to <code>i2analyzeMinimal.tar.gz</code>, then copy it to the <code>analyze-containers/pre-reqs</code> directory.</li>
 </ol>
 <p><strong>Note:</strong></p>
 <ul>
@@ -162,21 +148,12 @@ from an environment without an internet connection, see <a href="reference%20arc
 <li>Populate the subject of the form with <code>Request for i2 Analyst&#39;s Notebook Premium 10.0.0</code>.</li>
 </ul>
 </li>
-<li><p>Install i2 Analyst&#39;s Notebook Premium on a Windows machine.</p>
+<li><p>Install i2 Analyst&#39;s Notebook Premium on a Windows machine.
+<strong>Note</strong>: Ensure that you choose to install <code>i2 Analyze Schema Designer</code> as part of the installation process.</p>
 <blockquote><p>Note: If you are running Docker on MacOS, you can install Analyst&#39;s Notebook Premium on a Windows virtual machine.</p>
 </blockquote>
-<p> For more information, see <!-- markdown-link-check-disable --><a href="https://docs.i2group.com/anbp/10.0.0/installing_anbp.html">Installing i2 Analyst&#39;s Notebook Premium</a><!-- markdown-link-check-enable -->.</p>
+<p> For more information, see <a href="https://docs.i2group.com/anbp/10.0.1/installing_anbp.html">Installing i2 Analyst&#39;s Notebook Premium</a>.</p>
 </li>
-</ol>
-<h3 id="jdbc-drivers">JDBC drivers</h3>
-<p>You must provide the JDBC driver to enable the application to communicate with the database.</p>
-<ol>
-<li>Download the Microsoft JDBC Driver 12.2.0 for SQL Server from <a href="https://github.com/microsoft/mssql-jdbc/releases/tag/v12.2.0">https://github.com/microsoft/mssql-jdbc/releases/tag/v12.2.0</a> by clicking the <code>mssql-jdbc-12.2.0.jre11.jar</code> asset.</li>
-<li><p>Copy the <code>mssql-jdbc-12.2.0.jre11.jar</code> file to the <code>analyze-containers/pre-reqs/jdbc-drivers</code> directory.</p>
-</li>
-<li><p>Download the PostgreSQL JDBC Driver for PostgreSQL from <a href="https://jdbc.postgresql.org/download/">https://jdbc.postgresql.org/download/</a> by clicking the <code>download</code> button for the 42.5.1 or later Java 8 asset.</p>
-</li>
-<li>Copy the <code>postgresql-x.x.x.jar</code> file to the <code>analyze-containers/pre-reqs/jdbc-drivers</code> directory.</li>
 </ol>
 <h3 id="modifying-the-hosts-file">Modifying the hosts file</h3>
 <p>To enable you to connect to a deployment, the Solr Web UI, the database, the Prometheus Web UI and grafana, update your hosts file to include entries for the containers.</p>
@@ -210,7 +187,7 @@ from an environment without an internet connection, see <a href="reference%20arc
 <li><p>Download and install <a href="https://code.visualstudio.com/download">VS Code</a></p>
 <ul>
 <li>On Windows, when prompted to Select Additional Tasks during installation select the <strong>Add to PATH</strong> option so you can easily open a folder in WSL using the code command.</li>
-<li>On MacOS, after you install VS Code to your PATH. For more information, see <a href="https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line">Launching from the command line</a>.</li>
+<li>On MacOS, after you install VS Code, add it to your PATH. For more information, see <a href="https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line">Launching from the command line</a>.</li>
 </ul>
 </li>
 <li><p>Install the <a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers">Dev Containers extension</a></p>
@@ -218,18 +195,21 @@ from an environment without an internet connection, see <a href="reference%20arc
 <li><p>On Windows, use the following instructions to open the folder in WSL.</p>
 <ol>
 <li>Install the <a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl">WSL extension</a></li>
-<li>Press <strong>F1</strong> and type <code>WSL: New WSL Window</code> and select it.</li>
+<li>Press <strong>F1</strong> and type <code>WSL: Connect to WSL</code> and select it.</li>
 </ol>
 </li>
-<li><p>Press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS) and type <code>Dev Containers: Open Folder in Container</code> and select it. In the file explorer, navigate to your <code>analyze-containers</code> directory. For example: <code>/home/&lt;user-name&gt;/analyze-containers</code>.<br>If you are prompted, click <strong>Trust Folder &amp; Continue</strong>.</p>
+<li><p>Press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS) and type <code>Dev Containers: Open Folder in Container...</code> and select it. In the file explorer, navigate to your <code>analyze-containers</code> directory. For example: <code>/home/&lt;user-name&gt;/analyze-containers</code>.<br>If you are prompted, click <strong>Trust Folder &amp; Continue</strong>.</p>
 </li>
 <li>After the dev container starts, if you are prompted, click <strong>Install</strong> in the pop-up that is displayed that prompts you to install the recommended VS Code extensions.</li>
 </ol>
-<p>Your config dev environment is correctly opened when the following is displayed in the bottom left-hand corner of the VS Code window:<br><img src="../images/vscode_green.png" alt="Dev Container: Analyze Containers Dev" title="VS Code status">
-For more information about VS Code dev containers, see <a href="https://code.visualstudio.com/docs/remote/containers">Developing in a container</a>.</p>
+<p>Your config dev environment is correctly opened when the following is displayed in the bottom left-hand corner of the VS Code window:<br><img src="../images/vscode_green.png" alt="Dev Container: Analyze Containers Dev" title="VS Code status"><br>For more information about VS Code dev containers, see <a href="https://code.visualstudio.com/docs/remote/containers">Developing in a container</a>.</p>
 <ol>
 <li>To run the scripts in the analyze-containers repository, use the VS Code integrated terminal. To open the integrated terminal, click <strong>Terminal</strong> &gt; <strong>New Terminal</strong>.  </li>
 </ol>
+<h3 id="install-analyze-containers">Install analyze-containers</h3>
+<p>To download all the required images and configure your environment, run:</p>
+<pre><code class="lang-sh">  ./bootstrap
+</code></pre><p>This command can take a while to run depending on your internet connection and the speed of your machine.</p>
 <hr>
 <h2 id="what-to-do-next">What to do next</h2>
 <ul>

@@ -162,12 +162,11 @@
 <pre><code class="lang-bash">deploy -c &lt;config_name&gt;
 </code></pre><h2 id="debugging-your-extension">Debugging your extension</h2>
 <h3 id="deploying-in-debug-mode">Deploying in debug mode</h3>
-<p>To deploy with the Liberty server running in debug mode, change the local variable <code>LIBERTY_DEBUG</code> in <code>utils/common_variables.sh</code> to <code>true</code>.
-For example:</p>
+<p>To deploy with the Liberty server running in debug mode, change the local variable <code>LIBERTY_DEBUG</code> to &quot;true&quot;. To do this, create a <code>docker.env</code> file in the <code>analyze-containers</code> directory. In the file, add the following line:</p>
 <pre><code class="lang-sh">LIBERTY_DEBUG=&quot;true&quot;
-</code></pre><p>Then deploy from a clean environment.</p>
+</code></pre><p>Then deploy from a clean environment by using <code>deploy -c &lt;config-name&gt; -t clean</code> followed by <code>deploy-c &lt;config-name&gt;</code>.</p>
 <p>When the Liberty server starts, it waits for a debugger to be attached before continuing.
-This behavior is defined by the <code>WLP_DEBUG_SUSPEND</code> variable and can be changed in <code>utils/common_variables.sh</code>.
+This behavior is defined by the <code>WLP_DEBUG_SUSPEND</code> variable and can also be changed in the <code>docker.env</code> file.
 <strong>Note:</strong> The Liberty server will open and expose a unique debug port (7777) and wait for a debugger.</p>
 <h3 id="attaching-a-debugger">Attaching a debugger</h3>
 <p>The project is shipped with a default launch configuration which can be changed in <code>.vscode/launch.json</code>.
