@@ -1,0 +1,251 @@
+#!/usr/bin/env bash
+# i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
+# © N.Harris Computer Corporation (2022-2023)
+#
+# SPDX short identifier: MIT
+
+set -e
+
+# This ensures we use the bootstrap directory for docker.env
+SCRIPT_DIR="$(readlink -f "$(dirname "$0")")"
+
+USAGE="""
+Usage:
+  bootstrap [-p <path>] [-o <version>] [-v] [-y]
+  bootstrap -h
+
+Options:
+  -p <path>                              The full path to the directory to install analyze-containers. Defaults to the current directory.
+  -o <version>                           The version to install. Defaults to latest.
+  -v                                     Verbose output.
+  -y                                     Answer 'yes' to all prompts.
+  -h                                     Display the help.
+"""
+
+function print_usage() {
+  local exit_code="$1"
+
+  echo -e "${USAGE}"
+
+  if [[ -n "${exit_code}" ]]; then
+    exit "${exit_code}"
+  fi
+}
+
+function parse_arguments() {
+  while getopts ":o:p:hvy" flag; do
+    case "${flag}" in
+    p)
+      PATH_TO_DIR="${OPTARG}"
+      ;;
+    o)
+      ANALYZE_CONTAINERS_VERSION="${OPTARG}"
+      ;;
+    v)
+      VERBOSE="true"
+      ;;
+    y)
+      YES_FLAG="true"
+      ;;
+    h)
+      print_usage 0
+      ;;
+    \?)
+      print_usage 1
+      ;;
+    :)
+      echo "Invalid option: ${OPTARG} requires an argument"
+      print_usage 1
+      ;;
+    esac
+  done
+}
+
+function get_version_from_client_image() {
+  local variable_name="$1"
+  local container_version="$2"
+  local file_path="${3:-"/opt/analyze-containers/utils/common_variables.sh"}"
+
+  # The -i flag is required to attach stdin & stdout
+  # There should NOT be a -t flag here
+  docker run -i --rm -u "$(id -u):$(id -g)" --entrypoint="" \
+    "${ANALYZE_CONTAINERS_CLIENT_IMAGE_NAME}:${container_version}" \
+    bash -c "source ${file_path} && echo \${$variable_name}"
+}
+
+function set_defaults() {
+  if [[ -z "${PATH_TO_DIR}" ]]; then
+    PATH_TO_DIR="${PWD}"
+  fi
+
+  if [[ -z "${ANALYZE_CONTAINERS_CLIENT_IMAGE_NAME}" ]]; then
+    ANALYZE_CONTAINERS_CLIENT_IMAGE_NAME="i2group/i2eng-analyze-containers-client"
+  fi
+
+  if [[ -z "${ANALYZE_CONTAINERS_VERSION}" ]]; then
+    if [[ "${USE_LOCAL_IMAGE}" != "true" ]]; then
+      docker pull "${ANALYZE_CONTAINERS_CLIENT_IMAGE_NAME}:latest"
+    fi
+    ANALYZE_CONTAINERS_VERSION="$(get_version_from_client_image "VERSION" \
+      "latest" "/opt/analyze-containers/version.conf")"
+    echo "Using the latest version: ${ANALYZE_CONTAINERS_VERSION}"
+  fi
+  if [[ "${USE_LOCAL_IMAGE}" != "true" ]]; then
+    docker pull "${ANALYZE_CONTAINERS_CLIENT_IMAGE_NAME}:${ANALYZE_CONTAINERS_VERSION}"
+  fi
+  SUPPORTED_I2ANALYZE_VERSION="$(get_version_from_client_image "SUPPORTED_I2ANALYZE_VERSION" \
+    "${ANALYZE_CONTAINERS_VERSION}" "/opt/analyze-containers/version.conf")"
+}
+
+function create_empty_dirs() {
+  mkdir -p "${PATH_TO_DIR}" \
+    "${PATH_TO_DIR}/backups" \
+    "${PATH_TO_DIR}/dev-environment-secrets" \
+    "${PATH_TO_DIR}/additional-resources" \
+    "${PATH_TO_DIR}/configs" \
+    "${PATH_TO_DIR}/connector-images" \
+    "${PATH_TO_DIR}/gateway-schemas" \
+    "${PATH_TO_DIR}/i2a-data" \
+    "${PATH_TO_DIR}/i2a-extensions" \
+    "${PATH_TO_DIR}/i2a-plugins"
+}
+
+function run_script_on_client() {
+  local extra_args=("$@")
+  if [[ "${VERBOSE}" == "true" ]]; then
+    extra_args+=("-v")
+  fi
+  if [[ "${YES_FLAG}" == "true" ]]; then
+    extra_args+=("-y")
+  fi
+
+  container_args=()
+  if [[ -f "${SCRIPT_DIR}/docker.env" ]]; then
+    container_args+=("--env-file" "${SCRIPT_DIR}/docker.env")
+  fi
+
+  if [[ "${CI}" == "true" ]]; then
+    docker_run_arg="-i"
+  else
+    docker_run_arg="-it"
+  fi
+
+  local mount_list
+  if [[ -f "${PATH_TO_DIR}/path-configuration.json" ]]; then
+    # The -i flag is required to attach stdin & stdout
+    # There should NOT be a -t flag here
+    mount_list=$(docker run \
+      -i \
+      --rm \
+      -v "${PATH_TO_DIR}:${PATH_TO_DIR}" \
+      -e WORKDIR="${PATH_TO_DIR}" \
+      "${ANALYZE_CONTAINERS_CLIENT_IMAGE_NAME}:${ANALYZE_CONTAINERS_VERSION}" \
+      "/opt/analyze-containers/utils/containers/create-mounts" -t list)
+  fi
+  BIND_MOUNTS=()
+  for mount in $mount_list; do
+    BIND_MOUNTS+=("-v" "${mount}:${mount}")
+  done
+
+  docker run \
+    --rm \
+    "${docker_run_arg}" \
+    -w /opt/analyze-containers \
+    "${BIND_MOUNTS[@]}" \
+    -v "${PATH_TO_DIR}:${PATH_TO_DIR}" \
+    -v "ac_m2:/home/i2analyze/.m2" \
+    -v "ac_images_${SUPPORTED_I2ANALYZE_VERSION}:/opt/analyze-containers/images" \
+    -v "ac_templates_${SUPPORTED_I2ANALYZE_VERSION}:/opt/analyze-containers/templates" \
+    -v "/var/run/docker.sock:/var/run/docker-host.sock" \
+    -v "ac_tmp:/opt/analyze-containers/.tmp" \
+    -e WORKDIR="${PATH_TO_DIR}" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
+    "${container_args[@]}" \
+    "${ANALYZE_CONTAINERS_CLIENT_IMAGE_NAME}:${ANALYZE_CONTAINERS_VERSION}" \
+    "${extra_args[@]}"
+}
+
+function download_jdbc_driver() {
+  local driver_name="$1"
+  local driver_version="$2"
+  local driver_file_name
+  local all_existing_drivers
+
+  case "${driver_name}" in
+  "sqlserver")
+    driver_file_name_prefix="mssql-jdbc"
+    driver_file_name="${driver_file_name_prefix}-${driver_version}.jre11.jar"
+    driver_url="https://github.com/microsoft/mssql-jdbc/releases/download/v${driver_version}/${driver_file_name}"
+    ;;
+  "postgres")
+    driver_file_name_prefix="postgresql"
+    driver_file_name="${driver_file_name_prefix}-${driver_version}.jar"
+    driver_url="https://jdbc.postgresql.org/download/${driver_file_name}"
+    ;;
+  *)
+    echo "Unsupported JDBC driver: ${driver_name}"
+    exit 1
+    ;;
+  esac
+
+  while read -r file_name; do
+    if [[ -f "${file_name}" && "${file_name}" != *"/${driver_file_name}" ]]; then
+      echo "Another JDBC driver was found: ${file_name}"
+      echo "Please delete and rerun the command".
+      exit 1
+    fi
+  done <<<"$(find "${PATH_TO_DIR}/pre-reqs/jdbc-drivers" -mindepth 1 -maxdepth 1 -type f -name "${driver_file_name_prefix}*" | sort)"
+
+  if [[ ! -f "${PATH_TO_DIR}/pre-reqs/jdbc-drivers/${driver_file_name}" ]]; then
+    echo "Downloading ${driver_name} JDBC driver version ${driver_version}"
+    curl -o "${PATH_TO_DIR}/pre-reqs/jdbc-drivers/${driver_file_name}" -SL "${driver_url}"
+    echo "${driver_name} JDBC driver downloaded successfully."
+  else
+    echo "${driver_name} JDBC driver version ${driver_version} already exists."
+  fi
+}
+
+function check_prereqs_exists() {
+  if [[ ! -f "${PATH_TO_DIR}/pre-reqs/i2analyzeMinimal.tar.gz" ]]; then
+    echo "ERROR: Please ensure to download pre-requisites before running install."
+    exit 1
+  fi
+  # Download jdbc-drivers if not exists
+  if [[ ! -d "${PATH_TO_DIR}/pre-reqs/jdbc-drivers" ]]; then
+    mkdir -p "${PATH_TO_DIR}/pre-reqs/jdbc-drivers"
+  fi
+  MSSQL_JDBC_VERSION=$(get_version_from_client_image "MSSQL_JDBC_VERSION" "${ANALYZE_CONTAINERS_VERSION}")
+  download_jdbc_driver "sqlserver" "${MSSQL_JDBC_VERSION}"
+  POSTGRES_JDBC_VERSION=$(get_version_from_client_image "POSTGRES_JDBC_VERSION" "${ANALYZE_CONTAINERS_VERSION}")
+  download_jdbc_driver "postgres" "${POSTGRES_JDBC_VERSION}"
+}
+
+function quietly_remove_docker_volume() {
+  local volume_to_delete="$1"
+
+  if grep -q ^"$volume_to_delete"$ <<<"$(docker volume ls -q)"; then
+    docker volume rm "$volume_to_delete"
+  fi
+}
+
+function main() {
+  parse_arguments "$@"
+  set_defaults
+  check_prereqs_exists
+  create_empty_dirs
+
+  if [[ -f "${PATH_TO_DIR}/version.conf" ]]; then
+    source "${PATH_TO_DIR}/version.conf"
+  fi
+  if [[ "${VERSION}" != "${ANALYZE_CONTAINERS_VERSION}" ]]; then
+    quietly_remove_docker_volume "ac_images_${SUPPORTED_I2ANALYZE_VERSION}"
+    quietly_remove_docker_volume "ac_templates_${SUPPORTED_I2ANALYZE_VERSION}"
+  fi
+  run_script_on_client "/opt/analyze-containers/scripts/install-analyze-containers" -p "${PATH_TO_DIR}"
+  run_script_on_client "/opt/analyze-containers/utils/scripts/install-wrappers" -p "${PATH_TO_DIR}"
+
+  # Add scripts to path
+  export PATH="$PATH:${PATH_TO_DIR}/scripts"
+}
+
+main "$@"

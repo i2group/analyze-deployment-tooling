@@ -1,8 +1,0 @@
-
-# Prevent local modules and debug logs from being copied into the docker image and possibly overwriting modules installed in the image
-node_modules
-npm-debug.log
-.vscode
-.app
-*.tar.gz
-*.tgz

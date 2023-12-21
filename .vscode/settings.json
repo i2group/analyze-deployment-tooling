@@ -18,7 +18,6 @@
     "**/.": true,
     "**/.{github*}*": true,
     "**/.{vscode*}*": true,
-    "**/.{devcontainer*}*": true,
     "**/configs/*/.*": true,
     "**/configs/*/configuration/*.bak": true,
     "**/.root": true,
