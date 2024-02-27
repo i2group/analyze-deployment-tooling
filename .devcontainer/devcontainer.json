@@ -2,7 +2,10 @@
   "name": "Analyze Containers Dev",
   "image": "i2group/i2eng-analyze-containers-dev:1.2",
   "remoteUser": "vscode",
-  "runArgs": ["--init"],
+  "runArgs": [
+    "--init",
+    "--env-file",".devcontainer/devcontainer.env"
+  ],
   "mounts": [
     "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind",
     "source=analyze-containers,target=/commandhistory,type=volume",

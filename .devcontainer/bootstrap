@@ -27,7 +27,7 @@ function run_task() {
 
 function init() {
   docker pull i2group/i2eng-analyze-containers-dev:1.2
-  mkdir -p "${HOME}/.m2" "${HOME}/.config/gh"
+  mkdir -p "${HOME}/.m2" "${HOME}/.config/gh" "${HOME}/.circleci"
 }
 
 function install_analyze_containers_deps() {
@@ -61,7 +61,7 @@ function post_start() {
     install_analyze_containers_deps
     echo "Dev Container is ready"
   else
-    printf "\n\e[33mWARN: analyze-containers is not installed. Please run ./bootstrap\e[0m\n" >&2
+    printf "\n\e[33mINFO: analyze-containers is not installed. To install analyze-containers, open a terminal in this VSCode window and run ./bootstrap\e[0m\n" >&2
   fi
   unset CONTINUE_ON_ERROR
 }

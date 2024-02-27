@@ -73,7 +73,26 @@ function get_version_from_client_image() {
     bash -c "source ${file_path} && echo \${$variable_name}"
 }
 
+function load_devcontainer_env() {
+  local env_file="$1"
+
+  while IFS='=' read -r key value || [[ -n "$value" ]]; do
+    value="$(echo "${value}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+    [[ -z "$value" ]] && continue
+    # Don't override environment variables that are already set
+    if [[ -z "${!key}" ]]; then
+      # Ensure no trailing or leading whitespace
+      eval "${key}"="${value}"
+    else
+      echo "Environment variable ${key} set which overrides devcontainer environment"
+    fi
+  done <"$env_file"
+}
+
 function set_defaults() {
+  if [[ -f "${SCRIPT_DIR}/.devcontainer/devcontainer.env" ]]; then
+    load_devcontainer_env "${SCRIPT_DIR}/.devcontainer/devcontainer.env"
+  fi
   if [[ -z "${PATH_TO_DIR}" ]]; then
     PATH_TO_DIR="${PWD}"
   fi
@@ -93,8 +112,6 @@ function set_defaults() {
   if [[ "${USE_LOCAL_IMAGE}" != "true" ]]; then
     docker pull "${ANALYZE_CONTAINERS_CLIENT_IMAGE_NAME}:${ANALYZE_CONTAINERS_VERSION}"
   fi
-  SUPPORTED_I2ANALYZE_VERSION="$(get_version_from_client_image "SUPPORTED_I2ANALYZE_VERSION" \
-    "${ANALYZE_CONTAINERS_VERSION}" "/opt/analyze-containers/version.conf")"
 }
 
 function create_empty_dirs() {
@@ -107,6 +124,7 @@ function create_empty_dirs() {
     "${PATH_TO_DIR}/gateway-schemas" \
     "${PATH_TO_DIR}/i2a-data" \
     "${PATH_TO_DIR}/i2a-extensions" \
+    "${PATH_TO_DIR}/runtime-environments" \
     "${PATH_TO_DIR}/i2a-plugins"
 }
 
@@ -124,7 +142,7 @@ function run_script_on_client() {
     container_args+=("--env-file" "${SCRIPT_DIR}/docker.env")
   fi
 
-  if [[ "${CI}" == "true" ]]; then
+  if [[ "${CI}" == "true" || "${TTY}" == "false" ]]; then
     docker_run_arg="-i"
   else
     docker_run_arg="-it"
@@ -147,6 +165,12 @@ function run_script_on_client() {
     BIND_MOUNTS+=("-v" "${mount}:${mount}")
   done
 
+  # Ensure docker login information is available in the container.
+  # Devcontainer already has its own docker login redirection capability which we won't get in the way.
+  if [[ "${CI}" == "true" ]]; then
+    BIND_MOUNTS+=("-v" "${HOME}/.docker:/home/i2analyze/.docker")
+  fi
+
   docker run \
     --rm \
     "${docker_run_arg}" \
@@ -154,8 +178,8 @@ function run_script_on_client() {
     "${BIND_MOUNTS[@]}" \
     -v "${PATH_TO_DIR}:${PATH_TO_DIR}" \
     -v "ac_m2:/home/i2analyze/.m2" \
-    -v "ac_images_${SUPPORTED_I2ANALYZE_VERSION}:/opt/analyze-containers/images" \
-    -v "ac_templates_${SUPPORTED_I2ANALYZE_VERSION}:/opt/analyze-containers/templates" \
+    -v "ac_images_${ANALYZE_CONTAINERS_VERSION}:/opt/analyze-containers/images" \
+    -v "ac_templates_${ANALYZE_CONTAINERS_VERSION}:/opt/analyze-containers/templates" \
     -v "/var/run/docker.sock:/var/run/docker-host.sock" \
     -v "ac_tmp:/opt/analyze-containers/.tmp" \
     -e WORKDIR="${PATH_TO_DIR}" \
@@ -234,13 +258,16 @@ function main() {
   check_prereqs_exists
   create_empty_dirs
 
+  # Remove previous installation volumes if they exist when re-bootstrapping.
+  # This is usually not a problem on released versions but dev environments can get out of date.
   if [[ -f "${PATH_TO_DIR}/version.conf" ]]; then
     source "${PATH_TO_DIR}/version.conf"
+    if [[ "${VERSION}" == "${ANALYZE_CONTAINERS_VERSION}" ]]; then
+      quietly_remove_docker_volume "ac_images_${ANALYZE_CONTAINERS_VERSION}"
+      quietly_remove_docker_volume "ac_templates_${ANALYZE_CONTAINERS_VERSION}"
+    fi
   fi
-  if [[ "${VERSION}" != "${ANALYZE_CONTAINERS_VERSION}" ]]; then
-    quietly_remove_docker_volume "ac_images_${SUPPORTED_I2ANALYZE_VERSION}"
-    quietly_remove_docker_volume "ac_templates_${SUPPORTED_I2ANALYZE_VERSION}"
-  fi
+
   run_script_on_client "/opt/analyze-containers/scripts/install-analyze-containers" -p "${PATH_TO_DIR}"
   run_script_on_client "/opt/analyze-containers/utils/scripts/install-wrappers" -p "${PATH_TO_DIR}"
 
