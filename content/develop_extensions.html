@@ -79,13 +79,21 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="developing-and-deploying-extensions-for-i2-analyze">Developing and deploying extensions for i2 Analyze</h1>
 
-<p>i2 Analyze Developer Essentials contains tools, libraries, and examples that enable development and deployment of custom extensions to i2 Analyze. The following information describes how you can use the config development environment to quickly deploy an extension for a config to test and develop.<br>For more information about the types of extension that are available, see <a href="https://github.com/i2group/analyze/blob/master/documentation/index.md">i2 Analyze Developer Essentials</a>.</p>
-<p>If your extension is already built (.jar file), then create a folder with the same name as your jar file inside <code>i2a-extensions</code> directory. For example, if your .jar file is called <code>opal-security.jar</code> then place it inside <code>i2a-extensions/opal-security</code> directory. Afterwards, follow the instructions in <a href="#adding-extensions-to-a-config">Adding extensions to a config</a> section.</p>
+<p>i2 Analyze Developer Essentials contains tools, libraries, and examples that enable development and deployment
+of custom extensions to i2 Analyze. The following information describes how you can use the config development
+environment to quickly deploy an extension for a config to test and develop.<br>For more information about the types of extension that are available, see
+<a href="https://github.com/i2group/analyze/blob/master/documentation/index.md">i2 Analyze Developer Essentials</a>.</p>
+<p>If your extension is already built (.jar file), then create a folder with the same name as your jar file inside
+<code>i2a-extensions</code> directory. For example, if your .jar file is called <code>opal-security.jar</code> then place it inside
+<code>i2a-extensions/opal-security</code> directory. Afterwards, follow the instructions in
+<a href="#adding-extensions-to-a-config">Adding extensions to a config</a> section.</p>
 <h2 id="creating-a-project-for-your-extension">Creating a project for your extension</h2>
 <p>You must create a Maven artifact to develop your extension in.</p>
 <ol>
-<li><p>Copy the template <code>templates/extension-development</code> directory to the <code>i2a-extensions</code> directory and rename it to be the name of your extension. This name is also the artifact id. For example, name the directory <code>opal-default-security-example</code>.
- The directory structure is:</p>
+<li><p>Copy the template <code>templates/extension-development</code> directory to the <code>i2a-extensions</code> directory and rename
+it to be the name of your extension. This name is also the artifact id. For example, name the directory
+<code>opal-default-security-example</code>.
+The directory structure is:</p>
 <pre><code class="lang-sh">- i2a-extensions
     - &lt;artifact_id&gt;
         - src
@@ -95,7 +103,8 @@
                 - java
         - pom.xml
 </code></pre></li>
-<li><p>Update the <code>pom.xml</code> file inside your new directory with information about your extension. The elements to modify are at the root of the file.<br>Update the values of the following elements:</p>
+<li><p>Update the <code>pom.xml</code> file inside your new directory with information about your extension. The elements to
+modify are at the root of the file.<br>Update the values of the following elements:</p>
 <ul>
 <li><code>&lt;groupId&gt;</code> is the name of the Java package</li>
 <li><code>&lt;artifactId&gt;</code> matches the name of the directory for your extension</li>
@@ -108,32 +117,44 @@
 </ul>
 </li>
 <li><p>Run <code>manage-environment -t extensions</code> command to install the necessary dependencies.
- Note: If you can&#39;t see your new extension in the Java Projects explorer, press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS), type <code>Java: Import Java Projects into Workspace</code> and select it. It might take a minute before refreshing.</p>
+ Note: If you can&#39;t see your new extension in the Java Projects explorer, press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS),
+ type <code>Java: Import Java Projects into Workspace</code> and select it. It might take a minute before refreshing.</p>
 </li>
 </ol>
-<p>You can now start developing your extension. For examples on i2 Analyze extensions, check the examples in <a href="https://github.com/i2group/analyze/blob/master/documentation/index.md">i2 Analyze Developer Essentials</a>.</p>
+<p>You can now start developing your extension. For examples on i2 Analyze extensions, check the examples in
+<a href="https://github.com/i2group/analyze/blob/master/documentation/index.md">i2 Analyze Developer Essentials</a>.</p>
 <ol>
 <li>Copy the contents of <code>src/main</code> folder of the extension into the <code>i2a-extensions/&lt;artifact_id&gt;/src/main</code> directory.</li>
 <li>Add any settings that are required by the extension to the <code>analyze-settings.properties</code> file.</li>
-<li>Add any resources that are required by the extension to the <code>/configs/&lt;config_name&gt;/configuration</code> directory. For example, the <code>group-based-default-security-dimension-values.xml</code> file.</li>
+<li>Add any resources that are required by the extension to the <code>/configs/&lt;config_name&gt;/configuration</code> directory.
+For example, the <code>group-based-default-security-dimension-values.xml</code> file.</li>
 </ol>
-<p>If your extension depends on <em>external</em> dependencies you need to add them to your project. To do this, open the <strong>JAVA PROJECTS</strong> tab view and expand your extension. Mouse-over the <strong>Maven Dependencies</strong> section and click &#39;+&#39;. Search for your dependency in the search bar at the top of the VS Code window. When you select your dependency, it is added to the <code>pom.xml</code> file for your extension. For information on how to add external dependencies from Maven Central, check <a href="https://code.visualstudio.com/docs/java/java-project#_add-a-maven-dependency">Add a Maven dependency</a>.</p>
-<p>The <code>liberty-apis</code> are published to Maven central. For example, the principal propagation extension from analyze-connect depends on the <code>liberty-apis</code> libraries. You can add these using the method mentioned previously, or by copying the following section into the <code>pom.xml</code> file.</p>
+<p>If your extension depends on <em>external</em> dependencies you need to add them to your project. To do this,
+open the <strong>JAVA PROJECTS</strong> tab view and expand your extension. Mouse-over the <strong>Maven Dependencies</strong> section
+and click &#39;+&#39;. Search for your dependency in the search bar at the top of the VS Code window. When you select
+your dependency, it is added to the <code>pom.xml</code> file for your extension. For information on how to add external
+dependencies from Maven Central, check <a href="https://code.visualstudio.com/docs/java/java-project#_add-a-maven-dependency">Add a Maven dependency</a>.</p>
+<p>The <code>liberty-apis</code> are published to Maven central. For example, the principal propagation extension from
+analyze-connect depends on the <code>liberty-apis</code> libraries. You can add these using the method mentioned previously,
+or by copying the following section into the <code>pom.xml</code> file.</p>
 <pre><code class="lang-xml">  &lt;dependency&gt;
     &lt;groupId&gt;net.wasdev.maven.tools.targets&lt;/groupId&gt;
     &lt;artifactId&gt;liberty-apis&lt;/artifactId&gt;
     &lt;version&gt;LATEST&lt;/version&gt;
     &lt;type&gt;pom&lt;/type&gt;
   &lt;/dependency&gt;
-</code></pre><p>If your extension depends on other extensions (not in Maven Central), you must add them to your <code>pom.xml</code> file manually under the comment: <code>&lt;!-- Extension specific dependencies --&gt;</code>.</p>
-<p>For example, the auditing extensions in Developer Essentials depend on the <code>opal-audit-example-common</code> extension. To add it as a dependency, populate the values of the <code>pom.xml</code> file as follows:</p>
+</code></pre><p>If your extension depends on other extensions (not in Maven Central), you must add them to your <code>pom.xml</code> file
+manually under the comment: <code>&lt;!-- Extension specific dependencies --&gt;</code>.</p>
+<p>For example, the auditing extensions in Developer Essentials depend on the <code>opal-audit-example-common</code> extension.
+To add it as a dependency, populate the values of the <code>pom.xml</code> file as follows:</p>
 <pre><code class="lang-xml">  &lt;!-- Extension specific dependencies --&gt;
   &lt;dependency&gt;
       &lt;groupId&gt;com.i2group&lt;/groupId&gt;
       &lt;artifactId&gt;opal-audit-example-common&lt;/artifactId&gt;
       &lt;version&gt;1.0.0&lt;/version&gt;
   &lt;/dependency&gt;
-</code></pre><p>You will also need to populate the <code>i2a-extensions/extension-dependencies.json</code> file with the extensions that you depend on, for example:</p>
+</code></pre><p>You will also need to populate the <code>i2a-extensions/extension-dependencies.json</code> file with the extensions that
+you depend on, for example:</p>
 <pre><code class="lang-json">[
   {
     &quot;name&quot;: &quot;opal-audit-file-example&quot;,
@@ -144,7 +165,9 @@
 ]
 </code></pre><h2 id="adding-extensions-to-a-config">Adding extensions to a config</h2>
 <ol>
-<li><p>In the configuration you want to deploy your extension with, update the <code>/configs/&lt;config_name&gt;/configuration/extension-references.json</code> file and add the directory name for your extension in the <code>extensions</code> array.<br>For example, to add the extension in <code>i2a-extensions/opal-default-security-example</code> the <code>extension-references.json</code> file contains the following <code>extensions</code> array:  </p>
+<li><p>In the configuration you want to deploy your extension with, update the <code>/configs/&lt;config_name&gt;/configuration/extension-references.json</code>
+file and add the directory name for your extension in the <code>extensions</code> array.<br>For example, to add the extension in <code>i2a-extensions/opal-default-security-example</code> the <code>extension-references.json</code>
+file contains the following <code>extensions</code> array:  </p>
 <pre><code class="lang-json">{
     &quot;extensions&quot;: [
         {
@@ -155,14 +178,16 @@
 }
 </code></pre></li>
 </ol>
-<p><strong>Note:</strong> The extensions in the <code>extension-references.json</code> file are loaded in order. If an extension depends on another extension, define the dependent extension first.</p>
+<p><strong>Note:</strong> The extensions in the <code>extension-references.json</code> file are loaded in order. If an extension depends
+on another extension, define the dependent extension first.</p>
 <h2 id="deploying-your-extension">Deploying your extension</h2>
 <p>Use the <code>deploy</code> command to build the extensions for your configuration.</p>
 <p>For example, to build and deploy the extensions declared in <code>extension-references.json</code> for your configuration:</p>
 <pre><code class="lang-bash">deploy -c &lt;config_name&gt;
 </code></pre><h2 id="debugging-your-extension">Debugging your extension</h2>
 <h3 id="deploying-in-debug-mode">Deploying in debug mode</h3>
-<p>To deploy with the Liberty server running in debug mode, change the local variable <code>LIBERTY_DEBUG</code> to &quot;true&quot;. To do this, create a <code>docker.env</code> file in the <code>analyze-containers</code> directory. In the file, add the following line:</p>
+<p>To deploy with the Liberty server running in debug mode, change the local variable <code>LIBERTY_DEBUG</code> to &quot;true&quot;.
+To do this, create a <code>docker.env</code> file in the <code>analyze-containers</code> directory. In the file, add the following line:</p>
 <pre><code class="lang-sh">LIBERTY_DEBUG=&quot;true&quot;
 </code></pre><p>Then deploy from a clean environment by using <code>deploy -c &lt;config-name&gt; -t clean</code> followed by <code>deploy-c &lt;config-name&gt;</code>.</p>
 <p>When the Liberty server starts, it waits for a debugger to be attached before continuing.

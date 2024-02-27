@@ -166,9 +166,37 @@ If you are unable to open the VS Code development container and you have already
 <p><strong>Solution:</strong></p>
 <ol>
 <li>In Docker Desktop, locate the Docker image.
-In the <strong>Images</strong> pane, find the image name that begins with <code>vsc</code> followed by the folder name for the upgrade. For example: <code>vsc-analyze-containers-280</code>. The rest of the image name is a GUID.</li>
+In the <strong>Images</strong> pane, find the image name that begins with <code>vsc</code> followed by the folder name for the upgrade. For example: <code>vsc-analyze-containers-290</code>. The rest of the image name is a GUID.</li>
 <li>Select the image by using the checkbox and click <strong>Delete</strong>.</li>
 <li>Try and reopen the VS Code development environment.</li>
+</ol>
+<h2 id="error-unable-to-find-image-locally">Error: unable to find image locally</h2>
+<p><strong>Scenario:</strong>
+If you are unable to deploy because the system cannot find an image locally, you can use the following procedure to rebuild the images.</p>
+<p><strong>Solution:</strong></p>
+<ol>
+<li>Run the <code>create-dev-environment</code> command.</li>
+<li>Run <code>deploy -c &lt;config-name&gt;</code> to deploy the config.</li>
+</ol>
+<h2 id="error-your-cache-folder-contains-root-owned-files-due-to-a-bug-in-npm-previous-versions-of-npm-which-has-since-been-addressed">Error: Your cache folder contains root-owned files, due to a bug in npm previous versions of npm which has since been addressed</h2>
+<p><strong>Scenario:</strong>
+If you are unable to deploy due to the following error, your connectors are using an unsupported version of Node.</p>
+<!--- /* cSpell:disable */ -->
+<pre><code class="lang-msg">npm ERR! code EACCES
+npm ERR! syscall open
+npm ERR! path /opt/app-root/src/.npm/_cacache/tmp/a0042286
+npm ERR! errno -13
+npm ERR! 
+npm ERR! Your cache folder contains root-owned files, due to a bug in
+npm ERR! previous versions of npm which has since been addressed.
+npm ERR! 
+npm ERR! To permanently fix this problem, please run:
+npm ERR!   sudo chown -R 1001:0 &quot;/opt/app-root/src/.npm&quot;
+</code></pre><!--- /* cSpell:enable */ -->
+<p><strong>Solution:</strong>
+Update the Dockerfile for your i2 Connect server connectors.</p>
+<ol>
+<li>Copy the <code>templates/i2connect-server-connector-image/Dockerfile</code> and replace the existing Dockerfiles for your i2 Connect server connectors.<br>For example, replace the <code>connector-images/&lt;connector-name&gt;/Dockerfile</code> with the one from the templates directory.</li>
 </ol>
 </article>
           </div>

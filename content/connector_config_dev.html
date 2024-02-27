@@ -219,7 +219,7 @@
 </code></pre><p> <strong>Note:</strong></p>
 <ul>
 <li>If your external connector is hosted in a Docker container on a different network to your config development environment, connect the Liberty container to the same network as your external connector container. For example, run <code>docker network connect &lt;connector-network-name&gt; liberty1.&lt;config-name&gt;</code>.</li>
-<li>If your connector is running on your host machine, use the <code>host.docker.internal</code> as the host in the <code>baseUrl</code> value. E.g. &quot;<a href="http://host.docker.internal:3000">http://host.docker.internal:3000</a>&quot;</li>
+<li>If your connector is running on your host machine, use the <code>host.docker.internal</code> as the host in the <code>baseUrl</code> value. E.g. &quot;http://<!-- markdown workaround: not make it link -->host.docker.internal:3000&quot;</li>
 </ul>
 </li>
 <li><p>Provide the version of the connector in the <code>&lt;connector_name&gt;/connector-version.json</code> file. For external connectors, this file is not required.
@@ -247,7 +247,7 @@
 </ol>
 <h2 id="defining-a-gateway-schema-optional">Defining a gateway schema (Optional)</h2>
 <p>You can develop the gateway schema and associated charting schemes by following the instructions in <a href="develop_schemas.html">Developing schemas in your configuration development environment</a>.
-After you develop the schemes, complete the following steps to add deploy them with your configuration:</p>
+After you develop the schemes, complete the following steps to deploy them with your configuration:</p>
 <ol>
 <li>Copy the schema and charting scheme files to the <code>/gateway-schemas</code> directory.<br>To define the short name of the gateway schema, the prefix of the file name is used. The convention is defined as: <code>&lt;short&gt;-&lt;name&gt;-schema.xml</code> and <code>&lt;short&gt;-&lt;name&gt;-schema-charting-scheme.xml</code>.<br>For example, files with the names <code>law-enforcement-schema.xml</code> and <code>law-enforcement-charting-schemes.xml</code> have the short name <code>law-enforcement</code>.</li>
 <li><p>Add the short name of your schema to the <code>configs/&lt;config_name&gt;/configuration/connector-references.json</code> file in the <code>gatewaySchemas</code> array.<br> For example, to add a gateway schema with the short name <code>law-enforcement</code>, the file contains the following <code>gatewaySchemas</code> array:</p>

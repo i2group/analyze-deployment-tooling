@@ -91,7 +91,10 @@
 <p>The following usage and help is provided for the <code>deploy</code> command:</p>
 <pre><code class="lang-bash">Usage:
   deploy -c &lt;config_name&gt; [-t {clean}] [-v] [-y]
+  deploy -c &lt;config_name&gt; [-e &lt;runtime_environment&gt;] [-v] [-y]
+  deploy -c &lt;config_name&gt; [-t {generate-db-scripts}] [-v] [-y]
   deploy -c &lt;config_name&gt; [-t {backup|restore} [-b &lt;backup_name&gt;]] [-v] [-y]
+  deploy -c &lt;config_name&gt; [-r &lt;release_number&gt;] [-v] [-y]
   deploy -h
 
 Options:
@@ -99,7 +102,10 @@ Options:
   -t {clean}                             Clean the deployment. Will permanently remove all containers and data.
   -t {backup}                            Backup the database.
   -t {restore}                           Restore the database.
+  -t {generate-db-scripts}               Generate the scripts to create the database.
   -b &lt;backup_name&gt;                       Name of the backup to create or restore. If not specified, the default backup is used.
+  -r &lt;release_number&gt;                    Creates a &#39;release&#39; change-set, with the specified release number.
+  -e &lt;runtime_environment&gt;               Name of the runtime environment to use.
   -v                                     Verbose output.
   -y                                     Answer &#39;yes&#39; to all prompts.
   -h                                     Display the help.

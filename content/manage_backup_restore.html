@@ -5,9 +5,9 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Back up and restore a development database </title>
+    <title>Back up and restore a development database and schemas </title>
     <meta name="viewport" content="width=device-width">
-    <meta name="title" content="Back up and restore a development database ">
+    <meta name="title" content="Back up and restore a development database and schemas ">
     <meta name="generator" content="docfx 2.56.2.0">
     
     <link rel="shortcut icon" href="../images/favicon.png">
@@ -77,10 +77,10 @@
             </div>
           </div>
             <article class="content wrap" id="_content" data-uid="">
-<h1 id="back-up-and-restore-a-development-database">Back up and restore a development database</h1>
+<h1 id="back-up-and-restore-a-development-database-and-schemas">Back up and restore a development database and schemas</h1>
 
-<p>When you are developing a configuration that uses an Information Store, you might populate the Information Store with demonstration or test data. You can use the tooling provided to back up the Information Store that is associated with a config.
-The Information Store is contained in a Docker volume. Because Docker is not designed for permanent data storage, you can back up an Information Store to your local file system.</p>
+<p>When you are developing a configuration that uses an Information Store or Chart Store, you might populate the database with demonstration or test data and charts. You can use the tooling provided to back up the Information Store database that is associated with a config and linked to the schemas within your configuration.
+The Information Store database is contained in a Docker volume. Because Docker is not designed for permanent data storage, you can back up an Information Store to your local file system.</p>
 <h2 id="backup-location">Backup location</h2>
 <p>The backups are stored in the <code>/backups</code> directory. A sub-directory is created for each config name, with another sub-directory for each backup name. The backup file is called <code>ISTORE.bak</code> for SQL Server or <code>ISTORE.pgb</code> for Postgres.</p>
 <p>For example:</p>
@@ -90,7 +90,26 @@ The Information Store is contained in a Docker volume. Because Docker is not des
       - ISTORE.bak
     - &lt;backup_name&gt;
       - ISTORE.bak
-</code></pre><h2 id="creating-a-backup">Creating a backup</h2>
+</code></pre><h2 id="creating-a-release-and-backup">Creating a release and backup</h2>
+<p>Use the <a href="managing_config_dev.html#the-deploy-script">deploy</a> script with the <code>release</code> option to create a backup. The release change set mechanism is used to create a release of your current schema files and a backup of the database. This ensures that the schema files and your database remain synchronized. For more information about the change set feature, see <a href="database_config.html">Database scripts and configuration</a>.</p>
+<p>The following usage pattern shows how you create a backup:</p>
+<pre><code class="lang-sh">deploy -c &lt;config-name&gt; -r
+</code></pre><p>The release change set is created in the <code>&lt;config-name&gt;/change-sets</code> directory, with a name in the following structure  <code>&lt;number&gt;-release-&lt;date&gt;-&lt;time&gt;</code>.</p>
+<p>The backup is created in the <code>backup/&lt;config-name&gt;/&lt;number&gt;-release-&lt;date&gt;-&lt;time&gt;</code> directory.</p>
+<h2 id="restoring-from-a-release">Restoring from a release</h2>
+<p>Use the <a href="managing_config_dev.html#the-deploy-script">deploy</a> script with the <code>release</code> option to restore the system to a previous release. The schema files from the release change set are restored in your configuration and the associated release backup is restored.</p>
+<p>If any change sets have been created since the previous release, the change sets are deleted when you restore to a previous release. For more information about the change set feature, see <a href="database_config.html">Database scripts and configuration</a>.</p>
+<p>The following usage pattern shows how you create a backup:</p>
+<pre><code class="lang-sh">deploy -c &lt;config-name&gt; -r &lt;release-change-set-number&gt;
+</code></pre><p>For example, to restore release change set 1:</p>
+<pre><code class="lang-sh">deploy -c &lt;config-name&gt; -r 1
+</code></pre><h2 id="adding-data-after-a-release">Adding data after a release</h2>
+<p>If you add data to your Information Store after you create a release change set, you need to create a new backup. The process that you need to follow depends on the current state of your environment:</p>
+<ul>
+<li>If you have made changes to the schema files, repeat the previous process to create a new release and associated backup.</li>
+<li>If you have not made any changes to the schema files, and do not have any change sets since the last release, then use the following instructions to take a backup and later restore.</li>
+</ul>
+<h2 id="creating-a-backup">Creating a backup</h2>
 <p>Use the <a href="managing_config_dev.html#the-deploy-script">deploy</a> script to create your backup. The following usage pattern shows how you create a backup:</p>
 <pre><code class="lang-sh">deploy -c &lt;config_name&gt; -t backup -b &lt;backup_name&gt;
 </code></pre><p>If you do not provide a backup name, the backup is created in a directory called <code>default</code>.</p>

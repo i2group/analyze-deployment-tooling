@@ -82,7 +82,7 @@
 <h2 id="prerequisites">Prerequisites</h2>
 <p>You can run the code in the analyze-containers repository on Windows with Windows Subsystem for Linux and MacOS.
 The system requires being connected to the internet to download required repositories. If you are running the project
-from an environment without an internet connection, see <a href="reference%20architecture/external_dependencies.html">External dependencies</a>.</p>
+from an environment without an internet connection, see <a href="reference-architecture/external_dependencies.html">External dependencies</a>.</p>
 <h3 id="windows-subsystem-for-linux-wsl">Windows Subsystem for Linux (WSL)</h3>
 <p>If you are on <strong>Windows</strong>, you must use WSL 2 as the backend for Docker and to run the shell scripts in this repository.</p>
 <ol>
@@ -112,16 +112,17 @@ from an environment without an internet connection, see <a href="reference%20arc
 </ul>
 </li>
 </ol>
+<p>Keep your Docker Desktop up-to-date as you use your system to ensure you receive stability, feature, and security updates.</p>
 <h3 id="code">Code</h3>
 <ol>
-<li>Download the <code>tar.gz</code> from <a href="https://github.com/i2group/analyze-containers/releases/tag/v2.8.0">https://github.com/i2group/analyze-containers/releases/tag/v2.8.0</a>.</li>
+<li>Download the <code>tar.gz</code> from <a href="https://github.com/i2group/analyze-containers/releases/tag/v2.9.0">https://github.com/i2group/analyze-containers/releases/tag/v2.9.0</a>.</li>
 <li><p>Extract the <code>tar.gz</code> file by using the following steps:</p>
 <ol>
-<li>On Windows, copy the <code>analyze-containers-2.8.0.tar.gz</code> file to your WSL filesystem. For example: <code>\\wsl.localhost\Ubuntu\home\&lt;user&gt;</code></li>
+<li>On Windows, copy the <code>analyze-containers-2.9.0.tar.gz</code> file to your WSL filesystem. For example: <code>\\wsl.localhost\Ubuntu\home\&lt;user&gt;</code></li>
 <li><p>Extract the <code>tar.gz</code> file (On Windows, run the commands from a WSL terminal. <strong>Start</strong> &gt; <strong>wsl</strong>):</p>
 <pre><code class="lang-sh">cd /home/&lt;user&gt;
-</code></pre><pre><code class="lang-sh">tar -xzf analyze-containers-2.8.0.tar.gz
-</code></pre><pre><code class="lang-sh">mv analyze-containers-2.8.0/ analyze-containers
+</code></pre><pre><code class="lang-sh">tar -xzf analyze-containers-2.9.0.tar.gz
+</code></pre><pre><code class="lang-sh">mv analyze-containers-2.9.0/ analyze-containers
 </code></pre></li>
 </ol>
 </li>
@@ -214,12 +215,12 @@ from an environment without an internet connection, see <a href="reference%20arc
 <h2 id="what-to-do-next">What to do next</h2>
 <ul>
 <li>Create and use a development environment to develop an i2 Analyze configuration. For more information, see <a href="deploy_config_dev.html">Configuration development environment</a>.</li>
-<li>Create an example pre-production deployment that is used to demonstrate how i2 Analyze can be deployed in a distributed cloud environment. For more information, see <a href="reference%20architecture/deploy_pre_prod.html">Pre-production example environment</a>.</li>
+<li>Create an example pre-production deployment that is used to demonstrate how i2 Analyze can be deployed in a distributed cloud environment. For more information, see <a href="reference-architecture/deploy_pre_prod.html">Pre-production example environment</a>.</li>
 </ul>
 <p>To understand how the containerized environment is created, you can review the documentation that explains the images, containers, tools, and functions:</p>
 <ul>
-<li><a href="images%20and%20containers/images.html">Images and containers</a></li>
-<li><a href="tools%20and%20functions/tools.html">Tools and functions</a></li>
+<li><a href="images-and-containers/images.html">Images and containers</a></li>
+<li>[Tools and functions](./tools-and-functions/tools.md</li>
 </ul>
 </article>
           </div>

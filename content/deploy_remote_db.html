@@ -79,7 +79,8 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="deploying-with-an-external-database-instance">Deploying with an external database instance</h1>
 
-<p>You can deploy analyze-containers to connect to a database instance that is not managed by analyze-containers. When you deploy analyze-containers it can create and manage the database, but it does not manage the database instance.</p>
+<p>You can deploy analyze-containers to connect to a database instance that is not managed by analyze-containers.
+When you deploy analyze-containers it can create and manage the database, but it does not manage the database instance.</p>
 <p>The configuration that determines if an external database instance is per config.</p>
 <p>The prerequisites for an external database instance:</p>
 <ul>
@@ -110,6 +111,10 @@
 <td>The port number to connect to the database instance.</td>
 </tr>
 <tr>
+<td><code>DB_SSL_CONNECTION</code></td>
+<td>Can be set to <code>true</code> or <code>false</code>. If set to <code>false</code> then traffic to/from the instance will be sent in clear text. If set to <code>true</code> then traffic to/from the instance will be encrypted via SSL.</td>
+</tr>
+<tr>
 <td><code>DB_LOCATION_DIR</code></td>
 <td>The location in the external database instance to create the database.</td>
 </tr>
@@ -124,6 +129,7 @@
 <pre><code class="lang-properties">DB_USER_MANAGED=&quot;true&quot;
 DB_FQDN=&quot;external-postgres.eia&quot;
 DB_PORT=&quot;5432&quot;
+DB_SSL_CONNECTION=&quot;true&quot;
 DB_LOCATION_DIR=&quot;/var/lib/postgresql/data&quot;
 DB_USERNAME=&quot;postgres&quot;
 </code></pre></li>
@@ -131,6 +137,7 @@ DB_USERNAME=&quot;postgres&quot;
 <pre><code class="lang-properties">DB_USER_MANAGED=&quot;true&quot;
 DB_FQDN=&quot;external-sqlserver.eia&quot;
 DB_PORT=&quot;1433&quot;
+DB_SSL_CONNECTION=&quot;true&quot;
 DB_LOCATION_DIR=&quot;/var/opt/mssql/data&quot;
 DB_USERNAME=&quot;sa&quot;
 </code></pre><p><strong>Note:</strong></p>
@@ -152,6 +159,15 @@ DB_USERNAME=&quot;sa&quot;
 <li><p>In the password file, provide the user&#39;s password.<br>The password is stored in plain text, do not store this file in source control.</p>
 </li>
 </ol>
+</li>
+<li><p>Configure SSL.</p>
+<p> If your external database uses SSL (you have <code>DB_SSL_CONNECTION=&quot;true&quot;</code>) then the certificate must be one that the deployment &quot;trusts&quot;. For security reasons, certificate verification is not optional; there is no &quot;ignore verification and automatically trust all certificates&quot; option.</p>
+<p> If your database&#39;s SSL certificate is not issued by a &quot;well known&quot; issuer (e.g. it is a self-signed certificate, or signed by a corporate internal CA rather than a public commercial provider) then you will need to provide the certificate(s) to the deployment so that the deployment knows to &quot;trust&quot; it:</p>
+<ul>
+<li>For a certificate that has been signed by an untrusted (self-signed or private) CA, add the (public part of the) CA certificate to <code>configs/&lt;config-name&gt;/configuration/secrets/additional-trust-certificates.cer</code>.</li>
+<li>This file is a text file in OpenSSL PEM format, i.e. certificates should start &quot;<code>-----BEGIN CERTIFICATE-----</code>&quot;.</li>
+<li>Do NOT include the private key to the deployment. That should be private to your database (and only your database).</li>
+</ul>
 </li>
 <li><p>Deploy the config using the <code>deploy</code> command in the usual way.
 For example:</p>
