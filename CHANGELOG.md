@@ -11,6 +11,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
 
+## 2.9.1 - 26/03/2024
+
+### Added
+
+* OIDC and SAML configuration documentation.
+* Deployment reference architecture for Postgres.
+
+### Fixed
+
+* Postgres backup user (dbb) permissions.
+* Additional trust certificates types support.
+
+[2.9.1]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.9.1><!-- markdown-link-check-enable -->
+
 ## 2.9.0 - 27/02/2024
 
 ### Added
@@ -32,7 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * `EACCES` error when starting npm connectors. To resolve this issue if you are still experiencing it after upgrading, see [Troubleshooting](https://i2group.github.io/analyze-containers/content/troubleshooting.html).
 * "Changes to schema" message blocking deployment.
 
-[2.9.0]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.9.0><!-- markdown-link-check-enable -->
+[2.9.0]\: <https://github.com/i2group/analyze-containers/tree/v2.9.0>
 
 ## 2.8.0 - 21/12/2023
 

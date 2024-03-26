@@ -83,8 +83,9 @@ function load_devcontainer_env() {
     if [[ -z "${!key}" ]]; then
       # Ensure no trailing or leading whitespace
       eval "${key}"="${value}"
+      echo "Setting ${key} to ${value}"
     else
-      echo "Environment variable ${key} set which overrides devcontainer environment"
+      echo "Environment variable ${key} set to ${!key} which overrides devcontainer environment"
     fi
   done <"$env_file"
 }
@@ -184,6 +185,7 @@ function run_script_on_client() {
     -v "ac_tmp:/opt/analyze-containers/.tmp" \
     -e WORKDIR="${PATH_TO_DIR}" \
     -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
+    -e DEBUG="${DEBUG}" \
     "${container_args[@]}" \
     "${ANALYZE_CONTAINERS_CLIENT_IMAGE_NAME}:${ANALYZE_CONTAINERS_VERSION}" \
     "${extra_args[@]}"

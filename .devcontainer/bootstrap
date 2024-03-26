@@ -27,7 +27,7 @@ function run_task() {
 
 function init() {
   docker pull i2group/i2eng-analyze-containers-dev:1.2
-  mkdir -p "${HOME}/.m2" "${HOME}/.config/gh" "${HOME}/.circleci"
+  mkdir -p "${HOME}/.m2" "${HOME}/.config/gh" "${HOME}/.circleci" "${HOME}/.jfrog" "${HOME}/.npmrc"
 }
 
 function install_analyze_containers_deps() {
