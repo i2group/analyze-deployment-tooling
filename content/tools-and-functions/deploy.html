@@ -112,7 +112,12 @@ In <code>deploy-pre-prod</code>, 3 ZooKeeper containers are used.</li>
 </li>
 </ol>
 <h2 id="initializing-the-information-store-database">Initializing the Information Store database</h2>
-<p>The initializing the Information Store database section creates a persistent database backup volume and runs the database container and configures the database management system.</p>
+<p>The initializing the Information Store database section creates a persistent database backup volume and runs the database container and configures the database management system. You can either deploy the Information Store on Microsoft SQL Server or PostgreSQL.</p>
+<ul>
+<li><a href="#sql-server">SQL Server</a></li>
+<li><a href="#postgresql">PostgreSQL</a></li>
+</ul>
+<h3 id="sql-server">SQL Server</h3>
 <ol>
 <li><p>The <code>deploy_secure_sql_server</code> function creates a persistent database backup volume and runs the database container. The function includes a number of calls that complete the following actions:</p>
 <ol>
@@ -125,7 +130,7 @@ In <code>deploy-pre-prod</code>, 3 ZooKeeper containers are used.</li>
 </li>
 <li><p>Before continuing, <code>deploy-pre-prod</code> uses the <code>wait_for_sql_server_to_be_live</code> common function to ensure that SQL Server is running.</p>
 </li>
-<li><p>The <code>change_sa_password</code> client function is used to change the <code>sa</code> user&#39;s password. For more information, see <a href="../security-and-users/db_users.html#changing-sa-password">change_sa_password</a></p>
+<li><p>The <code>change_sa_password</code> client function is used to change the <code>sa</code> user&#39;s password. For more information, see <a href="../security-and-users/db_users_sqlserver.html#changing-sa-password">change_sa_password</a></p>
 </li>
 </ol>
 </li>
@@ -162,7 +167,7 @@ In <code>deploy-pre-prod</code>, 3 ZooKeeper containers are used.</li>
 <ul>
 <li>The <code>run_sql_server_command_as_sa</code> client function runs the <code>create_db_roles.sh</code> script.</li>
 <li>The <code>create_db_login_and_user</code> client function creates the logins and users.</li>
-<li>The <code>run_sql_server_command_as_sa</code> client function runs the <code>applyBuiltInSQLServerRoles.sh</code> script.
+<li>The <code>run_sql_server_command_as_sa</code> client function runs the <code>grant_permissions_to_roles.sh</code> script.
 For more information about the database users and their permissions, see <a href="../security-and-users/db_users.html">Database users</a>.</li>
 </ul>
 </li>
@@ -180,6 +185,81 @@ For more information about the database users and their permissions, see <a href
 <ul>
 <li>The <code>run_sql_server_command_as_dba</code> client function is used to run the <code>runStaticScripts.sh</code> tool.  <ul>
 <li><a href="client_functions.html#run-sql-server-command-as-dba">run_sql_server_command_as_dba</a></li>
+<li><a href="i2analyze_tools.html#run-static-database-scripts-tool">Run static database scripts tool</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+</li>
+</ol>
+<h3 id="postgresql">PostgreSQL</h3>
+<ol>
+<li><p>The <code>run_postgres_server</code> server function creates the secure Postgres container for the deployment. For more information about building the Postgres image and running a container, see <a href="../images-and-containers/postgres_server.html">PostgreSQL Server</a>.</p>
+</li>
+<li><p>The <code>wait_for_postgres_server_to_be_live</code> common function is used to ensure that Postgres is running.</p>
+</li>
+<li><p>The <code>change_postgres_password</code> client function is used to change the <code>postgres</code> user&#39;s password. For more information, see <a href="../security-and-users/db_users_postgres.html">Postgres</a></p>
+</li>
+<li><p>You can implement a <code>initialize_istore_database</code> function that generates the ISTORE scripts and creates database roles, logins and users. The function must include a number of calls that complete the following actions:</p>
+<ol>
+<li><p>Generate the Information Store scripts.</p>
+<ul>
+<li>The <code>run_i2_analyze_tool</code> client function is used to run the <code>generateInfoStoreToolScripts.sh</code> tool.  <ul>
+<li><a href="client_functions.html#run-i2-analyze-tool">run_i2_analyze_tool</a></li>
+<li><a href="i2analyze_tools.html#generate-information-store-scripts">Generate Information Store scripts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Generate the static Information Store database scripts.</p>
+<ul>
+<li>The <code>run_i2_analyze_tool</code> client function is used to run the <code>generateStaticInfoStoreCreationScripts.sh</code> tool.  <ul>
+<li><a href="client_functions.html#run-i2-analyze-tool">run_i2_analyze_tool</a></li>
+<li><a href="i2analyze_tools.html#generate-static-database-scripts-tool">Generate static database scripts tool</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Create the Information Store database and schemas.</p>
+<ul>
+<li>The <code>run_postgres_server_command_as_postgres</code> client function is used to run the <code>runDatabaseCreationScripts.sh</code> tool.  <ul>
+<li><a href="client_functions.html#run_postgres_server_command_as_postgres">run_postgres_server_command_as_postgres</a></li>
+<li><a href="i2analyze_tools.html#run-database-creation-scripts-tool">Run database creation scripts tool</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Create the database roles.  </p>
+<ul>
+<li>The <code>run_postgres_server_command_as_postgres</code> client function runs the <code>create_db_roles.sh</code> script.</li>
+</ul>
+</li>
+<li><p>Create the PG Cron extension.  </p>
+<ul>
+<li>The <code>run_postgres_server_command_as_postgres</code> client function is used to run the <code>create_pg_cron_extension.sh</code> tool.  <ul>
+<li><a href="client_functions.html#run_postgres_server_command_as_postgres">run_postgres_server_command_as_postgres</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Create the database DBA login and user.  </p>
+<ul>
+<li>The <code>create_db_login_and_user</code> client function creates the DBA login and user.</li>
+<li>The <code>run_postgres_server_command_as_dba</code> client function runs the <code>grant_permissions_to_roles.sh</code> script.
+For more information about the database users and their permissions, see <a href="../security-and-users/db_users.html">Database users</a>.</li>
+</ul>
+</li>
+<li><p>Create the database logins and users.  </p>
+<ul>
+<li>The <code>create_db_login_and_user</code> client function creates the logins and roles.
+For more information about the database users and their permissions, see <a href="../security-and-users/db_users.html">Database users</a>.</li>
+</ul>
+</li>
+<li><p>Run the static scripts that create the Information Store database objects.</p>
+<ul>
+<li>The <code>run_postgres_server_command_as_dba</code> client function is used to run the <code>runStaticScripts.sh</code> tool.  <ul>
+<li><a href="client_functions.html#run_postgres_server_command_as_dba">run_postgres_server_command_as_dba</a></li>
 <li><a href="i2analyze_tools.html#run-static-database-scripts-tool">Run static database scripts tool</a></li>
 </ul>
 </li>

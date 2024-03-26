@@ -510,9 +510,11 @@ For example, to update the the configuration directory in the prometheus_config 
 <pre><code class="lang-bash">update_volume_from_volume &quot;config&quot; &quot;prometheus&quot; &quot;prometheus_config&quot; &quot;/prometheus&quot;
 </code></pre><h4 id="arguments-23">Arguments</h4>
 <ul>
-<li><strong>$1</strong> (string): The local directory on your machine.</li>
-<li><strong>$2</strong> (string): The volume name.</li>
-<li><strong>$3</strong> (string): The directory inside the volume.</li>
+<li><strong>$1</strong> (string): From volume name.</li>
+<li><strong>$2</strong> (string): From volume location.</li>
+<li><strong>$3</strong> (string): To volume name.</li>
+<li><strong>$4</strong> (string): To volume location.</li>
+<li><strong>$5</strong> (string): Optional, defaults to true. Flag to determine if we should follow symlinks.</li>
 </ul>
 <h2 id="volume-utilities-1">Volume utilities</h2>
 <p>Uses an ephemeral Red Hat UBI Docker image to update a volume with the contents of a local directory.
@@ -527,6 +529,9 @@ For example, to update the the run/secrets directory in the liberty1_secrets vol
 <li><strong>$1</strong> (string): The local directory on your machine.</li>
 <li><strong>$2</strong> (string): The volume name.</li>
 <li><strong>$3</strong> (string): The directory inside the volume.</li>
+<li><strong>$4</strong> (string): Optional, defaults to current user id. The user id.</li>
+<li><strong>$5</strong> (string): Optional, defaults to current user id. The group id.</li>
+<li><strong>$6</strong> (string): Optional, defaults to true. Flag to determine if we should follow symlinks.</li>
 </ul>
 <h3 id="getvolume">get_volume</h3>
 <p>Uses an ephemeral Red Hat UBI Docker image to update a local directory with the contents of a specified volume.

@@ -147,12 +147,26 @@ To learn more about Dev Container users, see
 </li>
 </ol>
 <h2 id="additional-certificates">Additional certificates</h2>
-<p>If you deploy with an external database that uses SSL (you have <code>DB_SSL_CONNECTION=&quot;true&quot;</code>) then the certificate it uses must be one that the deployment &quot;trusts&quot;. For security reasons, certificate verification is not optional; there is no &quot;ignore verification and automatically trust all certificates&quot; option.</p>
-<p>If your database&#39;s SSL certificate is not issued by a &quot;well known&quot; issuer (e.g. it is a self-signed certificate, or signed by a corporate internal CA rather than a public commercial provider) then you will need to provide the certificate(s) to the deployment so that the deployment knows to &quot;trust&quot; it:</p>
+<p>If you need to connect to an external system, such as a database or authentication provider, that uses SSL then the system must trust the certificate that it uses. For security reasons, certificate verification is not optional; there is no &quot;ignore verification and automatically trust all certificates&quot; option.</p>
+<p>You need to provide the trust certificates to the deployment so that the deployment knows to &quot;trust&quot; it. This file is a text file in OpenSSL PEM format, i.e. certificates should start &quot;<code>-----BEGIN CERTIFICATE-----</code>&quot;.</p>
+<p>You can provide any external systems public certificate&#39;s using the following mechanisms:</p>
 <ul>
-<li>For a certificate that has been signed by an untrusted (self-signed or private) CA, reference the (public part of the) CA certificate in a <code>.cer</code> file and set it as the value for the <code>SSL_ADDITIONAL_TRUST_CERTIFICATES</code> environment variable.</li>
-<li>This file is a text file in OpenSSL PEM format, i.e. certificates should start &quot;<code>-----BEGIN CERTIFICATE-----</code>&quot;.</li>
-<li>Do NOT include the private key to the deployment. That should be private to your database (and only your database).</li>
+<li>In the <code>configuration/secrets/additional-trust-certificates.cer</code> file that is built into the image.</li>
+<li>As the value of the <code>SSL_ADDITIONAL_TRUST_CERTIFICATES</code> environment variable.</li>
+</ul>
+<p>Do NOT include the private key in the file. That should be private to your external system.</p>
+<h2 id="application-secrets">Application secrets</h2>
+<p>You can provide additional variables to the environment through the <code>APP_SECRETS</code> environment variable.</p>
+<p>The value for this environment variable is a <code>.json</code> file containing variable name definitions and values. The variables defined in the file can be used by Liberty.</p>
+<p>For example:</p>
+<pre><code class="lang-json">{
+  &quot;CLIENT_SECRET&quot;: &quot;TOKEN&quot;
+}
+</code></pre><p>To reference the file in the Liberty configuration, use the <code>${ }</code> format. For example, <code>${CLIENT_SECRET}</code></p>
+<p>You can provide any additional secrets variables using the following mechanisms:</p>
+<ul>
+<li>In the <code>configuration/secrets/app-secrets.json</code> file that is built into the image.</li>
+<li>As a JSON string for the value of the <code>APP_SECRETS</code> environment variable.</li>
 </ul>
 <h2 id="password-generation">Password generation</h2>
 <p>The example simulates secrets management performed by various secrets managers provided by cloud vendors. The <code>generate-secrets</code> generates these secrets and populates the <code>dev-environment-secrets/simulated-secret-store</code> with secrets required for each container.

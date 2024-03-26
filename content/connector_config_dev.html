@@ -91,16 +91,16 @@
 <h2 id="creating-a-connector-image">Creating a connector image</h2>
 <p>Create a connector image from one of the image templates. You can deploy connectors using the following templates:</p>
 <ul>
-<li><a href="#spring-boot-based-connector-image">Spring Boot</a> for Java based connectors<ul>
+<li><a href="#spring-boot-based-connector-image">Spring Boot</a> for Java based connectors.<ul>
 <li>For information about developing connectors in Java, see <a href="https://github.com/i2group/analyze-connect">analyze-connect</a>.</li>
 </ul>
 </li>
-<li><a href="#i2-connect-server-based-connector-image">i2 Connect server</a> for Node v16 based connectors developed using the i2 Connect server SDK<ul>
+<li><a href="#i2-connect-server-based-connector-image">i2 Connect server</a> for Node v16 based connectors developed using the i2 Connect server SDK.<ul>
 <li>For information about developing connectors using the SDK, see <a href="https://github.com/i2group/analyze-connect-node-sdk">analyze-connect-node-sdk</a>.</li>
 </ul>
 </li>
-<li><a href="#nodejs-based-connector-image">NodeJS</a> for Node v16 based connectors</li>
-<li><a href="#external-connector">External</a> for connectors hosted outside of the config development environment</li>
+<li><a href="#nodejs-based-connector-image">NodeJS</a> for Node v16 based connectors.</li>
+<li><a href="#user-managed-connector">User managed</a> for connectors that are not managed by the config development environment. The connectors are managed manually outside of the environment.</li>
 </ul>
 <p>The connector should be secured and run on port <code>3443</code>. For more information about securing your system, see <a href="https://docs.i2group.com/analyze/4.4.3/t_configuring_security.html">Securing i2 Analyze</a>.</p>
 <h3 id="spring-boot-based-connector-image">Spring Boot based connector image</h3>
@@ -145,9 +145,9 @@
 <p> Next, <a href="#configuring-a-connector">configure your connector</a>.</p>
 </li>
 </ol>
-<h3 id="external-connector">External connector</h3>
+<h3 id="user-managed-connector">User managed connector</h3>
 <ol>
-<li><p>Copy the <code>/templates/external-connector</code> directory to the <code>/connector-images</code> directory.<br> Rename the <code>external-connector</code> folder to a custom connector name. The name of the directory is used to determine which connectors to deploy. Do not use spaces or special characters in the name.<br> The directory structure is:  </p>
+<li><p>Copy the <code>/templates/user-managed-connector</code> directory to the <code>/connector-images</code> directory.<br> Rename the <code>user-managed-connector</code> folder to a custom connector name. The name of the directory is used to determine which connectors to deploy. Do not use spaces or special characters in the name.<br> The directory structure is:  </p>
 <pre><code class="lang-sh">- connector-images
     - &lt;connector_name&gt;
         - connector-definition.json
@@ -183,15 +183,19 @@
 </tr>
 <tr>
 <td><code>type</code></td>
-<td>Used to identify the type of connector. For i2 Connect server connectors, set to <code>i2connect-server</code>. For external connectors, set to <code>external</code>. For any other connectors, the <code>type</code> key is not required.</td>
+<td>For i2 Connect server connectors, set to <code>i2connect-server</code>. For any other connectors, the <code>type</code> key is not required.</td>
+</tr>
+<tr>
+<td><code>userManaged</code></td>
+<td>Set to <code>true</code> for connectors that are managed outside of the environment. For any other connectors, the <code>userManaged</code> key is not required.</td>
+</tr>
+<tr>
+<td><code>baseUrl</code></td>
+<td>Used only for connectors with <code>userManaged</code> set to <code>true</code>. The <code>baseUrl</code> value is the URL address of the connector. For any other connectors, the <code>baseUrl</code> key is not required.</td>
 </tr>
 <tr>
 <td><code>sendSensitiveHeaders</code></td>
 <td>This setting effectively disables connectors that employ user-specific configuration.</td>
-</tr>
-<tr>
-<td><code>baseUrl</code></td>
-<td>Used only for connectors of type <code>external</code>. The <code>baseUrl</code> value is the URL address of the connector. For any other connectors, the <code>baseUrl</code> key is not required.</td>
 </tr>
 </tbody>
 </table>
@@ -213,16 +217,16 @@
     &quot;configurationPath&quot;: &quot;/config&quot;,
     &quot;gatewaySchema&quot;: &quot;template&quot;,
     &quot;sendSensitiveHeaders&quot;: &quot;false&quot;,
-    &quot;type&quot;: &quot;external&quot;,
+    &quot;userManaged&quot;: true,
     &quot;baseUrl&quot;: &quot;https://example-connector:3443&quot; 
 }
 </code></pre><p> <strong>Note:</strong></p>
 <ul>
-<li>If your external connector is hosted in a Docker container on a different network to your config development environment, connect the Liberty container to the same network as your external connector container. For example, run <code>docker network connect &lt;connector-network-name&gt; liberty1.&lt;config-name&gt;</code>.</li>
+<li>If your user managed connector is hosted in a Docker container on a different network to your config development environment, connect the Liberty container to the same network as your user managed connector container. For example, run <code>docker network connect &lt;connector-network-name&gt; liberty1.&lt;config-name&gt;</code>.</li>
 <li>If your connector is running on your host machine, use the <code>host.docker.internal</code> as the host in the <code>baseUrl</code> value. E.g. &quot;http://<!-- markdown workaround: not make it link -->host.docker.internal:3000&quot;</li>
 </ul>
 </li>
-<li><p>Provide the version of the connector in the <code>&lt;connector_name&gt;/connector-version.json</code> file. For external connectors, this file is not required.
+<li><p>Provide the version of the connector in the <code>&lt;connector_name&gt;/connector-version.json</code> file. For user managed connectors, this file is not required.
  The <code>version</code> value specifies the version of the connector.</p>
 <p> For example:</p>
 <pre><code class="lang-json">{
