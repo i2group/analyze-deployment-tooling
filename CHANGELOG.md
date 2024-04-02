@@ -11,6 +11,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
 
+## 2.9.2 - 28/03/2024
+
+### Fixed
+
+* Broken copy mechanism for files in the `configuration/liberty` directory.
+
+[2.9.2]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.9.2><!-- markdown-link-check-enable -->
+
 ## 2.9.1 - 26/03/2024
 
 ### Added
@@ -23,7 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * Postgres backup user (dbb) permissions.
 * Additional trust certificates types support.
 
-[2.9.1]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.9.1><!-- markdown-link-check-enable -->
+[2.9.1]\: <https://github.com/i2group/analyze-containers/tree/v2.9.1>
 
 ## 2.9.0 - 27/02/2024
 
