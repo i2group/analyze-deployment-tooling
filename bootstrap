@@ -179,8 +179,6 @@ function run_script_on_client() {
     "${BIND_MOUNTS[@]}" \
     -v "${PATH_TO_DIR}:${PATH_TO_DIR}" \
     -v "ac_m2:/home/i2analyze/.m2" \
-    -v "ac_images_${ANALYZE_CONTAINERS_VERSION}:/opt/analyze-containers/images" \
-    -v "ac_templates_${ANALYZE_CONTAINERS_VERSION}:/opt/analyze-containers/templates" \
     -v "/var/run/docker.sock:/var/run/docker-host.sock" \
     -v "ac_tmp:/opt/analyze-containers/.tmp" \
     -e WORKDIR="${PATH_TO_DIR}" \
@@ -259,16 +257,6 @@ function main() {
   set_defaults
   check_prereqs_exists
   create_empty_dirs
-
-  # Remove previous installation volumes if they exist when re-bootstrapping.
-  # This is usually not a problem on released versions but dev environments can get out of date.
-  if [[ -f "${PATH_TO_DIR}/version.conf" ]]; then
-    source "${PATH_TO_DIR}/version.conf"
-    if [[ "${VERSION}" == "${ANALYZE_CONTAINERS_VERSION}" ]]; then
-      quietly_remove_docker_volume "ac_images_${ANALYZE_CONTAINERS_VERSION}"
-      quietly_remove_docker_volume "ac_templates_${ANALYZE_CONTAINERS_VERSION}"
-    fi
-  fi
 
   run_script_on_client "/opt/analyze-containers/scripts/install-analyze-containers" -p "${PATH_TO_DIR}"
   run_script_on_client "/opt/analyze-containers/utils/scripts/install-wrappers" -p "${PATH_TO_DIR}"

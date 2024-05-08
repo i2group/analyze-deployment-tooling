@@ -11,13 +11,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
 
+## 2.9.3 - 08/05/2024
+
+### Added
+
+* Documentation about how to deploy analyze-containers in an offline environment
+* Troubleshooting information if Docker runs out of memory
+* Ability to rotate secrets in the environment without data loss
+
+### Fixed
+
+* Checking wrong files for placeholder text
+* If the `connector-references.json` file is missing, the deploy succeeds with errors
+* Unclear documentation about how to run an external connector running in WSL
+* Incorrect documentation about how to deploy the pre-prod example environment
+
+[2.9.3]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.9.3><!-- markdown-link-check-enable -->
+
 ## 2.9.2 - 28/03/2024
 
 ### Fixed
 
 * Broken copy mechanism for files in the `configuration/liberty` directory.
 
-[2.9.2]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.9.2><!-- markdown-link-check-enable -->
+[2.9.2]\: <https://github.com/i2group/analyze-containers/tree/v2.9.2>
 
 ## 2.9.1 - 26/03/2024
 
