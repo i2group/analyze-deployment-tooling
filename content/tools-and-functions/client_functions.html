@@ -100,10 +100,13 @@
 <li><a href="#getasyncrequeststatus">get_async_request_status</a></li>
 <li><a href="#waitforindexestobebuilt">wait_for_indexes_to_be_built</a></li>
 <li><a href="#waitforconnectortobelive">wait_for_connector_to_be_live</a></li>
+<li><a href="#changesqlserveruserpassword">change_sql_server_user_password</a></li>
 <li><a href="#changesapassword">change_sa_password</a></li>
+<li><a href="#changepostgresserveruserpassword">change_postgres_server_user_password</a></li>
 <li><a href="#changepostgrespassword">change_postgres_password</a></li>
 <li><a href="#createdbloginanduser">create_db_login_and_user</a></li>
 <li><a href="#addusertorole">add_user_to_role</a></li>
+<li><a href="#changezkpassword">change_zk_password</a></li>
 <li><a href="#runsolrclientcommand">run_solr_client_command</a></li>
 <li><a href="#runi2analyzetool">run_i2_analyze_tool</a></li>
 <li><a href="#runi2analyzetoolasexternaluser">run_i2_analyze_tool_as_external_user</a></li>
@@ -211,15 +214,17 @@ If the connector is not live after 10 retries the function will print an error a
 <li>Retry attempts, error messages or success message.</li>
 </ul>
 <h2 id="database-security-utilities">Database Security Utilities</h2>
-<p>Change the initial password for the SA user.
-Uses the generated secrets to call the change_sa_password.sh with the initial (generated)
-sa password and the new (generated) password.
-For more information, see <a href="../security-and-users/db_users.html#the-changesapassword-function">change_sa_password</a>.</p>
+<p>Change password for the specified user.</p>
+<h3 id="changesqlserveruserpassword">change_sql_server_user_password</h3>
+<p>Change password for the specified user.</p>
 <h3 id="changesapassword">change_sa_password</h3>
 <p>Change the initial password for the SA user.
 Uses the generated secrets to call the change_sa_password.sh with the initial (generated)
 sa password and the new (generated) password.
 For more information, see <a href="../security-and-users/db_users.html#the-changesapassword-function">change_sa_password</a>.</p>
+<p><em>Function has no arguments.</em></p>
+<h3 id="changepostgresserveruserpassword">change_postgres_server_user_password</h3>
+<p>Change the initial password for the postgres user.</p>
 <p><em>Function has no arguments.</em></p>
 <h3 id="changepostgrespassword">change_postgres_password</h3>
 <p>Change the initial password for the postgres user.</p>
@@ -241,10 +246,10 @@ For more information, see <a href="../security-and-users/db_users.html#the-creat
 <li><strong>$2</strong> (string): The database role name</li>
 </ul>
 <h2 id="execution-utilities">Execution Utilities</h2>
-<p>Use an ephemeral Solr client container to run commands against Solr.
-For more information about the environment variables and volume mounts that are required for the Solr client, see <a href="../images-and-containers/solr_client.html">Running a Solr client container</a>.
-The run_solr_client_command function takes the command you want to run as an argument.
-For more information about commands you can execute using the Solr zkcli, see <a href="https://lucene.apache.org/solr/guide/8_6/command-line-utilities.html">Solr ZK Command Line Utilities</a></p>
+<p>Use an ephemeral ZK client container to change ZK digest password.</p>
+<h3 id="changezkpassword">change_zk_password</h3>
+<p>Use an ephemeral ZK client container to change ZK digest password.</p>
+<p><em>Function has no arguments.</em></p>
 <h3 id="runsolrclientcommand">run_solr_client_command</h3>
 <p>Use an ephemeral Solr client container to run commands against Solr.
 For more information about the environment variables and volume mounts that are required for the Solr client, see <a href="../images-and-containers/solr_client.html">Running a Solr client container</a>.

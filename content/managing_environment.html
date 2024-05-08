@@ -90,10 +90,12 @@
 <pre><code class="lang-bash">Usage:
   manage-environment -t backup [-p &lt;path&gt;] [-i &lt;config_name&gt;] [-e &lt;config_name&gt;] [-b &lt;backup_name&gt;] [-y]
   manage-environment -t copy -p &lt;path&gt; [-i &lt;config_name&gt;] [-e &lt;config_name&gt;] [-y]
-  manage-environment -t upgrade -p &lt;path&gt; [-y]
+  manage-environment -t upgrade [-y]
   manage-environment -t update [-y]
   manage-environment -t link [-y]
   manage-environment -t stop [-y]
+  manage-environment -t renew-certificates [-y]
+  manage-environment -t renew-secrets [-y]
   manage-environment -t clean [-i &lt;config_name&gt;] [-e &lt;config_name&gt;] [-y]
   manage-environment -t connectors [-i &lt;connector_name&gt;] [-e &lt;connector_name&gt;] [-y]
   manage-environment -t extensions [-i &lt;extension_name&gt;] [-e &lt;extension_name&gt;] [-y]
@@ -107,12 +109,14 @@ Options:
   -t {link}                                                     Links shared configurations.
   -t {stop}                                                     Stops the running containers.
   -t {clean}                                                    Clean the deployment for a config. Will permanently remove all containers and data.
+  -t {renew-secrets}                                            Renews secrets for the configuration development environment.
+  -t {renew-certificates}                                       Renews certificates for the configuration development environment.
   -t {connectors}                                               Build all connector images.
   -t {extensions}                                               Build all extensions.
   -i &lt;config_name|extension_name|connector_name&gt;                Name of the config, connector or extension to include for the task. To specify multiple values, add additional -i options.
   -e &lt;config_name|extension_name|connector_name&gt;                Name of the config, connector or extension to exclude for the task. To specify multiple values, add additional -e options.
   -b &lt;backup_name&gt;                                              Name of the backup to create or restore. If not specified, the default backup is used.
-  -p &lt;path&gt;                                                     Path to the root of an analyze-containers project. Defaults to the current project path.
+  -p &lt;path&gt;                                                     Path to the root of an analyze-containers project. Defaults to the current project path. Or /home/&lt;user_name&gt;/analyze-containers in upgrade.
   -y                                                            Answer &#39;yes&#39; to all prompts.
   -v                                                            Verbose output.
   -h                                                            Display the help.
@@ -206,6 +210,10 @@ Options:
 <p>The <code>clean</code> task allows you to clean all configs by deleting all the containers and volumes. This is a destructive operation.</p>
 <h2 id="linking-shared-configurations">Linking shared configurations</h2>
 <p>The <code>link</code> task allows you to link configurations. For more information, see <a href="managing_shared_configurations.html">Managing shared configurations</a>.</p>
+<h2 id="renewing-certificates">Renewing certificates</h2>
+<p>The <code>renew-certificates</code> task allows you to renew certificates for all configs.</p>
+<h2 id="renewing-secrets">Renewing secrets</h2>
+<p>The <code>renew-secrets</code> task allows you to renew secrets for all configs. Similar to <code>renew-certificates</code> task but also renews passwords.</p>
 </article>
           </div>
           

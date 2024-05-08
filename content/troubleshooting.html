@@ -119,6 +119,18 @@ In the error dialogue, press <strong>Retry</strong>.</p>
 <li>Run <code>docker system prune</code> to remove dangling images and containers that are no longer in use to free up already allocated Docker disk space.</li>
 <li>Allocate more disk space to Docker via Docker Desktop (on MacOS) or <code>.wslconfig</code> (on Windows).</li>
 </ol>
+<h2 id="error-container-stops-running-unexpectedly">Error: Container stops running unexpectedly</h2>
+<p><strong>Scenario:</strong><br>When your system has been running for an extended period of time, one or more of the containers stop running unexpectedly.</p>
+<p><strong>Solutions:</strong>  </p>
+<ol>
+<li><p>Increase the memory allocated to Docker.</p>
+<p> For more information about modifying the resources allocated to Docker, see:</p>
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/windows/wsl/wsl-config#example-wslconfig-file">Editing the wslconfig file on Windows</a></li>
+<li><a href="https://docs.docker.com/desktop/settings/mac/#resources">Docker Desktop for Mac</a></li>
+</ul>
+</li>
+</ol>
 <h2 id="error-ingestionscriptscreate-ingestion-sourcessh-doesnt-exist">Error: <code>ingestion/scripts/create-ingestion-sources.sh doesn&#39;t exist</code></h2>
 <p><strong>Scenario:</strong><br>When you attempt to use any of the example ingestion scripts, the scripts cannot be found.</p>
 <p>This happens when you have upgraded from a previous version where the scripts had different names.</p>
@@ -166,7 +178,7 @@ If you are unable to open the VS Code development container and you have already
 <p><strong>Solution:</strong></p>
 <ol>
 <li>In Docker Desktop, locate the Docker image.
-In the <strong>Images</strong> pane, find the image name that begins with <code>vsc</code> followed by the folder name for the upgrade. For example: <code>vsc-analyze-containers-292</code>. The rest of the image name is a GUID.</li>
+In the <strong>Images</strong> pane, find the image name that begins with <code>vsc</code> followed by the folder name for the upgrade. For example: <code>vsc-analyze-containers-293</code>. The rest of the image name is a GUID.</li>
 <li>Select the image by using the checkbox and click <strong>Delete</strong>.</li>
 <li>Try and reopen the VS Code development environment.</li>
 </ol>

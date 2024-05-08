@@ -82,7 +82,7 @@
 <h2 id="prerequisites">Prerequisites</h2>
 <p>You can run the code in the analyze-containers repository on Windows with Windows Subsystem for Linux and MacOS.
 The system requires being connected to the internet to download required repositories. If you are running the project
-from an environment without an internet connection, see <a href="reference-architecture/external_dependencies.html">External dependencies</a>.</p>
+from an environment without an internet connection, you must first install in an online environment with the following instructions before moving to an offline system. For more information, see <a href="reference-architecture/external_dependencies.html">External dependencies</a>.</p>
 <h3 id="windows-subsystem-for-linux-wsl">Windows Subsystem for Linux (WSL)</h3>
 <p>If you are on <strong>Windows</strong>, you must use WSL 2 as the backend for Docker and to run the shell scripts in this repository.</p>
 <ol>
@@ -107,22 +107,22 @@ from an environment without an internet connection, see <a href="reference-archi
 <p> On Windows, Docker is automatically allocated 8GB or 50% of available memory whichever is less.</p>
 <p> For more information about modifying the resources allocated to Docker, see:</p>
 <ul>
-<li><a href="https://docs.docker.com/desktop/settings/windows/#resources">Docker Desktop for Windows</a></li>
-<li><a href="https://docs.docker.com/docker-for-mac/#resources">Docker Desktop for Mac</a></li>
+<li><a href="https://learn.microsoft.com/en-us/windows/wsl/wsl-config#example-wslconfig-file">Editing the wslconfig file on Windows</a></li>
+<li><a href="https://docs.docker.com/desktop/settings/mac/#resources">Docker Desktop for Mac</a></li>
 </ul>
 </li>
 </ol>
 <p>Keep your Docker Desktop up-to-date as you use your system to ensure you receive stability, feature, and security updates.</p>
 <h3 id="code">Code</h3>
 <ol>
-<li>Download the <code>tar.gz</code> from <a href="https://github.com/i2group/analyze-containers/releases/tag/v2.9.2">https://github.com/i2group/analyze-containers/releases/tag/v2.9.2</a>.</li>
+<li>Download the <code>tar.gz</code> from <a href="https://github.com/i2group/analyze-containers/releases/tag/v2.9.3">https://github.com/i2group/analyze-containers/releases/tag/v2.9.3</a>.</li>
 <li><p>Extract the <code>tar.gz</code> file by using the following steps:</p>
 <ol>
-<li>On Windows, copy the <code>analyze-containers-2.9.2.tar.gz</code> file to your WSL filesystem. For example: <code>\\wsl.localhost\Ubuntu\home\&lt;user&gt;</code></li>
+<li>On Windows, copy the <code>analyze-containers-2.9.3.tar.gz</code> file to your WSL filesystem. For example: <code>\\wsl.localhost\Ubuntu\home\&lt;user&gt;</code></li>
 <li><p>Extract the <code>tar.gz</code> file (On Windows, run the commands from a WSL terminal. <strong>Start</strong> &gt; <strong>wsl</strong>):</p>
 <pre><code class="lang-sh">cd /home/&lt;user&gt;
-</code></pre><pre><code class="lang-sh">tar -xzf analyze-containers-2.9.2.tar.gz
-</code></pre><pre><code class="lang-sh">mv analyze-containers-2.9.2/ analyze-containers
+</code></pre><pre><code class="lang-sh">tar -xzf analyze-containers-2.9.3.tar.gz
+</code></pre><pre><code class="lang-sh">mv analyze-containers-2.9.3/ analyze-containers
 </code></pre></li>
 </ol>
 </li>
@@ -176,7 +176,7 @@ from an environment without an internet connection, see <a href="reference-archi
 </ol>
 <p>If you deploy on <strong>MacOS</strong>, for your virtual machine to connect to i2 Analyze, complete the following:</p>
 <ol>
-<li><p>On your MacOS terminal, run <code>ifconfig</code> and identify the IP address for your virtual machine in a section such as <code>vmnet1</code>. For example, <code>172.16.100.1</code>.</p>
+<li><p>On your MacOS, go to <strong>Settings</strong> &gt; <strong>General</strong> &gt; <strong>Sharing</strong>. Click the <code>i</code> information next to <strong>File Sharing</strong>. Turn on File Sharing and copy the IP address displayed. For example, <code>172.16.100.1</code>.</p>
 </li>
 <li><p>Then, on your Windows virtual machine add the same lines above to the file with the identified IP address.  To edit the hosts file, open an Administrator Command Prompt and run <code>Notepad.exe C:\Windows\System32\drivers\etc\hosts</code>.<br>For example <code>172.16.100.1 i2analyze.eia</code>.</p>
 </li>

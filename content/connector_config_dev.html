@@ -223,7 +223,11 @@
 </code></pre><p> <strong>Note:</strong></p>
 <ul>
 <li>If your user managed connector is hosted in a Docker container on a different network to your config development environment, connect the Liberty container to the same network as your user managed connector container. For example, run <code>docker network connect &lt;connector-network-name&gt; liberty1.&lt;config-name&gt;</code>.</li>
-<li>If your connector is running on your host machine, use the <code>host.docker.internal</code> as the host in the <code>baseUrl</code> value. E.g. &quot;http://<!-- markdown workaround: not make it link -->host.docker.internal:3000&quot;</li>
+<li>If your connector is running on your host machine&#39;s operating system, use the <code>host.docker.internal</code> as the host in the <code>baseUrl</code> value. For example, &quot;http://<!-- markdown workaround: not make it link -->host.docker.internal:3000&quot;</li>
+<li>If your connector is running in WSL, use the IP address for WSL as the host in the <code>baseUrl</code> value. For example, &quot;http://<!-- markdown workaround: not make it link -->172.23.0.164:3000&quot;.<ul>
+<li>You can find the IP address of your current WSL distribution by running <code>ip addr show eth0 | grep -oP &#39;(?&lt;=inet\s)\d+(\.\d+){3}&#39;</code>. Note that the IP address changes every time that WSL is shutdown and restarted.</li>
+</ul>
+</li>
 </ul>
 </li>
 <li><p>Provide the version of the connector in the <code>&lt;connector_name&gt;/connector-version.json</code> file. For user managed connectors, this file is not required.
