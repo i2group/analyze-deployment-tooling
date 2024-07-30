@@ -125,6 +125,8 @@
         BACKUP DATABASE ISTORE
         TO DISK = &#39;/backup/1/IStore.bak&#39;
             WITH FORMAT;\&quot;&quot;
+</code></pre><p><strong>NOTE:</strong> To backup the Postgres database, you must use the <code>postgres</code>user. The <code>run_postgres_command_as_postgres</code> client function is used to run <code>pg_dump</code> command to create the backup file. For example:</p>
+<pre><code class="lang-sh">run_postgres_server_command_as_postgres bash -c &quot;pg_dump -h postgres.eia -U postgres ISTORE &gt; /backup/1/ISTORE.pgb&quot;
 </code></pre><p>For more information about backing up a SQL Server database, see:</p>
 <ul>
 <li><a href="https://docs.microsoft.com/en-us/sql/t-sql/statements/backup-transact-sql?view=sql-server-ver15">Backup SQL Documentation</a></li>
