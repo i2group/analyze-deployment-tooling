@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [semantic versioning](https://i2group.github.io/analyze-containers/guidetoc/index.html#support-policy):
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [semantic versioning](https://i2group.github.io/analyze-deployment-tooling/guidetoc/index.html#support-policy):
 
 * `Added` for new features.
 * `Changed` for changes in existing functionality.
@@ -11,22 +11,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
 
+## 2.9.4 - 30/07/2024
+
+### Changed
+
+* Postgres backup user (postgres) permissions. Reverted to before 2.9.1 given pg_dump error backing up charts.
+
+### Fixed
+
+* Postgres backup command in arm64 architecture.
+
+[2.9.4]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-deployment-tooling/tree/v2.9.4><!-- markdown-link-check-enable -->
+
 ## 2.9.3 - 08/05/2024
 
 ### Added
 
-* Documentation about how to deploy analyze-containers in an offline environment
-* Troubleshooting information if Docker runs out of memory
-* Ability to rotate secrets in the environment without data loss
+* Documentation about how to deploy analyze-containers in an offline environment.
+* Troubleshooting information if Docker runs out of memory.
+* Ability to rotate secrets in the environment without data loss.
 
 ### Fixed
 
-* Checking wrong files for placeholder text
-* If the `connector-references.json` file is missing, the deploy succeeds with errors
-* Unclear documentation about how to run an external connector running in WSL
-* Incorrect documentation about how to deploy the pre-prod example environment
+* Checking wrong files for placeholder text.
+* If the `connector-references.json` file is missing, the deploy succeeds with errors.
+* Unclear documentation about how to run an external connector running in WSL.
+* Incorrect documentation about how to deploy the pre-prod example environment.
 
-[2.9.3]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-containers/tree/v2.9.3><!-- markdown-link-check-enable -->
+[2.9.3]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v2.9.3>
 
 ## 2.9.2 - 28/03/2024
 
@@ -34,7 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 * Broken copy mechanism for files in the `configuration/liberty` directory.
 
-[2.9.2]\: <https://github.com/i2group/analyze-containers/tree/v2.9.2>
+[2.9.2]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v2.9.2>
 
 ## 2.9.1 - 26/03/2024
 
@@ -48,7 +60,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * Postgres backup user (dbb) permissions.
 * Additional trust certificates types support.
 
-[2.9.1]\: <https://github.com/i2group/analyze-containers/tree/v2.9.1>
+[2.9.1]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v2.9.1>
 
 ## 2.9.0 - 27/02/2024
 
@@ -68,10 +80,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * Liberty container setting incorrect deployment state.
 * Extension configuration files not being updated.
 * Minor documentation issues.
-* `EACCES` error when starting npm connectors. To resolve this issue if you are still experiencing it after upgrading, see [Troubleshooting](https://i2group.github.io/analyze-containers/content/troubleshooting.html).
+* `EACCES` error when starting npm connectors. To resolve this issue if you are still experiencing it after upgrading, see [Troubleshooting](https://i2group.github.io/analyze-deployment-tooling/content/troubleshooting.html).
 * "Changes to schema" message blocking deployment.
 
-[2.9.0]\: <https://github.com/i2group/analyze-containers/tree/v2.9.0>
+[2.9.0]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v2.9.0>
 
 ## 2.8.0 - 21/12/2023
 
@@ -91,7 +103,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * Compatibility with pre-installed Mac bash version.
 * Multiple issues with file permissions.
 * Issue with opening the VS Code dev container.
-  * If you see an error message when you open analyze-containers in a VS Code dev container, see this [GitHub Issue](https://github.com/i2group/analyze-containers/issues/13).
+  * If you see an error message when you open analyze-containers in a VS Code dev container, see this [GitHub Issue](https://github.com/i2group/analyze-deployment-tooling/issues/13).
 
 ### Deprecated
 
@@ -99,7 +111,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * Removal of old top-level `.sh` scripts. Deprecated since version 2.4.0.
 * Removal of old client functions. Deprecated since version 2.4.0.
 
-[2.8.0]\: <https://github.com/i2group/analyze-containers/tree/v2.8.0>
+[2.8.0]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v2.8.0>
 
 ## 2.7.1 - 27/09/2023
 
@@ -107,7 +119,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 * Multiple issues with schema update.
 
-[2.7.1]\: <https://github.com/i2group/analyze-containers/tree/v2.7.1>
+[2.7.1]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v2.7.1>
 
 ## 2.7.0 - 01/09/2023
 
@@ -125,7 +137,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * `renew-certificates` task updates connector secrets.
 * Secret expiry no longer causes data loss since last backup.
 
-[2.7.0]\: <https://github.com/i2group/analyze-containers/tree/v2.7.0>
+[2.7.0]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v2.7.0>
 
 ## 2.6.0 - 24/07/2023
 
@@ -146,9 +158,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * A config that includes `overrideHttpAuthMethod="CLIENT_CERT"` in the `server.extensions.xml` can be deployed successfully.
 * Fixed JDBC driver version validation for `create-environment` script.
 
-[2.6.0]\: <https://github.com/i2group/analyze-containers/tree/v2.6.0>
+[2.6.0]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v2.6.0>
 
-## 2.5.3 - 07/06/2023
+## 2.5.3 [Deprecated] - 07/06/2023
 
 ### Added
 
@@ -164,9 +176,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * The pre-prod example deployment now backs up the match_index2.
 * Versions are correctly resolved in documentation.
 
-[2.5.3]\: <https://github.com/i2group/analyze-containers/tree/v2.5.3>
-
-## 2.5.2 - 31/03/2023
+## 2.5.2 [Deprecated] - 31/03/2023
 
 ### Added
 
@@ -185,9 +195,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * Stopped repeating Liberty properties on start up.
 * Password generation issues on Mac OS.
 
-[2.5.2]\: <https://github.com/i2group/analyze-containers/tree/v2.5.2>
-
-## 2.5.1 - 14/02/2023
+## 2.5.1 [Deprecated] - 14/02/2023
 
 ### Changed
 
@@ -202,9 +210,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 * Upgrading from v2.2.0 after a you complete a back up results in connectors that cannot be recovered. Before you upgrade, run `deploy -c <config_name> -t connectors`.
 
-[2.5.1]\: <https://github.com/i2group/analyze-containers/tree/v2.5.1>
-
-## 2.5.0 - 20/12/2022
+## 2.5.0 [Deprecated] - 20/12/2022
 
 ### Added
 
@@ -218,8 +224,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * Node based connectors are built with the dependencies that are defined in a npm-shrinkwrap.json file if the file exist in the connector.
 * Improved shared configuration UX by changing `configure-paths` script parameters. Use the `-h` flag for more information on how to run the command.
 * `manage-environment -t upgrade` and `manage-toolkit-configuration -t {create | prepare | import | export}` commands now use the path specified in the `path-configuration.json` file instead of the `-p` flag. Use the `-h` flag in each script for more information on how to run the commands.
-
-[2.5.0]\: <https://github.com/i2group/analyze-containers/tree/v2.5.0>
 
 ## 2.4.0 [Deprecated] - 23/09/2022
 
@@ -240,8 +244,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * The top-level `.sh` scripts. Start using the commands instead.
 * The client functions with the previous names. Start using the renamed functions.
 
-[2.4.0]\: <https://github.com/i2group/analyze-containers/tree/v2.4.0>
-
 ## 2.3.0 [Deprecated]- 22/07/2022
 
 ### Added
@@ -253,8 +255,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 * The environment must be run inside a VS Code development container.
 * The base Docker images are no longer built locally. The images are pulled from [docker hub - i2group](https://hub.docker.com/u/i2group).
-
-[2.3.0]\: <https://github.com/i2group/analyze-containers/tree/v2.3.0>
 
 ## 2.2.0 [Deprecated] - 06/05/2022
 
@@ -279,14 +279,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Security
 
 * Updated the Liberty and Solr images to use Log4j2 version 2.17.2 to remediate <https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-44228>
-  * To remediate the CVE, you must rebuild the Docker images in your environment. To rebuild the Docker images, complete the instructions [Updating to the latest version of the analyze-containers repository](https://i2group.github.io/analyze-containers/content/managing_update_env.html).
+  * To remediate the CVE, you must rebuild the Docker images in your environment. To rebuild the Docker images, complete the instructions [Updating to the latest version of the analyze-deployment-tooling repository](https://i2group.github.io/analyze-deployment-tooling/content/managing_update_env.html).
 
 ## 2.1.1 [Deprecated] - 12/01/2022
 
 ### Security
 
 * Updated the Liberty and Solr images to use Log4j2 version 2.17.1 to remediate <https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-44228>
-  * To remediate the CVE, you must rebuild the Docker images in your environment. To rebuild the Docker images, complete the instructions [Updating to the latest version of the analyze-containers repository](https://i2group.github.io/analyze-containers/content/managing_update_env.html).
+  * To remediate the CVE, you must rebuild the Docker images in your environment. To rebuild the Docker images, complete the instructions [Updating to the latest version of the analyze-deployment-tooling repository](https://i2group.github.io/analyze-deployment-tooling/content/managing_update_env.html).
 
 ## 2.1.0 [Deprecated] - 06/10/2021
 
@@ -300,14 +300,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Changed
 
 * Additional command line tools required.
-  * See [Updating to the latest version of the analyze-containers repository](https://i2group.github.io/analyze-containers/content/managing_update_env.html).
+  * See [Updating to the latest version of the analyze-deployment-tooling repository](https://i2group.github.io/analyze-deployment-tooling/content/managing_update_env.html).
 
 ## 2.0.0 [Deprecated] - 23/07/2021
 
 ### Added
 
 * Configuration development environment.
-* Documentation hosted at <https://i2group.github.io/analyze-containers/>
+* Documentation hosted at <https://i2group.github.io/analyze-deployment-tooling/>
 * Updated for compatibility with i2 Analyze 4.3.4
 
 ### Changed
