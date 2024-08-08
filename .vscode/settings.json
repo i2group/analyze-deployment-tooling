@@ -12,7 +12,6 @@
     "**/.{connector-images*}": true,
     "**/connector-images/connector-url-mappings-file.json": true,
     "**/.{i2a-extensions*}": true,
-    "**/i2a-extensions/pom.xml": true,
     "**/i2a-extensions/*/target": true,
     "**/.{i2a-plugins*}": true,
     "**/.": true,
@@ -22,7 +21,10 @@
     "**/configs/*/configuration/*.bak": true,
     "**/.root": true,
     "**/.gitattributes": true,
-    "**/.gitkeep": true
+    "**/.gitkeep": true,
+    "**/textchart-configs/**/output_conf": true,
+    "**/textchart-configs/**/_default": true,
+    "**/textchart-configs/**/styles.json": true
   },
   "terminal.integrated.defaultProfile.windows": "C:\\WINDOWS\\System32\\wsl.exe",
   "java.project.referencedLibraries": [

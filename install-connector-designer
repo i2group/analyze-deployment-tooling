@@ -18,11 +18,10 @@ SCRIPT_DIR="$(readlink -f "$(dirname "$0")")"
 
 USAGE="""
 Usage:
-  bootstrap [-p <path>] [-o <version>] [-v] [-y]
-  bootstrap -h
+  install-connector-designer [-o <version>] [-y] [-v]
+  install-connector-designer -h
 
 Options:
-  -p <path>                              The full path to the directory to install analyze-containers. Defaults to the current directory.
   -o <version>                           The version to install. Defaults to latest.
   -v                                     Verbose output.
   -y                                     Answer 'yes' to all prompts.
@@ -40,22 +39,19 @@ function print_usage() {
 }
 
 function parse_arguments() {
-  while getopts ":o:p:hvy" flag; do
+  while getopts ":o:hvy" flag; do
     case "${flag}" in
-    p)
-      PATH_TO_DIR="${OPTARG}"
-      ;;
     o)
       ANALYZE_CONTAINERS_VERSION="${OPTARG}"
+      ;;
+    h)
+      print_usage 0
       ;;
     v)
       VERBOSE="true"
       ;;
     y)
       YES_FLAG="true"
-      ;;
-    h)
-      print_usage 0
       ;;
     \?)
       print_usage 1
@@ -208,7 +204,6 @@ function download_jdbc_driver() {
   local driver_name="$1"
   local driver_version="$2"
   local driver_file_name
-  local all_existing_drivers
 
   case "${driver_name}" in
   "sqlserver")
@@ -267,6 +262,13 @@ function quietly_remove_docker_volume() {
   fi
 }
 
+function check_allowed_installation() {
+  if [[ -f "${PATH_TO_DIR}/version.conf" ]]; then
+    echo "There is an installation already in this path. Please use Connector Designer in the Config Dev Environment." >&2
+    exit 1
+  fi
+}
+
 function check_script_updates() {
   # Skip this check in CI
   if [[ "${CI}" == "true" ]]; then
@@ -276,7 +278,6 @@ function check_script_updates() {
   if ! docker run \
     -i \
     --rm \
-    --log-driver none \
     -v "${SCRIPT_DIR}:${SCRIPT_DIR}" \
     -e WORKDIR="${SCRIPT_DIR}" \
     "${ANALYZE_CONTAINERS_CLIENT_IMAGE_NAME}:${ANALYZE_CONTAINERS_VERSION}" \
@@ -290,21 +291,21 @@ function main() {
   parse_arguments "$@"
   set_defaults
   check_script_updates
+
   check_prereqs_exists
+  check_allowed_installation
+
   create_empty_dirs
 
-  run_script_on_client "/opt/analyze-deployment-tooling/scripts/install-analyze-deployment-tooling" -p "${PATH_TO_DIR}"
-  run_script_on_client "/opt/analyze-deployment-tooling/utils/scripts/install-wrappers" -p "${PATH_TO_DIR}"
+  run_script_on_client "/opt/analyze-deployment-tooling/scripts/install-analyze-deployment-tooling" -p "${PATH_TO_DIR}" -e con-des-only
+  run_script_on_client "/opt/analyze-deployment-tooling/utils/scripts/install-wrappers" -p "${PATH_TO_DIR}" -n "deploy"
+  run_script_on_client "/opt/analyze-deployment-tooling/utils/scripts/install-wrappers" -p "${PATH_TO_DIR}" -n "manage-environment"
+
+  run_script_on_client "/opt/analyze-deployment-tooling/utils/containers/create-con-des-stores"
 
   # Add scripts to path
   export PATH="$PATH:${PATH_TO_DIR}/scripts"
-
-  # Run configure paths if running outside of devcontainer
-  if [[ "${DEVCONTAINER}" != "true" ]]; then
-    pushd "${PATH_TO_DIR}/scripts" &>/dev/null
-    export ANALYZE_CONTAINERS_ROOT_DIR="${PATH_TO_DIR}"
-    ./configure-paths
-    popd
-  fi
+  echo "SUCCESS: Connector Designer has been installed successfully."
 }
+
 main "$@"

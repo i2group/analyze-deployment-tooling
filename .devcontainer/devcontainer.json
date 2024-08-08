@@ -20,7 +20,8 @@
   "remoteEnv": {
     "WORKSPACE": "${containerWorkspaceFolder}",
     "DEVCONTAINER": "true",
-    "HOST_HOME": "${localEnv:HOME}"
+    "HOST_HOME": "${localEnv:HOME}",
+    "DOCKER_BUILDKIT": "1"
   },
   "workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind,consistency=cached",
   "workspaceFolder": "${localWorkspaceFolder}",

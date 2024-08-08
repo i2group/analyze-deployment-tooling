@@ -11,6 +11,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
 
+## 3.0.0 - 08/08/2024
+
+### Added
+
+* Updated for compatibility with i2 Analyze 4.4.4.
+* Connector Designer support for Config Dev Environment.
+* Support for Connector Designer installation with separate deployment. See: <!-- markdown-link-check-disable -->[Adding Connector Designer to your deployment](https://docs.i2group.com/analyze/4.4.4/deploy_connector_designer.html).<!-- markdown-link-check-enable -->
+* Load balancer support for Config Dev Environment.
+* Documentation for different authentication mechanisms.
+* Documentation for secret and certificate management.
+* Support to start and stop specific components in the environment using the `manage-environment` script.
+* Support for running connectors based on an image from a registry.
+* Documentation for external database user configuration.
+
+### Changed
+
+* Rename repository to `analyze-deployment-tooling`.
+* Update documentation for Solr replication and high availability after autoscaling policy rules deprecation.
+* Database user creation to use the `dba` instead of master user (`postgres` or `sa`).
+* Certificates for metric system.
+
+### Fixed
+
+* Container rebuilds on every deploy when changing runtime memory settings.
+* Improved error handling when adding additional certificates to clients.
+* Errors with TTY when running in a non-interactive shell.
+
+[3.0.0]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-deployment-tooling/tree/v3.0.0><!-- markdown-link-check-enable -->
+
 ## 2.9.4 - 30/07/2024
 
 ### Changed
@@ -27,7 +56,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-* Documentation about how to deploy analyze-containers in an offline environment.
+* Documentation about how to deploy analyze-deployment-tooling in an offline environment.
 * Troubleshooting information if Docker runs out of memory.
 * Ability to rotate secrets in the environment without data loss.
 
@@ -90,7 +119,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 
 * Updated for compatibility with i2 Analyze 4.4.3.
-* Use of a client image to execute analyze-containers.
+* Use of a client image to execute analyze-deployment-tooling.
 * New installation mechanism (see bootstrap script).
 
 ### Changed
@@ -103,7 +132,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * Compatibility with pre-installed Mac bash version.
 * Multiple issues with file permissions.
 * Issue with opening the VS Code dev container.
-  * If you see an error message when you open analyze-containers in a VS Code dev container, see this [GitHub Issue](https://github.com/i2group/analyze-deployment-tooling/issues/13).
+  * If you see an error message when you open analyze-deployment-tooling in a VS Code dev container, see this [GitHub Issue](https://github.com/i2group/analyze-deployment-tooling/issues/13).
 
 ### Deprecated
 

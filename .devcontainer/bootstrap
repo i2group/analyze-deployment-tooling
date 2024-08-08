@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
-# © N.Harris Computer Corporation (2022-2023)
+# © N.Harris Computer Corporation (2022-2024)
 #
 # SPDX short identifier: MIT
 
@@ -27,29 +27,19 @@ function run_task() {
 
 function init() {
   docker pull i2group/i2eng-analyze-containers-dev:1.2
-  mkdir -p "${HOME}/.m2" "${HOME}/.config/gh" "${HOME}/.circleci" "${HOME}/.jfrog" "${HOME}/.npmrc"
-}
-
-function install_analyze_containers_deps() {
-  if [[ -d "${ANALYZE_CONTAINERS_ROOT_DIR}/pre-reqs/i2analyze/toolkit" ]]; then
-    # Ensure to install the maven dependencies and images
-    source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_functions.sh"
-    source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/simulated_external_variables.sh"
-    source "${ANALYZE_CONTAINERS_ROOT_DIR}/utils/common_variables.sh"
-    pull_base_images
-    setup_i2_analyze_maven_local
-  fi
+  # We want to create these folders inside the devcontainer so that they are owned by the user (not the same as HOST_HOME)
+  mkdir -p "${HOME}/.m2" "${HOME}/.config/gh" "${HOME}/.circleci" "${HOME}/.jfrog"
+  touch "${HOME}/.npmrc"
 }
 
 function create() {
+  export ANALYZE_CONTAINERS_ROOT_DIR="${WORKSPACE}"
+  export CONTINUE_ON_ERROR="true"
   if [[ -z $(docker network ls -q --filter name="^eia$") ]]; then
     docker network create eia
   fi
   docker network connect eia "${HOSTNAME}"
   echo "VSCode dev container connected to docker network: eia"
-
-  # This takes some time so slows down the first start of the devcontainer
-  install_analyze_containers_deps
   echo "Done"
 }
 
@@ -58,7 +48,6 @@ function post_start() {
   export CONTINUE_ON_ERROR="true"
   if [[ -f "${ANALYZE_CONTAINERS_ROOT_DIR}/scripts/manage-environment" ]]; then
     "${ANALYZE_CONTAINERS_ROOT_DIR}/scripts/manage-environment" -t link
-    install_analyze_containers_deps
     echo "Dev Container is ready"
   else
     printf "\n\e[33mINFO: analyze-containers is not installed. To install analyze-containers, open a terminal in this VSCode window and run ./bootstrap\e[0m\n" >&2
