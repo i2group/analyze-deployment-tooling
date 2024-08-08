@@ -35,7 +35,7 @@
               </button>
               
               <a class="navbar-brand" href="../index.html">
-                i2 Analyze Containers
+                i2 Analyze Deployment Tooling
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -79,13 +79,13 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="troubleshooting">Troubleshooting</h1>
 
-<h2 id="error-opening-analyze-containers-in-a-dev-container">Error opening analyze-containers in a Dev Container</h2>
+<h2 id="error-opening-analyze-deployment-tooling-in-a-dev-container">Error opening analyze-deployment-tooling in a Dev Container</h2>
 <p><strong>Scenario:</strong><br>Opening the folder in a Dev Container fails on Windows.</p>
-<p><strong>Solution:</strong><br>Ensure that you have opened the analyze-containers folder in a WSL VS Code window before opening the folder as a Dev Container.</p>
+<p><strong>Solution:</strong><br>Ensure that you have opened the analyze-deployment-tooling folder in a WSL VS Code window before opening the folder as a Dev Container.</p>
 <p>In the bottom-left of the window, the green bar must say <code>WSL: Ubuntu</code>. For example: <img src="../images/vscode_wsl_green.png" alt="WSL: Ubuntu">.</p>
 <p>If it does not say <code>WSL: Ubuntu</code>, press <strong>F1</strong> and type <code>WSL: Reopen folder in WSL</code> then select it. After the WSL window opens, you can then follow the instructions to open the folder in a Dev Container.</p>
 <h2 id="error-when-reloading-vs-code-window">Error when reloading VS Code window</h2>
-<p><strong>Scenario:</strong><br>When you have multiple versions of analyze-containers running in VS Code and run <code>manage-environment -t stop</code> in one of the windows, the other VS Code window displays the message <code>Cannot reconnect. Please reload the window.</code>. When you press <strong>Reload Window</strong>, you might see the following message: <code>An error occurred setting up the container.</code></p>
+<p><strong>Scenario:</strong><br>When you have multiple versions of analyze-deployment-tooling running in VS Code and run <code>manage-environment -t stop</code> in one of the windows, the other VS Code window displays the message <code>Cannot reconnect. Please reload the window.</code>. When you press <strong>Reload Window</strong>, you might see the following message: <code>An error occurred setting up the container.</code></p>
 <p><strong>Solution:</strong>
 In the error dialogue, press <strong>Retry</strong>.</p>
 <h2 id="error-grafana-not-live">Error: <code>Grafana not live</code></h2>
@@ -94,16 +94,16 @@ In the error dialogue, press <strong>Retry</strong>.</p>
 <ol>
 <li>On Windows, restart WSL and redeploy.<ol>
 <li>In a command prompt enter <code>wsl --shutdown</code>, then <code>wsl</code>.</li>
-<li>In your analyze-containers VS Code window, run <code>deploy -c &lt;config-name&gt;</code>.</li>
+<li>In your analyze-deployment-tooling VS Code window, run <code>deploy -c &lt;config-name&gt;</code>.</li>
 </ol>
 </li>
 <li>Deploy with the <code>-t clean</code> option to clear down the system and redeploy<ol>
-<li>In your analyze-containers VS Code window, run <code>deploy -c &lt;config-name&gt; -t clean</code> then <code>deploy -c &lt;config-name&gt;</code>.</li>
+<li>In your analyze-deployment-tooling VS Code window, run <code>deploy -c &lt;config-name&gt; -t clean</code> then <code>deploy -c &lt;config-name&gt;</code>.</li>
 </ol>
 </li>
 <li>Remove the Grafana secrets from the environment and recreate them, then redeploy.<ol>
-<li>Remove the <code>dev-environment-secrets/generated-secrets/grafana</code> and <code>dev-environment-secrets/simulated-secret-store/grafana</code> directories.</li>
-<li>In your analyze-containers VS Code window, run <code>create-dev-environment</code>, <code>deploy -c &lt;config-name&gt; -t clean</code>, then <code>deploy -c &lt;config-name&gt;</code>.</li>
+<li>Remove the <code>environment-secrets/generated-secrets/grafana</code> and <code>environment-secrets/simulated-secret-store/grafana</code> directories.</li>
+<li>In your analyze-deployment-tooling VS Code window, run <code>create-dev-environment</code>, <code>deploy -c &lt;config-name&gt; -t clean</code>, then <code>deploy -c &lt;config-name&gt;</code>.</li>
 </ol>
 </li>
 </ol>
@@ -178,7 +178,7 @@ If you are unable to open the VS Code development container and you have already
 <p><strong>Solution:</strong></p>
 <ol>
 <li>In Docker Desktop, locate the Docker image.
-In the <strong>Images</strong> pane, find the image name that begins with <code>vsc</code> followed by the folder name for the upgrade. For example: <code>vsc-analyze-containers-294</code>. The rest of the image name is a GUID.</li>
+In the <strong>Images</strong> pane, find the image name that begins with <code>vsc</code> followed by the folder name for the upgrade. For example: <code>vsc-analyze-deployment-tooling-300</code>. The rest of the image name is a GUID.</li>
 <li>Select the image by using the checkbox and click <strong>Delete</strong>.</li>
 <li>Try and reopen the VS Code development environment.</li>
 </ol>
@@ -210,6 +210,18 @@ Update the Dockerfile for your i2 Connect server connectors.</p>
 <ol>
 <li>Copy the <code>templates/i2connect-server-connector-image/Dockerfile</code> and replace the existing Dockerfiles for your i2 Connect server connectors.<br>For example, replace the <code>connector-images/&lt;connector-name&gt;/Dockerfile</code> with the one from the templates directory.</li>
 </ol>
+<h2 id="tar-child-optanalyze-deployment-toolingpre-reqsi2analyzeminimaltargz-cannot-open-no-such-file-or-directory">tar (child): /opt/analyze-deployment-tooling/pre-reqs/i2analyzeMinimal.tar.gz: Cannot open: No such file or directory</h2>
+<p><strong>Scenario:</strong>
+The following error might be displayed when you run <code>bootstrap</code> and you are using an older version of Docker Desktop.</p>
+<pre><code class="lang-msg">#----------------------------------------------------------------------
+# Setting up i2 Analyze Minimal Toolkit
+#----------------------------------------------------------------------
+tar (child): /opt/analyze-deployment-tooling/pre-reqs/i2analyzeMinimal.tar.gz: Cannot open: No such file or directory
+tar (child): Error is not recoverable: exiting now
+tar: Child returned status 2
+tar: Error is not recoverable: exiting now
+</code></pre><p><strong>Solution:</strong>
+Update Docker Desktop to the latest version.</p>
 </article>
           </div>
           
@@ -230,8 +242,8 @@ Update the Dockerfile for your i2 Connect server connectors.</p>
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022-2023)
             
+            <span>Generated by <strong>DocFX</strong></span>
           </div>
         </div>
       </footer>

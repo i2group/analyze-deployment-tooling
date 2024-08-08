@@ -35,7 +35,7 @@
               </button>
               
               <a class="navbar-brand" href="../index.html">
-                i2 Analyze Containers
+                i2 Analyze Deployment Tooling
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -81,47 +81,54 @@
 
 <p>When you are developing a configuration that uses an Information Store or Chart Store, you might populate the database with demonstration or test data and charts. You can use the tooling provided to back up the Information Store database that is associated with a config and linked to the schemas within your configuration.
 The Information Store database is contained in a Docker volume. Because Docker is not designed for permanent data storage, you can back up an Information Store to your local file system.</p>
+<hr>
 <h2 id="backup-location">Backup location</h2>
 <p>The backups are stored in the <code>/backups</code> directory. A sub-directory is created for each config name, with another sub-directory for each backup name. The backup file is called <code>ISTORE.bak</code> for SQL Server or <code>ISTORE.pgb</code> for Postgres.</p>
 <p>For example:</p>
-<pre><code class="lang-sh">- backups
+<pre><code class="lang-bash">- backups
   - &lt;config_name&gt;
     - &lt;backup_name&gt;
       - ISTORE.bak
     - &lt;backup_name&gt;
       - ISTORE.bak
-</code></pre><h2 id="creating-a-release-and-backup">Creating a release and backup</h2>
+</code></pre><hr>
+<h2 id="creating-a-release-and-backup">Creating a release and backup</h2>
 <p>Use the <a href="managing_config_dev.html#the-deploy-script">deploy</a> script with the <code>release</code> option to create a backup. The release change set mechanism is used to create a release of your current schema files and a backup of the database. This ensures that the schema files and your database remain synchronized. For more information about the change set feature, see <a href="database_config.html">Database scripts and configuration</a>.</p>
 <p>The following usage pattern shows how you create a backup:</p>
-<pre><code class="lang-sh">deploy -c &lt;config-name&gt; -r
-</code></pre><p>The release change set is created in the <code>&lt;config-name&gt;/change-sets</code> directory, with a name in the following structure  <code>&lt;number&gt;-release-&lt;date&gt;-&lt;time&gt;</code>.</p>
+<pre><code class="lang-bash">deploy -c &lt;config-name&gt; -r
+</code></pre><p>The release change set is created in the <code>&lt;config-name&gt;/change-sets</code> directory, with a name in the following structure: <code>&lt;number&gt;-release-&lt;date&gt;-&lt;time&gt;</code>.</p>
 <p>The backup is created in the <code>backup/&lt;config-name&gt;/&lt;number&gt;-release-&lt;date&gt;-&lt;time&gt;</code> directory.</p>
+<hr>
 <h2 id="restoring-from-a-release">Restoring from a release</h2>
 <p>Use the <a href="managing_config_dev.html#the-deploy-script">deploy</a> script with the <code>release</code> option to restore the system to a previous release. The schema files from the release change set are restored in your configuration and the associated release backup is restored.</p>
 <p>If any change sets have been created since the previous release, the change sets are deleted when you restore to a previous release. For more information about the change set feature, see <a href="database_config.html">Database scripts and configuration</a>.</p>
 <p>The following usage pattern shows how you create a backup:</p>
-<pre><code class="lang-sh">deploy -c &lt;config-name&gt; -r &lt;release-change-set-number&gt;
+<pre><code class="lang-bash">deploy -c &lt;config-name&gt; -r &lt;release-change-set-number&gt;
 </code></pre><p>For example, to restore release change set 1:</p>
-<pre><code class="lang-sh">deploy -c &lt;config-name&gt; -r 1
-</code></pre><h2 id="adding-data-after-a-release">Adding data after a release</h2>
+<pre><code class="lang-bash">deploy -c &lt;config-name&gt; -r 1
+</code></pre><hr>
+<h2 id="adding-data-after-a-release">Adding data after a release</h2>
 <p>If you add data to your Information Store after you create a release change set, you need to create a new backup. The process that you need to follow depends on the current state of your environment:</p>
 <ul>
 <li>If you have made changes to the schema files, repeat the previous process to create a new release and associated backup.</li>
 <li>If you have not made any changes to the schema files, and do not have any change sets since the last release, then use the following instructions to take a backup and later restore.</li>
 </ul>
+<hr>
 <h2 id="creating-a-backup">Creating a backup</h2>
 <p>Use the <a href="managing_config_dev.html#the-deploy-script">deploy</a> script to create your backup. The following usage pattern shows how you create a backup:</p>
-<pre><code class="lang-sh">deploy -c &lt;config_name&gt; -t backup -b &lt;backup_name&gt;
+<pre><code class="lang-bash">deploy -c &lt;config_name&gt; -t backup -b &lt;backup_name&gt;
 </code></pre><p>If you do not provide a backup name, the backup is created in a directory called <code>default</code>.</p>
 <p>For example, to create a backup called <code>test-1</code> for the <code>config-development</code> config:</p>
-<pre><code class="lang-sh">deploy -c config-development -t backup -b test-1
-</code></pre><h2 id="restoring-from-backup">Restoring from backup</h2>
+<pre><code class="lang-bash">deploy -c config-development -t backup -b test-1
+</code></pre><hr>
+<h2 id="restoring-from-backup">Restoring from backup</h2>
 <p>Use the <a href="managing_config_dev.html#the-deploy-script">deploy</a> script to restore from a backup. The following usage pattern shows how you restore from a backup:</p>
-<pre><code class="lang-sh">deploy -c &lt;config_name&gt; -t restore -b &lt;backup_name&gt;
+<pre><code class="lang-bash">deploy -c &lt;config_name&gt; -t restore -b &lt;backup_name&gt;
 </code></pre><p>For example, to restore a backup called <code>test-1</code> for the <code>config-development</code> config:</p>
-<pre><code class="lang-sh">deploy -c config-development -t restore -b test-1
-</code></pre><h2 id="using-external-database-backups">Using external database backups</h2>
-<p>You can use the <code>backup-database-utility</code> to create and restore backups from outside of analyze-containers. This means that you can store your database backups separately from your configs by using S3-like storage or a shared drive.</p>
+<pre><code class="lang-bash">deploy -c config-development -t restore -b test-1
+</code></pre><hr>
+<h2 id="using-external-database-backups">Using external database backups</h2>
+<p>You can use the <code>backup-database-utility</code> to create and restore backups from outside of analyze-deployment-tooling. This means that you can store your database backups separately from your configs by using S3-like storage or a shared drive.</p>
 <p>The <code>backup-database-utility</code> supports using <a href="#backup-and-restore-with-s3-like-storage">S3-like storage</a> or <a href="#backup-and-restore-with-filesystem-storage">filesystem storage</a>.</p>
 <h3 id="backup-and-restore-with-s3-like-storage">Backup and restore with S3-like storage</h3>
 <p>The <code>s3cmd</code> option allows you to backup to any S3-like system supported by the <a href="https://s3tools.org/s3cmd">S3cmd tool</a>. For example: AWS S3, Azure Blob Storage, Google Cloud Storage, and DigitalOcean Spaces.</p>
@@ -138,24 +145,24 @@ The Information Store database is contained in a Docker volume. Because Docker i
 <li>Create an access key ID and secret access key for the user by following the steps in <a href="https://docs.aws.amazon.com/powershell/latest/userguide/pstools-appendix-sign-up.html">AWS Account and Access Keys</a>.</li>
 <li>Configure your local system to access your AWS S3 storage. You can either assign the user&#39;s access key ID and secret values to the environment variables <code>AWS_ACCESS_KEY_ID</code> and <code>AWS_SECRET_ACCESS_KEY</code>. Additionally, you can run <code>backup-database-utility -t configure-s3cmd</code> that creates the <code>.s3cfg</code> configuration file in the root of the project where you can specify the access key ID and secret.
  &gt; <strong>Important:</strong> This file contains secrets in plain text. You must store this file appropriately.</li>
-<li>Create an S3 bucket to store your backups. For example, <code>analyze-containers-backups</code></li>
+<li>Create an S3 bucket to store your backups. For example, <code>analyze-deployment-tooling-backups</code></li>
 </ol>
 <p>To create a backup, run the command with the following arguments:</p>
-<pre><code class="lang-sh">backup-database-utility -c &lt;config_name&gt; -s s3cmd -p &quot;s3://analyze-containers-backups/&quot; -t backup -b &lt;backup_name&gt;
+<pre><code class="lang-bash">backup-database-utility -c &lt;config_name&gt; -s s3cmd -p &quot;s3://analyze-deployment-tooling-backups/&quot; -t backup -b &lt;backup_name&gt;
 </code></pre><p>  If a backup with that name already exists for the config, it will be copied to the location specified for <code>-p</code>.</p>
-<p>For example, to create a backup named <code>fraud</code> for the <code>config-development</code> config in the <code>analyze-containers-backups</code> bucket:</p>
-<pre><code class="lang-sh">backup-database-utility -c config-development -s s3cmd -p &quot;s3://analyze-containers-backups/&quot; -t backup -b fraud
+<p>For example, to create a backup named <code>fraud</code> for the <code>config-development</code> config in the <code>analyze-deployment-tooling-backups</code> bucket:</p>
+<pre><code class="lang-bash">backup-database-utility -c config-development -s s3cmd -p &quot;s3://analyze-deployment-tooling-backups/&quot; -t backup -b fraud
 </code></pre><p>You can restore the above backup by using the <code>-t restore</code> flag. For example:</p>
-<pre><code class="lang-sh">backup-database-utility -c config-development -s s3cmd -p &quot;s3://analyze-containers-backups/&quot; -t restore -b fraud
+<pre><code class="lang-bash">backup-database-utility -c config-development -s s3cmd -p &quot;s3://analyze-deployment-tooling-backups/&quot; -t restore -b fraud
 </code></pre><h3 id="backup-and-restore-with-filesystem-storage">Backup and restore with filesystem storage</h3>
-<p>The filesystem option allows you to backup to a shared network drive or other filesystem outside of analyze-containers or your shared configs.</p>
+<p>The filesystem option allows you to backup to a shared network drive or other filesystem outside of analyze-deployment-tooling or your shared configs.</p>
 <p>To create a backup, run the command with the following arguments:</p>
-<pre><code class="lang-sh">backup-database-utility -c &lt;config_name&gt; -s filesystem -p &lt;path&gt; -t backup -b &lt;backup_name&gt;
+<pre><code class="lang-bash">backup-database-utility -c &lt;config_name&gt; -s filesystem -p &lt;path&gt; -t backup -b &lt;backup_name&gt;
 </code></pre><p>If a backup with that name already exists for the config, it will be copied to the location specified for <code>-p</code>. The utility attempts to create the folder if it does not already exist.</p>
 <p>For example, to create a backup named <code>fraud</code> for the <code>config-development</code> config in the user&#39;s OneDrive folder:</p>
-<pre><code class="lang-sh">backup-database-utility -c config-development -s filesystem -p &quot;/mnt/c/Users/&lt;user_name&gt;/OneDrive/backups&quot; -t backup -b fraud
+<pre><code class="lang-bash">backup-database-utility -c config-development -s filesystem -p &quot;/mnt/c/Users/&lt;user_name&gt;/OneDrive/backups&quot; -t backup -b fraud
 </code></pre><p>You can restore the above backup by using the <code>-t restore</code> flag. For example:</p>
-<pre><code class="lang-sh">backup-database-utility -c config-development -s filesystem -p &quot;/mnt/c/Users/&lt;user_name&gt;/OneDrive/backups&quot; -t restore -b fraud
+<pre><code class="lang-bash">backup-database-utility -c config-development -s filesystem -p &quot;/mnt/c/Users/&lt;user_name&gt;/OneDrive/backups&quot; -t restore -b fraud
 </code></pre></article>
           </div>
           
@@ -176,8 +183,8 @@ The Information Store database is contained in a Docker volume. Because Docker i
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022-2023)
             
+            <span>Generated by <strong>DocFX</strong></span>
           </div>
         </div>
       </footer>

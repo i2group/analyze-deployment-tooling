@@ -35,7 +35,7 @@
               </button>
               
               <a class="navbar-brand" href="../index.html">
-                i2 Analyze Containers
+                i2 Analyze Deployment Tooling
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -82,14 +82,17 @@
 <p>The system supports changing the default runtime values, such as the allocated memory or CPUs. This is useful if you want to ingest large amounts of data and improve application performance.</p>
 <p>You can configure the runtime of the following components:</p>
 <ul>
-<li>Liberty</li>
-<li>Solr</li>
-<li>ZooKeeper</li>
-<li>Prometheus</li>
-<li>Grafana</li>
 <li>Database</li>
 <li>Deployment</li>
+<li>Grafana</li>
+<li>HAProxy</li>
+<li>Liberty</li>
+<li>Prometheus</li>
+<li>Solr</li>
+<li>ZooKeeper</li>
+<li>Connector Designer</li>
 </ul>
+<hr>
 <h2 id="creating-environment-runtime-files">Creating environment runtime files</h2>
 <p>The <code>/runtime-environments</code> directory is used to contain the <code>.properties</code> files that define the available runtime environments. The name of the <code>.properties</code> file specifies the name for the runtime environment. The file name is formed as <code>runtime-&lt;environment_name&gt;.properties</code>.</p>
 <p>For example:</p>
@@ -104,15 +107,28 @@
 <pre><code class="lang-properties">&lt;component&gt;.&lt;option_name&gt;
 </code></pre><p>Where:</p>
 <ul>
-<li><code>&lt;component&gt;</code> is the name of one of the components i2 Analyze consists of. For example <code>solr</code></li>
-<li><code>&lt;option_name&gt;</code> is the name of the option. This name is passed directly to Docker. The name must match the name of the option as described in the Docker documentation. For example the Docker run option <code>--memory</code> becomes <code>memory</code>. The exception to this rule is for the <code>deployment</code> component, where the options are passed to i2 Analyze directly.</li>
+<li><p><code>&lt;component&gt;</code> is the name of one of the components i2 Analyze consists of. For example <code>solr</code>.<br>The available components are:</p>
+<ul>
+<li><code>db</code></li>
+<li><code>deployment</code></li>
+<li><code>grafana</code></li>
+<li><code>haproxy</code></li>
+<li><code>liberty</code></li>
+<li><code>prometheus</code></li>
+<li><code>solr</code></li>
+<li><code>zookeeper</code></li>
+<li><code>connector-designer</code></li>
+</ul>
+</li>
+<li><p><code>&lt;option_name&gt;</code> is the name of the option. This name is passed directly to Docker. The name must match the name of the option as described in the Docker documentation. For example the Docker run option <code>--memory</code> becomes <code>memory</code>. The exception to this rule is for the <code>deployment</code> component, where the options are passed to i2 Analyze directly.</p>
+</li>
 </ul>
 <p>The most common runtime options that you might want to configure include:</p>
 <ul>
 <li><code>memory</code> - The maximum amount of memory the container can use. If you set this option, the minimum allowed value is 6m (6 megabytes). For more information, see <a href="https://docs.docker.com/reference/cli/docker/container/run/">Docker run - memory</a>.</li>
 <li><code>memory-swap</code> - Memory swap limit which equals to memory plus swap or &#39;-1&#39; to enable unlimited swap. For more information, see <a href="https://docs.docker.com/config/containers/resource_constraints/#--memory-swap-details">Docker run - memory swap</a></li>
 <li><code>cpus</code> - Number of CPUs. Number can be a fractional number. 0.000 means no limit. For more information, see <a href="https://docs.docker.com/config/containers/resource_constraints/#cpu">Docker run - cpu</a></li>
-<li><code>display-name-suffix</code> - The deployment display name suffix. The value is appended to the deployment name set in the configuration. For more information about the deployment name, see <a href="https://docs.i2group.com/analyze/4.4.3/setting-deployment-name.html">Setting a deployment name</a></li>
+<li><code>display-name-suffix</code> - The deployment display name suffix. The value is appended to the deployment name set in the configuration. For more information about the deployment name, see <a href="https://docs.i2group.com/analyze/4.4.4/setting-deployment-name.html">Setting a deployment name</a></li>
 </ul>
 <p>For example, you might create a <code>runtime-dev.properties</code> file and populate the settings as:</p>
 <pre><code class="lang-properties">solr.memory=6g
@@ -126,16 +142,18 @@ zookeeper.memory=2g
 db.memory=4g
 
 deployment.display-name-suffix=dev
-</code></pre><h2 id="deploying-a-config-with-a-specific-runtime-environment">Deploying a config with a specific runtime environment</h2>
+</code></pre><hr>
+<h2 id="deploying-a-config-with-a-specific-runtime-environment">Deploying a config with a specific runtime environment</h2>
 <p>To deploy a config with a specific runtime, run:</p>
-<pre><code class="lang-sh">deploy -c &lt;config_name&gt; -e &lt;runtime_environment&gt;
-</code></pre><p>Where <code>&lt;runtime_environment&gt;</code> is <code>dev</code> for settings in <code>/runtime-environments/runtime-dev.properties</code> file.</p>
+<pre><code class="lang-sh">deploy -e &lt;runtime_environment&gt;
+</code></pre><p>Where <code>&lt;runtime_environment&gt;</code> is <code>dev</code> for settings in <code>/runtime-environments/runtime-dev.properties</code> file.<br>If you have multiple configs, specify the config name with <code>-c &lt;config-name&gt;</code>.</p>
+<hr>
 <h2 id="using-local-variables">Using local variables</h2>
 <p>You can use local variables to override the runtime properties individually. When you run the deploy command with the local variables specified, these values are used instead of the values for the matching options in a runtime environment properties file.</p>
 <p>The naming convention for these variables is:</p>
 <pre><code class="lang-sh">RUNTIME_&lt;component&gt;_&lt;option_name&gt;
 </code></pre><p>The mapping of the <code>&lt;option_name&gt;</code> is similar to the one used in the <code>.properties</code> file where the names used are the same. The only difference is that if <code>&lt;option_name&gt;</code> has a hyphen (<code>-</code>) it must be replaced by an underscore (<code>_</code>).</p>
-<p>To specify the local variables to be used, create a <code>docker.env</code> file in the <code>analyze-containers</code> directory.</p>
+<p>To specify the local variables to be used, create a <code>docker.env</code> file in the <code>analyze-deployment-tooling</code> directory.</p>
 <p>To populate the file with the same settings as above, use the following variables and values:</p>
 <pre><code class="lang-sh">RUNTIME_SOLR_MEMORY=&quot;6g&quot;
 RUNTIME_SOLR_MEMORY_SWAP=&quot;1g&quot;
@@ -143,9 +161,9 @@ RUNTIME_SOLR_CPUS=&quot;4&quot;
 
 RUNTIME_LIBERTY_MEMORY=&quot;4g&quot;
 
-RUNTIME_ZOOKEEPER_MEMORY=&quot;4g&quot;
-
 RUNTIME_DB_MEMORY=&quot;4g&quot;
+
+RUNTIME_ZOOKEEPER_MEMORY=&quot;4g&quot;
 
 RUNTIME_DEPLOYMENT_DISPLAY_NAME_SUFFIX=&quot;dev&quot;
 </code></pre><p>You can also use a local variable to override the runtime environment properties file that is used. To do this, use the <code>RUNTIME_ENVIRONMENT</code> variable in the <code>docker.env</code> file.</p>
@@ -171,8 +189,8 @@ RUNTIME_DEPLOYMENT_DISPLAY_NAME_SUFFIX=&quot;dev&quot;
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022-2023)
             
+            <span>Generated by <strong>DocFX</strong></span>
           </div>
         </div>
       </footer>

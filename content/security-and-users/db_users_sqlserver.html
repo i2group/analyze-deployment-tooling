@@ -35,7 +35,7 @@
               </button>
               
               <a class="navbar-brand" href="../../index.html">
-                i2 Analyze Containers
+                i2 Analyze Deployment Tooling
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -263,7 +263,7 @@ Note: The <code>configure_dba_roles_and_permissions.sh</code> script is run duri
 <tr>
 <td>IS_Stg</td>
 <td>ALTER, SELECT, UPDATE, INSERT, DELETE</td>
-<td>Required to upload and delete records via Analyst&#39;s Notebook Premium and to run deletion-by-rule jobs.</td>
+<td>Required to upload and delete records via Analyst&#39;s Notebook and to run deletion-by-rule jobs.</td>
 </tr>
 <tr>
 <td>IS_Meta</td>
@@ -273,7 +273,7 @@ Note: The <code>configure_dba_roles_and_permissions.sh</code> script is run duri
 <tr>
 <td>IS_Data</td>
 <td>SELECT, UPDATE, INSERT, DELETE</td>
-<td>UPDATE, INSERT, and DELETE are required by deletion-by-rule and to upload and delete records via Analyst&#39;s Notebook Premium.</td>
+<td>UPDATE, INSERT, and DELETE are required by deletion-by-rule and to upload and delete records via Analyst&#39;s Notebook.</td>
 </tr>
 <tr>
 <td>IS_Core</td>
@@ -360,32 +360,32 @@ Note: The <code>configure_dba_roles_and_permissions.sh</code> script is run duri
 <tr>
 <td><code>sa</code></td>
 <td>The system administrator user. The <code>sa</code> user has full permissions on the database instance. This user creates the Information Store database, roles, users, and logins.</td>
-<td>The password is in the <code>sa_PASSWORD</code> file in the <code>dev-environment-secrets/generated-secrets/sqlserver</code> directory.</td>
+<td>The password is in the <code>sa_PASSWORD</code> file in the <code>environment-secrets/generated-secrets/sqlserver</code> directory.</td>
 </tr>
 <tr>
 <td><code>i2analyze</code></td>
 <td>The <code>i2analyze</code> user is a member of the <code>i2analyze_Role</code> and <code>i2_Public_Role</code>.</td>
-<td>The password is in the <code>i2analyze_PASSWORD</code> file in the <code>dev-environment-secrets/generated-secrets/sqlserver</code> directory.</td>
+<td>The password is in the <code>i2analyze_PASSWORD</code> file in the <code>environment-secrets/generated-secrets/sqlserver</code> directory.</td>
 </tr>
 <tr>
 <td><code>etl</code></td>
 <td>The <code>etl</code> user is a member of <code>External_ETL_Role</code>.</td>
-<td>The password is in the <code>etl_PASSWORD</code> file in the <code>dev-environment-secrets/generated-secrets/sqlserver</code> directory.</td>
+<td>The password is in the <code>etl_PASSWORD</code> file in the <code>environment-secrets/generated-secrets/sqlserver</code> directory.</td>
 </tr>
 <tr>
 <td><code>i2etl</code></td>
 <td>The <code>i2etl</code> user is a member of <code>i2_ETL_Role</code> and <code>Deletion_By_Rule</code></td>
-<td>The password is in the <code>i2etl_PASSWORD</code> file in the <code>dev-environment-secrets/generated-secrets/sqlserver</code> directory.</td>
+<td>The password is in the <code>i2etl_PASSWORD</code> file in the <code>environment-secrets/generated-secrets/sqlserver</code> directory.</td>
 </tr>
 <tr>
 <td><code>dba</code></td>
 <td>The <code>dba</code> user is a member of <code>DBA_Role</code>.</td>
-<td>The password is in the <code>dba_PASSWORD</code> file in the <code>dev-environment-secrets/generated-secrets/sqlserver</code> directory.</td>
+<td>The password is in the <code>dba_PASSWORD</code> file in the <code>environment-secrets/generated-secrets/sqlserver</code> directory.</td>
 </tr>
 <tr>
 <td><code>dbb</code></td>
 <td>The <code>dbb</code> user is the database backup user, it is a member of the SQL Server built in role: <code>db_backupoperator</code>.</td>
-<td>The password is in the <code>dbb_PASSWORD</code> file in the <code>dev-environment-secrets/generated-secrets/sqlserver</code> directory.</td>
+<td>The password is in the <code>dbb_PASSWORD</code> file in the <code>environment-secrets/generated-secrets/sqlserver</code> directory.</td>
 </tr>
 </tbody>
 </table>
@@ -403,7 +403,7 @@ Note: The <code>configure_dba_roles_and_permissions.sh</code> script is run duri
 <p>In the example, the <code>create_db_roles.sh</code> script is called in <code>deploy</code>.</p>
 <p>Note: All the secrets required at runtime by the client container can be made available by providing a file path to the secret which is converted to an environment variable by the docker container.</p>
 <p>For example, to provide the <code>SA_USERNAME</code> environment variable to the client container, a file containing the secret is declared in the docker run command:</p>
-<pre><code class="lang-sh">-e &quot;SA_USERNAME_FILE=${CONTAINER_SECRETS_DIR}/SA_USERNAME_FILE&quot;
+<pre><code class="lang-sh">-e &quot;SA_USERNAME_FILE=/run/secrets/SA_USERNAME_FILE&quot;
 </code></pre><p>The file name can be anything, but the environment variable is fixed. For more information see, <a href="security.html">managing container security</a></p>
 <h2 id="create-the-login-and-user">Create the login and user</h2>
 <p>Use the <code>sa</code> user to create the login and the user on the <code>ISTORE</code>, and make the user a member of the role.</p>
@@ -529,8 +529,8 @@ Note: The <code>configure_dba_roles_and_permissions.sh</code> script is run duri
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022-2023)
             
+            <span>Generated by <strong>DocFX</strong></span>
           </div>
         </div>
       </footer>

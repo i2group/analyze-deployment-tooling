@@ -35,7 +35,7 @@
               </button>
               
               <a class="navbar-brand" href="../index.html">
-                i2 Analyze Containers
+                i2 Analyze Deployment Tooling
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -87,6 +87,8 @@ environment to quickly deploy an extension for a config to test and develop.<br>
 <code>i2a-extensions</code> directory. For example, if your .jar file is called <code>opal-security.jar</code> then place it inside
 <code>i2a-extensions/opal-security</code> directory. Afterwards, follow the instructions in
 <a href="#adding-extensions-to-a-config">Adding extensions to a config</a> section.</p>
+<p><strong>Important</strong>: Do not modify the root <code>pom.xml</code> file within the i2a-extensions directory. When creating a project for your extension, a separate <code>pom.xml</code> is created to update with information about the extension.</p>
+<hr>
 <h2 id="creating-a-project-for-your-extension">Creating a project for your extension</h2>
 <p>You must create a Maven artifact to develop your extension in.</p>
 <ol>
@@ -163,7 +165,8 @@ you depend on, for example:</p>
     ]
   }
 ]
-</code></pre><h2 id="adding-extensions-to-a-config">Adding extensions to a config</h2>
+</code></pre><hr>
+<h2 id="adding-extensions-to-a-config">Adding extensions to a config</h2>
 <ol>
 <li><p>In the configuration you want to deploy your extension with, update the <code>/configs/&lt;config_name&gt;/configuration/extension-references.json</code>
 file and add the directory name for your extension in the <code>extensions</code> array.<br>For example, to add the extension in <code>i2a-extensions/opal-default-security-example</code> the <code>extension-references.json</code>
@@ -180,15 +183,17 @@ file contains the following <code>extensions</code> array:  </p>
 </ol>
 <p><strong>Note:</strong> The extensions in the <code>extension-references.json</code> file are loaded in order. If an extension depends
 on another extension, define the dependent extension first.</p>
+<hr>
 <h2 id="deploying-your-extension">Deploying your extension</h2>
-<p>Use the <code>deploy</code> command to build the extensions for your configuration.</p>
-<p>For example, to build and deploy the extensions declared in <code>extension-references.json</code> for your configuration:</p>
-<pre><code class="lang-bash">deploy -c &lt;config_name&gt;
-</code></pre><h2 id="debugging-your-extension">Debugging your extension</h2>
+<p>Use the <code>deploy</code> command to build and deploy the extensions declared in <code>extension-references.json</code> for your configuration:</p>
+<pre><code class="lang-bash">deploy
+</code></pre><p>If you have multiple configs, specify the config name with <code>-c &lt;config-name&gt;</code>.</p>
+<hr>
+<h2 id="debugging-your-extension">Debugging your extension</h2>
 <h3 id="deploying-in-debug-mode">Deploying in debug mode</h3>
 <p>To deploy with the Liberty server running in debug mode, change the local variable <code>LIBERTY_DEBUG</code> to &quot;true&quot;.
-To do this, create a <code>docker.env</code> file in the <code>analyze-containers</code> directory. In the file, add the following line:</p>
-<pre><code class="lang-sh">LIBERTY_DEBUG=&quot;true&quot;
+To do this, create a <code>docker.env</code> file in the <code>analyze-deployment-tooling</code> directory. In the file, add the following line:</p>
+<pre><code class="lang-env">LIBERTY_DEBUG=&quot;true&quot;
 </code></pre><p>Then deploy from a clean environment by using <code>deploy -c &lt;config-name&gt; -t clean</code> followed by <code>deploy-c &lt;config-name&gt;</code>.</p>
 <p>When the Liberty server starts, it waits for a debugger to be attached before continuing.
 This behavior is defined by the <code>WLP_DEBUG_SUSPEND</code> variable and can also be changed in the <code>docker.env</code> file.
@@ -196,6 +201,11 @@ This behavior is defined by the <code>WLP_DEBUG_SUSPEND</code> variable and can 
 <h3 id="attaching-a-debugger">Attaching a debugger</h3>
 <p>The project is shipped with a default launch configuration which can be changed in <code>.vscode/launch.json</code>.
 Run the Java debugger by pressing <strong>F5</strong> and choose <em>Debug Extensions</em> if asked.</p>
+<hr>
+<h2 id="removing-an-extension">Removing an extension</h2>
+<p>To remove an extension from a configuration, remove the extension from the extensions array within the <code>extension-references.json</code> file.</p>
+<p>If you have additional <code>.properties</code> files that have been created for the extension in the <code>configs/&lt;config_name&gt;/configuration</code> directory, these will need to be removed as well.</p>
+<p>Run the <code>deploy</code> command to remove the extension from the configuration.</p>
 </article>
           </div>
           
@@ -216,8 +226,8 @@ Run the Java debugger by pressing <strong>F5</strong> and choose <em>Debug Exten
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022-2023)
             
+            <span>Generated by <strong>DocFX</strong></span>
           </div>
         </div>
       </footer>

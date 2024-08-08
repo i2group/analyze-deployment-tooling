@@ -35,7 +35,7 @@
               </button>
               
               <a class="navbar-brand" href="../../index.html">
-                i2 Analyze Containers
+                i2 Analyze Deployment Tooling
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -85,8 +85,8 @@
 <h3 id="docker-build-command">Docker build command</h3>
 <p>The <em>base image</em> is built from the Dockerfile in <code>images/liberty_ubi_base</code>.
 The following <code>docker build</code> command builds the Liberty base image:</p>
-<pre><code class="lang-bash">docker build -t &quot;liberty_ubi_base:4.4.3&quot; images/liberty_ubi_base \
-  --build-arg I2ANALYZE_VERSION=&quot;4.4.3&quot;
+<pre><code class="lang-bash">docker build -t &quot;liberty_ubi_base:4.4.4&quot; images/liberty_ubi_base \
+  --build-arg I2ANALYZE_VERSION=&quot;4.4.4&quot;
 </code></pre><p>For examples of the build commands, see <code>build-images</code> script.</p>
 <h2 id="configuring-the-liberty-server">Configuring the Liberty server</h2>
 <p>Liberty is configured by exception. The runtime environment operates from a set of built-in configuration default settings, and you only need to specify configuration that overrides those default settings. You do this by editing either the <code>server.xml</code> file or another XML file that is included in <code>server.xml</code> at run time.</p>
@@ -100,8 +100,8 @@ The following <code>docker build</code> command builds the Liberty base image:</
 <p>The <em>configured image</em> is built from the base image. The configured image contains the i2 Analyze application and Liberty configuration that is required to start the i2 Analyze application. When you change the configuration, the configured image must be rebuilt to reflect the changes.</p>
 <h3 id="docker-build-command-1">Docker build command</h3>
 <p>The configured image is built from the Dockerfile in <code>images/liberty_ubi_combined</code>. The following <code>docker build</code> command builds the configured image:</p>
-<pre><code class="lang-bash">docker build -t &quot;liberty_configured_redhat:4.4.3&quot; &quot;images/liberty_ubi_combined&quot; \
-    --build-arg BASE_IMAGE=&quot;liberty_redhat:4.4.3&quot;
+<pre><code class="lang-bash">docker build -t &quot;liberty_configured_redhat:4.4.4&quot; &quot;images/liberty_ubi_combined&quot; \
+    --build-arg BASE_IMAGE=&quot;liberty_redhat:4.4.4&quot;
 </code></pre><p>An example of providing the configuration to the classes directory and building the image is included in the <code>build_liberty_configured_image</code> function in the <code>server_functions.sh</code> script.</p>
 <h2 id="running-a-liberty-container">Running a Liberty container</h2>
 <p>A Liberty container uses the configured image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to Liberty on the container. The environment variables are described in <a href="#environment-variables">environment variables</a></p>
@@ -114,7 +114,7 @@ The following <code>docker build</code> command builds the Liberty base image:</
   --network &quot;eia&quot; \
   --net-alias &quot;liberty1.eia&quot; \
   -p &quot;9045:9443&quot; \
-  -v &quot;/dev-environment-secrets/simulated-secret-store/liberty1:/run/secrets&quot; \
+  -v &quot;/environment-secrets/simulated-secret-store/liberty1:/run/secrets&quot; \
   -v &quot;liberty1_data:/data&quot; \
   -e LICENSE=&quot;accept&quot; \
   -e FRONT_END_URI=&quot;https://liberty.eia:9045/opal&quot; \
@@ -138,6 +138,9 @@ The following <code>docker build</code> command builds the Liberty base image:</
   -e SSL_OUTBOUND_PRIVATE_KEY_FILE=&quot;/run/secrets/gateway_user.key&quot; \
   -e SSL_OUTBOUND_CERTIFICATE_FILE=&quot;/run/secrets/gateway_user.cer&quot; \
   -e SSL_OUTBOUND_CA_CERTIFICATE_FILE=&quot;/run/secrets/outbound_CA.cer&quot; \
+  -e SSL_ADDITIONAL_TRUST_CERTIFICATES=&quot;/run/secrets/additional_trust_certificates.cer&quot; \
+  -e JWT_CERTIFICATE_FILE=&quot;/run/secrets/jwt_sign.cer&quot; \
+  -e JWT_PRIVATE_KEY_FILE=&quot;/run/secrets/jwt_sign.key&quot; \
   -e LIBERTY_HADR_MODE=1 \
   -e LIBERTY_HADR_POLL_INTERVAL=1 \
   &quot;liberty_configured_redhat&quot;
@@ -156,11 +159,12 @@ The following <code>docker build</code> command builds the Liberty base image:</
 <p>To configure the Liberty container to use the volume, specify the <code>-v</code> option with the name of the volume and the path where the directory is mounted in the container. By setting <code>-v</code> option in the docker run command, a named volume is created. For Liberty, the directory that is mounted must be <code>/data</code>, this directory folder stores: jobs, record groups and charts.</p>
 <p>For example:</p>
 <pre><code class="lang-sh">-v liberty_data:/data \
--v /dev-environment-secrets/simulated-secret-store/liberty1:/run/secrets
-</code></pre><p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access ZooKeeper, the database, and the certificates used in SSL.<br>The directory is used to update the named volume location defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>ZOO_DIGEST_USERNAME_FILE</code> to locate the secrets.<br>In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files.</p>
+-v /environment-secrets/simulated-secret-store/liberty1:/run/secrets
+</code></pre><p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access ZooKeeper, the database, and the certificates used in SSL.<br>The directory is mounted to <code>/run/secrets</code> inside the container. This can then be used by other environment variables such as <code>ZOO_DIGEST_USERNAME_FILE</code> to locate the secrets.<br>In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files.</p>
 <h3 id="environment-variables">Environment variables</h3>
 <p>To configure the Liberty server, you provide environment variables to the Docker container in the <code>docker run</code> command.</p>
 <p>The following table describes the supported environment variables that you can use:</p>
+<!-- markdown-link-check-disable -->
 <table>
 <thead>
 <tr>
@@ -171,7 +175,7 @@ The following <code>docker build</code> command builds the Liberty base image:</
 <tbody>
 <tr>
 <td><code>FRONT_END_URI</code></td>
-<td>The URI that clients use to connect to i2 Analyze. For more information, see <a href="https://docs.i2group.com/analyze/4.4.3/t_edge_url.html">Specifying the connection URI</a>.</td>
+<td>The URI that clients use to connect to i2 Analyze. For more information, see <a href="https://docs.i2group.com/analyze/4.4.4/t_edge_url.html">Specifying the connection URI</a>.</td>
 </tr>
 <tr>
 <td><code>DB_DIALECT</code></td>
@@ -213,8 +217,17 @@ The following <code>docker build</code> command builds the Liberty base image:</
 <td><code>ZOO_DIGEST_PASSWORD</code></td>
 <td>The ZooKeeper user password.</td>
 </tr>
+<tr>
+<td><code>JWT_CERTIFICATE_FILE</code></td>
+<td>The path to the certificate file used to verify a generated JSON Web Token (JWT).</td>
+</tr>
+<tr>
+<td><code>JWT_PRIVATE_KEY_FILE</code></td>
+<td>The path to the private key file used to sign a generated JSON Web Token (JWT).</td>
+</tr>
 </tbody>
 </table>
+<!-- markdown-link-check-enable -->
 <p>The following environment variables enable you to use SSL:</p>
 <table>
 <thead>
@@ -319,8 +332,8 @@ The following <code>docker build</code> command builds the Liberty base image:</
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022-2023)
             
+            <span>Generated by <strong>DocFX</strong></span>
           </div>
         </div>
       </footer>

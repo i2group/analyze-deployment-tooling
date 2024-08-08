@@ -35,7 +35,7 @@
               </button>
               
               <a class="navbar-brand" href="../../index.html">
-                i2 Analyze Containers
+                i2 Analyze Deployment Tooling
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -99,8 +99,8 @@ The process includes the following high-level steps:</p>
 <li><p>During the ingestion walk-through, the default behavior is used to determine the property values of the correlated record. In the default behavior, the property values from the merge contributor with the most recent value for <code>source_last_updated</code> are used.</p>
 </li>
 </ul>
-<p>For more information about the how the property values for merged records are calculated, see <a href="https://docs.i2group.com/analyze/4.4.3/c_merged_properties.html">Define how property values of merged records are calculated</a></p>
-<p>After you ingest the data, in Analyst&#39;s Notebook Premium search for <code>Julie Yochum</code> and add the returned entity to the chart. Keep the chart open for the remainder of the walkthrough script.</p>
+<p>For more information about the how the property values for merged records are calculated, see <a href="https://docs.i2group.com/analyze/4.4.4/c_merged_properties.html">Define how property values of merged records are calculated</a></p>
+<p>After you ingest the data, in Analyst&#39;s Notebook search for <code>Julie Yochum</code> and add the returned entity to the chart. Keep the chart open for the remainder of the walkthrough script.</p>
 <h2 id="enabling-merged-property-values">Enabling merged property values</h2>
 <p>To inform i2 Analyze that you intend to define the property values of merged records, run the <code>enableMergedPropertyValues.sh</code> tool. You can take control of the property values for records of specific item types, or all item types in the i2 Analyze schema.
 Note that this operation must be performed by the database administrator.</p>
@@ -109,7 +109,7 @@ Note that this operation must be performed by the database administrator.</p>
 <ul>
 <li><a href="../tools-and-functions/client_functions.html#run_etl_toolkit_tool_as_dba">run_etl_toolkit_tool_as_dba</a></li>
 <li><a href="../tools-and-functions/etl_tools.html#enable-merge-property-values">enableMergedPropertyValues</a></li>
-<li><a href="https://docs.i2group.com/analyze/4.4.3/c_merged_properties.html">Defining the property values of merged i2 Analyze records</a></li>
+<li><a href="https://docs.i2group.com/analyze/4.4.4/c_merged_properties.html">Defining the property values of merged i2 Analyze records</a></li>
 </ul>
 <p>In the <code>mergedPropertyValuesWalkthrough.sh</code>, the views are created for the Person item type. The <code>enableMergedPropertyValues.sh</code> tool is used in the <code>Create the merged property views for the CORRELATED_SCHEMA_TYPE_IDS</code> section.</p>
 <h2 id="updating-property-value-definitions">Updating property value definitions</h2>
@@ -120,13 +120,13 @@ Note, this step is also performed by the database administrator.</p>
 <p>The <code>run_sql_server_command_as_dba</code> client functions in used to run the <code>createAlternativeMergedPropertyValuesView.sql</code> script.</p>
 <ul>
 <li><a href="../tools-and-functions/client_functions.html#run-sql-server-command-as-dba">run_sql_server_command_as_dba</a></li>
-<li><a href="https://docs.i2group.com/analyze/4.4.3/c_view_definition.html">The merged property values definition view</a></li>
+<li><a href="https://docs.i2group.com/analyze/4.4.4/c_view_definition.html">The merged property values definition view</a></li>
 </ul>
 <h2 id="reingesting-the-data">Reingesting the data</h2>
 <p>The property values of merged records do not update when the MPVDV views are modified. To update the values of existing records, you must reingest at least one of the merge contributors to the record.</p>
 <p>To do this, use the <code>ingestDataWalkthrough.sh</code> script to ingest some data the correlates. For more information about ingesting the data, see <a href="ingestion.html">Ingesting data into the Information Store</a>.</p>
 <p>See the <code>Reingesting the data</code> section of the walkthrough script.</p>
-<p>After the data is ingested, in the Analyst&#39;s Notebook Premium chart that you have open, select the <code>Julie Yochum</code> item and click <strong>Get changes</strong>.</p>
+<p>After the data is ingested, in the Analyst&#39;s Notebook chart that you have open, select the <code>Julie Yochum</code> item and click <strong>Get changes</strong>.</p>
 <p>The name of the item changes to <code>Julia Yocham</code>, because the property values that make up the name are now from the merge contributor where the ingestion source name is <code>EXAMPLE_1</code>.</p>
 </article>
           </div>
@@ -148,8 +148,8 @@ Note, this step is also performed by the database administrator.</p>
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022-2023)
             
+            <span>Generated by <strong>DocFX</strong></span>
           </div>
         </div>
       </footer>

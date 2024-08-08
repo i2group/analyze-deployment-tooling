@@ -35,7 +35,7 @@
               </button>
               
               <a class="navbar-brand" href="../index.html">
-                i2 Analyze Containers
+                i2 Analyze Deployment Tooling
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -79,16 +79,91 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="deploying-with-an-external-database-instance">Deploying with an external database instance</h1>
 
-<p>You can deploy analyze-containers to connect to a database instance that is not managed by analyze-containers.
-When you deploy analyze-containers it can create and manage the database, but it does not manage the database instance.</p>
+<p>You can deploy analyze-deployment-tooling to connect to a database instance that is not managed by analyze-deployment-tooling.
+When you deploy analyze-deployment-tooling it can create and manage the database, but it does not manage the database instance.</p>
 <p>The configuration that determines if an external database instance is per config.</p>
 <p>The prerequisites for an external database instance:</p>
 <ul>
-<li>The external database must be able to communicate with the analyze-containers containers on the <code>eia</code> Docker network and the containers must be able to communicate with it.</li>
-<li>Provide a username and password for an admin user in the external database instance. This user must be able to create databases and other database users required by the deployment.</li>
+<li>The external database must be able to communicate with the analyze-deployment-tooling containers on the <code>eia</code> Docker network and the containers must be able to communicate with it.</li>
 </ul>
-<h2 id="configuring-the-connection-to-the-external-database-instance">Configuring the connection to the external database instance</h2>
+<p>Process overview:</p>
 <ol>
+<li>Generate and run the database creation scripts.</li>
+<li>Create a dba user.</li>
+<li>Deploy analyze-deployment-tooling with the external database instance.</li>
+</ol>
+<hr>
+<h2 id="generating-and-running-the-database-creation-scripts">Generating and running the database creation scripts</h2>
+<p>If you are deploying with an external database, you must configure the external database and generate the scripts to create the database.</p>
+<ol>
+<li><p>Update the analyze-deployment-tooling config with the details of your external database system:</p>
+<ol>
+<li><p>In the <code>/configs/&lt;config-name&gt;/configuration/InfoStoreNames&lt;db_dialect&gt;.properties</code> file, specify the name of the tablespace to use in your external system:
+For example:</p>
+<pre><code class="lang-properties"># The default tablespace for the Information Store database.
+DatabaseTablespace=istore
+
+# The tablespace for big data tables.
+BigDataTablespace=istore
+
+# The tablespace for indexes on big data tables.
+BigIndexTablespace=istore
+
+# The tablespace for small data tables.
+SmallDataTablespace=istore
+
+# The tablespace for indexes on small data tables.
+SmallIndexTablespace=istore
+
+# Tablespace Locations
+istoreTablespaceLocationDir=/var/lib/postgresql/data/istore
+</code></pre><p><strong>NOTE:</strong> You will need to create the tablespace in your external database system before executing database creation scripts.</p>
+</li>
+<li><p>In the <code>/configs/&lt;config-name&gt;/utils/variables.conf</code> file specify values for the following variables:</p>
+<p> Where:</p>
+<ul>
+<li><code>DB_USER_MANAGED</code> specifies whether the config uses an external database. The possible values are <code>true</code> or <code>false</code>.</li>
+<li><code>DB_NAME</code> specifies the name of the Information Store database. By default the value is <code>ISTORE</code>.</li>
+<li><code>DB_FQDN</code> is the fully-qualified domain name of the external database server.</li>
+<li><code>DB_PORT</code> is the port number to connect to the external database.</li>
+<li><p><code>DB_SSL_CONNECTION</code> specifies whether the connection to the external database is secure. The possible values are <code>true</code> or <code>false</code>. When set to true, you must provide the CA&#39;s public certificate in the <code>configs/&lt;config-name&gt;/configuration/secrets/&lt;db-dialect&gt;/</code> directory to ensure trust.</p>
+<p>For example:</p>
+<pre><code class="lang-properties">DB_USER_MANAGED=&quot;true&quot;
+DB_NAME=&quot;ISTORE&quot;
+DB_FQDN=&quot;postgres.eia&quot;
+DB_PORT=&quot;5432&quot;
+DB_SSL_CONNECTION=&quot;false&quot;
+</code></pre></li>
+</ul>
+</li>
+</ol>
+</li>
+<li><p>To generate the scripts for your config, run the following command:</p>
+<pre><code class="lang-bash">deploy -t generate-db-scripts
+</code></pre><p>The scripts are generated in the <code>configs/&lt;config-name&gt;/database-scripts/generated/static</code> directory. Copy the generated scripts to a location where you can run them against your external database system.
+Run all the scripts that are listed in <code>runDatabaseCreationScripts.sh</code> against the external database system. You can find the script in the <code>configs/&lt;config-name&gt;/database-scripts/generated</code> directory.</p>
+</li>
+</ol>
+<h3 id="creating-the-dba-user">Creating the dba user</h3>
+<p>To create the dba user, run the <code>create_dba_login_and_user.sh</code> script against your external database system.
+The script is generated in the <code>configs/&lt;config-name&gt;/database-scripts/generated/static</code> directory.</p>
+<p><strong>NOTE:</strong></p>
+<ul>
+<li>The script is generated with a placeholder for the dba password, please replace the placeholder with the actual password before executing the script.</li>
+<li>You can set the <code>DBA_USERNAME</code> in the <code>configs/&lt;config-name&gt;/utils/variables.conf</code>, to overwrite the default value of <code>dba_${DB_NAME}</code>.</li>
+</ul>
+<hr>
+<h2 id="deploying-analyze-deployment-tooling-with-an-external-database-instance">Deploying analyze-deployment-tooling with an external database instance</h2>
+<p>Provide the external database dba user&#39;s password.</p>
+<ol>
+<li><p>Create the directory and file to store the password secret.</p>
+<ul>
+<li>For PostgreSQL: <code>configs/&lt;config-name&gt;/configuration/secrets/postgres/dba_PASSWORD</code></li>
+<li>For SQL Server: <code>configs/&lt;config-name&gt;/configuration/secrets/sqlserver/dba_PASSWORD</code></li>
+</ul>
+</li>
+<li><p>In the password file, provide the user&#39;s password.<br>The password is stored in plain text, do not store this file in source control.</p>
+</li>
 <li><p>Edit the <code>configs/&lt;config-name&gt;/utils/variables.conf</code> file to provide the required information.  </p>
 <table>
 <thead>
@@ -100,7 +175,7 @@ When you deploy analyze-containers it can create and manage the database, but it
 <tbody>
 <tr>
 <td><code>DB_USER_MANAGED</code></td>
-<td>Can be set to <code>true</code> or <code>false</code>. If set to <code>true</code>, analyze-containers does not manage the database instance.</td>
+<td>Can be set to <code>true</code> or <code>false</code>. If set to <code>true</code>, analyze-deployment-tooling does not manage the database instance.</td>
 </tr>
 <tr>
 <td><code>DB_FQDN</code></td>
@@ -119,8 +194,8 @@ When you deploy analyze-containers it can create and manage the database, but it
 <td>The location in the external database instance to create the database.</td>
 </tr>
 <tr>
-<td><code>DB_USERNAME</code></td>
-<td>The username of the admin user in the external database instance.</td>
+<td><code>DBA_USERNAME</code></td>
+<td>The dba username to connect to the database instance.</td>
 </tr>
 </tbody>
 </table>
@@ -131,7 +206,7 @@ DB_FQDN=&quot;external-postgres.eia&quot;
 DB_PORT=&quot;5432&quot;
 DB_SSL_CONNECTION=&quot;true&quot;
 DB_LOCATION_DIR=&quot;/var/lib/postgresql/data&quot;
-DB_USERNAME=&quot;postgres&quot;
+DBA_USERNAME=&quot;dba_istore&quot;
 </code></pre></li>
 <li><p>An example SQL Server configuration:</p>
 <pre><code class="lang-properties">DB_USER_MANAGED=&quot;true&quot;
@@ -139,7 +214,7 @@ DB_FQDN=&quot;external-sqlserver.eia&quot;
 DB_PORT=&quot;1433&quot;
 DB_SSL_CONNECTION=&quot;true&quot;
 DB_LOCATION_DIR=&quot;/var/opt/mssql/data&quot;
-DB_USERNAME=&quot;sa&quot;
+DBA_USERNAME=&quot;dba_istore&quot;
 </code></pre><p><strong>Note:</strong></p>
 <ul>
 <li>If your external database is hosted in a Docker container on a different network to your config development environment, connect your external database container to the <code>eia</code> network. For example, run <code>docker network connect eia &lt;external-database-container&gt;</code>.</li>
@@ -147,18 +222,6 @@ DB_USERNAME=&quot;sa&quot;
 </ul>
 </li>
 </ul>
-</li>
-<li><p>Provide the external database user&#39;s password.  </p>
-<ol>
-<li><p>Create the directory and file to store the password secret.</p>
-<ul>
-<li>For PostgreSQL: <code>configs/&lt;config-name&gt;/configuration/secrets/postgres/postgres_PASSWORD</code></li>
-<li>For SQL Server: <code>configs/&lt;config-name&gt;/configuration/secrets/sqlserver/sa_PASSWORD</code></li>
-</ul>
-</li>
-<li><p>In the password file, provide the user&#39;s password.<br>The password is stored in plain text, do not store this file in source control.</p>
-</li>
-</ol>
 </li>
 <li><p>Configure SSL.</p>
 <p> If your external database uses SSL (you have <code>DB_SSL_CONNECTION=&quot;true&quot;</code>) then the certificate must be one that the deployment &quot;trusts&quot;. For security reasons, certificate verification is not optional; there is no &quot;ignore verification and automatically trust all certificates&quot; option.</p>
@@ -171,9 +234,33 @@ DB_USERNAME=&quot;sa&quot;
 </li>
 <li><p>Deploy the config using the <code>deploy</code> command in the usual way.
 For example:</p>
-<pre><code class="lang-sh">deploy -c &lt;config-name&gt;
-</code></pre></li>
+<pre><code class="lang-bash">deploy
+</code></pre><p> If you have multiple configs, specify the config name with <code>-c &lt;config-name&gt;</code>.</p>
+</li>
 </ol>
+<hr>
+<h2 id="additional-postgresql-database-configuration">Additional PostgreSQL database configuration</h2>
+<ol>
+<li>Configure permissions for data ingestion.</li>
+</ol>
+<p>If you are using PostgreSQL as your external database, you must configure the permissions for data ingestion.
+You will need to execute the following SQL commands on your external database as a superuser:</p>
+<p>Where <code>${ETL_USERNAME}</code> is the username that you have configured in the <code>variables.conf</code> file, or is default to <code>etl_${DB_NAME}</code>.</p>
+<pre><code class="lang-sql">GRANT pg_read_server_files TO ${ETL_USERNAME}_role;
+</code></pre><ol>
+<li>Configure pg_cron extension.</li>
+</ol>
+<p>If you are using PostgreSQL as your external database, you must configure the <code>pg_cron</code> extension. This extension is a job scheduling extension for PostgreSQL, which runs inside the database and is used to schedule SQL commands.</p>
+<p>To enable the <code>pg_cron</code> extension and grant usage to the DBA user, you can use the following commands in you local database:</p>
+<pre><code class="lang-sql">CREATE EXTENSION IF NOT EXISTS pg_cron;
+GRANT USAGE ON SCHEMA cron TO ${DBA_USERNAME}_role;
+</code></pre><p>If you are using AWS RDS, you can enable the <code>pg_cron</code> extension by adding it to the <code>shared_preload_libraries</code> parameter in your RDS DB Parameter Group:</p>
+<pre><code class="lang-yaml">RdsDbParameterGroup:
+  Type: AWS::RDS::DBParameterGroup
+  Properties:
+    Parameters:
+      shared_preload_libraries: pg_cron
+</code></pre><p>For other cloud providers, refer to their documentation on how to enable the <code>pg_cron</code> extension.</p>
 </article>
           </div>
           
@@ -194,8 +281,8 @@ For example:</p>
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022-2023)
             
+            <span>Generated by <strong>DocFX</strong></span>
           </div>
         </div>
       </footer>

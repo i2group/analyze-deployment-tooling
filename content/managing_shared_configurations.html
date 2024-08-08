@@ -35,7 +35,7 @@
               </button>
               
               <a class="navbar-brand" href="../index.html">
-                i2 Analyze Containers
+                i2 Analyze Deployment Tooling
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -79,14 +79,14 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="managing-shared-configurations">Managing shared configurations</h1>
 
-<p>The analyze-containers repository enables you to share a configuration or deploy a configuration that has been shared with you.  </p>
-<p>The shared configurations are recommended to be stored in a source control system such as Git. When you clone the shared configurations to your machine, they are cloned to a directory outside of the analyze-containers project and then referenced.</p>
-<p>To use a shared configuration in your environment, you provide the file path to the directory outside of the analyze-containers project. Then, you choose which configs or assets to link to your environment.</p>
+<p>The analyze-deployment-tooling repository enables you to share a configuration or deploy a configuration that has been shared with you.  </p>
+<p>The shared configurations are recommended to be stored in a source control system such as Git. When you clone the shared configurations to your machine, they are cloned to a directory outside of the analyze-deployment-tooling project and then referenced.</p>
+<p>To use a shared configuration in your environment, you provide the file path to the directory outside of the analyze-deployment-tooling project. Then, you choose which configs or assets to link to your environment.</p>
 <p>When you use a source control system to manage the shared configurations, use VS Code to manage the repositories that they are contained in.</p>
 <h2 id="prerequisites">Prerequisites</h2>
-<p>Before you create or use a shared configuration, you must configure the analyze-containers repository and create the dev environment:  </p>
+<p>Before you create or use a shared configuration, you must configure the analyze-deployment-tooling repository and create the dev environment:  </p>
 <ul>
-<li><a href="getting_started.html">Getting started with the analyze-containers repository</a></li>
+<li><a href="getting_started.html">Getting started with the analyze-deployment-tooling repository</a></li>
 <li><a href="deploy_config_dev.html">Configuration development environment</a><ul>
 <li>You do not need to create a config.</li>
 </ul>
@@ -99,13 +99,13 @@
 <li>On Windows, use a WSL terminal. Press <strong>Start -&gt; wsl</strong></li>
 </ul>
 </li>
-<li><p>Navigate to the <code>analyze-containers/scripts</code> directory.</p>
+<li><p>Navigate to the <code>analyze-deployment-tooling/scripts</code> directory.</p>
 </li>
 <li><p>Run the <code>configure-paths</code> script with the <code>shared</code> task.<br> For example:</p>
 <pre><code class="lang-sh">configure-paths -t shared
 </code></pre><p> By default the script creates a folder named <code>my-configurations</code> in your home directory For example <code>/home/&lt;user&gt;/my-configurations</code>. To specify a different path, use <code>-p &lt;path&gt;</code> with your path when you run the command.</p>
 </li>
-<li><p>Reopen the analyze-containers folder in a dev container.<br>Press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS), type <code>Dev Containers: Rebuild Container</code> and select it.</p>
+<li><p>Reopen the analyze-deployment-tooling folder in a dev container.<br>Press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS), type <code>Dev Containers: Rebuild Container</code> and select it.</p>
 </li>
 </ol>
 <p>After you have run the script, you can open the shared configurations folder in VS Code. In the same terminal as step 1, navigate to your shared configuration folder and open VS Code.</p>
@@ -121,16 +121,16 @@
 <h2 id="sharing-a-configuration">Sharing a configuration</h2>
 <p>You can share a configuration that you have already developed locally, or you can start developing a shared configuration from a new template.</p>
 <ol>
-<li>From the analyze-containers VS Code window right-click the <code>shared-repository</code> template and copy it to the shared configurations VS Code window. Rename the folder to provide a name for your shared configuration.  <ul>
+<li>From the analyze-deployment-tooling VS Code window right-click the <code>shared-repository</code> template and copy it to the shared configurations VS Code window. Rename the folder to provide a name for your shared configuration.  <ul>
 <li>On MacOS copy the template using the Finder app.</li>
 </ul>
 </li>
 <li>You can share an existing config or asset, or create a new one to share.<ol>
-<li>If you have local configs or assets that you want to start sharing, move the configs or assets from the analyze-containers window into the new shared configurations window in the new <code>shared-repository</code> folder.</li>
+<li>If you have local configs or assets that you want to start sharing, move the configs or assets from the analyze-deployment-tooling window into the new shared configurations window in the new <code>shared-repository</code> folder.</li>
 <li>If you are creating a new config, complete the instructions in <a href="deploy_config_dev.html">Configuration development environment</a> to create your config. When you copy the <code>config-development</code> template, copy it to the <code>shared-repository</code> your shared configurations VS Code window.</li>
 </ol>
 </li>
-<li>To link your shared configuration into your analyze-containers project, complete the steps in <a href="#linking-shared-configurations">link configurations</a>.</li>
+<li>To link your shared configuration into your analyze-deployment-tooling project, complete the steps in <a href="#linking-shared-configurations">link configurations</a>.</li>
 </ol>
 <p><strong>Note:</strong> We recommend to share your configurations through Git and the template configuration contains the files required to work with Git. To initialize the Git repository, run <code>git init</code> from the terminal the shared configuration folder. For example <code>/home/&lt;user&gt;/my-configurations/shared-repository</code>. For more information about how to use Git, see <a href="https://git-scm.com/docs">Git Reference Documentation</a>.</p>
 <h2 id="linking-shared-configurations">Linking shared configurations</h2>
@@ -217,8 +217,8 @@ If your configuration is located in a git repository, you can clone it to the sh
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022-2023)
             
+            <span>Generated by <strong>DocFX</strong></span>
           </div>
         </div>
       </footer>

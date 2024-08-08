@@ -35,7 +35,7 @@
               </button>
               
               <a class="navbar-brand" href="../../index.html">
-                i2 Analyze Containers
+                i2 Analyze Deployment Tooling
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -85,7 +85,7 @@
 <p>The SQL Server Client image is built from the Dockerfile in <code>images/sql_client</code>.</p>
 <h3 id="docker-build-command">Docker build command</h3>
 <p>The following <code>docker build</code> command builds the SQL Server Client image:</p>
-<pre><code class="lang-bash">docker build -t &quot;sqlserver_client_redhat:4.4.3&quot; images/sql_client
+<pre><code class="lang-bash">docker build -t &quot;sqlserver_client_redhat:4.4.4&quot; images/sql_client
 </code></pre><h2 id="running-a-sql-server-client-container">Running a SQL Server Client container</h2>
 <p>An SQL Server Client container uses the SQL Server Client image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to the container. The environment variables are described in <a href="#environment-variables">environment variables</a>.</p>
 <p>The container will run with a default User ID and Group ID of <code>10001</code> (this can be changed with the <code>USER_ID</code> and <code>GROUP_ID</code> env variables). All files in mounted directories will be created with these IDs. If files are manipulated externally these IDs must be retained or the container will not function correctly.</p>
@@ -95,9 +95,9 @@
 <pre><code class="lang-bash">docker run \
     --rm \
     --network &quot;eia&quot; \
-    -v &quot;/home/&lt;user-name&gt;/analyze-containers/pre-reqs/i2analyze/toolkit:/opt/toolkit&quot; \
-    -v &quot;/home/&lt;user-name&gt;/analyze-containers/examples/pre-prod/database-scripts/generated:/opt/databaseScripts/generated&quot; \
-    -v &quot;/home/&lt;user-name&gt;/analyze-containers/examples/pre-prod/configuration/database-scripts:/opt/customDatabaseScripts&quot; \
+    -v &quot;/home/&lt;user-name&gt;/analyze-deployment-tooling/pre-reqs/i2analyze/toolkit:/opt/toolkit&quot; \
+    -v &quot;/home/&lt;user-name&gt;/analyze-deployment-tooling/examples/pre-prod/database-scripts/generated:/opt/databaseScripts/generated&quot; \
+    -v &quot;/home/&lt;user-name&gt;/analyze-deployment-tooling/examples/pre-prod/configuration/database-scripts:/opt/customDatabaseScripts&quot; \
     -e USER_ID=&quot;$(id -u)&quot; -e GROUP_ID=&quot;$(id -g)&quot; \
     -e SQLCMD=&quot;/opt/mssql-tools/bin/sqlcmd&quot; \
     -e SQLCMD_FLAGS=&quot;-N -b&quot; \
@@ -114,8 +114,9 @@
     -e &quot;ETL_USERNAME=etl&quot; \
     -e &quot;I2_ANALYZE_USERNAME=i2analyze&quot; \
     -e &quot;I2_PUBLIC_USERNAME=i2_public&quot; \
-    -e SSL_CA_CERTIFICATE=&quot;SSL_CA_CERTIFICATE&quot; \
-    &quot;sqlserver_client_redhat:4.4.3&quot; &quot;$@&quot;
+    -e SSL_CA_CERTIFICATE=&quot;/run/secrets/CA.cer&quot; \
+    -e SSL_ADDITIONAL_TRUST_CERTIFICATES=&quot;/run/secrets/additional_trust_certificates.cer&quot; \
+    &quot;sqlserver_client_redhat:4.4.4&quot; &quot;$@&quot;
 </code></pre><p>The local user ID is required so that a user is created in the Docker container with a <code>USER_ID</code> that is the same as the local user. The user is required to ensure that the local user can access any files that are generated on the container. The value of <code>$id</code> comes from your shell.</p>
 <p>For an example of the <code>docker run</code> command, see <code>run_sql_server_command_as_etl</code> function in <code>client_functions.sh</code> script.
 For an example of how to use <code>run_sql_server_command_as_etl</code> function, see <a href="../tools-and-functions/client_functions.html#run-sql-server-command-as-etl">run_sql_server_command_as_etl</a>.</p>
@@ -123,7 +124,7 @@ For an example of how to use <code>run_sql_server_command_as_etl</code> function
 </blockquote>
 <h2 id="bind-mounts">Bind mounts</h2>
 <ul>
-<li><p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access the database and certificates used in SSL.<br>The directory is mounted to a location in the container defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>SSL_CA_CERTIFICATE_FILE</code> to locate the secrets.
+<li><p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access the database and certificates used in SSL.<br>The directory is mounted to <code>/run/secrets</code> inside the container. This can then be used by other environment variables such as <code>SSL_CA_CERTIFICATE_FILE</code> to locate the secrets.
 In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files. This is achieved by using a bind mount. In production this would not be required.</p>
 </li>
 <li><p><strong>Toolkit</strong>:<br>For the SQL Server Client to use the tools in <code>/opt/toolkit/i2-tools/scripts</code>,
@@ -252,8 +253,8 @@ the toolkit must be mounted into the container.<br>In the example scripts, this 
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022-2023)
             
+            <span>Generated by <strong>DocFX</strong></span>
           </div>
         </div>
       </footer>

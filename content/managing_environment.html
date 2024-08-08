@@ -35,7 +35,7 @@
               </button>
               
               <a class="navbar-brand" href="../index.html">
-                i2 Analyze Containers
+                i2 Analyze Deployment Tooling
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -93,33 +93,36 @@
   manage-environment -t upgrade [-y]
   manage-environment -t update [-y]
   manage-environment -t link [-y]
-  manage-environment -t stop [-y]
+  manage-environment -t stop [-i &lt;component_name&gt;] [-e &lt;component_name&gt;] [-y]
   manage-environment -t renew-certificates [-y]
   manage-environment -t renew-secrets [-y]
   manage-environment -t clean [-i &lt;config_name&gt;] [-e &lt;config_name&gt;] [-y]
   manage-environment -t connectors [-i &lt;connector_name&gt;] [-e &lt;connector_name&gt;] [-y]
   manage-environment -t extensions [-i &lt;extension_name&gt;] [-e &lt;extension_name&gt;] [-y]
+  manage-environment -t duplicate-config -c &lt;config_name&gt; -n &lt;new_config_name&gt; [-l] [-y]
   manage-environment -h
 
 Options:
-  -t {backup}                                                   Backup the database for a config.
-  -t {copy}                                                     Copy the dependencies for a config from the specified path, to the current analyze-containers project.
-  -t {upgrade}                                                  Upgrade all configurations from the specified path.
-  -t {update}                                                   Update images.
-  -t {link}                                                     Links shared configurations.
-  -t {stop}                                                     Stops the running containers.
-  -t {clean}                                                    Clean the deployment for a config. Will permanently remove all containers and data.
-  -t {renew-secrets}                                            Renews secrets for the configuration development environment.
-  -t {renew-certificates}                                       Renews certificates for the configuration development environment.
-  -t {connectors}                                               Build all connector images.
-  -t {extensions}                                               Build all extensions.
-  -i &lt;config_name|extension_name|connector_name&gt;                Name of the config, connector or extension to include for the task. To specify multiple values, add additional -i options.
-  -e &lt;config_name|extension_name|connector_name&gt;                Name of the config, connector or extension to exclude for the task. To specify multiple values, add additional -e options.
-  -b &lt;backup_name&gt;                                              Name of the backup to create or restore. If not specified, the default backup is used.
-  -p &lt;path&gt;                                                     Path to the root of an analyze-containers project. Defaults to the current project path. Or /home/&lt;user_name&gt;/analyze-containers in upgrade.
-  -y                                                            Answer &#39;yes&#39; to all prompts.
-  -v                                                            Verbose output.
-  -h                                                            Display the help.
+  -t {backup}                                                       Backup the database for a config.
+  -t {copy}                                                         Copy the dependencies for a config from the specified path, to the current analyze-deployment-tooling project.
+  -t {upgrade}                                                      Upgrade all configurations from the specified path.
+  -t {update}                                                       Update images.
+  -t {link}                                                         Links shared configurations.
+  -t {stop}                                                         Stops the running containers.
+  -t {clean}                                                        Clean the deployment for a config. Will permanently remove all containers and data.
+  -t {renew-secrets}                                                Renews secrets for the configuration development environment.
+  -t {renew-certificates}                                           Renews certificates for the configuration development environment.
+  -t {connectors}                                                   Build all connector images.
+  -t {extensions}                                                   Build all extensions.
+  -t {duplicate-config}                                             Duplicates a config.
+  -l                                                                Duplicates a config in a shared repository and symlink it to analyze-deployment-tooling project.
+  -i &lt;config_name|extension_name|connector_name|component_name&gt;     Name of the config, connector, extension or component to include for the task. To specify multiple values, add additional -i options.
+  -e &lt;config_name|extension_name|connector_name|component_name&gt;     Name of the config, connector, extension or component to exclude for the task. To specify multiple values, add additional -e options.
+  -b &lt;backup_name&gt;                                                  Name of the backup to create or restore. If not specified, the default backup is used.
+  -p &lt;path&gt;                                                         Path to the root of an analyze-deployment-tooling project. Defaults to the current project path. Or /home/&lt;user_name&gt;/analyze-deployment-tooling in upgrade.
+  -y                                                                Answer &#39;yes&#39; to all prompts.
+  -v                                                                Verbose output.
+  -h                                                                Display the help.
 </code></pre><h2 id="backup-and-restore">Backup and restore</h2>
 <p>The <code>backup</code> and <code>restore</code> tasks allow you to back up and restore a number of configurations by using one command. To back up a single config, use the <code>deploy</code> command that is described in <a href="manage_backup_restore.html">back up and restore</a>.</p>
 <p>To back up all of the configs in your environment, run:</p>
@@ -128,18 +131,27 @@ Options:
 <h2 id="updating-the-docker-images">Updating the Docker images</h2>
 <p>The <code>update</code> task pulls the latest images from Docker Hub and rebuilds the local images. Use this task to update the images in your environments. Images on Docker Hub are updated with security fixes and other updates. For more information, see <a href="manage_update_images.html">Update the Docker images</a>.</p>
 <h2 id="upgrading">Upgrading</h2>
-<p>The <code>upgrade</code> task allows you to upgrade the configs in your environment to a later version of Analyze containers or i2 Analyze.<br>For more information, see <a href="managing_upgrade_env.html">Upgrading</a>.</p>
+<p>The <code>upgrade</code> task allows you to upgrade the configs in your environment to a later version of Analyze deployment tooling or i2 Analyze.<br>For more information, see <a href="managing_upgrade_env.html">Upgrading</a>.</p>
+<h2 id="duplicate-a-configuration">Duplicate a configuration</h2>
+<p>The <code>duplicate-config</code> task allows you to duplicate a configuration within the environment. This is useful if you want to create a new configuration that is similar to an existing configuration. The new configuration is created with the same settings as the existing configuration, but with a different name.</p>
+<ol>
+<li><p>Run the following command:</p>
+<pre><code class="lang-sh">manage-environment -t duplicate-config -c &lt;config-name&gt; -n &lt;new_config-name&gt;
+</code></pre><p> Where <code>&lt;config-name&gt;</code> is the name of the config that you want to duplicate and <code>&lt;new-config-name&gt;</code> is the name of the new config.</p>
+</li>
+</ol>
+<p>If the configuration that you are duplicating is from a <a href="managing_shared_configurations.html">shared configuration</a>, specify the <code>-l</code> option to create the new configuration in the shared configuration location. Otherwise, the new configuration is created locally.</p>
 <h2 id="copying-configurations">Copying configurations</h2>
 <p>The <code>copy</code> task allows you to copy configs from one development environment to another.</p>
 <ol>
 <li><p>Update the <code>path-configuration.json</code> file to reference the path where you installed the i2 Analyze toolkit:</p>
 <ol>
 <li><p>Add a name and the path to your i2 Analyze toolkit as the keys and values for the <code>externalDirectories</code> object.</p>
-<p>For example, to add <code>/home/&lt;user-name&gt;/analyze-containers-2</code> the <code>path-configuration.json</code> file contains the following:  </p>
+<p>For example, to add <code>/home/&lt;user-name&gt;/analyze-deployment-tooling-2</code> the <code>path-configuration.json</code> file contains the following:  </p>
 <pre><code class="lang-json">{
 &quot;externalDirectories&quot;: [{
  &quot;name&quot;: &quot;containers-repo&quot;,
- &quot;path&quot;: &quot;/home/&lt;user-name&gt;/analyze-containers-2&quot;
+ &quot;path&quot;: &quot;/home/&lt;user-name&gt;/analyze-deployment-tooling-2&quot;
 }]
 }
 </code></pre></li>
@@ -148,7 +160,8 @@ Options:
 </ol>
 <p>To update your environment to use the root directory, you must run the <code>configure-paths</code> command.</p>
 <ol>
-<li>Reopen the analyze-containers folder locally.  <ul>
+<li><p>Reopen the analyze-deployment-tooling folder locally.  </p>
+<ul>
 <li>On Windows press <strong>F1</strong>, type <code>Dev Containers: Reopen Folder in WSL</code> and select it.</li>
 <li>On MacOS press <strong>Cmd+Shift+P</strong>, type <code>Dev Containers: Reopen Folder Locally</code> and select it.</li>
 </ul>
@@ -156,17 +169,17 @@ Options:
 <li><p>Open a terminal and run:</p>
 <pre><code class="lang-sh">./scripts/configure-paths
 </code></pre></li>
-<li><p>Reopen the analyze-containers folder in a dev container.<br>Press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS), type <code>Dev Containers: Rebuild and Reopen in Container</code> and select it</p>
+<li><p>Reopen the analyze-deployment-tooling folder in a dev container.<br>Press <strong>F1</strong> (or <strong>Cmd+Shift+P</strong> in MacOS), type <code>Dev Containers: Rebuild and Reopen in Container</code> and select it</p>
 </li>
 <li><p>Run the following command:</p>
 <pre><code class="lang-sh">manage-environment -p &lt;path&gt; -t copy
-</code></pre><p> Where <code>&lt;path&gt;</code> is the absolute path to the root of another <code>analyze-containers</code> repository that was added to the <code>path-configuration.json</code> file.</p>
+</code></pre><p> Where <code>&lt;path&gt;</code> is the absolute path to the root of another <code>analyze-deployment-tooling</code> repository that was added to the <code>path-configuration.json</code> file.</p>
 <p> This script copies the following directories:</p>
 <ul>
 <li><code>backups</code></li>
 <li><code>configs</code></li>
 <li><code>connector-images</code></li>
-<li><code>dev-environment-secrets</code></li>
+<li><code>environment-secrets</code></li>
 <li><code>gateway-schemas</code></li>
 <li><code>i2a-data</code></li>
 <li><code>i2a-extensions</code></li>
@@ -234,8 +247,8 @@ Options:
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022-2023)
             
+            <span>Generated by <strong>DocFX</strong></span>
           </div>
         </div>
       </footer>

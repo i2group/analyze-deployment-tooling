@@ -35,7 +35,7 @@
               </button>
               
               <a class="navbar-brand" href="../../index.html">
-                i2 Analyze Containers
+                i2 Analyze Deployment Tooling
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -85,8 +85,8 @@
 <h3 id="docker-build-command">Docker build command</h3>
 <p>The Solr image is built from the Dockerfile in <code>images/solr_client</code>.
 The following <code>docker build</code> command builds the Solr image:</p>
-<pre><code class="lang-bash">docker build -t &quot;solr_client_redhat:4.4.3&quot; images/solr_client \
-  --build-arg I2ANALYZE_VERSION=&quot;4.4.3&quot;
+<pre><code class="lang-bash">docker build -t &quot;solr_client_redhat:4.4.4&quot; images/solr_client \
+  --build-arg I2ANALYZE_VERSION=&quot;4.4.4&quot;
 </code></pre><p>For examples of the build commands, see <code>build-images</code> script.</p>
 <h2 id="running-a-solr-client-container">Running a Solr Client container</h2>
 <p>A Solr Client container uses the Solr image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to Solr on the container. The environment variables are described in <a href="#environment-variables">environment variables</a></p>
@@ -96,7 +96,7 @@ The following <code>docker build</code> command builds the Solr image:</p>
 <p>The following <code>docker run</code> command runs a Solr Client container:</p>
 <pre><code class="lang-bash">docker run --rm \
     --net &quot;eia&quot; \
-    -v &quot;/home/&lt;user-name&gt;/analyze-containers/examples/pre-prod/configuration:/opt/configuration&quot; \
+    -v &quot;/home/&lt;user-name&gt;/analyze-deployment-tooling/examples/pre-prod/configuration:/opt/configuration&quot; \
     -e USER_ID=&quot;$(id -u)&quot; -e GROUP_ID=&quot;$(id -g)&quot; \
     -e SOLR_ADMIN_DIGEST_USERNAME=&quot;solr&quot; \
     -e SOLR_ADMIN_DIGEST_PASSWORD=&quot;SOLR_ADMIN_DIGEST_PASSWORD&quot; \
@@ -109,12 +109,12 @@ The following <code>docker build</code> command builds the Solr image:</p>
     -e SSL_PRIVATE_KEY=&quot;SSL_PRIVATE_KEY&quot; \
     -e SSL_CERTIFICATE=&quot;SSL_CERTIFICATE&quot; \
     -e SSL_CA_CERTIFICATE=&quot;SSL_CA_CERTIFICATE&quot; \
-    &quot;solr_client_redhat:4.4.3&quot; &quot;$@&quot;
+    &quot;solr_client_redhat:4.4.4&quot; &quot;$@&quot;
 </code></pre><p>The local group ID is required so that the solr user is created in the Docker container with a <code>GROUP_ID</code> that is the same as the local user. The user is required to ensure that the local user can access any files that are generated on the container. The value of <code>$id</code> comes from your shell.</p>
 <p>For an example of the <code>docker run</code> command, see <code>run_solr_client_command</code> function in <code>client_functions.sh</code> script.
 For an example of how to use <code>run_solr_client_command</code> function, see <a href="../tools-and-functions/client_functions.html#run-solr-client-command">run_solr_client_command</a>.</p>
 <h2 id="bind-mounts">Bind mounts</h2>
-<p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access zookeeper and certificates used in SSL.<br>The directory is mounted to a location in the container defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>ZOO_DIGEST_USERNAME_FILE</code> to locate the secrets.
+<p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access zookeeper and certificates used in SSL.<br>The directory is mounted to <code>/run/secrets</code> inside the container. This can then be used by other environment variables such as <code>ZOO_DIGEST_USERNAME_FILE</code> to locate the secrets.
 In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files. This is achieved by using a bind mount. In production this would not be required.</p>
 <p><strong>Configuration</strong>:<br>The Solr client requires the i2 Analyze configuration to perform some Solr operations. To access the configuration, the <code>configuration</code> directory must be mounted into the container.</p>
 <h2 id="environment-variables">Environment variables</h2>
@@ -181,7 +181,7 @@ In a production environment, the orchestration environment can provide the secre
 <p>When commands are passed to the Solr client by using the <code>&quot;$@&quot;</code> notation, the command that is passed to the container must be escaped correctly. On the container, the command is run using <code>docker exec &quot;$@&quot;</code>. Because the command is passed to the <code>docker run</code> command using <code>bash -c</code>, the command must be maintained as a double quoted string.</p>
 <p>For example:</p>
 <pre><code class="lang-bash">run_solr_client_command bash -c &quot;curl -u \&quot;\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\&quot; 
-   --cacert ${CONTAINER_SECRETS_DIR}/CA.cer 
+   --cacert /run/secrets/CA.cer 
    \&quot;${SOLR1_BASE_URL}/solr/main_index/update?commit=true\&quot; 
    -H Content-Type:text/xml --data-binary \&quot;&lt;delete&gt;&lt;query&gt;*:*&lt;/query&gt;&lt;/delete&gt;\&quot;&quot;
 </code></pre><p>Different parts of the command must be escaped in different ways:</p>
@@ -210,8 +210,8 @@ In a production environment, the orchestration environment can provide the secre
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022-2023)
             
+            <span>Generated by <strong>DocFX</strong></span>
           </div>
         </div>
       </footer>

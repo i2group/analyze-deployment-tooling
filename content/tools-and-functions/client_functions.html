@@ -35,7 +35,7 @@
               </button>
               
               <a class="navbar-brand" href="../../index.html">
-                i2 Analyze Containers
+                i2 Analyze Deployment Tooling
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -104,6 +104,7 @@
 <li><a href="#changesapassword">change_sa_password</a></li>
 <li><a href="#changepostgresserveruserpassword">change_postgres_server_user_password</a></li>
 <li><a href="#changepostgrespassword">change_postgres_password</a></li>
+<li><a href="#createdbaloginanduser">create_dba_login_and_user</a></li>
 <li><a href="#createdbloginanduser">create_db_login_and_user</a></li>
 <li><a href="#addusertorole">add_user_to_role</a></li>
 <li><a href="#changezkpassword">change_zk_password</a></li>
@@ -172,7 +173,7 @@ and defaults to &quot;default&quot; if the file doesn&#39;t exist.</p>
 in the JSON response returned.
 If the state is not marked as completed, the function returns the response message which contains
 any error messages that are reported with the asynchronous request.
-For more information about the Asynchronous Collection API, see <a href="https://lucene.apache.org/solr/guide/8_9/collections-api.html#requeststatus">REQUESTSTATUS: Request Status of an Async Call</a>.</p>
+For more information about the Asynchronous Collection API, see <a href="https://solr.apache.org/guide/solr/latest/configuration-guide/collections-api.html#requeststatus">REQUESTSTATUS: Request Status of an Async Call</a>.</p>
 <h4 id="arguments-3">Arguments</h4>
 <ul>
 <li><strong>$1</strong> (string): The request id of the asynchronous request to get the status of.</li>
@@ -224,15 +225,21 @@ sa password and the new (generated) password.
 For more information, see <a href="../security-and-users/db_users.html#the-changesapassword-function">change_sa_password</a>.</p>
 <p><em>Function has no arguments.</em></p>
 <h3 id="changepostgresserveruserpassword">change_postgres_server_user_password</h3>
-<p>Change the initial password for the postgres user.</p>
-<p><em>Function has no arguments.</em></p>
+<p>Change password for the specified user.</p>
 <h3 id="changepostgrespassword">change_postgres_password</h3>
 <p>Change the initial password for the postgres user.</p>
 <p><em>Function has no arguments.</em></p>
+<h3 id="createdbaloginanduser">create_dba_login_and_user</h3>
+<p>Creates a database login and user for the dba user, and assigns the user to the provided role.
+For more information, see <a href="../security-and-users/db_users.html">db_users</a>.</p>
+<h4 id="arguments-6">Arguments</h4>
+<ul>
+<li><strong>$1</strong> (boolean): Defines if dba user creation script should be executed. [Default: true]</li>
+</ul>
 <h3 id="createdbloginanduser">create_db_login_and_user</h3>
 <p>Creates a database login and user for the provided user, and assigns the user to the provided role.
-For more information, see <a href="../security-and-users/db_users.html#the-createdbloginanduser-function">create_db_login_and_user</a>.</p>
-<h4 id="arguments-6">Arguments</h4>
+For more information, see <a href="../security-and-users/db_users.html">db_users</a></p>
+<h4 id="arguments-7">Arguments</h4>
 <ul>
 <li><strong>$1</strong> (string): The database user name</li>
 <li><strong>$2</strong> (string): The database role name</li>
@@ -240,7 +247,7 @@ For more information, see <a href="../security-and-users/db_users.html#the-creat
 <h3 id="addusertorole">add_user_to_role</h3>
 <p>Assigns the user to the provided role.
 For more information, see <a href="../security-and-users/db_users.html#the-createdbloginanduser-function">create_db_login_and_user</a>.</p>
-<h4 id="arguments-7">Arguments</h4>
+<h4 id="arguments-8">Arguments</h4>
 <ul>
 <li><strong>$1</strong> (string): The database user name</li>
 <li><strong>$2</strong> (string): The database role name</li>
@@ -249,15 +256,19 @@ For more information, see <a href="../security-and-users/db_users.html#the-creat
 <p>Use an ephemeral ZK client container to change ZK digest password.</p>
 <h3 id="changezkpassword">change_zk_password</h3>
 <p>Use an ephemeral ZK client container to change ZK digest password.</p>
-<p><em>Function has no arguments.</em></p>
+<h4 id="arguments-9">Arguments</h4>
+<ul>
+<li><strong>$1</strong> (string): The old password</li>
+<li><strong>$2</strong> (string): The new password</li>
+</ul>
 <h3 id="runsolrclientcommand">run_solr_client_command</h3>
 <p>Use an ephemeral Solr client container to run commands against Solr.
 For more information about the environment variables and volume mounts that are required for the Solr client, see <a href="../images-and-containers/solr_client.html">Running a Solr client container</a>.
 The run_solr_client_command function takes the command you want to run as an argument.
-For more information about commands you can execute using the Solr zkcli, see <a href="https://lucene.apache.org/solr/guide/8_6/command-line-utilities.html">Solr ZK Command Line Utilities</a></p>
+For more information about commands you can execute using the Solr zkcli, see <a href="https://solr.apache.org/guide/solr/latest/deployment-guide/zookeeper-utilities.html#using-solrs-zookeeper-cli">Solr ZK Command Line Utilities</a></p>
 <h4 id="example-4">Example</h4>
 <pre><code class="lang-bash">run_solr_client_command &quot;/opt/solr/server/scripts/cloud-scripts/zkcli.sh&quot; -zkhost &quot;${ZK_HOST}&quot; -cmd clusterprop -name urlScheme -val https
-</code></pre><h4 id="arguments-8">Arguments</h4>
+</code></pre><h4 id="arguments-10">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): The command you want to run on the Solr client container</li>
 </ul>
@@ -270,7 +281,7 @@ For more information about commands you can execute using the Solr zkcli, see <a
 <p>Run an ephemeral i2 Analyze Tool container to run the i2 Analyze tools.</p>
 <h4 id="example-5">Example</h4>
 <pre><code class="lang-bash">run_i2_analyze_tool &quot;/opt/i2-tools/scripts/updateSecuritySchema.sh&quot;
-</code></pre><h4 id="arguments-9">Arguments</h4>
+</code></pre><h4 id="arguments-11">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the i2 Analyze Tool container</li>
 </ul>
@@ -288,8 +299,8 @@ For example, if you would like to send a Curl request to the load balancer stats
       --silent \
       --cookie-jar /tmp/cookie.txt \
       --cacert /tmp/i2acerts/CA.cer \
-      --request POST \&quot;${FRONT_END_URI}/j_security_check\&quot; \
-      --header &#39;Origin: ${FRONT_END_URI}&#39; \
+      --request POST \&quot;${INTERNAL_FRONT_END_URI}/j_security_check\&quot; \
+      --header &#39;Origin: ${INTERNAL_FRONT_END_URI}&#39; \
       --header &#39;Content-Type: application/x-www-form-urlencoded&#39; \
       --data-urlencode &#39;j_username=Jenny&#39; \
       --data-urlencode &#39;j_password=Jenny&#39; \
@@ -297,8 +308,8 @@ For example, if you would like to send a Curl request to the load balancer stats
       --silent \
       --cookie /tmp/cookie.txt \
       --cacert /tmp/i2acerts/CA.cer\
-      \&quot;${FRONT_END_URI}/api/v1/admin/indexes/status\&quot;&quot;
-</code></pre><h4 id="arguments-10">Arguments</h4>
+      \&quot;${INTERNAL_FRONT_END_URI}/api/v1/admin/indexes/status\&quot;&quot;
+</code></pre><h4 id="arguments-12">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the i2 Analyze Tool container</li>
 </ul>
@@ -315,7 +326,7 @@ For more information about running a SQL Client container and the environment va
 \&quot;BULK INSERT IS_Staging.E_Person
 FROM &#39;/var/i2a-data/law-enforcement-data-set-2-merge/person.csv&#39;
 WITH (FORMATFILE = &#39;/var/i2a-data/law-enforcement-data-set-2-merge/sqlserver/format-files/person.fmt&#39;, FIRSTROW = 2)\&quot;&quot;
-</code></pre><h4 id="arguments-11">Arguments</h4>
+</code></pre><h4 id="arguments-13">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the SQL Client container</li>
 </ul>
@@ -334,7 +345,7 @@ For more information about running a Postgres Client container and the environme
   p_height_from, p_height_to, p_family_name, p_middle_name, p_additional_informatio, p_occupation, p_unique_reference,
   p_gender, source_ref_source_location, source_ref_source_type, source_ref_source_image_url)
 FROM &#39;/var/i2a-data/law-enforcement-data-set-2-merge/person.csv&#39; CSV HEADER ENCODING &#39;UTF8&#39; NULL AS &#39;&#39;\&quot;&quot;
-</code></pre><h4 id="arguments-12">Arguments</h4>
+</code></pre><h4 id="arguments-14">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the SQL Client container</li>
 </ul>
@@ -348,7 +359,7 @@ FROM &#39;/var/i2a-data/law-enforcement-data-set-2-merge/person.csv&#39; CSV HEA
 Information Store database as the postgres user with the initial postgres password.
 For more information about running a Postgres Client container and the environment variables required for the
 container, see <a href="../images-and-containers/postgres_client.html">Postgres Client</a>.</p>
-<h4 id="arguments-13">Arguments</h4>
+<h4 id="arguments-15">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the Postgres Client container</li>
 </ul>
@@ -364,7 +375,7 @@ For more information about running a Postgres Client container and the environme
 container, see <a href="../images-and-containers/postgres_client.html">Postgres Client</a>.</p>
 <h4 id="example-9">Example</h4>
 <pre><code class="lang-bash">run_postgres_server_command_as_postgres &quot;/opt/i2-tools/scripts/database-creation/runStaticScripts.sh&quot;
-</code></pre><h4 id="arguments-14">Arguments</h4>
+</code></pre><h4 id="arguments-16">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the Postgres Client container</li>
 </ul>
@@ -380,7 +391,7 @@ For more information about running a Postgres Client container and the environme
 container, see <a href="../images-and-containers/postgres_client.html">Postgres Client</a>.</p>
 <h4 id="example-10">Example</h4>
 <pre><code class="lang-bash">run_postgres_server_command_as_dba &quot;/opt/i2-tools/scripts/database-creation/runStaticScripts.sh&quot;
-</code></pre><h4 id="arguments-15">Arguments</h4>
+</code></pre><h4 id="arguments-17">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the Postgres Client container</li>
 </ul>
@@ -396,7 +407,7 @@ For more information about running a Postgres Client container and the environme
 container, see <a href="../images-and-containers/postgres_client.html">Postgres Client</a>.</p>
 <h4 id="example-11">Example</h4>
 <pre><code class="lang-bash">run_postgres_server_command_as_dbb bash -c &quot;pg_dump &#39;/backup/istore.pgb&#39;&quot;
-</code></pre><h4 id="arguments-16">Arguments</h4>
+</code></pre><h4 id="arguments-18">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the Postgres Client container</li>
 </ul>
@@ -410,7 +421,7 @@ container, see <a href="../images-and-containers/postgres_client.html">Postgres 
 Information Store database as the sa user with the initial SA password.
 For more information about running a SQL Client container and the environment variables required for the
 container, see <a href="../images-and-containers/sql_client.html">SQL Client</a>.</p>
-<h4 id="arguments-17">Arguments</h4>
+<h4 id="arguments-19">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the SQL Client container</li>
 </ul>
@@ -426,7 +437,7 @@ For more information about running a SQL Client container and the environment va
 container, see <a href="../images-and-containers/sql_client.html">SQL Client</a>.</p>
 <h4 id="example-12">Example</h4>
 <pre><code class="lang-bash">run_sql_server_command_as_sa &quot;/opt/i2-tools/scripts/database-creation/runStaticScripts.sh&quot;
-</code></pre><h4 id="arguments-18">Arguments</h4>
+</code></pre><h4 id="arguments-20">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the SQL Client container</li>
 </ul>
@@ -442,7 +453,7 @@ For more information about running a SQL Client container and the environment va
 container, see <a href="../images-and-containers/sql_client.html">SQL Client</a>.</p>
 <h4 id="example-13">Example</h4>
 <pre><code class="lang-bash">run_sql_server_command_as_dba &quot;/opt/i2-tools/scripts/clearInfoStoreData.sh&quot;
-</code></pre><h4 id="arguments-19">Arguments</h4>
+</code></pre><h4 id="arguments-21">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the SQL Client container</li>
 </ul>
@@ -462,7 +473,7 @@ container, see <a href="../images-and-containers/sql_client.html">SQL Client</a>
   BACKUP DATABASE ISTORE
   TO DISK = &#39;/backup/istore.bak&#39;
      WITH FORMAT;\&quot;&quot;
-</code></pre><h4 id="arguments-20">Arguments</h4>
+</code></pre><h4 id="arguments-22">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the SQL Client container</li>
 </ul>
@@ -478,7 +489,7 @@ For more information about running the ETL Client container and the environment 
 For more information about running the ETL toolkit container and the tasks that you can run, see <a href="etl_tools.html">ETL Tools</a></p>
 <h4 id="example-15">Example</h4>
 <pre><code class="lang-bash">run_etl_toolkit_tool_as_i2_etl bash -c &quot;/opt/i2/etltoolkit/addInformationStoreIngestionSource --ingestionSourceName EXAMPLE_1 --ingestionSourceDescription EXAMPLE_1&quot;
-</code></pre><h4 id="arguments-21">Arguments</h4>
+</code></pre><h4 id="arguments-23">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the ETL Toolkit container</li>
 </ul>
@@ -494,7 +505,7 @@ For more information about running the ETL Client container and the environment 
 For more information about running the ETL toolkit container and the tasks that you can run, see <a href="etl_tools.html">ETL Tools</a></p>
 <h4 id="example-16">Example</h4>
 <pre><code class="lang-bash">run_etl_toolkit_tool_as_dba bash -c &quot;/opt/i2/etltoolkit/addInformationStoreIngestionSource --ingestionSourceName EXAMPLE_1 --ingestionSourceDescription EXAMPLE_1&quot;
-</code></pre><h4 id="arguments-22">Arguments</h4>
+</code></pre><h4 id="arguments-24">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): Command you want to run on the ETL Toolkit container</li>
 </ul>
@@ -513,7 +524,7 @@ For example, to update the the configuration directory in the prometheus_config 
 /.configuration/prometheus directory, run:</p>
 <h4 id="example-17">Example</h4>
 <pre><code class="lang-bash">update_volume_from_volume &quot;config&quot; &quot;prometheus&quot; &quot;prometheus_config&quot; &quot;/prometheus&quot;
-</code></pre><h4 id="arguments-23">Arguments</h4>
+</code></pre><h4 id="arguments-25">Arguments</h4>
 <ul>
 <li><strong>$1</strong> (string): From volume name.</li>
 <li><strong>$2</strong> (string): From volume location.</li>
@@ -523,13 +534,13 @@ For example, to update the the configuration directory in the prometheus_config 
 </ul>
 <h2 id="volume-utilities-1">Volume utilities</h2>
 <p>Uses an ephemeral Red Hat UBI Docker image to update a volume with the contents of a local directory.
-For example, to update the the run/secrets directory in the liberty1_secrets volume with the content of the local /dev-environment-secrets/simulated-secret-store directory, run:</p>
+For example, to update the the run/secrets directory in the liberty1_secrets volume with the content of the local /environment-secrets/simulated-secret-store directory, run:</p>
 <h3 id="updatevolume">update_volume</h3>
 <p>Uses an ephemeral Red Hat UBI Docker image to update a volume with the contents of a local directory.
-For example, to update the the run/secrets directory in the liberty1_secrets volume with the content of the local /dev-environment-secrets/simulated-secret-store directory, run:</p>
+For example, to update the the run/secrets directory in the liberty1_secrets volume with the content of the local /environment-secrets/simulated-secret-store directory, run:</p>
 <h4 id="example-18">Example</h4>
-<pre><code class="lang-bash">update_volume &quot;/dev-environment-secrets/simulated-secret-store&quot; &quot;liberty1_secrets&quot; &quot;/run/secrets&quot;
-</code></pre><h4 id="arguments-24">Arguments</h4>
+<pre><code class="lang-bash">update_volume &quot;/environment-secrets/simulated-secret-store&quot; &quot;liberty1_secrets&quot; &quot;/run/secrets&quot;
+</code></pre><h4 id="arguments-26">Arguments</h4>
 <ul>
 <li><strong>$1</strong> (string): The local directory on your machine.</li>
 <li><strong>$2</strong> (string): The volume name.</li>
@@ -540,10 +551,10 @@ For example, to update the the run/secrets directory in the liberty1_secrets vol
 </ul>
 <h3 id="getvolume">get_volume</h3>
 <p>Uses an ephemeral Red Hat UBI Docker image to update a local directory with the contents of a specified volume.
-For example, to get the contents from the run/secrets directory in the liberty1_secrets volume into your local /dev-environment-secrets/simulated-secret-store directory, run:</p>
+For example, to get the contents from the run/secrets directory in the liberty1_secrets volume into your local /environment-secrets/simulated-secret-store directory, run:</p>
 <h4 id="example-19">Example</h4>
-<pre><code class="lang-bash">get_volume &quot;/dev-environment-secrets/simulated-secret-store&quot; &quot;liberty1_secrets&quot; &quot;/run/secrets&quot;
-</code></pre><h4 id="arguments-25">Arguments</h4>
+<pre><code class="lang-bash">get_volume &quot;/environment-secrets/simulated-secret-store&quot; &quot;liberty1_secrets&quot; &quot;/run/secrets&quot;
+</code></pre><h4 id="arguments-27">Arguments</h4>
 <ul>
 <li><strong>$1</strong> (string): The local directory on your machine.</li>
 <li><strong>$2</strong> (string): The volume name.</li>
@@ -570,8 +581,8 @@ For example, to get the contents from the run/secrets directory in the liberty1_
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022-2023)
             
+            <span>Generated by <strong>DocFX</strong></span>
           </div>
         </div>
       </footer>

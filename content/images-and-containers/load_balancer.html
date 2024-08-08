@@ -35,7 +35,7 @@
               </button>
               
               <a class="navbar-brand" href="../../index.html">
-                i2 Analyze Containers
+                i2 Analyze Deployment Tooling
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -91,7 +91,7 @@
     --net-alias &quot;i2analyze.eia&quot; \
     -p &quot;9046:9046&quot; \
     -v &quot;ac_load_balancer_config:/usr/local/etc/haproxy&quot; \
-    -v &quot;/dev-environment-secrets/simulated-secret-store/i2analyze:/run/secrets/&quot; \
+    -v &quot;/environment-secrets/simulated-secret-store/i2analyze:/run/secrets/&quot; \
     -e LIBERTY1_LB_STANZA=&quot;liberty1.eia:9080&quot; \
     -e LIBERTY2_LB_STANZA=&quot;liberty2.eia:9080&quot; \
     -e LIBERTY_SSL_CONNECTION=&quot;true&quot; \
@@ -99,6 +99,11 @@
     -e SSL_PRIVATE_KEY_FILE=&quot;/run/secrets/server.key&quot; \
     -e SSL_CERTIFICATE_FILE=&quot;/run/secrets/server.cer&quot; \
     -e SSL_CA_CERTIFICATE_FILE=&quot;/run/secrets/CA.cer&quot; \
+    -e GATEWAY_SSL_CONNECTION=&quot;true&quot; \
+    -e SSL_OUTBOUND_PRIVATE_KEY_FILE=&quot;/run/secrets/gateway_user.key&quot; \
+    -e SSL_OUTBOUND_CERTIFICATE_FILE=&quot;/run/secrets/gateway_user.cer&quot; \
+    -e SSL_OUTBOUND_CA_CERTIFICATE_FILE=&quot;/run/secrets/outbound_CA.cer&quot; \
+    -e SSL_ADDITIONAL_TRUST_CERTIFICATES=&quot;/run/secrets/additional_trust_certificates.cer&quot; \
     &quot;i2eng-haproxy:2.9&quot;
 </code></pre><p>For an example of the <code>docker run</code> command, see <code>utils/server_functions.sh</code> script. The <code>run_load_balancer</code> function does not take any arguments.</p>
 <h3 id="storage">Storage</h3>
@@ -109,7 +114,7 @@
 </code></pre><ul>
 <li><strong>Secrets</strong>:</li>
 </ul>
-<p>A directory that contains all of the secrets that this tool requires.<br>The directory is mounted to a location in the container defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>SSL_PRIVATE_KEY_FILE</code> to locate the secrets.<br>In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files. This is achieved by using a bind mount. In production this would not be required.</p>
+<p>A directory that contains all of the secrets that this tool requires.<br>The directory is mounted to <code>/run/secrets</code> inside the container. This can then be used by other environment variables such as <code>SSL_PRIVATE_KEY_FILE</code> to locate the secrets.<br>In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files. This is achieved by using a bind mount. In production this would not be required.</p>
 <h2 id="environment-variables">Environment variables</h2>
 <p>To configure the load balancer, you provide environment variables to the Docker container in the <code>docker run</code> command.</p>
 <p>The following table describes the environment variables that you can use to configure the load balancer:</p>
@@ -122,31 +127,51 @@
 </thead>
 <tbody>
 <tr>
-<td>LIBERTY1_LB_STANZA</td>
+<td><code>LIBERTY1_LB_STANZA</code></td>
 <td>The stanza for the first Liberty server.</td>
 </tr>
 <tr>
-<td>LIBERTY2_LB_STANZA</td>
+<td><code>LIBERTY2_LB_STANZA</code></td>
 <td>The stanza for the second Liberty server.</td>
 </tr>
 <tr>
-<td>LIBERTY_SSL_CONNECTION</td>
+<td><code>LIBERTY_SSL_CONNECTION</code></td>
 <td>See <a href="../security-and-users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
-<td>SERVER_SSL</td>
+<td><code>SERVER_SSL</code></td>
 <td>See <a href="../security-and-users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
-<td>SSL_PRIVATE_KEY_FILE</td>
+<td><code>SSL_PRIVATE_KEY_FILE</code></td>
 <td>See <a href="../security-and-users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
-<td>SSL_CERTIFICATE_FILE</td>
+<td><code>SSL_CERTIFICATE_FILE</code></td>
 <td>See <a href="../security-and-users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 <tr>
-<td>SSL_CA_CERTIFICATE_FILE</td>
+<td><code>SSL_CA_CERTIFICATE_FILE</code></td>
+<td>See <a href="../security-and-users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
+</tr>
+<tr>
+<td><code>GATEWAY_SSL_CONNECTION</code></td>
+<td>See <a href="../security-and-users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
+</tr>
+<tr>
+<td><code>SSL_OUTBOUND_PRIVATE_KEY_FILE</code></td>
+<td>See <a href="../security-and-users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
+</tr>
+<tr>
+<td><code>SSL_OUTBOUND_CERTIFICATE_FILE</code></td>
+<td>See <a href="../security-and-users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
+</tr>
+<tr>
+<td><code>SSL_OUTBOUND_CA_CERTIFICATE_FILE</code></td>
+<td>See <a href="../security-and-users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
+</tr>
+<tr>
+<td><code>SSL_ADDITIONAL_TRUST_CERTIFICATES</code></td>
 <td>See <a href="../security-and-users/security.html#secure-environment-variables">Secure Environment variables</a>.</td>
 </tr>
 </tbody>
@@ -171,8 +196,8 @@
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022-2023)
             
+            <span>Generated by <strong>DocFX</strong></span>
           </div>
         </div>
       </footer>

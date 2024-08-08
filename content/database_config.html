@@ -35,7 +35,7 @@
               </button>
               
               <a class="navbar-brand" href="../index.html">
-                i2 Analyze Containers
+                i2 Analyze Deployment Tooling
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -80,6 +80,7 @@
 <h1 id="database-scripts-and-configuration">Database scripts and configuration</h1>
 
 <p>The ISTORE database is created by using a number of database scripts. These scripts are created based on your configuration and the type of action being completed against the database.</p>
+<hr>
 <h2 id="change-sets">Change sets</h2>
 <p>When the database is created for the first time in a config, a change set is created that contains all of the
 scripts required to create the database for that configuration. The change set is in the following location: <code>&lt;config-name&gt;/change-sets</code>.</p>
@@ -94,6 +95,7 @@ scripts required to create the database for that configuration. The change set i
 </ul>
 <p>A change set contains the database scripts that are required to create the database or make additive updates,
 some also contain configuration changes that caused the change in database scripts.</p>
+<hr>
 <h2 id="releasing-database-scripts">Releasing database scripts</h2>
 <p>You can create a <code>release</code> change set that contains the database scripts required to create or update a database
 with the same changes as in your development environment.</p>
@@ -103,13 +105,14 @@ you can create a release change set. You can use the database scripts in this ch
 for that schema in any environment. The first time you run this command, the release change set named
 <code>1-release-&lt;date&gt;-&lt;time&gt;</code> is created. All other change sets that were present are removed.</p>
 <p>To create a release change set, run:</p>
-<pre><code class="lang-sh">deploy -c &lt;config-name&gt; -r
-</code></pre><p>When you run this command, a database backup is also created with the name of the change set. E.g. <code>1-release-&lt;date&gt;-&lt;time&gt;</code>.</p>
+<pre><code class="lang-bash">deploy -r
+</code></pre><p>If you have multiple configs, specify the config name with <code>-c &lt;config-name&gt;</code>.</p>
+<p>When you run this command, a database backup is also created with the name of the change set. E.g. <code>1-release-&lt;date&gt;-&lt;time&gt;</code>.</p>
 <p>After you create the first release change set, you can continue to develop your configuration further with
 additive changes. You can create other release change sets that contain the scripts required to update the
 database from a previous release to the next one.</p>
-<p>For example, if you run <code>deploy -c &lt;config-name&gt; -r</code> for a second time you will have the following change-sets available:</p>
-<pre><code class="lang-sh">- 1-release-&lt;date&gt;-&lt;time&gt;
+<p>For example, if you run <code>deploy -r</code> for a second time you will have the following change-sets available:</p>
+<pre><code class="lang-bash">- 1-release-&lt;date&gt;-&lt;time&gt;
 - 2-release-&lt;date&gt;-&lt;time&gt;
 </code></pre><p>You can use the scripts in the <code>2-release</code> change set to update a database created with the <code>1-release</code> change set.</p>
 <h3 id="destructive-changes">Destructive changes</h3>
@@ -117,11 +120,11 @@ database from a previous release to the next one.</p>
 changes from a destructive change set. If you make a destructive change, you have 2 options:</p>
 <ul>
 <li>Revert back to a release from before you made the destructive change.<ul>
-<li>Run <code>deploy -c &lt;config-name&gt; -r &lt;release-change-set-number&gt;</code>.<br>This will restore the database to the version at the specified release. All later change sets are removed.</li>
+<li>Run <code>deploy -r &lt;release-change-set-number&gt;</code>.<br>This will restore the database to the version at the specified release. All later change sets are removed.</li>
 </ul>
 </li>
 <li>Make the destructive change set the new first release.<ul>
-<li>Run <code>deploy -c &lt;config-name&gt; -r</code>.<br>If the system detects a destructive change set between now and the last release, you are prompted if you want
+<li>Run <code>deploy -r</code>.<br>If the system detects a destructive change set between now and the last release, you are prompted if you want
 to make the new release the 1st release change set. All other change sets are removed.</li>
 </ul>
 </li>
@@ -130,6 +133,7 @@ to make the new release the 1st release change set. All other change sets are re
 <p>When an upgrade requires changes to the database, the scripts to complete these changes are captured in a change set.
 Any change sets that were created between the last release change set and the upgrade are removed. The upgrade
 change set is named <code>&lt;number&gt;-upgrade-release-&lt;date&gt;-&lt;time&gt;</code>.</p>
+<hr>
 <h2 id="using-change-sets">Using change sets</h2>
 <p>If you want to use the change sets to recreate or update the Information Store database in another environment,
 you can run the database scripts from your release change sets. Each release change set contains a <code>run-database-scripts.sh</code>
@@ -194,8 +198,8 @@ to update the deployment.</li>
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022-2023)
             
+            <span>Generated by <strong>DocFX</strong></span>
           </div>
         </div>
       </footer>

@@ -35,7 +35,7 @@
               </button>
               
               <a class="navbar-brand" href="../../index.html">
-                i2 Analyze Containers
+                i2 Analyze Deployment Tooling
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -94,7 +94,7 @@ In <code>deploy-pre-prod</code>, 3 ZooKeeper containers are used.</li>
 <ol>
 <li><p>The <code>run_solr_client_command</code> client function is used a number of times to complete the following actions:</p>
 <ol>
-<li>Create the <code>znode</code> for the cluster.<br>i2 Analyze uses a ZooKeeper connection string with a chroot. To use a chroot connection string, a <em>znode</em> with that name must exist. For more information, see <a href="https://lucene.apache.org/solr/guide/8_6/solr-control-script-reference.html#solrcloud-mode">SolrCloud Mode</a>.</li>
+<li>Create the <code>znode</code> for the cluster.<br>i2 Analyze uses a ZooKeeper connection string with a chroot. To use a chroot connection string, a <em>znode</em> with that name must exist. For more information, see <a href="https://solr.apache.org/guide/solr/latest/deployment-guide/solr-control-script-reference.html#solrcloud-mode">SolrCloud Mode</a>.</li>
 <li>Set the <code>urlScheme</code> to be <code>https</code>.</li>
 <li><p>Configure the Solr authentication by uploading the <code>security.json</code> file to ZooKeeper.</p>
 <p>For more information about the function, see <a href="client_functions.html#run-solr-client-command">run_solr_client_command</a>.</p>
@@ -282,20 +282,22 @@ For more information about the database users and their permissions, see <a href
 </code></pre></li>
 </ul>
 </li>
-<li><p>The <code>create_solr_cluster_policy</code> function uses the <code>run_solr_client_command</code> client function to set a cluster policy such that each host has 1 replica of each shard.<br>For example:</p>
-<pre><code class="lang-bash">run_solr_client_command bash -c &quot;curl -u \&quot;\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\&quot;
---cacert ${CONTAINER_SECRETS_DIR}/CA.cer -X POST -H Content-Type:text/xml -d 
-&#39;{ \&quot;set-cluster-policy\&quot;: [ {\&quot;replica\&quot;: \&quot;&lt;2\&quot;, \&quot;shard\&quot;: \&quot;#EACH\&quot;, \&quot;host\&quot;: \&quot;#EACH\&quot;}]}&#39; 
-\&quot;${SOLR1_BASE_URL}/api/cluster/autoscaling\&quot;&quot;
-</code></pre><p>For more information about Solr policies, see <a href="https://lucene.apache.org/solr/guide/8_6/solrcloud-autoscaling-policy-preferences.html#policy-specification">Autoscaling Policy and Preferences</a>.</p>
+<li><p>The <code>create_solr_cluster_policy</code> function uses the <code>run_solr_client_command</code> client function to set a cluster policy.</p>
+<ul>
+<li><p>The <code>create_solr_cluster_policy</code> is using Solr&#39;s built-in replica placement plugin with the default configuration that defines each host has 1 replica of each shard.
+For example:</p>
+<pre><code class="lang-bash">run_solr_client_command bash -c &quot;curl -u \&quot;\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\&quot; --cacert ${CONTAINER_CERTS_DIR}/CA.cer -X POST -H &#39;Content-Type: application/json&#39; -d &#39;{\&quot;add\&quot;:{ \&quot;name\&quot;: \&quot;.placement-plugin\&quot;, \&quot;class\&quot;: \&quot;org.apache.solr.cluster.placement.plugins.AffinityPlacementFactory\&quot;}}&#39; \&quot;${SOLR1_BASE_URL}/api/cluster/plugin\&quot;&quot;
+</code></pre><p>For more information about Solr&#39;s Replica Placement Plugin, see <a href="https://solr.apache.org/guide/solr/latest/configuration-guide/replica-placement-plugins.html">Replica Placement Plugins</a>.</p>
+</li>
+</ul>
 </li>
 <li><p>The <code>create_solr_collections</code> function creates the Solr Collections.</p>
 <ul>
 <li><p>The <code>run_solr_client_command</code> client function is used to create each Solr collection. For example:</p>
 <pre><code class="lang-bash">run_solr_client_command bash -c &quot;curl -u \&quot;\${SOLR_ADMIN_DIGEST_USERNAME}:\${SOLR_ADMIN_DIGEST_PASSWORD}\&quot;
---cacert ${CONTAINER_SECRETS_DIR}/CA.cer 
-\&quot;${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&amp;name=main_index&amp;collection.configName=main_index&amp;numShards=1&amp;maxShardsPerNode=4&amp;rule=replica:&lt;2,host:*\&quot;&quot;
-</code></pre><p> For more information about the Solr collection API call, see <a href="https://lucene.apache.org/solr/guide/8_6/collection-management.html#create">CREATE: Create a Collection</a>.</p>
+--cacert /run/secrets/CA.cer 
+\&quot;${SOLR1_BASE_URL}/solr/admin/collections?action=CREATE&amp;name=main_index&amp;collection.configName=main_index&amp;numShards=1&amp;rule=replica:&lt;2,host:*\&quot;&quot;
+</code></pre><p>For more information about the Solr collection API call, see <a href="https://solr.apache.org/guide/solr/latest/deployment-guide/collection-management.html#create">CREATE: Create a Collection</a>.</p>
 </li>
 </ul>
 </li>
@@ -339,7 +341,7 @@ For more information about the database users and their permissions, see <a href
 <li><p>The <code>run_load_balancer</code> function in <code>server_functions.sh</code> runs HAProxy as a load balancer in a Docker container.</p>
 <p>The load balancer configuration we use can be found in <code>haproxy.cfg</code> file and the variables are passed as environment variables to the Docker container.</p>
 <p>The load balancer routes requests to the application to both Liberty servers that are running. The configuration that used is a simplified configuration for example purposes and is not to be used in production.</p>
-<p>For more information about configuring a load balancer with i2 Analyze, see <a href="https://docs.i2group.com/analyze/4.4.3/hadr_loadbalancer.html">Load balancer</a>.</p>
+<p>For more information about configuring a load balancer with i2 Analyze, see <a href="https://docs.i2group.com/analyze/4.4.4/hadr_loadbalancer.html">Load balancer</a>.</p>
 </li>
 </ul>
 </li>
@@ -387,8 +389,8 @@ For more information about running a Grafana container, see <a href="../images-a
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022-2023)
             
+            <span>Generated by <strong>DocFX</strong></span>
           </div>
         </div>
       </footer>

@@ -35,7 +35,7 @@
               </button>
               
               <a class="navbar-brand" href="../index.html">
-                i2 Analyze Containers
+                i2 Analyze Deployment Tooling
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -79,15 +79,19 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="adding-connectors-to-your-development-environment">Adding connectors to your development environment</h1>
 
-<p>To add a connector to your deployment of i2 Analyze, you must develop an i2 Connect connector. For more information about developing connectors, see <a href="https://i2group.github.io/analyze-connect/index.html">i2 Connect gateway connector development</a>.</p>
+<p>To add a connector to your deployment of i2 Analyze, you must develop an i2 Connect connector.</p>
 <p>Ensure that the <code>DEPLOYMENT_PATTERN</code> variable in the <code>&lt;config_name&gt;/utils/variables.conf</code> file is set to a pattern that includes the i2 Connect gateway.<br>For example:  </p>
 <pre><code class="lang-sh">DEPLOYMENT_PATTERN=&quot;i2c_istore&quot;
-</code></pre><p>Process overview:</p>
+</code></pre><p>For information about developing your own connectors, see <a href="https://i2group.github.io/analyze-connect/index.html">i2 Connect gateway connector development</a>.</p>
+<p>You can use Connector Designer to create simple connectors by using a visual user interface. If you create a connector using Connector Designer, you do not need to follow the rest of the instructions.
+To open Connector Designer, open <code>https://i2analyze.eia:9443/connector-designer/connectors</code>. For more information about using Connector Designer, see <!-- markdown-link-check-disable --><a href="https://docs.i2group.com/ah/ah-connector-designer.html">Connector Designer</a><!-- markdown-link-check-enable -->.</p>
+<p>Process overview:</p>
 <ul>
 <li>Create a custom connector image</li>
 <li>Update the configuration to reference connectors</li>
 <li>Build connector images and redeploy</li>
 </ul>
+<hr>
 <h2 id="creating-a-connector-image">Creating a connector image</h2>
 <p>Create a connector image from one of the image templates. You can deploy connectors using the following templates:</p>
 <ul>
@@ -102,7 +106,7 @@
 <li><a href="#nodejs-based-connector-image">NodeJS</a> for Node v16 based connectors.</li>
 <li><a href="#user-managed-connector">User managed</a> for connectors that are not managed by the config development environment. The connectors are managed manually outside of the environment.</li>
 </ul>
-<p>The connector should be secured and run on port <code>3443</code>. For more information about securing your system, see <a href="https://docs.i2group.com/analyze/4.4.3/t_configuring_security.html">Securing i2 Analyze</a>.</p>
+<p>The connector should be secured and run on port <code>3443</code>. For more information about securing your system, see <a href="https://docs.i2group.com/analyze/4.4.4/t_configuring_security.html">Securing i2 Analyze</a>.</p>
 <h3 id="spring-boot-based-connector-image">Spring Boot based connector image</h3>
 <ol>
 <li><p>Copy the <code>/templates/springboot-connector-image</code> directory (including the sub-directories) to the <code>/connector-images</code> directory.<br> Rename the <code>springboot-connector-image</code> folder to a custom connector name. The name of the directory is used to determine which connectors to deploy. Do not use spaces or special characters in the name.<br> The directory structure is:  </p>
@@ -154,6 +158,7 @@
 </code></pre><p> Next, <a href="#configuring-a-connector">configure your connector</a>.</p>
 </li>
 </ol>
+<hr>
 <h2 id="configuring-a-connector">Configuring a connector</h2>
 <ol>
 <li><p>Populate the values in the <code>&lt;connector_name&gt;/connector-definition.json</code> file with information about your connector.  </p>
@@ -196,6 +201,10 @@
 <tr>
 <td><code>sendSensitiveHeaders</code></td>
 <td>This setting effectively disables connectors that employ user-specific configuration.</td>
+</tr>
+<tr>
+<td><code>imageName</code></td>
+<td>When specified, the connector image is tagged with a custom name during the build process and uses this name, along with the tag specified in the version file, when deploying the image. Ensure to include the registry name if different than default DockerHub.</td>
 </tr>
 </tbody>
 </table>
@@ -240,6 +249,7 @@
 </code></pre></li>
 </ol>
 <p>For more information about configuring connectors, see <a href="managing_connectors.html">Managing connectors</a>.</p>
+<hr>
 <h2 id="adding-connectors-to-a-config">Adding connectors to a config</h2>
 <ol>
 <li><p>In the configuration you want to deploy your connector with, update the <code>configs/&lt;config_name&gt;/configuration/connector-references.json</code> file and add the directory name for your connector in the <code>connectors</code> array.<br>For example, to add the connector in <code>/connector-images/example-connector</code> the <code>connector-references.json</code> file contains the following <code>connectors</code> array:  </p>
@@ -253,11 +263,12 @@
 }
 </code></pre></li>
 </ol>
+<hr>
 <h2 id="defining-a-gateway-schema-optional">Defining a gateway schema (Optional)</h2>
 <p>You can develop the gateway schema and associated charting schemes by following the instructions in <a href="develop_schemas.html">Developing schemas in your configuration development environment</a>.
 After you develop the schemes, complete the following steps to deploy them with your configuration:</p>
 <ol>
-<li>Copy the schema and charting scheme files to the <code>/gateway-schemas</code> directory.<br>To define the short name of the gateway schema, the prefix of the file name is used. The convention is defined as: <code>&lt;short&gt;-&lt;name&gt;-schema.xml</code> and <code>&lt;short&gt;-&lt;name&gt;-schema-charting-scheme.xml</code>.<br>For example, files with the names <code>law-enforcement-schema.xml</code> and <code>law-enforcement-charting-schemes.xml</code> have the short name <code>law-enforcement</code>.</li>
+<li>Copy the schema and charting scheme files to the <code>/gateway-schemas</code> directory.<br>To define the short name of the gateway schema, the prefix of the file name is used. The convention is defined as: <code>&lt;short&gt;-&lt;name&gt;-schema.xml</code> and <code>&lt;short&gt;-&lt;name&gt;-schema-charting-scheme.xml</code>.<br>For example, files with the names <code>law-enforcement-schema.xml</code> and <code>law-enforcement-schema-charting-schemes.xml</code> have the short name <code>law-enforcement</code>.</li>
 <li><p>Add the short name of your schema to the <code>configs/&lt;config_name&gt;/configuration/connector-references.json</code> file in the <code>gatewaySchemas</code> array.<br> For example, to add a gateway schema with the short name <code>law-enforcement</code>, the file contains the following <code>gatewaySchemas</code> array:</p>
 <pre><code class="lang-json">{
     ...
@@ -273,11 +284,13 @@ After you develop the schemes, complete the following steps to deploy them with 
 <li><p>Set the short name of your schema in the <code>&lt;connector_name&gt;/connector-definition.json</code> as the value for the <code>gatewaySchema</code> key of the connector that will use the gateway schema.</p>
 </li>
 </ol>
+<hr>
 <h2 id="building-the-connector-images-and-redeploying">Building the connector images and redeploying</h2>
 <ol>
-<li><p>Run the <code>deploy</code> command with your config name, to generate the secrets for your connectors, build the connector images, and deploy your environment.  </p>
-<pre><code class="lang-sh">deploy -c &lt;config_name&gt;
-</code></pre></li>
+<li><p>Run the <code>deploy</code> command to generate the secrets for your connectors, build the connector images, and deploy your environment.  </p>
+<pre><code class="lang-bash">deploy
+</code></pre><p> If you have multiple configs, specify the config name with <code>-c &lt;config-name&gt;</code>.</p>
+</li>
 </ol>
 <p>After you add connectors to your environment, you can <a href="develop_config_dev.html">configure the rest of the configuration</a>.</p>
 </article>
@@ -300,8 +313,8 @@ After you develop the schemes, complete the following steps to deploy them with 
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            &copy; N. Harris Computer Corporation (2022-2023)
             
+            <span>Generated by <strong>DocFX</strong></span>
           </div>
         </div>
       </footer>
