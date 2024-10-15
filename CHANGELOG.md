@@ -11,6 +11,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
 
+## 3.0.1 - 08/15/2024
+
+### Added
+
+* Documentation for deploying external connectors with SSL enabled.
+
+### Fixed
+
+* Bootstrap script errors in environments with non-default permissions.
+* Renew secrets in a deployment pattern without database.
+* ProvisioningCompatibilityMode and UserIdentityCompatibilityMode not set to true after upgrading.
+
+[3.0.1]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-deployment-tooling/tree/v3.0.1><!-- markdown-link-check-enable -->
+
 ## 3.0.0 - 08/08/2024
 
 ### Added
@@ -38,7 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * Improved error handling when adding additional certificates to clients.
 * Errors with TTY when running in a non-interactive shell.
 
-[3.0.0]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-deployment-tooling/tree/v3.0.0><!-- markdown-link-check-enable -->
+[3.0.0]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v3.0.0>
 
 ## 2.9.4 - 30/07/2024
 
@@ -50,7 +64,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 * Postgres backup command in arm64 architecture.
 
-[2.9.4]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-deployment-tooling/tree/v2.9.4><!-- markdown-link-check-enable -->
+[2.9.4]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v2.9.4>
 
 ## 2.9.3 - 08/05/2024
 

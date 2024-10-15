@@ -63,21 +63,8 @@ GOTO :eof
     ECHO VSCode is already installed.
     EXIT /B 0
   )
-  ECHO Downloading VSCode...
-  curl -L "%VSCODE_DOWNLOAD_URL%" -o "%TEMP%\%VSCODE_INSTALL_EXE%"
-  IF %ERRORLEVEL% NEQ 0 (
-    ECHO Error: Failed to download VSCode. >&2
-    EXIT /B 1
-  )
-  ECHO Installing VSCode...
-  "%TEMP%\%VSCODE_INSTALL_EXE%" /VERYSILENT /MERGETASKS=addtopath,!runcode
-  IF %ERRORLEVEL% NEQ 0 (
-    ECHO Error: Failed to install VSCode. >&2
-    EXIT /B 1
-  )
-  DEL "%TEMP%\%VSCODE_INSTALL_EXE%"
-  ECHO VSCode has been downloaded and installed.
-  EXIT /B 0
+  ECHO Download and install VSCode manually before reruning this script again.
+  EXIT /B 1
 
 :ensure_vscode_extension_installed
   :: Note: We have to CALL the VSCode command instead of merely invoking it.

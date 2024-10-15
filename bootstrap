@@ -279,6 +279,7 @@ function check_script_updates() {
     --log-driver none \
     -v "${SCRIPT_DIR}:${SCRIPT_DIR}" \
     -e WORKDIR="${SCRIPT_DIR}" \
+    -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
     "${ANALYZE_CONTAINERS_CLIENT_IMAGE_NAME}:${ANALYZE_CONTAINERS_VERSION}" \
     "/opt/analyze-deployment-tooling/utils/containers/check-installers" -n "${SCRIPT_NAME}"; then
     echo "The script has been updated to a new version. Please run the script again to use the new version." >&2
