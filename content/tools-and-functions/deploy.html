@@ -97,7 +97,7 @@ In <code>deploy-pre-prod</code>, 3 ZooKeeper containers are used.</li>
 <li>Create the <code>znode</code> for the cluster.<br>i2 Analyze uses a ZooKeeper connection string with a chroot. To use a chroot connection string, a <em>znode</em> with that name must exist. For more information, see <a href="https://solr.apache.org/guide/solr/latest/deployment-guide/solr-control-script-reference.html#solrcloud-mode">SolrCloud Mode</a>.</li>
 <li>Set the <code>urlScheme</code> to be <code>https</code>.</li>
 <li><p>Configure the Solr authentication by uploading the <code>security.json</code> file to ZooKeeper.</p>
-<p>For more information about the function, see <a href="client_functions.html#run-solr-client-command">run_solr_client_command</a>.</p>
+<p>For more information about the function, see <a href="./client_functions.md#run-solr-client-command">run_solr_client_command</a>.</p>
 </li>
 </ol>
 </li>
@@ -139,7 +139,7 @@ In <code>deploy-pre-prod</code>, 3 ZooKeeper containers are used.</li>
 <li><p>Generate the Information Store scripts.</p>
 <ul>
 <li>The <code>run_i2_analyze_tool</code> client function is used to run the <code>generateInfoStoreToolScripts.sh</code> tool.  <ul>
-<li><a href="client_functions.html#run-i2-analyze-tool">run_i2_analyze_tool</a></li>
+<li><a href="./client_functions.md#run-i2-analyze-tool">run_i2_analyze_tool</a></li>
 <li><a href="i2analyze_tools.html#generate-information-store-scripts">Generate Information Store scripts</a></li>
 </ul>
 </li>
@@ -148,7 +148,7 @@ In <code>deploy-pre-prod</code>, 3 ZooKeeper containers are used.</li>
 <li><p>Generate the static Information Store database scripts.</p>
 <ul>
 <li>The <code>run_i2_analyze_tool</code> client function is used to run the <code>generateStaticInfoStoreCreationScripts.sh</code> tool.  <ul>
-<li><a href="client_functions.html#run-i2-analyze-tool">run_i2_analyze_tool</a></li>
+<li><a href="./client_functions.md#run-i2-analyze-tool">run_i2_analyze_tool</a></li>
 <li><a href="i2analyze_tools.html#generate-static-database-scripts-tool">Generate static database scripts tool</a></li>
 </ul>
 </li>
@@ -157,7 +157,7 @@ In <code>deploy-pre-prod</code>, 3 ZooKeeper containers are used.</li>
 <li><p>Create the Information Store database and schemas.</p>
 <ul>
 <li>The <code>run_sql_server_command_as_sa</code> client function is used to run the <code>runDatabaseCreationScripts.sh</code> tool.  <ul>
-<li><a href="client_functions.html#run-sql-server-command-as-sa">run_sql_server_command_as_sa</a></li>
+<li><a href="./client_functions.md#run-sql-server-command-as-sa">run_sql_server_command_as_sa</a></li>
 <li><a href="i2analyze_tools.html#run-database-creation-scripts-tool">Run database creation scripts tool</a></li>
 </ul>
 </li>
@@ -184,7 +184,7 @@ For more information about the database users and their permissions, see <a href
 <li><p>Run the static scripts that create the Information Store database objects.</p>
 <ul>
 <li>The <code>run_sql_server_command_as_dba</code> client function is used to run the <code>runStaticScripts.sh</code> tool.  <ul>
-<li><a href="client_functions.html#run-sql-server-command-as-dba">run_sql_server_command_as_dba</a></li>
+<li><a href="./client_functions.md#run-sql-server-command-as-dba">run_sql_server_command_as_dba</a></li>
 <li><a href="i2analyze_tools.html#run-static-database-scripts-tool">Run static database scripts tool</a></li>
 </ul>
 </li>
@@ -206,7 +206,7 @@ For more information about the database users and their permissions, see <a href
 <li><p>Generate the Information Store scripts.</p>
 <ul>
 <li>The <code>run_i2_analyze_tool</code> client function is used to run the <code>generateInfoStoreToolScripts.sh</code> tool.  <ul>
-<li><a href="client_functions.html#run-i2-analyze-tool">run_i2_analyze_tool</a></li>
+<li><a href="./client_functions.md#run-i2-analyze-tool">run_i2_analyze_tool</a></li>
 <li><a href="i2analyze_tools.html#generate-information-store-scripts">Generate Information Store scripts</a></li>
 </ul>
 </li>
@@ -215,7 +215,7 @@ For more information about the database users and their permissions, see <a href
 <li><p>Generate the static Information Store database scripts.</p>
 <ul>
 <li>The <code>run_i2_analyze_tool</code> client function is used to run the <code>generateStaticInfoStoreCreationScripts.sh</code> tool.  <ul>
-<li><a href="client_functions.html#run-i2-analyze-tool">run_i2_analyze_tool</a></li>
+<li><a href="./client_functions.md#run-i2-analyze-tool">run_i2_analyze_tool</a></li>
 <li><a href="i2analyze_tools.html#generate-static-database-scripts-tool">Generate static database scripts tool</a></li>
 </ul>
 </li>
@@ -224,7 +224,7 @@ For more information about the database users and their permissions, see <a href
 <li><p>Create the Information Store database and schemas.</p>
 <ul>
 <li>The <code>run_postgres_server_command_as_postgres</code> client function is used to run the <code>runDatabaseCreationScripts.sh</code> tool.  <ul>
-<li><a href="client_functions.html#run_postgres_server_command_as_postgres">run_postgres_server_command_as_postgres</a></li>
+<li><a href="./client_functions.md#run_postgres_server_command_as_postgres">run_postgres_server_command_as_postgres</a></li>
 <li><a href="i2analyze_tools.html#run-database-creation-scripts-tool">Run database creation scripts tool</a></li>
 </ul>
 </li>
@@ -238,7 +238,7 @@ For more information about the database users and their permissions, see <a href
 <li><p>Create the PG Cron extension.  </p>
 <ul>
 <li>The <code>run_postgres_server_command_as_postgres</code> client function is used to run the <code>create_pg_cron_extension.sh</code> tool.  <ul>
-<li><a href="client_functions.html#run_postgres_server_command_as_postgres">run_postgres_server_command_as_postgres</a></li>
+<li><a href="./client_functions.md#run_postgres_server_command_as_postgres">run_postgres_server_command_as_postgres</a></li>
 </ul>
 </li>
 </ul>
@@ -259,7 +259,7 @@ For more information about the database users and their permissions, see <a href
 <li><p>Run the static scripts that create the Information Store database objects.</p>
 <ul>
 <li>The <code>run_postgres_server_command_as_dba</code> client function is used to run the <code>runStaticScripts.sh</code> tool.  <ul>
-<li><a href="client_functions.html#run_postgres_server_command_as_dba">run_postgres_server_command_as_dba</a></li>
+<li><a href="./client_functions.md#run_postgres_server_command_as_dba">run_postgres_server_command_as_dba</a></li>
 <li><a href="i2analyze_tools.html#run-static-database-scripts-tool">Run static database scripts tool</a></li>
 </ul>
 </li>
@@ -307,12 +307,12 @@ For example:</p>
 <ol>
 <li>The <code>configure_istore_database</code> function generates and runs the dynamic database scripts that create the schema specific database objects within the database.<ul>
 <li>The <code>run_i2_analyze_tool</code> client function is used to run the <code>generateDynamicInfoStoreCreationScripts.sh</code> tool.<ul>
-<li><a href="client_functions.html#run-i2-analyze-tool">run_i2_analyze_tool</a></li>
+<li><a href="./client_functions.md#run-i2-analyze-tool">run_i2_analyze_tool</a></li>
 <li><a href="i2analyze_tools.html#generate-dynamic-information-store-creation-scripts-tool">Generate dynamic Information Store creation scripts tool</a></li>
 </ul>
 </li>
 <li>The <code>run_sql_server_command_as_dba</code> client function is used to run the <code>runDynamicScripts.sh</code> tool.<ul>
-<li><a href="client_functions.html#run-sql-server-command-as-dba">run_sql_server_command_as_dba</a></li>
+<li><a href="./client_functions.md#run-sql-server-command-as-dba">run_sql_server_command_as_dba</a></li>
 <li><a href="i2analyze_tools.html#run-dynamic-information-store-creation-scripts-tool">Run dynamic Information Store creation scripts tool</a></li>
 </ul>
 </li>
@@ -389,8 +389,8 @@ For more information about running a Grafana container, see <a href="../images-a
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
+            &copy; N. Harris Computer Corporation
             
-            <span>Generated by <strong>DocFX</strong></span>
           </div>
         </div>
       </footer>

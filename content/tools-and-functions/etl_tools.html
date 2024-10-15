@@ -80,7 +80,7 @@
 <h1 id="etl-tools">ETL Tools</h1>
 
 <p>This topic describes how to perform ETL tasks by using the ETL toolkit in a containerized deployment of i2 Analyze.</p>
-<p>The <code>run_etl_toolkit_tool_as_i2_etl</code> client function is used to run the ETL tools described in this topic as the i2ETL user. For more information about this client function, see <a href="client_functions.html#run_etl_toolkit_tool_as_i2_etl">run_etl_toolkit_tool_as_i2_etl</a></p>
+<p>The <code>run_etl_toolkit_tool_as_i2_etl</code> client function is used to run the ETL tools described in this topic as the i2ETL user. For more information about this client function, see <a href="../tools-and-functions/client_functions.md#run_etl_toolkit_tool_as_i2_etl">run_etl_toolkit_tool_as_i2_etl</a></p>
 <h2 id="building-an-etl-client-image">Building an ETL Client image</h2>
 <p>The ETL client image is built from the Dockerfile in <code>images/etl_client</code>.</p>
 <p>The following <code>docker build</code> command builds the configured image:</p>
@@ -109,19 +109,19 @@
 </tr>
 </tbody>
 </table>
-<p>Use the <a href="client_functions.html#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
+<p>Use the <a href="../tools-and-functions/client_functions.md#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">run_etl_toolkit_tool_as_i2_etl 
     bash -c &quot;/opt/i2/etltoolkit/addInformationStoreIngestionSource 
         -n &lt;&gt; 
         -d &lt;&gt; &quot;
 </code></pre><h2 id="drop-information-store-error-tables">Drop Information Store error tables</h2>
 <p>The <code>dropInformationStoreErrorTables</code> tool is used to remove the <code>_ERROR</code> and <code>_REJECT</code> tables from the Information Store.</p>
-<p>Use the <a href="client_functions.html#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
+<p>Use the <a href="../tools-and-functions/client_functions.md#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">run_etl_toolkit_tool_as_i2_etl 
     bash -c &quot;/opt/i2/etltoolkit/dropInformationStoreErrorTables&quot;
 </code></pre><h2 id="clear-information-store-staging-schema">Clear Information Store staging schema</h2>
 <p>The <code>clearInformationStoreStagingSchema</code> tool is used to clear all the tables in the Information Store Staging Schema.</p>
-<p>Use the <a href="client_functions.html#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
+<p>Use the <a href="../tools-and-functions/client_functions.md#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">run_etl_toolkit_tool_as_i2_etl 
     bash -c &quot;/opt/i2/etltoolkit/clearInformationStoreStagingSchema&quot;
 </code></pre><h2 id="create-information-store-staging-table">Create Information Store staging table</h2>
@@ -149,7 +149,7 @@
 </tr>
 </tbody>
 </table>
-<p>Use the <a href="client_functions.html#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
+<p>Use the <a href="../tools-and-functions/client_functions.md#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">run_etl_toolkit_tool_as_i2_etl 
     bash -c &quot;/opt/i2/etltoolkit/createInformationStoreStagingTable 
         -stid &lt;&gt; 
@@ -192,7 +192,7 @@
 </tr>
 </tbody>
 </table>
-<p>Use the <a href="client_functions.html#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
+<p>Use the <a href="../tools-and-functions/client_functions.md#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">run_etl_toolkit_tool_as_i2_etl 
     bash -c &quot;/opt/i2/etltoolkit/ingestInformationStoreRecords 
     -imf &lt;&gt; 
@@ -200,12 +200,12 @@
     -im &lt;&gt;&quot;
 </code></pre><h2 id="sync-information-store-records">Sync Information Store records</h2>
 <p>The <code>syncInformationStoreCorrelation</code> tool is used after an error during correlation, to synchronize the data in the Information Store with the data in the Solr index so that the data returns to a usable state</p>
-<p>Use the <a href="client_functions.html#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
+<p>Use the <a href="../tools-and-functions/client_functions.md#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">run_etl_toolkit_tool_as_i2_etl 
     bash -c &quot;/opt/i2/etltoolkit/syncInformationStoreCorrelation&quot;
 </code></pre><h2 id="duplicate-provenance-check">Duplicate provenance check</h2>
 <p>The <code>duplicateProvenanceCheck</code> tool can be used for identifying records in the Information Store with duplicate origin identifiers. Any provenance that has a duplicated origin identifier is added to a staging table in the Information Store.</p>
-<p>Use the <a href="client_functions.html#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
+<p>Use the <a href="../tools-and-functions/client_functions.md#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">runEtlToolkitTool
     bash -c &quot;/opt/i2/etltoolkit/syncInformationStoreCorrelation&quot;
 </code></pre><h2 id="duplicate-provenance-delete">Duplicate provenance delete</h2>
@@ -226,7 +226,7 @@
 </tbody>
 </table>
 <p>If no arguments are provided, duplicate origin identifiers are deleted from all staging tables.</p>
-<p>Use the <a href="client_functions.html#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
+<p>Use the <a href="../tools-and-functions/client_functions.md#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">run_etl_toolkit_tool_as_i2_etl 
     bash -c &quot;/opt/i2/etltoolkit/syncInformationStoreCorrelation&quot;
 </code></pre><h2 id="generate-information-store-index-creation-scripts">Generate Information Store index creation scripts</h2>
@@ -250,7 +250,7 @@
 </tr>
 </tbody>
 </table>
-<p>Use the <a href="client_functions.html#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
+<p>Use the <a href="../tools-and-functions/client_functions.md#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">runEtlToolkitTask 
     bash -c &quot;/opt/i2/etltoolkit/generateInformationStoreIndexCreationScript 
     -op &lt;&gt;
@@ -276,7 +276,7 @@
 </tr>
 </tbody>
 </table>
-<p>Use the <a href="client_functions.html#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
+<p>Use the <a href="../tools-and-functions/client_functions.md#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">runEtlToolkitTask 
     bash -c &quot;/opt/i2/etltoolkit/generateInformationStoreIndexDropScript 
     --op &lt;&gt; 
@@ -299,7 +299,7 @@
 </tbody>
 </table>
 <p>If no item type id is provided, orphaned objects for all item types are removed</p>
-<p>Use the <a href="client_functions.html#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
+<p>Use the <a href="../tools-and-functions/client_functions.md#run_etl_toolkit_tool_as_i2_etl"><code>run_etl_toolkit_tool_as_i2_etl</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">run_etl_toolkit_tool_as_i2_etl 
     bash -c &quot;/opt/i2/etltoolkit/deleteOrphanedDatabaseObjects 
         -iti &lt;&gt; &quot;
@@ -325,7 +325,7 @@
 </tbody>
 </table>
 <p>If no schema type identifier is provided, the views for all of the item types are be removed</p>
-<p>Use the <a href="client_functions.html#run_etl_toolkit_tool_as_dba"><code>run_etl_toolkit_tool_as_dba</code></a> client function to run the tool. For example:</p>
+<p>Use the <a href="../tools-and-functions/client_functions.md#run_etl_toolkit_tool_as_dba"><code>run_etl_toolkit_tool_as_dba</code></a> client function to run the tool. For example:</p>
 <pre><code class="lang-bash">run_etl_toolkit_tool_as_i2_etl 
     bash -c &quot;/opt/i2/etltoolkit/disableMergedPropertyValues 
         -etd &lt;&gt;
@@ -353,7 +353,7 @@
 </tbody>
 </table>
 <p>If no schema type identifier is provided, the views for all of the item types are generated. If the views already exist, they are overwritten.</p>
-<p>Use the <a href="client_functions.html#run_etl_toolkit_tool_as_dba"><code>run_etl_toolkit_tool_as_dba</code></a> client function to run the tool as the database administrator. For example:</p>
+<p>Use the <a href="../tools-and-functions/client_functions.md#run_etl_toolkit_tool_as_dba"><code>run_etl_toolkit_tool_as_dba</code></a> client function to run the tool as the database administrator. For example:</p>
 <pre><code class="lang-bash">run_etl_toolkit_tool_as_i2_etl 
     bash -c &quot;/opt/i2/etltoolkit/enableMergedPropertyValues 
         -etd &lt;&gt; 
@@ -379,8 +379,8 @@
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
+            &copy; N. Harris Computer Corporation
             
-            <span>Generated by <strong>DocFX</strong></span>
           </div>
         </div>
       </footer>
