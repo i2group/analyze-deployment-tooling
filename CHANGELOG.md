@@ -11,6 +11,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
 
+## 3.0.5 - 27/02/2025
+
+### Fixed
+
+* Documentation for external dependencies: was pointing to the wrong image version.
+
+[3.0.5]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-deployment-tooling/tree/v3.0.5><!-- markdown-link-check-enable -->
+
 ## 3.0.4 - 28/01/2025
 
 ### Fixed
