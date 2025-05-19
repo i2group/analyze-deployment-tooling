@@ -2,7 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [semantic versioning](https://i2group.github.io/analyze-deployment-tooling/guidetoc/index.html#support-policy):
+This project adheres to [semantic versioning](https://i2group.github.io/analyze-deployment-tooling/guidetoc/index.html#support-policy).
+This document's format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+Dates are in UK format - DD/MM/YYYY.
 
 * `Added` for new features.
 * `Changed` for changes in existing functionality.
@@ -10,6 +12,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * `Removed` for now removed features.
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
+
+## 3.1.0 - 16/05/2025
+
+### Added
+
+* Updated for compatibility with i2 Analyze 4.4.5.
+
+### Changed
+
+* Improved support for offline environments.
+
+### Deprecated
+
+* generate-secrets utility script. Use the new 'secrets-utility' command instead.
+
+[3.1.0]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-deployment-tooling/tree/v3.1.0><!-- markdown-link-check-enable -->
 
 ## 3.0.5 - 27/02/2025
 

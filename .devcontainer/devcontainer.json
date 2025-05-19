@@ -10,8 +10,7 @@
     "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind",
     "source=analyze-containers,target=/commandhistory,type=volume",
     "source=${localEnv:HOME}/.m2,target=/home/vscode/.m2,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.config/gh,target=/home/vscode/.config/gh,type=bind",
-    "source=${localEnv:HOME}/.jfrog,target=/home/vscode/.jfrog,type=bind"
+    "source=${localEnv:HOME}/.config/gh,target=/home/vscode/.config/gh,type=bind"
   ],
   "overrideCommand": false,
   "initializeCommand": "bash ./.devcontainer/bootstrap init",

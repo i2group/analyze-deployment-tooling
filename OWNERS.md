@@ -11,7 +11,3 @@ routing PRs, questions, etc. to the right place.
   * UX and documentation
 * Mark Todd
   * Systems Architect ([@Mark-Todd-i2](https://github.com/Mark-Todd-i2))
-
-## Developers
-
-* Oleksandr Kushchak ([@Oleksandr-Kushchak-i2](https://github.com/Oleksandr-Kushchak-i2))
