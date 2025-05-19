@@ -341,7 +341,7 @@ For example:</p>
 <li><p>The <code>run_load_balancer</code> function in <code>server_functions.sh</code> runs HAProxy as a load balancer in a Docker container.</p>
 <p>The load balancer configuration we use can be found in <code>haproxy.cfg</code> file and the variables are passed as environment variables to the Docker container.</p>
 <p>The load balancer routes requests to the application to both Liberty servers that are running. The configuration that used is a simplified configuration for example purposes and is not to be used in production.</p>
-<p>For more information about configuring a load balancer with i2 Analyze, see <a href="https://docs.i2group.com/analyze/4.4.4/hadr_loadbalancer.html">Load balancer</a>.</p>
+<p>For more information about configuring a load balancer with i2 Analyze, see <a href="https://docs.i2group.com/analyze/4.4.5/hadr_loadbalancer.html">Load balancer</a>.</p>
 </li>
 </ul>
 </li>
@@ -349,7 +349,7 @@ For example:</p>
 </li>
 <li><p>The <code>update_match_rules</code> function updates the system match rules.</p>
 <ul>
-<li>The <code>run_i2_analyze_tool</code> client function is used to run the <code>runIndexCommand.sh</code> tool. The tool is run twice, once to update the match rules file and once to switch the match indexes.<br>For more information, see <a href="i2analyze_tools.html#manage-solr-indexes-tool">Manage Solr indexes tool</a>.</li>
+<li>The <code>run_i2_analyze_tool</code> client function is used to run the <code>runAdminCommand.sh</code> tool. The tool is run twice, once to update the match rules file and once to switch the match indexes.<br>For more information, see <a href="i2analyze_tools.html#manage-solr-indexes-tool">Manage Solr indexes tool</a>.</li>
 </ul>
 </li>
 </ol>
