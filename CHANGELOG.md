@@ -13,7 +13,38 @@ Dates are in UK format - DD/MM/YYYY.
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
 
-## 3.1.0 - 16/05/2025
+<!--
+
+Maintenance note:
+Official releases will be tagged in git
+and a summary of the changes from the previous version
+described in each version section.
+
+-->
+
+## 3.1.1 - 21/10/2025
+
+### Added
+
+* Support for persistent storage for connectors.
+* Support for connectors serving connector-supplied static files.
+
+### Changed
+
+* Bugfix: HAProxy mishandled X-Forwarded-... headers.
+* Bugfix: documentation indexes and links were broken.
+* bootstrap now defaults to fetching its own version.
+* Stop using deprecated grafana-cli command.
+* Improved diagnostics in case of errors.
+* Offline installation documentation improved.
+
+### Deprecated
+
+* None
+
+[3.1.1]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-deployment-tooling/tree/v3.1.1><!-- markdown-link-check-enable -->
+
+## 3.1.0 - 19/05/2025
 
 ### Added
 
@@ -423,6 +454,7 @@ Dates are in UK format - DD/MM/YYYY.
 
 ### Added
 
+<!-- cspell: ignore runi2AnalyzeToolAsExternalUser -->
 * Walkthroughs to demonstrate high availability and disaster recovery scenarios.
 * New client functions added - getSolrStatus & runi2AnalyzeToolAsExternalUser.
 * Documentation for the environments/pre-prod/resetRepository.sh script.

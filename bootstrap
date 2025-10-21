@@ -4,7 +4,7 @@
 #
 # SPDX short identifier: MIT
 
-set -e
+set -euo pipefail
 
 if grep -qEi "(Microsoft|WSL)" /proc/sys/kernel/osrelease &>/dev/null; then
   if [[ "$(docker version --format '{{.Server.Version}}')" == "25.0.3" ]]; then
@@ -14,7 +14,9 @@ fi
 
 # This ensures we use the bootstrap directory for docker.env
 SCRIPT_NAME="$(basename "$0")"
-SCRIPT_DIR="$(readlink -f "$(dirname "$0")")"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# This MUST be maintained to be in sync with the version of the code.
+DEFAULT_VERSION="3.1.1"
 
 USAGE="""
 Usage:
@@ -22,24 +24,116 @@ Usage:
   bootstrap -h
 
 Options:
-  -p <path>                              The full path to the directory to install analyze-containers. Defaults to the current directory.
-  -o <version>                           The version to install. Defaults to latest.
-  -v                                     Verbose output.
-  -y                                     Answer 'yes' to all prompts.
-  -h                                     Display the help.
+  -p <path>     The full path to the directory to install to.
+                Defaults to the current directory.
+  -o <version>  The version to install, e.g. \"1.2.3\" or \"latest\".
+                Defaults to \"${DEFAULT_VERSION}\".
+  -v            Verbose output.
+  -y            Answer 'yes' to all prompts.
+  -h            Display the help.
 """
+
+#######################################
+# Gets docker container details of where we're running.
+# Takes no arguments.
+# stdout:
+#   "" if not running in a container
+#   "container running cmd-and-args..." if we can determine the entry point command, or
+#   "container" if we can't determine the entry point command.
+# where
+#   "container" will be "docker_image(container_name)" if we can talk to our own daemon, or
+#   just "docker-container" if we can't determine which container we are.
+#######################################
+function get_our_container_details() {
+  if [ ! -f /.dockerenv ]; then
+    return # not running in a container
+  fi
+  local -a container_details=()
+  # If we have access to the docker client then we can ask it to tell us what containers
+  # were started at the exact same time we were.
+  local container_ids
+  if container_ids=$(docker ps --all --format '{{.CreatedAt}}\t{{.Names}}\t{{.Image}}' 2>&1); then
+    # We know our start time because it's the creation time of the /.dockerenv file.
+    local dockerenv_creation_seconds_since_epoch
+    dockerenv_creation_seconds_since_epoch=$(stat -c %Y /.dockerenv)
+    local created_at container_name image_name
+    while IFS=$'\t' read -r created_at container_name image_name; do
+      # The "created_at" value is in a format that date does not understand.
+      created_at=$(sed -E 's/([-+][0-9]{4}) [A-Z]{2,4}$/\1/' <<<"${created_at}")
+      local created_at_seconds_since_epoch
+      created_at_seconds_since_epoch=$(date --date="${created_at}" +%s)
+      if [[ "${created_at_seconds_since_epoch}" == "${dockerenv_creation_seconds_since_epoch}" ]]; then
+        container_details+=( "${image_name}(${container_name})" )
+      fi
+    done <<<"${container_ids}"
+  fi
+  local container_image_and_name=''
+  if [[ "${#container_details[@]}" -eq 1 ]]; then # one match means it's probably us
+    container_image_and_name="${container_details[0]}"
+  else
+    container_image_and_name='docker-container'
+  fi
+  local container_entry_point=''
+  container_entry_point=$( (tr '\0\n' ' ;' < /proc/1/cmdline) 2>/dev/null || true)
+  if [[ -n "${container_entry_point}" ]]; then
+    container_entry_point=" running ${container_entry_point}"
+  fi
+  echo "${container_image_and_name}${container_entry_point}"
+}
+
+#######################################
+# Prints the bash stacktrace, if our version of bash supports it.
+# Includes the container details if we can determine them.
+# Arguments:
+#   1: Number of stack frames to ignore.
+#      Defaults to 0, meaning that whatever called this method will
+#      be the first element on the trace. If that method wants to
+#      hide, it should pass in 1 etc.
+#######################################
+function print_stacktrace() {
+  local number_of_inner_levels_to_ignore="${1:-0}"
+  # if our bash version supports stacktraces, give a stacktrace.
+  if [[ -n "${BASH_LINENO[*]:-}" && -n "${BASH_SOURCE[*]:-}" ]]; then
+    local stack_length="${#BASH_LINENO[@]}"
+    local stack_length_minus_one=$((stack_length - 1))
+    local stack_index
+    local stack_index_plus_one
+    local stack_file
+    local stack_line_number
+    local stack_function_name
+    for ((stack_index = number_of_inner_levels_to_ignore; stack_index < stack_length_minus_one; stack_index++)); do
+      stack_index_plus_one=$((stack_index + 1))
+      stack_file="${BASH_SOURCE[${stack_index_plus_one}]}"
+      stack_function_name="${FUNCNAME[${stack_index_plus_one}]}"
+      stack_line_number=${BASH_LINENO[${stack_index}]}
+      if [[ ${stack_index_plus_one} -lt ${stack_length_minus_one} ]]; then
+        echo "    at ${stack_file}:${stack_line_number} in function ${stack_function_name}()"
+      else
+        echo "    at ${stack_file}:${stack_line_number}"
+      fi
+    done
+    local container_details
+    container_details=$(get_our_container_details)
+    if [[ -n "${container_details}" ]]; then
+      echo "    in ${container_details}"
+    fi
+  fi
+}
+trap '{ set +x; echo "Error occurred at line ${LINENO} executing ${BASH_COMMAND:-}. Stacktrace:" >&2; print_stacktrace >&2; }' ERR
+trap '{ echo "Script interrupted by user (Ctrl+C)" >&2; exit 130; }' INT
+trap '{ echo "Script terminated" >&2; exit 143; }' TERM
+set -E
 
 function print_usage() {
   local exit_code="$1"
-
   echo -e "${USAGE}"
-
   if [[ -n "${exit_code}" ]]; then
     exit "${exit_code}"
   fi
 }
 
 function parse_arguments() {
+  ANALYZE_CONTAINERS_VERSION="${DEFAULT_VERSION}"
   while getopts ":o:p:hvy" flag; do
     case "${flag}" in
     p)
@@ -58,11 +152,12 @@ function parse_arguments() {
       print_usage 0
       ;;
     \?)
-      print_usage 1
+      echo "Invalid option: ${OPTARG}" >&2
+      print_usage 1 >&2
       ;;
     :)
-      echo "Invalid option: ${OPTARG} requires an argument"
-      print_usage 1
+      echo "Invalid option: ${OPTARG} requires an argument" >&2
+      print_usage 1 >&2
       ;;
     esac
   done
@@ -72,52 +167,85 @@ function get_version_from_client_image() {
   local variable_name="$1"
   local container_version="$2"
   local file_path="${3:-"/opt/analyze-deployment-tooling/utils/common_variables.sh"}"
-
   # The -i flag is required to attach stdin & stdout
   # There should NOT be a -t flag here
   docker run -i --rm --log-driver none -u "$(id -u):$(id -g)" --entrypoint="" \
     "${ANALYZE_CONTAINERS_CLIENT_IMAGE_NAME}:${container_version}" \
-    bash -c "source ${file_path} && echo \${$variable_name}"
+    bash -c "source ${file_path} && echo \${${variable_name}}"
 }
 
+# Sets environment variables from a file containing lines of the form "KEY=VALUE",
+# but not overwriting any existing environment variables.
+# Whitespace is trimmed from both ends of the lines.
+# Arguments:
+#   1. Path to the environment file (e.g. ".devcontainer.env")
+# Returns 0 on success, non-zero on failure.
+# Outputs INFO and WARN messages to stdout.
+# INFO messages notifying the user of any that were set.
+# WARN messages notifying the user of any that were ignored.
 function load_devcontainer_env() {
+  # Maintenance note: This is used by bootstrap so must be compatible with bash 3.2.57 (MacOS) onwards.
   local env_file="$1"
-
-  while IFS='=' read -r key value || [[ -n "$value" ]]; do
-    value="$(echo "${value}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-    [[ -z "$value" ]] && continue
+  local number_of_ignores=0
+  local number_of_settings=0
+  local key new_value
+  while IFS='=' read -r key new_value || [[ -n "${key}${new_value}" ]]; do
+    key="${key#"${key%%[! 	]*}"}"
+    key="${key%"${key##*[! 	]}"}"
+    [[ -z "${key}" ]] && continue
+    new_value="${new_value#"${new_value%%[! 	]*}"}"
+    new_value="${new_value%"${new_value##*[! 	]}"}"
+    [[ -z "${new_value}" ]] && continue
     # Don't override environment variables that are already set
-    if [[ -z "${!key}" ]]; then
-      # Ensure no trailing or leading whitespace
-      eval "${key}"="${value}"
-      echo "Setting ${key} to ${value}"
-    else
-      echo "Environment variable ${key} set to ${!key} which overrides devcontainer environment"
+    local current_value
+    eval "current_value=\"\${${key}:-}\""
+    if [[ "${current_value}" != "${new_value}" ]]; then # only process differences
+      if [[ -z "${current_value}" ]]; then
+        # Ensure no trailing or leading whitespace
+        echo "INFO: Setting '${key}' to '${new_value}'"
+        number_of_settings=$((number_of_settings + 1))
+        eval "${key}"="${new_value}"
+      else
+        echo "WARN: Ignoring '${key}=${new_value}'; not overriding previous value '${current_value}'"
+        number_of_ignores=$((number_of_ignores + 1))
+      fi
     fi
-  done <"$env_file"
+  done <"${env_file}"
+  if [[ "${number_of_ignores}" -gt 0 ]]; then
+    if [[ "${number_of_settings}" -gt 0 ]]; then
+      echo "WARN: ${number_of_ignores} environment variable(s) ignored and ${number_of_settings} loaded from file '${env_file}'."
+    else
+      echo "WARN: ${number_of_ignores} environment variable(s) ignored from file '${env_file}'."
+    fi
+  elif [[ "${number_of_settings}" -gt 0 ]]; then
+    echo "INFO: ${number_of_settings} environment variable(s) loaded from '${env_file}'."
+  fi
 }
 
 function set_defaults() {
+  VERBOSE="${VERBOSE:-}"
+  YES_FLAG="${YES_FLAG:-}"
   if [[ -f "${SCRIPT_DIR}/.devcontainer/devcontainer.env" ]]; then
     load_devcontainer_env "${SCRIPT_DIR}/.devcontainer/devcontainer.env"
   fi
-  if [[ -z "${PATH_TO_DIR}" ]]; then
+  if [[ -z "${PATH_TO_DIR:-}" ]]; then
     PATH_TO_DIR="${PWD}"
   fi
-
   if [[ -z "${ANALYZE_CONTAINERS_CLIENT_IMAGE_NAME}" ]]; then
     ANALYZE_CONTAINERS_CLIENT_IMAGE_NAME="i2group/i2eng-analyze-containers-client"
   fi
-
-  if [[ -z "${ANALYZE_CONTAINERS_VERSION}" ]]; then
-    if [[ "${USE_LOCAL_IMAGE}" != "true" ]]; then
+  if [[ -z "${ANALYZE_CONTAINERS_VERSION}" || "${ANALYZE_CONTAINERS_VERSION}" == "latest" ]]; then
+    if [[ "${USE_LOCAL_IMAGE:-}" != "true" ]]; then
+      local version_name="latest"
       docker pull "${ANALYZE_CONTAINERS_CLIENT_IMAGE_NAME}:latest"
+    else
+      local version_name="local"
     fi
     ANALYZE_CONTAINERS_VERSION="$(get_version_from_client_image "VERSION" \
       "latest" "/opt/analyze-deployment-tooling/version.conf")"
-    echo "Using the latest version: ${ANALYZE_CONTAINERS_VERSION}"
+    echo "Using the ${version_name} version: ${ANALYZE_CONTAINERS_VERSION}"
   fi
-  if [[ "${USE_LOCAL_IMAGE}" != "true" ]]; then
+  if [[ "${USE_LOCAL_IMAGE:-}" != "true" ]]; then
     docker pull "${ANALYZE_CONTAINERS_CLIENT_IMAGE_NAME}:${ANALYZE_CONTAINERS_VERSION}"
   fi
 }
@@ -138,26 +266,23 @@ function create_empty_dirs() {
 }
 
 function run_script_on_client() {
-  local extra_args=("$@")
+  local cmd_to_run_in_container=("$@")
   if [[ "${VERBOSE}" == "true" ]]; then
-    extra_args+=("-v")
+    cmd_to_run_in_container+=("-v")
   fi
   if [[ "${YES_FLAG}" == "true" ]]; then
-    extra_args+=("-y")
+    cmd_to_run_in_container+=("-y")
   fi
-
-  container_args=()
+  local docker_run_args=()
   if [[ -f "${SCRIPT_DIR}/docker.env" ]]; then
-    container_args+=("--env-file" "${SCRIPT_DIR}/docker.env")
+    docker_run_args+=("--env-file" "${SCRIPT_DIR}/docker.env")
   fi
-
-  if [[ "${CI}" == "true" || "${TTY}" == "false" ]] || ! tty -s; then
-    docker_run_arg="-i"
+  if [[ "${CI:-}" == "true" || "${TTY:-}" == "false" ]] || ! tty -s; then
+    docker_run_args+=("-i")
   else
-    docker_run_arg="-it"
+    docker_run_args+=("-it")
   fi
-
-  local mount_list
+  local mount_list=""
   if [[ -f "${PATH_TO_DIR}/path-configuration.json" ]]; then
     # The -i flag is required to attach stdin & stdout
     # There should NOT be a -t flag here
@@ -170,26 +295,21 @@ function run_script_on_client() {
       "${ANALYZE_CONTAINERS_CLIENT_IMAGE_NAME}:${ANALYZE_CONTAINERS_VERSION}" \
       "/opt/analyze-deployment-tooling/utils/containers/create-mounts" -t list)
   fi
-  BIND_MOUNTS=()
-  for mount in $mount_list; do
-    BIND_MOUNTS+=("-v" "${mount}:${mount}")
+  for mount in ${mount_list}; do
+    docker_run_args+=("-v" "${mount}:${mount}")
   done
-
   # Ensure docker login information is available in the container.
   # Wrappers execute analyze-containers client which doesn't have a tunnelling mechanism to pass docker login
   # information. Instead we require to do a docker login with an API key and store it in ac_docker_config volume.
-  if [[ "${CI}" == "true" ]]; then
-    BIND_MOUNTS+=("-v" "${HOST_HOME:-"${HOME}"}/.docker:/home/i2analyze/.docker")
+  if [[ "${CI:-}" == "true" ]]; then
+    docker_run_args+=("-v" "${HOST_HOME:-"${HOME}"}/.docker:/home/i2analyze/.docker")
   else
-    BIND_MOUNTS+=("-v" "ac_docker_config:/home/i2analyze/.docker")
+    docker_run_args+=("-v" "ac_docker_config:/home/i2analyze/.docker")
   fi
-
   docker run \
     --rm \
-    "${docker_run_arg}" \
     -w /opt/analyze-deployment-tooling \
     --name "analyze-deployment-tooling-${ANALYZE_CONTAINERS_VERSION}" \
-    "${BIND_MOUNTS[@]}" \
     -v "${PATH_TO_DIR}:${PATH_TO_DIR}" \
     -v "ac_m2:/home/i2analyze/.m2" \
     -v "/var/run/docker.sock:/var/run/docker-host.sock" \
@@ -198,17 +318,16 @@ function run_script_on_client() {
     -e HOST_HOME="${HOST_HOME:-"${HOME}"}" \
     -e WORKDIR="${PATH_TO_DIR}" \
     -e USER_ID="$(id -u)" -e GROUP_ID="$(id -g)" \
-    -e DEBUG="${DEBUG}" \
-    "${container_args[@]}" \
+    -e DEBUG="${DEBUG:-}" \
+    "${docker_run_args[@]}" \
     "${ANALYZE_CONTAINERS_CLIENT_IMAGE_NAME}:${ANALYZE_CONTAINERS_VERSION}" \
-    "${extra_args[@]}"
+    "${cmd_to_run_in_container[@]}"
 }
 
 function download_jdbc_driver() {
   local driver_name="$1"
   local driver_version="$2"
-  local driver_file_name
-
+  local driver_file_name_prefix driver_file_name driver_url
   case "${driver_name}" in
   "sqlserver")
     driver_file_name_prefix="mssql-jdbc"
@@ -225,7 +344,6 @@ function download_jdbc_driver() {
     exit 1
     ;;
   esac
-
   while read -r file_name; do
     if [[ -f "${file_name}" && "${file_name}" != *"/${driver_file_name}" ]]; then
       echo "Another JDBC driver was found: ${file_name}" >&2
@@ -233,7 +351,6 @@ function download_jdbc_driver() {
       exit 1
     fi
   done <<<"$(find "${PATH_TO_DIR}/pre-reqs/jdbc-drivers" -mindepth 1 -maxdepth 1 -type f -name "${driver_file_name_prefix}*" | sort)"
-
   if [[ ! -f "${PATH_TO_DIR}/pre-reqs/jdbc-drivers/${driver_file_name}" ]]; then
     echo "Downloading ${driver_name} JDBC driver version ${driver_version}"
     curl -o "${PATH_TO_DIR}/pre-reqs/jdbc-drivers/${driver_file_name}" -SL "${driver_url}"
@@ -252,26 +369,26 @@ function check_prereqs_exists() {
   if [[ ! -d "${PATH_TO_DIR}/pre-reqs/jdbc-drivers" ]]; then
     mkdir -p "${PATH_TO_DIR}/pre-reqs/jdbc-drivers"
   fi
-  MSSQL_JDBC_VERSION=$(get_version_from_client_image "MSSQL_JDBC_VERSION" "${ANALYZE_CONTAINERS_VERSION}")
-  download_jdbc_driver "sqlserver" "${MSSQL_JDBC_VERSION}"
-  POSTGRES_JDBC_VERSION=$(get_version_from_client_image "POSTGRES_JDBC_VERSION" "${ANALYZE_CONTAINERS_VERSION}")
-  download_jdbc_driver "postgres" "${POSTGRES_JDBC_VERSION}"
+  local mssql_jdbc_version
+  mssql_jdbc_version=$(get_version_from_client_image "MSSQL_JDBC_VERSION" "${ANALYZE_CONTAINERS_VERSION}")
+  download_jdbc_driver "sqlserver" "${mssql_jdbc_version}"
+  local postgres_jdbc_version
+  postgres_jdbc_version=$(get_version_from_client_image "POSTGRES_JDBC_VERSION" "${ANALYZE_CONTAINERS_VERSION}")
+  download_jdbc_driver "postgres" "${postgres_jdbc_version}"
 }
 
 function quietly_remove_docker_volume() {
   local volume_to_delete="$1"
-
-  if grep -q ^"$volume_to_delete"$ <<<"$(docker volume ls -q)"; then
-    docker volume rm "$volume_to_delete"
+  if grep -q ^"${volume_to_delete}"$ <<<"$(docker volume ls -q)"; then
+    docker volume rm "${volume_to_delete}"
   fi
 }
 
 function check_script_updates() {
   # Skip this check in CI
-  if [[ "${CI}" == "true" ]]; then
+  if [[ "${CI:-}" == "true" ]]; then
     return
   fi
-
   if ! docker run \
     -i \
     --rm \
@@ -292,19 +409,17 @@ function main() {
   check_script_updates
   check_prereqs_exists
   create_empty_dirs
-
   run_script_on_client "/opt/analyze-deployment-tooling/scripts/install-analyze-deployment-tooling" -p "${PATH_TO_DIR}"
   run_script_on_client "/opt/analyze-deployment-tooling/utils/scripts/install-wrappers" -p "${PATH_TO_DIR}"
-
   # Add scripts to path
-  export PATH="$PATH:${PATH_TO_DIR}/scripts"
-
+  export PATH="${PATH}:${PATH_TO_DIR}/scripts"
   # Run configure paths if running outside of devcontainer
-  if [[ "${DEVCONTAINER}" != "true" ]]; then
+  if [[ "${DEVCONTAINER:-}" != "true" ]]; then
     pushd "${PATH_TO_DIR}/scripts" &>/dev/null
     export ANALYZE_CONTAINERS_ROOT_DIR="${PATH_TO_DIR}"
     run_script_on_client "/opt/analyze-deployment-tooling/scripts/configure-paths"
     popd
   fi
 }
+
 main "$@"
