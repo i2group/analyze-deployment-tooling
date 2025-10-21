@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="../../../../styles/docfx.css">
     <link rel="stylesheet" href="../../../../styles/main.css">
     <meta property="docfx:navrel" content="../../../../toc.html">
-    <meta property="docfx:tocrel" content="../toc.html">
+    <meta property="docfx:tocrel" content="../../../../toc.html">
     
     <meta property="docfx:rel" content="../../../../">
     
@@ -59,14 +59,7 @@
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
-        
-        <div class="sidenav hide-when-search">
-          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
-          <div class="sidetoggle collapse" id="sidetoggle">
-            <div id="sidetoc"></div>
-          </div>
-        </div>
-        <div class="article row grid-right">
+        <div class="article row grid">
           <div class="col-md-10">
           
           <div class="subnav navbar navbar-default">
@@ -108,7 +101,7 @@ This ensures all the core images are labeled in AWS ECR for that version of the 
 <h3 id="upload-artifacts">Upload artifacts</h3>
 <p>The <code>uploadArtifacts</code> function is used to upload the configuration to the <code>analyze-containers-aws-ref-arch-config</code> S3 bucket. The function also uploads the CloudFormation templates and i2a-scripts to the <code>analyze-containers-aws-ref-arch-resources</code> bucket.</p>
 <h3 id="create-runbooks">Create runbooks</h3>
-<p>The <code>createRunbooks</code> function creates the runbooks that are required to start and stop the system and uploads them to AWS <a href="https://eu-west-2.console.aws.amazon.com/systems-manager/documents">System Manager</a>.<br>For more information about the runbooks, see <a href="../runbooks">Runbooks</a>.</p>
+<p>The <code>createRunbooks</code> function creates the runbooks that are required to start and stop the system and uploads them to AWS <a href="https://eu-west-2.console.aws.amazon.com/systems-manager/documents">System Manager</a>.<br>For more information about the runbooks, see <a href="../runbooks/runbooks.html">Runbooks</a>.</p>
 <h2 id="deploy-awssh-script">deploy-aws.sh script</h2>
 <p>The script creates all the stacks that are required for the i2 Analyze deployment.</p>
 <p>The stacks are created in the following order:</p>
@@ -121,14 +114,14 @@ This ensures all the core images are labeled in AWS ECR for that version of the 
 <li><code>solr</code></li>
 <li><code>admin-client</code></li>
 </ul>
-<p>For more information about the stacks, see <a href="../stacks">Stacks</a>.</p>
+<p>For more information about the stacks, see <a href="../stacks/stacks.html">Stacks</a>.</p>
 <p>After the stacks are created, the following runbooks are used to start the system:</p>
 <ul>
-<li><a href="../runbooks/helper_runbooks.html#i2a-UpdateScripts"><code>i2a-UpdateScripts</code></a></li>
-<li><a href="../runbooks/solr_runbooks.html#i2a-SolrFirstRun"><code>i2a-SolrFirstRun</code></a></li>
-<li><a href="../runbooks/sqlserver_runbooks.html#i2a-SqlServerFirstRun"><code>i2a-SqlServerFirstRun</code></a></li>
+<li><a href="../runbooks/helper_runbooks.html#i2a-updatescripts"><code>i2a-UpdateScripts</code></a></li>
+<li><a href="../runbooks/solr_runbooks.html#i2a-solrfirstrun"><code>i2a-SolrFirstRun</code></a></li>
+<li><a href="../runbooks/sqlserver_runbooks.html#i2a-sqlserverfirstrun"><code>i2a-SqlServerFirstRun</code></a></li>
 </ul>
-<p>For more information about the runbooks, see <a href="../runbooks">Runbooks</a>.</p>
+<p>For more information about the runbooks, see <a href="../runbooks/runbooks.html">Runbooks</a>.</p>
 </article>
           </div>
           

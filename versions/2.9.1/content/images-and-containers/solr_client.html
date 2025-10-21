@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="../../../../styles/docfx.css">
     <link rel="stylesheet" href="../../../../styles/main.css">
     <meta property="docfx:navrel" content="../../../../toc.html">
-    <meta property="docfx:tocrel" content="../toc.html">
+    <meta property="docfx:tocrel" content="../../../../guidetoc/toc.html">
     
     <meta property="docfx:rel" content="../../../../">
     
@@ -112,7 +112,7 @@ The following <code>docker build</code> command builds the Solr image:</p>
     &quot;solr_client_redhat:4.4.3&quot; &quot;$@&quot;
 </code></pre><p>The local group ID is required so that the solr user is created in the Docker container with a <code>GROUP_ID</code> that is the same as the local user. The user is required to ensure that the local user can access any files that are generated on the container. The value of <code>$id</code> comes from your shell.</p>
 <p>For an example of the <code>docker run</code> command, see <code>run_solr_client_command</code> function in <code>client_functions.sh</code> script.
-For an example of how to use <code>run_solr_client_command</code> function, see <a href="../tools-and-functions/client_functions.md#run-solr-client-command">run_solr_client_command</a>.</p>
+For an example of how to use <code>run_solr_client_command</code> function, see <a href="../tools-and-functions/client_functions.html#runsolrclientcommand">run_solr_client_command</a>.</p>
 <h2 id="bind-mounts">Bind mounts</h2>
 <p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access zookeeper and certificates used in SSL.<br>The directory is mounted to a location in the container defined by the <code>CONTAINER_SECRETS_DIR</code> environment variable. This can then be used by other environment variables such as <code>ZOO_DIGEST_USERNAME_FILE</code> to locate the secrets.
 In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files. This is achieved by using a bind mount. In production this would not be required.</p>

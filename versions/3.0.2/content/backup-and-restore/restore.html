@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="../../../../styles/docfx.css">
     <link rel="stylesheet" href="../../../../styles/main.css">
     <meta property="docfx:navrel" content="../../../../toc.html">
-    <meta property="docfx:tocrel" content="../toc.html">
+    <meta property="docfx:tocrel" content="../../../../guidetoc/toc.html">
     
     <meta property="docfx:rel" content="../../../../">
     
@@ -116,7 +116,7 @@
 Because the backup is completed for the <code>ISTORE</code> database only, the logins from the previous SQL Server instance cannot be restored. Additionally, the database users are restored but there are no logins mapped to them.</p>
 <p>For more information about SQL Server logins, see <a href="https://docs.microsoft.com/en-us/sql/relational-databases/security/authentication-access/create-a-login?view=sql-server-ver15">SQL Server Login documentation</a></p>
 <p>In this environment, create the required logins and users by dropping the users from the database and recreating the logins and the users by using the <code>create_db_login_and_user</code> client function. The logins and users are created in the same way as when original SQL Server instance was configured.</p>
-<p>For more information about creating the required logins, users, and permissions, see <a href="../tools-and-functions/deploy.html#configuring-sql-server">Configuring SQL Server</a> in the deployment documentation.</p>
+<p>For more information about creating the required logins, users, and permissions, see <a href="../tools-and-functions/deploy.html#initializing-the-information-store-database">Initializing the Information Store database</a> in the deployment documentation.</p>
 <p>See the <code>Dropping existing database users</code> and <code>Recreating database logins, users, and permissions</code> sections of the walkthrough script.</p>
 <h2 id="restoring-the-solr-collections">Restoring the Solr collections</h2>
 <p>Restoring the solr indexes includes the following high-level steps:</p>
@@ -133,7 +133,6 @@ Because the backup is completed for the <code>ISTORE</code> database only, the l
 <p>To restore the Solr indexes, deploy a new Solr cluster &amp; ZooKeeper ensemble. For more information about running a clean ZooKeeper &amp; Solr environment, see</p>
 <ul>
 <li><a href="../tools-and-functions/deploy.html#running-solr-and-zookeeper">Running Solr and ZooKeeper</a>.</li>
-<li><a href="../tools-and-functions/deploy.html#create-solr-cluster">Create Solr cluster</a>.</li>
 </ul>
 <p>See the <code>Deploying new Solr and ZooKeeper</code> section of the walkthrough script.</p>
 <h3 id="restoring-the-non-transient-solr-collections">Restoring the non-transient Solr collections</h3>
@@ -145,7 +144,7 @@ Because the backup is completed for the <code>ISTORE</code> database only, the l
 </blockquote>
 <p>See the <code>Restoring non-transient Solr collections</code> section of the walkthrough script.</p>
 <h2 id="determining-completion-of-solr-restore-procedure">Determining completion of Solr restore procedure</h2>
-<p>The <code>Monitoring Solr restore status</code> section of the walkthrough script runs a loop around the <code>get_async_request_status</code> client function that reports the status of the Asynchronous request. For more information about the client function, see <a href="../tools-and-functions/client_functions.md#getasyncrequeststatus"><code>get_async_request_status</code></a>.</p>
+<p>The <code>Monitoring Solr restore status</code> section of the walkthrough script runs a loop around the <code>get_async_request_status</code> client function that reports the status of the Asynchronous request. For more information about the client function, see <a href="../tools-and-functions/client_functions.html#getasyncrequeststatus"><code>get_async_request_status</code></a>.</p>
 <h3 id="recreate-transient-solr-collections">Recreate transient Solr collections</h3>
 <p>Recreate the transient <code>daod_index</code>, <code>vq_index</code>, <code>highlightquery_index</code>, and <code>recordshare_index</code> Solr collections.</p>
 <p>For more information about the creating Solr collections, see <a href="../tools-and-functions/deploy.html#configuring-solr-and-zookeeper">Configuring Solr and ZooKeeper</a>.</p>

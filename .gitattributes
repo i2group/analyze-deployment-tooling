@@ -1,5 +1,5 @@
 # Auto detect text files and perform LF normalization
-* text=auto
+* text=auto eol=lf
 
 # Shell scripts should use LF
 *.sh text eol=lf
@@ -50,5 +50,5 @@
 *.md text diff=markdown
 
 # Git
-*.gitattributes text
-*.gitignore text
+.gitattributes text
+.gitignore text

@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="../../../../styles/docfx.css">
     <link rel="stylesheet" href="../../../../styles/main.css">
     <meta property="docfx:navrel" content="../../../../toc.html">
-    <meta property="docfx:tocrel" content="../toc.html">
+    <meta property="docfx:tocrel" content="../../../../guidetoc/toc.html">
     
     <meta property="docfx:rel" content="../../../../">
     
@@ -94,7 +94,7 @@ servers fail. For more information, see <a href="https://docs.i2group.com/analyz
 </code></pre><p>See the <code>Simulating Zookeeper Quorum failure</code> section of the walkthrough script.</p>
 <h2 id="detecting-failure">Detecting failure</h2>
 <p>When the ZooKeeper quorum is lost, the Solr cluster also fails. The Solr status is reported as <code>DOWN</code>. For more information about losing Solr, see <a href="solr_cluster_failure.html">Failure of the Solr cluster</a>.</p>
-<p>The <code>Detecting failure</code> section of the walkthrough script runs a loop around the <code>get_solr_status</code> client function that reports the status of Solr. For more information about the function, see <a href="../tools%20and%20functions/client_functions.md#get_solr_status"><code>get_solr_status</code></a>.</p>
+<p>The <code>Detecting failure</code> section of the walkthrough script runs a loop around the <code>get_solr_status</code> client function that reports the status of Solr. For more information about the function, see <a href="../tools%20and%20functions/client_functions.html#getsolrstatus"><code>get_solr_status</code></a>.</p>
 <p>The function uses a grep command for the following message that indicates Solr is down:</p>
 <pre><code class="lang-Bash">grep -q &quot;^.*[com.i2group.apollo.common.toolkit.internal.ConsoleLogger] - (opal-services) - &#39;.*&#39;, .*&#39;DOWN&#39;&quot;
 </code></pre><p>For more information see the <code>Detecting failure</code> section of the walkthrough script.</p>

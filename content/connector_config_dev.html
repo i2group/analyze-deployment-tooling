@@ -105,7 +105,69 @@ To open Connector Designer, navigate to <code>https://i2analyze.eia:9443/connect
 <li><a href="#nodejs-based-connector-image">NodeJS</a> for Node v18 based connectors.</li>
 <li><a href="#user-managed-connector">User managed</a> for connectors that are not managed by the config development environment. The connectors are managed manually outside of the environment.</li>
 </ul>
-<p>The connector should be secured and run on port <code>3443</code>. For more information about securing your system, see <a href="https://docs.i2group.com/analyze/4.4.5/t_configuring_security.html">Securing i2 Analyze</a>.</p>
+<h3 id="connector-runtime-expectations">Connector runtime expectations</h3>
+<p>The connector must be secured and listen on port <code>3443</code>.
+For more information about securing your system, see
+<a href="https://docs.i2group.com/analyze/4.4.5/t_configuring_security.html">Securing i2 Analyze</a>.</p>
+<p>Connectors that are not user-managed will be run in a Docker container with the following environment:</p>
+<ul>
+<li>The identifier of the connector (as defined in the <code>connector-definition.json</code> file) will be provided in environment variable <code>CONNECTOR_ID</code>.</li>
+<li>If the connector should log additional debug information then environment variable <code>DEBUG</code> will be set to <code>true</code>.</li>
+<li>Environment variables <code>SSL_</code>... will be set to configure SSL for the connector.<ul>
+<li><code>SSL_ENABLED</code> will be set to <code>true</code></li>
+<li><code>SSL_PRIVATE_KEY</code>, <code>SSL_CERTIFICATE</code>, <code>SSL_CA_CERTIFICATE</code>, <code>SSL_ADDITIONAL_TRUST_CERTIFICATES</code> and <code>SSL_GATEWAY_CN</code> will be set to the contents of the respective files.</li>
+<li><code>SSL_SERVER_PORT</code> will be set to <code>3443</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="connectors-serving-up-resources-via-http">Connectors serving up resources via HTTP</h3>
+<p>Some connectors&#39; functionality depends on their ability to construct URLs that are answered by the connector itself.
+This requires the connector to know the URL that the proxy is looking for to route to the connector.
+The following environment variables are provided to connectors to support this:</p>
+<ul>
+<li><p>Environment variable <code>FRONT_END_URI_PATH</code> may be set to the path portion of the URL that will pass through the proxy and arrive at the connector.
+The connector must determine the host, port and protocol parts of the URL from HTTP headers it receives.</p>
+<p>e.g. <code>/connectors/$CONNECTOR_ID/api</code>.</p>
+</li>
+<li>Environment variable <code>FRONT_END_URI</code> may be set to complete a URL that will pass through the proxy and arrive at the connector.
+If this is set then the connector should ignore <code>FRONT_END_URI_PATH</code>.</li>
+<li>Environment variable <code>JWT_CERTIFICATE_FILE</code> will be set to the contents of the JWT certificate that the connector can use to validate JWT tokens sent by the gateway.</li>
+</ul>
+<p>In most cases, the <code>FRONT_END_URI_PATH</code> will be sufficient for the system to work;
+the haproxy will provide the <code>X-Forwarded-</code>... headers that the connector can use to determine the original protocol, host and port without the need for the deployer to set them explicitly.</p>
+<p>If the proxy chain between client and connectors does not permit this then
+the deployer should set the <code>CONNECTORS_BASE_URI</code> variable in the <code>variables.conf</code> file
+to a base URL.
+If this variable is set then the connector ID and <code>/api</code> will be appended and the result passed in to connectors as the <code>FRONT_END_URI</code> variable.</p>
+<p>e.g. if <code>CONNECTORS_BASE_URI</code> is set to <code>https://mycompany.com:1234/connectors/</code>
+then the connector will receive <code>FRONT_END_URI</code> set to <code>https://mycompany.com:1234/connectors/$CONNECTOR_ID/api</code> ... and the deployer must ensure that this URL is routed to the connector.</p>
+<h3 id="connectors-persisting-data">Connectors persisting data</h3>
+<p>Some connectors may require persistent storage that is not lost when the connector container is recreated.
+In this case the deployer must <em>either</em> set the <code>CONNECTOR_STORAGE_DIRECTORY</code> <em>or</em> set the <code>CONNECTOR_STORAGE_VOLUME</code> variable in the <code>variables.conf</code> file.</p>
+<ul>
+<li><p><code>CONNECTOR_STORAGE_DIRECTORY</code></p>
+<p>This is a path on the host machine&#39;s filesystem.</p>
+<p>If this is set then the <code>$CONNECTOR_ID</code> subdirectory within that directory
+will be mounted as a volume into the connector container and
+the <code>CONNECTOR_STORAGE_ROOT_LOCATION</code> environment variable will be passed in
+to provide the path where the volume is mounted within the container.</p>
+<p>If the directory (or subdirectory) does not exist they will be created during deployment.</p>
+<p>Note: post-deployment, this area should be treated as &quot;owned&quot; by the connectors.
+If the containers run (internally) as a different user-id to the one being used
+to run the deployment scripts then you may encounter file
+permission/ownership issues if you try to access these files
+directly.
+e.g. you may need to use <code>sudo</code> to delete them.</p>
+</li>
+<li><p><code>CONNECTOR_STORAGE_VOLUME</code></p>
+<p>This is the name of a Docker volume.</p>
+<p>If this is set then the <code>$CONNECTOR_ID</code> subdirectory within that volume
+will be mounted in the connector container and
+the <code>CONNECTOR_STORAGE_ROOT_LOCATION</code> environment variable will be passed in
+to provide the path where the volume is mounted within the container.</p>
+<p>If the volume or subdirectory does not exist they will be created during deployment.</p>
+</li>
+</ul>
 <h3 id="spring-boot-based-connector-image">Spring Boot based connector image</h3>
 <ol>
 <li><p>Copy the <code>/templates/springboot-connector-image</code> directory (including the sub-directories) to the <code>/connector-images</code> directory.<br> Rename the <code>springboot-connector-image</code> folder to a custom connector name. The name of the directory is used to determine which connectors to deploy. Do not use spaces or special characters in the name.<br> The directory structure is:  </p>
@@ -157,9 +219,9 @@ To open Connector Designer, navigate to <code>https://i2analyze.eia:9443/connect
 </code></pre></li>
 <li><p>To configure SSL on the external connector, you must do the following:</p>
 <p> Below is the example configuration for the i2 Connect server based connector running externally.</p>
-<p> <em>Option 1:</em> Use certificates generated by ADT.
-   You can run <code>manage-environment -t connectors</code> command to generate the required certificates and keys.
-   The script will generate the required certificates and keys in the <code>./environment-secrets/generated-secrets/certificates/&lt;connector_name&gt;</code> directory.
+<p> <strong>Option 1:</strong> Use certificates generated by ADT.</p>
+<p>   You can run <code>manage-environment -t connectors</code> command to generate the required certificates and keys.</p>
+<p>   The script will generate the required certificates and keys in the <code>./environment-secrets/generated-secrets/certificates/&lt;connector_name&gt;</code> directory.
    Once the certificate and the key are generated update your external configuration with the following values:</p>
 <pre><code class="lang-sh">SSL_ENABLED=&quot;true&quot;
 SSL_SERVER_PORT=&quot;&lt;port&gt;&quot;
@@ -167,8 +229,8 @@ SSL_PRIVATE_KEY_FILE=&quot;./environment-secrets/generated-secrets/certificates/
 SSL_CERTIFICATE_FILE=&quot;./environment-secrets/generated-secrets/certificates/&lt;connector_name&gt;/server.cer&quot;
 SSL_CA_CERTIFICATE_FILE=&quot;./environment-secrets/generated-secrets/certificates/externalCA/CA.cer&quot;
 SSL_GATEWAY_CN=&#39;gateway.user&#39;
-</code></pre><p> <em>Option 2:</em> Generate the required certificate and key using your own Certificate Authority (CA).
-   Once the certificate and the key are generated update your external configuration with the following values:</p>
+</code></pre><p> <strong>Option 2:</strong> Generate the required certificate and key using your own Certificate Authority (CA).</p>
+<p>   Once the certificate and the key are generated update your external configuration with the following values:</p>
 <pre><code class="lang-sh">SSL_ENABLED=&quot;true&quot;
 SSL_SERVER_PORT=&quot;&lt;port&gt;&quot;
 SSL_PRIVATE_KEY_FILE=&quot;&lt;path_to_your_private_key&gt;&quot;
