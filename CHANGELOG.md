@@ -22,6 +22,18 @@ described in each version section.
 
 -->
 
+## 3.2.0 - 29/10/2025
+
+### Added
+
+* Updated for compatibility with i2 Analyze 4.4.6.
+
+### Fixed
+
+* Resolve issues with undefined variables in the bootstrap process.
+
+[3.2.0]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-deployment-tooling/tree/v3.2.0><!-- markdown-link-check-enable -->
+
 ## 3.1.1 - 21/10/2025
 
 ### Added

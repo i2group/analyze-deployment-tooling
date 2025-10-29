@@ -4,7 +4,7 @@
 #
 # SPDX short identifier: MIT
 
-set -euo pipefail
+set -eo pipefail
 
 if grep -qEi "(Microsoft|WSL)" /proc/sys/kernel/osrelease &>/dev/null; then
   if [[ "$(docker version --format '{{.Server.Version}}')" == "25.0.3" ]]; then
@@ -16,7 +16,7 @@ fi
 SCRIPT_NAME="$(basename "$0")"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # This MUST be maintained to be in sync with the version of the code.
-DEFAULT_VERSION="3.1.1"
+DEFAULT_VERSION="3.2.0"
 
 USAGE="""
 Usage:
