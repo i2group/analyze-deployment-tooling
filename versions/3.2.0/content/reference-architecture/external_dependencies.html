@@ -1,0 +1,640 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>External dependencies </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="External dependencies ">
+    <meta name="generator" content="docfx 2.56.2.0">
+    
+    <link rel="shortcut icon" href="../../../../images/favicon.png">
+    <link rel="stylesheet" href="../../../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../../../styles/docfx.css">
+    <link rel="stylesheet" href="../../../../styles/main.css">
+    <meta property="docfx:navrel" content="../../../../toc.html">
+    <meta property="docfx:tocrel" content="../../../../guidetoc/toc.html">
+    
+    <meta property="docfx:rel" content="../../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../../../index.html">
+                i2 Analyze Deployment Tooling
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+          
+          <div class="subnav navbar navbar-default">
+            <div class="container hide-when-search" id="breadcrumb">
+              <ul class="breadcrumb">
+                <li></li>
+              </ul>
+            </div>
+          </div>
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="external-dependencies">External dependencies</h1>
+
+<p>The system requires access to the internet to download a number of &quot;external&quot; dependencies: Docker images, Maven artifacts, and JDBC drivers.
+Where the system needs to be deployed into an environment that does not have internet access,
+these dependencies must be downloaded on a &quot;low-side&quot; environment that does have internet access
+before they are transferred to the air-gapped &quot;high-side&quot; environment that does not have internet access.</p>
+<p>This document outlines the steps to set up the ADT client and its dependencies in such an environment.</p>
+<ol>
+<li>The process starts on the low-side, which has internet access, and where any necessary resources are downloaded and processed.</li>
+<li>The resources are transferred to the high-side.</li>
+<li>Once the resources are on the high-side, ADT can be run without internet access.</li>
+</ol>
+<p>The example commands in this document assume that the low-side and high-side are unix environments running Docker.</p>
+<p>Where user-customization is required, the modifiable parts of the commands are marked with an end-of-line comment <code># User-editable</code>.</p>
+<h2 id="low-side-setup">Low-side setup</h2>
+<ol>
+<li><p>Pull the required Docker images:</p>
+<pre><code class="lang-sh">ALL_DOCKER_IMAGES=(
+    docker/dockerfile:1.3
+    i2group/i2eng-analyze-containers-base:ubi-jdk17
+    i2group/i2eng-analyze-containers-client:3.2.0
+    i2group/i2eng-analyze-containers-connectors-base:18
+    i2group/i2eng-analyze-containers-connectors-base-minimal:18
+    i2group/i2eng-haproxy:2.9
+    i2group/i2eng-liberty:ubi-jdk17
+    i2group/i2eng-solr:9.7
+    i2group/i2eng-zookeeper:3.9
+    i2group/i2eng-connector-designer:1
+    i2group/i2eng-connector-designer-connectors-base:1
+    i2group/i2eng-grafana:11
+    i2group/i2eng-postgres:17
+    i2group/i2eng-prometheus:2.53
+    i2group/i2eng-sqlserver:2022-1
+    i2group/i2eng-textchart-data-access:7.5.0.6
+    i2group/i2eng-textchart-manager:7.5.2.0
+    i2group/i2eng-textchart-worker:7.5.2.0
+    # User-editable
+)
+for DOCKER_IMAGE in &quot;${ALL_DOCKER_IMAGES[@]}&quot;; do
+    docker pull &quot;${DOCKER_IMAGE}&quot;
+done
+</code></pre><p> If you have connector images that you require then include those
+ in the list, both here and in the later steps where <code>ALL_DOCKER_IMAGES</code> are processed.</p>
+</li>
+<li><p>Run bootstrap to pull pre-requisites and create the <code>ac_m2</code> docker volume:</p>
+<pre><code class="lang-sh">./bootstrap -v -o 3.2.0
+</code></pre><p> Note that this process will also create some other docker images but these will not be used on the low-side.</p>
+</li>
+</ol>
+<h2 id="data-transfer">Data transfer</h2>
+<p>The precise method of data transfer from low-side to high-side will depend on the security requirements of the environment.
+For example, the data transfer may be done using removable storage, a secure file transfer protocol,
+or having a docker registry that&#39;s accessible by both the low-side and high-side
+(See <a href="#how-to-run-a-local-docker-registry">How to run a local docker registry</a> for more information on setting up a local docker registry)
+.</p>
+<p>Choose the method that is most appropriate for your environment from the following options:</p>
+<ol>
+<li><a href="#data-transfer-using-removable-storage">Removable storage</a></li>
+<li><a href="#data-transfer-using-network-file-transfer">Network file transfer</a></li>
+<li><a href="#data-transfer-using-a-docker-registry">Docker registry</a>
+<!--
+Maintenance note: On the usage of "tar".
+We could "just run tar" locally but we can't trust that the user has tar installed, or that they have a tar
+that supports the `--owner` or `--group` option.
+We want to ensure that the files are owned by root:root during transport so it is user-agnostic,
+and then un-tarred as the local user on the high-side.
+-->
+<!--
+Maintenance note: On the usage of "docker run"
+Docker does not run as the local user by default, so if we want to read or write to the local filesystem
+then we need to run a docker container as the local user using the `-u` option otherwise we will get
+(or cause) permission errors.
+If we're not running as the local user then we MUST NOT use the `-v` option to mount the local filesystem.
+This means we sometimes require two docker run commands together.
+--></li>
+</ol>
+<h3 id="data-transfer-using-removable-storage">Data transfer using removable storage</h3>
+<h4 id="low-side-actions-for-removable-storage">Low-side actions for removable storage</h4>
+<ol>
+<li><p>Environment setup:</p>
+<p> The example commands use an environment variable <code>REMOVABLE_STORAGE_MOUNT_POINT</code>
+ to refer to the location of the removable storage.
+ You must set this variable to the location of the removable storage before running the commands.</p>
+<p> The commands also use the CLIENT_IMAGE variable to refer to the ADT client image
+ but this does not require user-editing.</p>
+<pre><code class="lang-sh">REMOVABLE_STORAGE_MOUNT_POINT=&#39;/path/to/removable/storage&#39; # User-editable
+ALL_DOCKER_IMAGES=(
+    # Same as the list used to pull the images
+    # User-editable
+)
+CLIENT_IMAGE=$( docker images --format &quot;{{.Repository}}:{{.Tag}}&quot; i2group/i2eng-analyze-containers-client | sort -r | head -1 )
+</code></pre> <!-- Maintenance note:
+ Users can have more than one client image, so we use the most recent one.
+ -->
+
+<p> You must run this in any terminal you wish to use the subsequent commands in.
+ e.g. if you close one terminal session and open another then you will need to repeat this step in the newly-opened terminal.</p>
+<p> The <code>ALL_DOCKER_IMAGES</code> variable content must be the same as the one used to pull the images
+ during the <a href="#low-side-setup">Low-side setup</a> step.</p>
+</li>
+<li><p>Prepare the <code>ac_m2</code> docker volume for transfer:</p>
+<p> Create a tar file of the docker volume:</p>
+<pre><code class="lang-sh">docker run --rm -v ac_m2:/mnt/ -u 0:0 --entrypoint /usr/bin/tar \
+  &quot;${CLIENT_IMAGE}&quot; cf - -C /mnt/ . &gt; &quot;${REMOVABLE_STORAGE_MOUNT_POINT}/ac_m2.tar&quot;
+</code></pre><p> This command will create a tar file <code>ac_m2.tar</code> containing the contents of the docker volume
+ in the removable storage.</p>
+</li>
+<li><p>Prepare ADT pre-requisites for transfer:</p>
+<p> Archive the files that you want to transfer by
+ <code>cd</code>ing to the ADT directory and then running:</p>
+<pre><code class="lang-sh">ADT_FILES=( &#39;pre-reqs/i2analyzeMinimal.tar.gz&#39; &#39;pre-reqs/jdbc-drivers&#39; ) # User-editable
+docker run --rm -v &quot;$(pwd):/mnt/&quot; -u &quot;$(id -u):$(id -g)&quot; --entrypoint /usr/bin/tar \
+  &quot;${CLIENT_IMAGE}&quot; cf - --owner=none:0 --group=none:0 -C /mnt/ &quot;${ADT_FILES[@]}&quot; \
+  &gt; &quot;${REMOVABLE_STORAGE_MOUNT_POINT}/adt-pre-reqs.tar&quot;
+</code></pre> <!-- Maintenance note:
+ The docker run command up to `>` is also used in the docker-registry equivalent, below.
+ It reads files from the local filesystem and creates a tar file output to stdout.
+ This usecase then outputs that to a file in the removable storage.
+ -->
+
+<p> Note: This command will only copy the pre-requisites;
+ you will also need to copy ADT itself and your config separately.
+ You can do this using a tar command like the one above if you choose.
+ <!--
+ Maintenance note: while transferring just the pre-reqs and requiring the user to
+ transfer the other data is not a simple UX, it is the simplest way to do it.
+ If we tried to transfer everything in one go then we would need to also handle edge
+ cases like the config being symbolic links to files outside of the ADT directory etc.
+ It's easier to tell the user to set up ADT in the same way again on the high-side.
+ --></p>
+</li>
+<li><p>Prepare docker images for transfer:</p>
+<p> Create a tar file of the docker images using the <code>docker save</code> command:</p>
+<pre><code class="lang-sh">docker save -o &quot;${REMOVABLE_STORAGE_MOUNT_POINT}/all_images.image.tar&quot; &quot;${ALL_DOCKER_IMAGES[@]}&quot;
+</code></pre><p> <!--
+ Maintenance note: name:tag can't contain spaces, so we don't need to worry about that.
+ -->
+ Note that this will create a single tar file containing all of the images listed.
+ If you have images that you do not want to transfer, you can remove them from the list
+ by modifying the <code>ALL_DOCKER_IMAGES</code> variable before running the <code>docker save</code> command.</p>
+</li>
+</ol>
+<h4 id="physically-move-the-data">Physically move the data</h4>
+<p>Remove the storage from the low-side (don&#39;t forget to unmount it first) and move it to the high-side.</p>
+<h4 id="high-side-actions-for-removable-storage">High-side actions for removable storage</h4>
+<ol>
+<li><p>Extract all of the docker images:</p>
+<p> If using removable storage, you must now restore the docker images from the tar file you created on the low-side:</p>
+<pre><code class="lang-sh">REMOVABLE_STORAGE_MOUNT_POINT=&#39;/path/to/removable/storage&#39; # User-editable
+for FILE in &quot;${REMOVABLE_STORAGE_MOUNT_POINT}&quot;/*.image.tar; do
+    docker load -i &quot;${FILE}&quot;
+done
+</code></pre><p> This will load each image from the removable storage into the local docker daemon on the high-side.</p>
+</li>
+<li><p>Optional: Verify docker images:</p>
+<p> To verify that all of the images on the low-side are now on the high-side, you can run the following command on both sides and compare the output:</p>
+<pre><code class="lang-sh">docker images --format &quot;{{.ID}}\t{{.Repository}}:{{.Tag}}&quot; | sort -k2
+</code></pre><p> If the images are the same, the output will be identical on both sides.
+ The <code>ID</code> field will be the same when the content of the image is the same; if the IDs are different, the content of the images is different.</p>
+</li>
+<li><p>Create and populate the <code>ac_m2</code> docker volume:</p>
+<p> Extract the ac_m2 tar file you created into a new docker volume as follows:</p>
+<pre><code class="lang-sh">docker volume rm -f ac_m2
+docker volume create ac_m2
+docker run --rm -i -v ac_m2:/mnt/ -u 0:0 --entrypoint /usr/bin/tar \
+  &quot;${CLIENT_IMAGE}&quot; xf - -C /mnt/ &lt; &quot;${REMOVABLE_STORAGE_MOUNT_POINT}/ac_m2.tar&quot;
+</code></pre><p> This will extract the contents of the <code>ac_m2.tar</code> file into a newly-created <code>ac_m2</code> docker volume, erasing any previous volume of that name.</p>
+</li>
+<li><p>Extract the ADT files:</p>
+<p> Extract the tar file of ADT files into the ADT directory as follows:</p>
+<pre><code class="lang-sh">cd &#39;/path/to/adt&#39; # User-editable
+cat &quot;${REMOVABLE_STORAGE_MOUNT_POINT}/adt-pre-reqs.tar&quot; | \
+  docker run --rm -i -v &quot;$(pwd):/mnt/&quot; -u &quot;$(id -u):$(id -g)&quot; --entrypoint /usr/bin/tar \
+  &quot;${CLIENT_IMAGE}&quot; xf - --no-same-owner -C /mnt/
+</code></pre> <!-- Maintenance note:
+ The docker run command after `|` is also used in the docker-registry equivalent, below.
+ It un-tars stdin to the local filesystem as the local user not as the users in the tar file.
+ This usecase reads the tar file from the removable storage and pipes it into the docker run command.
+ -->
+
+</li>
+</ol>
+<h3 id="data-transfer-using-network-file-transfer">Data transfer using network file transfer</h3>
+<p>If you are using a network file transfer method,
+for example <code>scp</code>, <code>sftp</code> or <code>rsync</code> (via e.g. ssh),
+then the process is similar to that for removable storage.
+Use the commands for
+<a href="#data-transfer-using-removable-storage">removable storage</a>
+with a few modifications:</p>
+<h4 id="low-side-actions-for-network-file-transfer">Low-side actions for network file transfer</h4>
+<p>Follow the same steps as for <a href="#low-side-actions-for-removable-storage">removable storage</a>
+but set the <code>REMOVABLE_STORAGE_MOUNT_POINT</code> variable to the location of an empty temporary directory.</p>
+<h4 id="transfer-the-data-using-network-file-transfer">Transfer the data using network file transfer</h4>
+<p>Use the network to transfer the files from the <code>REMOVABLE_STORAGE_MOUNT_POINT</code> temporary directory
+on the low-side to a temporary directory on the high-side.</p>
+<h4 id="high-side-actions-for-network-file-transfer">High-side actions for network file transfer</h4>
+<p>Follow the same steps as for <a href="#high-side-actions-for-removable-storage">removable storage</a>
+but set the <code>REMOVABLE_STORAGE_MOUNT_POINT</code> variable to the location of the temporary directory
+where you transferred the files to.</p>
+<h3 id="data-transfer-using-a-docker-registry">Data transfer using a docker registry</h3>
+<p>If you have a docker registry that is accessible from both the low-side and high-side
+then you can use that as an intermediary, uploading the data as images from the low-side
+and pulling them from the registry on the high-side.</p>
+<p>This makes it easier to transfer docker images (as they are already in image format)
+but you must encapsulate all other data in docker images too.</p>
+<h4 id="low-side-actions-for-docker-registry">Low-side actions for docker registry</h4>
+<ol>
+<li><p>Environment setup:</p>
+<p> The example commands use an environment variable <code>PRIVATE_REGISTRY</code>
+ to refer to the private docker registry.
+ You must set this variable before running the commands.
+ If the registry requires authentication then you will need to do <code>docker login &quot;${PRIVATE_REGISTRY}&quot;</code> too.</p>
+<p> The commands also use the CLIENT_IMAGE variable to refer to the ADT client image
+ but this does not require user-editing.</p>
+<pre><code class="lang-sh">PRIVATE_REGISTRY=&#39;docker_registry_hostname:port&#39; # User-editable
+ALL_DOCKER_IMAGES=(
+    # Same as the list used to pull the images
+    # User-editable
+)
+CLIENT_IMAGE=$( docker images --format &quot;{{.Repository}}:{{.Tag}}&quot; i2group/i2eng-analyze-containers-client | sort -r | head -1 )
+</code></pre> <!-- Maintenance note:
+ Users can have more than one client image, so we use the most recent one.
+ -->
+
+<p> You will need to run this in any terminal you wish to use the subsequent commands in.
+ e.g. if you close one terminal session and open another then you will need to repeat this step in the newly-opened terminal.</p>
+<p> The <code>ALL_DOCKER_IMAGES</code> variable content must be the same as the one used to pull the images
+ during the <a href="#low-side-setup">Low-side setup</a> step.</p>
+</li>
+<li><p>Prepare the <code>ac_m2</code> docker volume for transfer:</p>
+<p> Encapsulate the docker volume in a docker image and push it to the registry.</p>
+<pre><code class="lang-sh">docker image inspect &#39;ac_m2_image:latest&#39; &gt;/dev/null 2&gt;&amp;1 &amp;&amp; docker rmi &#39;ac_m2_image:latest&#39;
+docker container inspect &#39;ac_m2_container&#39; &gt;/dev/null 2&gt;&amp;1 &amp;&amp; docker rm &#39;ac_m2_container&#39;
+docker run -v ac_m2:/mnt/ -u 0:0 --name &#39;temp_ac_m2_container&#39; --entrypoint /usr/bin/tar \
+  &quot;${CLIENT_IMAGE}&quot; cf /volume.tar -C /mnt/ .
+docker commit &#39;temp_ac_m2_container&#39; &#39;ac_m2_image:latest&#39;
+docker rm -f &#39;temp_ac_m2_container&#39;
+</code></pre> <!-- Maintenance note:
+ There is little to be gained by using the `-z` option to compress the tar file as
+ most of the files within the docker volume are already compressed.
+ -->
+</li>
+<li><p>Prepare ADT pre-requisites for transfer:</p>
+<p> Create a docker image containing the files that you want to transfer by
+ <code>cd</code>ing to the ADT directory and then running:</p>
+<pre><code class="lang-sh">ADT_FILES=( &#39;pre-reqs/i2analyzeMinimal.tar.gz&#39; &#39;pre-reqs/jdbc-drivers&#39; ) # User-editable
+docker image inspect &#39;adt_pre_reqs_image:latest&#39; &gt;/dev/null 2&gt;&amp;1 &amp;&amp; docker rmi -f &#39;adt_pre_reqs_image:latest&#39;
+docker container inspect &#39;temp_adt_pre_reqs_container&#39; &gt;/dev/null 2&gt;&amp;1 &amp;&amp; docker rm -f &#39;temp_adt_pre_reqs_container&#39;
+docker run --rm -v &quot;$(pwd):/mnt/&quot; -u &quot;$(id -u):$(id -g)&quot; --entrypoint /usr/bin/tar \
+  &quot;${CLIENT_IMAGE}&quot; cf - --owner=none:0 --group=none:0 -C /mnt/ &quot;${ADT_FILES[@]}&quot; | \
+  docker run -i -u 0:0 --name &#39;temp_adt_pre_reqs_container&#39; --entrypoint /bin/bash \
+    &quot;${CLIENT_IMAGE}&quot; -c &#39;cat &gt; /volume.tar&#39;
+docker commit &#39;temp_adt_pre_reqs_container&#39; &#39;adt_pre_reqs_image:latest&#39;
+docker rm -f &#39;temp_adt_pre_reqs_container&#39;
+</code></pre> <!-- Maintenance note:
+ The docker run command up to `|` is also used in the removable-storage equivalent, above.
+ It reads files from the local filesystem and creates a tar file output to stdout.
+ This usecase then creates a new docker container which stores the data as /volume.tar.
+ -->
+
+<p> Note: This command will only copy the pre-requisites;
+ you will also need to copy ADT itself and your config separately.
+ You can do this using a tar command like the one above if you choose.</p>
+</li>
+</ol>
+<h4 id="transfer-the-data-using-the-docker-registry">Transfer the data using the docker registry</h4>
+<ol>
+<li><p>Push the images from the low-side to the registry:</p>
+<pre><code class="lang-sh">IMAGES_TO_PUSH=(
+    &#39;ac_m2_image:latest&#39;
+    &#39;adt_pre_reqs_image:latest&#39;
+    &quot;${ALL_DOCKER_IMAGES[@]}&quot;
+)
+for DOCKER_IMAGE in &quot;${IMAGES_TO_PUSH[@]}&quot;; do
+    docker tag &quot;$DOCKER_IMAGE&quot; &quot;${PRIVATE_REGISTRY}/${DOCKER_IMAGE}&quot;
+    docker push &quot;${PRIVATE_REGISTRY}/${DOCKER_IMAGE}&quot;
+    docker rmi &quot;${PRIVATE_REGISTRY}/${DOCKER_IMAGE}&quot;
+done
+</code></pre></li>
+<li><p>Extract all of the docker images on the high-side:</p>
+<p> Pull the images from that into the local docker daemon.
+ You must replace the <code>...</code> in the command below with the list of images you generated in the previous step.</p>
+<p> If your registry requires authentication then you will need to do <code>docker login &quot;${PRIVATE_REGISTRY}&quot;</code> first.</p>
+<pre><code class="lang-sh">ALL_DOCKER_IMAGES=(
+    # Same as the list used to pull the images
+    # User-editable
+)
+IMAGES_TO_PULL=(
+    &#39;ac_m2_image:latest&#39;
+    &#39;adt_pre_reqs_image:latest&#39;
+    &quot;${ALL_DOCKER_IMAGES[@]}&quot;
+)
+for DOCKER_IMAGE in &quot;${IMAGES_TO_PULL[@]}&quot;; do
+    docker pull &quot;${PRIVATE_REGISTRY}/${DOCKER_IMAGE}&quot;
+    docker tag &quot;${PRIVATE_REGISTRY}/${DOCKER_IMAGE}&quot; &quot;$DOCKER_IMAGE&quot;
+    docker rmi &quot;${PRIVATE_REGISTRY}/${DOCKER_IMAGE}&quot;
+done
+</code></pre><p> The <code>ALL_DOCKER_IMAGES</code> variable content must be the same as the one used to pull the images
+ during the <a href="#low-side-setup">Low-side setup</a> step.</p>
+</li>
+<li><p>Optional: Verify docker images:</p>
+<p> To verify that all of the images on the low-side are now on the high-side, you can run the following command on both sides and compare the output:</p>
+<pre><code class="lang-sh">docker images --format &quot;{{.ID}}\t{{.Repository}}:{{.Tag}}&quot; | sort -k2
+</code></pre><p> If the images are the same, the output will be identical on both sides.
+ The <code>ID</code> field will be the same when the content of the image is the same; if the IDs are different, the content of the images is different.
+ Unwanted images can be removed using the <code>docker rmi</code> command.</p>
+</li>
+</ol>
+<h4 id="high-side-actions-for-docker-registry">High-side actions for docker registry</h4>
+<ol>
+<li><p>Extract the <code>ac_m2</code> docker volume from the image:</p>
+<pre><code class="lang-sh">docker volume rm -f ac_m2
+docker volume create ac_m2
+docker run --rm -v ac_m2:/mnt/ -u 0:0 --entrypoint /usr/bin/tar &#39;ac_m2_image:latest&#39; xf /volume.tar -C /mnt/
+docker rmi &#39;ac_m2_image:latest&#39;
+</code></pre><p> This will extract the contents of the tar file embedded in the <code>ac_m2_image:latest</code> image
+ into a newly-created <code>ac_m2</code> docker volume,
+ erasing any previous volume of that name and erasing the image afterwards.</p>
+</li>
+<li><p>Extract the ADT files from the image:</p>
+<pre><code class="lang-sh">cd &#39;/path/to/adt&#39; # User-editable
+docker run --rm -u 0:0 --entrypoint /usr/bin/cat &#39;adt_pre_reqs_image:latest&#39; /volume.tar | \
+  docker run --rm -i -v &quot;$(pwd):/mnt/&quot; -u &quot;$(id -u):$(id -g)&quot; --entrypoint /usr/bin/tar \
+  &quot;${CLIENT_IMAGE}&quot; xf - --no-same-owner -C /mnt/
+docker rmi &#39;adt_pre_reqs_image:latest&#39;
+</code></pre> <!-- Maintenance note:
+ The docker run command after `|` is also used in the removable storage equivalent, above.
+ It un-tars stdin to the local filesystem as the local user not as the users in the tar file.
+ This usecase reads the tar file from the adt_pre_reqs_image image's /volume.tar file and pipes it into the docker run command.
+ -->
+
+</li>
+</ol>
+<h2 id="high-side-setup">High-side setup</h2>
+<p>After the data transfer is complete and the resources have been extracted, you can deploy &quot;as normal&quot; on the high-side,
+but with a few extra steps to ensure that the system does not try to pull any images from the internet.</p>
+<ol>
+<li><p>Tell the high-side to bootstrap without re-fetching images.</p>
+<p> Create a file <code>docker.env</code> (place it in the same directory as the <code>bootstrap</code> script file), populate it with contents <code>ALWAYS_PULL_IMAGES=false</code>, and then run the bootstrap script with environment variable <code>USE_LOCAL_IMAGE</code> set to <code>true</code>:</p>
+<pre><code class="lang-sh">cd &#39;/path/to/adt&#39; # User-editable
+echo &#39;ALWAYS_PULL_IMAGES=false&#39; &gt; &#39;docker.env&#39;
+export USE_LOCAL_IMAGE=true
+./bootstrap -v -o 3.2.0
+</code></pre> <!-- Maintenance note:
+ We create it from the CLI so that we can be more sure users will get the filename correct and not accidentally create a file called `docker.env.txt` or similar.
+ -->
+</li>
+<li><p>Use it:</p>
+<p> All subsequent interactions also require <code>USE_LOCAL_IMAGE</code> set to <code>true</code>, e.g.:</p>
+<pre><code class="lang-sh">cd &#39;/path/to/adt&#39; # User-editable
+export USE_LOCAL_IMAGE=true
+./scripts/deploy -v -c &lt;config_name&gt;
+</code></pre></li>
+</ol>
+<h2 id="footnotes">Footnotes</h2>
+<h3 id="how-to-run-a-local-docker-registry">How to run a local docker registry</h3>
+<p>While a fully &quot;air-gapped&quot; environment is possible using some form of removable storage,
+it is often more convenient to have a minimal network connection between the low-side and high-side,
+and one common use case is to have a local docker registry that is accessible from both sides.</p>
+<p>To create a Docker registry you will need to install Docker on a machine that is accessible from both the low-side and high-side,
+and then run the following command to create a local registry:</p>
+<pre><code class="lang-sh">docker pull registry:2
+docker run -d -p 5000:5000 --restart=always --name registry registry:2
+</code></pre><p>This will create a local docker registry that is accessible on port 5000 of the machine it is running on,
+so where the previous instructions said <code>PRIVATE_REGISTRY=&#39;docker_registry_hostname:port&#39;</code> you can set it to <code>hostname:5000</code>
+for the hostname of the machine running the registry.</p>
+<p>For information about deploying a Docker registry, see <a href="https://distribution.github.io/distribution/about/deploying/">Deploy a registry server</a>.</p>
+<h3 id="docker-image-reference">Docker image reference</h3>
+<p>ADT makes use of a number of docker images, some of which are always required for the system to deploy and run,
+and some of which are optional and may be required (or not) depending on the configuration being deployed.
+These are further subdivided into &quot;external&quot; images that are pulled from the (public) docker registry
+and &quot;local&quot; images that are built by this code (based on the external ones).</p>
+<h4 id="externally-pulled-images">Externally-pulled images</h4>
+<h5 id="external-mandatory-images">External mandatory images</h5>
+<pre><code class="lang-text">docker/dockerfile:1.3
+i2group/i2eng-analyze-containers-base:ubi-jdk17
+i2group/i2eng-analyze-containers-client:3.2.0
+i2group/i2eng-analyze-containers-connectors-base:18
+i2group/i2eng-analyze-containers-connectors-base-minimal:18
+i2group/i2eng-haproxy:2.9
+i2group/i2eng-liberty:ubi-jdk17
+i2group/i2eng-solr:9.7
+i2group/i2eng-zookeeper:3.9
+</code></pre><h5 id="external-optional-images">External optional images</h5>
+<pre><code class="lang-text">i2group/i2eng-connector-designer:1
+i2group/i2eng-connector-designer-connectors-base:1
+i2group/i2eng-grafana:11
+i2group/i2eng-postgres:17
+i2group/i2eng-prometheus:2.53
+i2group/i2eng-sqlserver:2022-1
+i2group/i2eng-textchart-data-access:7.5.0.6
+i2group/i2eng-textchart-manager:7.5.2.0
+i2group/i2eng-textchart-worker:7.5.2.0
+</code></pre><h4 id="locally-built-images">Locally-built images</h4>
+<h5 id="local-mandatory-images">Local mandatory images</h5>
+<pre><code class="lang-text">ac_tools:4.4.6.0
+etlclient_redhat:4.4.6.0
+i2a_tools_redhat:4.4.6.0
+liberty_redhat:4.4.6.0
+solr_client_redhat:4.4.6.0
+solr_redhat:4.4.6.0
+</code></pre><h5 id="local-optional-images">Local optional images</h5>
+<pre><code class="lang-text">postgres_client_image:4.4.6.0
+sqlserver_client_redhat:4.4.6.0
+</code></pre><h4 id="full-list-of-images-as-json">Full list of images as JSON</h4>
+<p>You can generate the full list of images required for the deployment by running the following command:</p>
+<pre><code class="lang-sh">manage-environment -t create-image-list
+</code></pre><p>This command creates a file called <code>adt-image-list.json</code> in the ADT directory containing the full list of images.
+The file is in JSON format and will look like this:</p>
+<!--
+Maintenance note:
+There seems to be a bug in our documentation generation process, most likely a defect in docfx, whereby if we
+tell markdown that this data should be formatted as JSON then the generated HTML is no longer prettified.
+So we specify that it is (plain) text instead to keep our formatting.
+-->
+<pre><code class="lang-text">{
+  &quot;i2group-core&quot;: [
+    {
+      &quot;name&quot;: &quot;docker/dockerfile&quot;,
+      &quot;version&quot;: &quot;1.3&quot;
+    },
+    {
+      &quot;name&quot;: &quot;i2group/i2eng-analyze-containers-base&quot;,
+      &quot;version&quot;: &quot;ubi-jdk17&quot;
+    },
+    {
+      &quot;name&quot;: &quot;i2group/i2eng-analyze-containers-client&quot;,
+      &quot;version&quot;: &quot;3.2.0&quot;
+    },
+    {
+      &quot;name&quot;: &quot;i2group/i2eng-analyze-containers-connectors-base&quot;,
+      &quot;version&quot;: &quot;18&quot;
+    },
+    {
+      &quot;name&quot;: &quot;i2group/i2eng-analyze-containers-connectors-base-minimal&quot;,
+      &quot;version&quot;: &quot;18&quot;
+    },
+    {
+      &quot;name&quot;: &quot;i2group/i2eng-haproxy&quot;,
+      &quot;version&quot;: &quot;2.9&quot;
+    },
+    {
+      &quot;name&quot;: &quot;i2group/i2eng-liberty&quot;,
+      &quot;version&quot;: &quot;ubi-jdk17&quot;
+    },
+    {
+      &quot;name&quot;: &quot;i2group/i2eng-solr&quot;,
+      &quot;version&quot;: &quot;9.7&quot;
+    },
+    {
+      &quot;name&quot;: &quot;i2group/i2eng-zookeeper&quot;,
+      &quot;version&quot;: &quot;3.9&quot;
+    }
+  ],
+  &quot;i2group-optional&quot;: [
+    {
+      &quot;name&quot;: &quot;i2group/i2eng-connector-designer&quot;,
+      &quot;version&quot;: &quot;1&quot;
+    },
+    {
+      &quot;name&quot;: &quot;i2group/i2eng-connector-designer-connectors-base&quot;,
+      &quot;version&quot;: &quot;1&quot;
+    },
+    {
+      &quot;name&quot;: &quot;i2group/i2eng-grafana&quot;,
+      &quot;version&quot;: &quot;11&quot;
+    },
+    {
+      &quot;name&quot;: &quot;i2group/i2eng-postgres&quot;,
+      &quot;version&quot;: &quot;17&quot;
+    },
+    {
+      &quot;name&quot;: &quot;i2group/i2eng-prometheus&quot;,
+      &quot;version&quot;: &quot;2.53&quot;
+    },
+    {
+      &quot;name&quot;: &quot;i2group/i2eng-sqlserver&quot;,
+      &quot;version&quot;: &quot;2022-1&quot;
+    },
+    {
+      &quot;name&quot;: &quot;i2group/i2eng-textchart-data-access&quot;,
+      &quot;version&quot;: &quot;7.5.0.6&quot;
+    },
+    {
+      &quot;name&quot;: &quot;i2group/i2eng-textchart-manager&quot;,
+      &quot;version&quot;: &quot;7.5.2.0&quot;
+    },
+    {
+      &quot;name&quot;: &quot;i2group/i2eng-textchart-worker&quot;,
+      &quot;version&quot;: &quot;7.5.2.0&quot;
+    }
+  ],
+  &quot;i2a-core&quot;: [
+    {
+      &quot;name&quot;: &quot;ac_tools&quot;,
+      &quot;version&quot;: &quot;4.4.6.0&quot;
+    },
+    {
+      &quot;name&quot;: &quot;etlclient_redhat&quot;,
+      &quot;version&quot;: &quot;4.4.6.0&quot;
+    },
+    {
+      &quot;name&quot;: &quot;i2a_tools_redhat&quot;,
+      &quot;version&quot;: &quot;4.4.6.0&quot;
+    },
+    {
+      &quot;name&quot;: &quot;liberty_redhat&quot;,
+      &quot;version&quot;: &quot;4.4.6.0&quot;
+    },
+    {
+      &quot;name&quot;: &quot;solr_client_redhat&quot;,
+      &quot;version&quot;: &quot;4.4.6.0&quot;
+    },
+    {
+      &quot;name&quot;: &quot;solr_redhat&quot;,
+      &quot;version&quot;: &quot;4.4.6.0&quot;
+    }
+  ],
+  &quot;i2a-optional&quot;: [
+    {
+      &quot;name&quot;: &quot;postgres_client_image&quot;,
+      &quot;version&quot;: &quot;4.4.6.0&quot;
+    },
+    {
+      &quot;name&quot;: &quot;sqlserver_client_redhat&quot;,
+      &quot;version&quot;: &quot;4.4.6.0&quot;
+    }
+  ]
+}
+</code></pre></article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            &copy; N. Harris Computer Corporation
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../../styles/main.js"></script>
+  </body>
+</html>

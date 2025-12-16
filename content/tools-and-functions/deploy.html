@@ -278,7 +278,7 @@ For more information about the database users and their permissions, see <a href
 <li><p>The <code>generateSolrSchemas.sh</code> i2-tool creates the <code>solr</code> directory in <code>examples/pre-prod/configuration/solr/generated_config</code>. This directory contains the managed-schema, Solr synonyms file and Solr config files for each index.</p>
 </li>
 <li><p>The <code>run_solr_client_command</code> client function is used to upload the <code>managed-schema</code>, <code>solr.xml</code>, and synonyms file for each collection to ZooKeeper.<br>For example:</p>
-<pre><code class="lang-bash">run_solr_client_command solr zk upconfig -v -z &quot;${ZK_HOST}&quot; -n daod_index -d /conf/solr_config/daod_index
+<pre><code class="lang-bash">run_solr_client_command solr zk upconfig --verbose -z &quot;${ZK_HOST}&quot; -n daod_index -d /conf/solr_config/daod_index
 </code></pre></li>
 </ul>
 </li>

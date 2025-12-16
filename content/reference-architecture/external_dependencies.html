@@ -97,12 +97,12 @@ before they are transferred to the air-gapped &quot;high-side&quot; environment 
 <pre><code class="lang-sh">ALL_DOCKER_IMAGES=(
     docker/dockerfile:1.3
     i2group/i2eng-analyze-containers-base:ubi-jdk17
-    i2group/i2eng-analyze-containers-client:3.2.0
+    i2group/i2eng-analyze-containers-client:3.2.1
     i2group/i2eng-analyze-containers-connectors-base:18
     i2group/i2eng-analyze-containers-connectors-base-minimal:18
     i2group/i2eng-haproxy:2.9
     i2group/i2eng-liberty:ubi-jdk17
-    i2group/i2eng-solr:9.7
+    i2group/i2eng-solr:9.9
     i2group/i2eng-zookeeper:3.9
     i2group/i2eng-connector-designer:1
     i2group/i2eng-connector-designer-connectors-base:1
@@ -122,7 +122,7 @@ done
  in the list, both here and in the later steps where <code>ALL_DOCKER_IMAGES</code> are processed.</p>
 </li>
 <li><p>Run bootstrap to pull pre-requisites and create the <code>ac_m2</code> docker volume:</p>
-<pre><code class="lang-sh">./bootstrap -v -o 3.2.0
+<pre><code class="lang-sh">./bootstrap -v -o 3.2.1
 </code></pre><p> Note that this process will also create some other docker images but these will not be used on the low-side.</p>
 </li>
 </ol>
@@ -419,7 +419,7 @@ but with a few extra steps to ensure that the system does not try to pull any im
 <pre><code class="lang-sh">cd &#39;/path/to/adt&#39; # User-editable
 echo &#39;ALWAYS_PULL_IMAGES=false&#39; &gt; &#39;docker.env&#39;
 export USE_LOCAL_IMAGE=true
-./bootstrap -v -o 3.2.0
+./bootstrap -v -o 3.2.1
 </code></pre> <!-- Maintenance note:
  We create it from the CLI so that we can be more sure users will get the filename correct and not accidentally create a file called `docker.env.txt` or similar.
  -->
@@ -453,12 +453,12 @@ and &quot;local&quot; images that are built by this code (based on the external 
 <h5 id="external-mandatory-images">External mandatory images</h5>
 <pre><code class="lang-text">docker/dockerfile:1.3
 i2group/i2eng-analyze-containers-base:ubi-jdk17
-i2group/i2eng-analyze-containers-client:3.2.0
+i2group/i2eng-analyze-containers-client:3.2.1
 i2group/i2eng-analyze-containers-connectors-base:18
 i2group/i2eng-analyze-containers-connectors-base-minimal:18
 i2group/i2eng-haproxy:2.9
 i2group/i2eng-liberty:ubi-jdk17
-i2group/i2eng-solr:9.7
+i2group/i2eng-solr:9.9
 i2group/i2eng-zookeeper:3.9
 </code></pre><h5 id="external-optional-images">External optional images</h5>
 <pre><code class="lang-text">i2group/i2eng-connector-designer:1
@@ -504,7 +504,7 @@ So we specify that it is (plain) text instead to keep our formatting.
     },
     {
       &quot;name&quot;: &quot;i2group/i2eng-analyze-containers-client&quot;,
-      &quot;version&quot;: &quot;3.2.0&quot;
+      &quot;version&quot;: &quot;3.2.1&quot;
     },
     {
       &quot;name&quot;: &quot;i2group/i2eng-analyze-containers-connectors-base&quot;,
@@ -524,7 +524,7 @@ So we specify that it is (plain) text instead to keep our formatting.
     },
     {
       &quot;name&quot;: &quot;i2group/i2eng-solr&quot;,
-      &quot;version&quot;: &quot;9.7&quot;
+      &quot;version&quot;: &quot;9.9&quot;
     },
     {
       &quot;name&quot;: &quot;i2group/i2eng-zookeeper&quot;,
