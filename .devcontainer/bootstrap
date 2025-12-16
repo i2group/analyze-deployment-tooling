@@ -2,9 +2,12 @@
 # i2, i2 Group, the i2 Group logo, and i2group.com are trademarks of N.Harris Computer Corporation.
 # © N.Harris Computer Corporation (2022-2024)
 #
+# Script called as part of the Visual Studio Code dev-container setup.
+# We know this script will only ever be run in a VSC terminal, so we can use colour escape sequences here.
+#
 # SPDX short identifier: MIT
 
-set -e
+set -euo pipefail
 
 function run_task() {
   local task="$1"
@@ -19,23 +22,28 @@ function run_task() {
     post_start
     ;;
   *)
-    echo "Unknown task: ${task}" >&2
+    printf "\e[31mERROR: Unknown task: %s\e[0m\n" "${task}" >&2
     exit 1
     ;;
   esac
 }
 
+# Called as the dev-container's initializeCommand
 function init() {
+  if [[ -z "${HOME:-}" ]]; then
+    printf "\e[31mERROR: HOME environment variable is not set\e[0m\n" >&2
+    exit 1
+  fi
   docker pull i2group/i2eng-analyze-containers-dev:1.2
-  # We want to create these folders inside the devcontainer so that they are owned by the user (not the same as HOST_HOME)
-  mkdir -p "${HOME}/.m2" "${HOME}/.config/gh" "${HOME}/.circleci"
-  touch "${HOME}/.npmrc"
 }
 
+# Called as the dev-container's onCreateCommand
 function create() {
-  export ANALYZE_CONTAINERS_ROOT_DIR="${WORKSPACE}"
-  export CONTINUE_ON_ERROR="true"
-  if [[ -z $(docker network ls -q --filter name="^eia$") ]]; then
+  if [[ -z "${HOSTNAME:-}" ]]; then
+    printf "\e[31mERROR: HOSTNAME environment variable is not set\e[0m\n" >&2
+    exit 1
+  fi
+  if [[ -z "$(docker network ls -q --filter name='^eia$')" ]]; then
     docker network create eia
   fi
   docker network connect eia "${HOSTNAME}"
@@ -43,16 +51,79 @@ function create() {
   echo "Done"
 }
 
+# Called as the dev-container's postStartCommand
 function post_start() {
-  export ANALYZE_CONTAINERS_ROOT_DIR="${WORKSPACE}"
-  export CONTINUE_ON_ERROR="true"
-  if [[ -f "${ANALYZE_CONTAINERS_ROOT_DIR}/scripts/manage-environment" ]]; then
-    "${ANALYZE_CONTAINERS_ROOT_DIR}/scripts/manage-environment" -t link
+  # see if we need to sudo to do things as root
+  local -a maybe_sudo
+  if [[ "$(id -u)" -ne 0 ]]; then
+    maybe_sudo=("sudo")
+  else
+    maybe_sudo=()
+  fi
+  # make VSC dev-container user ~/.* that point back to /local_user versions.
+  # i.e. most of the dotfiles and folders from /local_user (where the original user's home is mounted) to ~ (in the container)
+  (
+    cd /local_user
+    # There's a few things we know we're going to want, even if the user has never used them before.
+    for dotfilename in .m2/ .config/ .circleci/ .npmrc; do
+      if [[ ! -e "${dotfilename}" ]]; then
+        if [[ "${dotfilename}" == */ ]]; then
+          "${maybe_sudo[@]}" mkdir -p "${dotfilename}"
+        else
+          "${maybe_sudo[@]}" touch "${dotfilename}"
+        fi
+        "${maybe_sudo[@]}" chown --reference=. "${dotfilename}"
+      fi
+    done
+    # We do NOT copy .docker because that depends on docker-credential-desktop.exe which is not available in the container.
+    # We omit the .ssh folder as we make a deep copy of that later.
+    # We omit the others as they're intended to be local to the OS they're on.
+    find . \
+      -mindepth 1 \
+      -maxdepth 1 \
+      -name '.*' \
+      '!' -name '.docker' \
+      '!' -name '.bash_' \
+      '!' -name '.local' \
+      '!' -name '.ssh' \
+      '!' -name '.vscode-*' \
+      '!' -name '.sudo_as_admin_successful' \
+      -printf '%P\n' \
+      | sort
+  ) | (
+    while IFS= read -r dotfilename
+    do
+      rm -rf ~/"${dotfilename}"
+      (
+        set -x
+        ln -sf "/local_user/${dotfilename}" ~/"${dotfilename}"
+      )
+    done
+  )
+  # SSH won't accept a symlink'ed .ssh folder, so we copy it.
+  if [[ -d /local_user/.ssh ]]; then
+    rm -rf ~/.ssh
+    (
+      homedir=$(cd ~ && pwd)
+      set -x
+      "${maybe_sudo[@]}" cp -pr /local_user/.ssh "${homedir}/.ssh"
+      "${maybe_sudo[@]}" chown --recursive --reference="${homedir}" "${homedir}/.ssh"
+    )
+  fi
+  if [[ -z "${WORKSPACE:-}" ]]; then
+    printf "\e[31mERROR: WORKSPACE environment variable is not set\e[0m\n" >&2
+    exit 1
+  fi
+  if [[ -f "${WORKSPACE}/scripts/manage-environment" ]]; then
+    (
+      export ANALYZE_CONTAINERS_ROOT_DIR="${WORKSPACE}"
+      export CONTINUE_ON_ERROR="true"
+      "${ANALYZE_CONTAINERS_ROOT_DIR}/scripts/manage-environment" -t link
+    )
     echo "Dev Container is ready"
   else
     printf "\n\e[33mINFO: analyze-containers is not installed. To install analyze-containers, open a terminal in this VSCode window and run ./bootstrap\e[0m\n" >&2
   fi
-  unset CONTINUE_ON_ERROR
 }
 
 run_task "$1"

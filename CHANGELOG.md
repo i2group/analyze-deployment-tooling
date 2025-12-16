@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [semantic versioning](https://i2group.github.io/analyze-deployment-tooling/guidetoc/index.html#support-policy).
 This document's format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
-Dates are in UK format - DD/MM/YYYY.
+Dates are in ISO 8601 format (YYYY-MM-DD).
 
 * `Added` for new features.
 * `Changed` for changes in existing functionality.
@@ -22,7 +22,21 @@ described in each version section.
 
 -->
 
-## 3.2.0 - 29/10/2025
+<!-- markdown-link-check-disable -->
+## [3.2.1](https://github.com/i2group/analyze-deployment-tooling/tree/v3.2.1)
+<!-- markdown-link-check-enable -->
+Release date: 16/12/2025.
+
+### Security
+
+<!-- markdown-link-check-disable -->
+* Fixed bug: [anonymous access to connector APIs](https://support.i2group.com/s/article/3504).
+<!-- markdown-link-check-enable -->
+
+<!-- markdown-link-check-disable -->
+## [3.2.0](https://github.com/i2group/analyze-deployment-tooling/tree/v3.2.0)
+<!-- markdown-link-check-enable -->
+Release date: 2025-10-29
 
 ### Added
 
@@ -32,9 +46,14 @@ described in each version section.
 
 * Resolve issues with undefined variables in the bootstrap process.
 
-[3.2.0]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-deployment-tooling/tree/v3.2.0><!-- markdown-link-check-enable -->
+### Security
 
-## 3.1.1 - 21/10/2025
+* Bug: anonymous access to connector APIs. Fixed in 3.2.1.
+
+<!-- markdown-link-check-disable -->
+## [3.1.1](https://github.com/i2group/analyze-deployment-tooling/tree/v3.1.1)
+<!-- markdown-link-check-enable -->
+Release date: 2025-10-21
 
 ### Added
 
@@ -50,13 +69,14 @@ described in each version section.
 * Improved diagnostics in case of errors.
 * Offline installation documentation improved.
 
-### Deprecated
+### Security
 
-* None
+* Introduced bug: anonymous access to connector APIs. Fixed in 3.2.1.
 
-[3.1.1]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-deployment-tooling/tree/v3.1.1><!-- markdown-link-check-enable -->
-
-## 3.1.0 - 19/05/2025
+<!-- markdown-link-check-disable -->
+## [3.1.0](https://github.com/i2group/analyze-deployment-tooling/tree/v3.1.0)
+<!-- markdown-link-check-enable -->
+Release date: 2025-05-19
 
 ### Added
 
@@ -70,25 +90,28 @@ described in each version section.
 
 * generate-secrets utility script. Use the new 'secrets-utility' command instead.
 
-[3.1.0]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-deployment-tooling/tree/v3.1.0><!-- markdown-link-check-enable -->
-
-## 3.0.5 - 27/02/2025
+<!-- markdown-link-check-disable -->
+## [3.0.5](https://github.com/i2group/analyze-deployment-tooling/tree/v3.0.5)
+<!-- markdown-link-check-enable -->
+Release date: 2025-02-27
 
 ### Fixed
 
 * Documentation for external dependencies: was pointing to the wrong image version.
 
-[3.0.5]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-deployment-tooling/tree/v3.0.5><!-- markdown-link-check-enable -->
-
-## 3.0.4 - 28/01/2025
+<!-- markdown-link-check-disable -->
+## [3.0.4](https://github.com/i2group/analyze-deployment-tooling/tree/v3.0.4)
+<!-- markdown-link-check-enable -->
+Release date: 2025-01-28
 
 ### Fixed
 
 * Errors for the Docker build filesystem entitlement checks.
 
-[3.0.4]\: <!-- markdown-link-check-disable --><https://github.com/i2group/analyze-deployment-tooling/tree/v3.0.4><!-- markdown-link-check-enable -->
-
-## 3.0.3 - 17/12/2024
+<!-- markdown-link-check-disable -->
+## [3.0.3](https://github.com/i2group/analyze-deployment-tooling/tree/v3.0.3)
+<!-- markdown-link-check-enable -->
+Release date: 2024-12-17
 
 ### Fixed
 
@@ -96,9 +119,10 @@ described in each version section.
 * Additional trust certificates types support in SQL Server.
 * Error when running bootstrap script in an already installed environment.
 
-[3.0.3]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v3.0.3>
-
-## 3.0.2 - 12/12/2024
+<!-- markdown-link-check-disable -->
+## [3.0.2](https://github.com/i2group/analyze-deployment-tooling/tree/v3.0.2)
+<!-- markdown-link-check-enable -->
+Release date: 2024-12-12
 
 ### Changed
 
@@ -109,9 +133,10 @@ described in each version section.
 * Broken duplicate configuration task for shared configurations.
 * Wrapper script installation issues.
 
-[3.0.2]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v3.0.2>
-
-## 3.0.1 - 15/08/2024
+<!-- markdown-link-check-disable -->
+## [3.0.1](https://github.com/i2group/analyze-deployment-tooling/tree/v3.0.1)
+<!-- markdown-link-check-enable -->
+Release date: 2024-08-15
 
 ### Added
 
@@ -123,9 +148,10 @@ described in each version section.
 * Renew secrets in a deployment pattern without database.
 * ProvisioningCompatibilityMode and UserIdentityCompatibilityMode not set to true after upgrading.
 
-[3.0.1]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v3.0.1>
-
-## 3.0.0 - 08/08/2024
+<!-- markdown-link-check-disable -->
+## [3.0.0](https://github.com/i2group/analyze-deployment-tooling/tree/v3.0.0)
+<!-- markdown-link-check-enable -->
+Release date: 2024-08-08
 
 ### Added
 
@@ -152,9 +178,10 @@ described in each version section.
 * Improved error handling when adding additional certificates to clients.
 * Errors with TTY when running in a non-interactive shell.
 
-[3.0.0]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v3.0.0>
-
-## 2.9.4 - 30/07/2024
+<!-- markdown-link-check-disable -->
+## [2.9.4](https://github.com/i2group/analyze-deployment-tooling/tree/v2.9.4)
+<!-- markdown-link-check-enable -->
+Release date: 2024-07-30
 
 ### Changed
 
@@ -164,9 +191,10 @@ described in each version section.
 
 * Postgres backup command in arm64 architecture.
 
-[2.9.4]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v2.9.4>
-
-## 2.9.3 - 08/05/2024
+<!-- markdown-link-check-disable -->
+## [2.9.3](https://github.com/i2group/analyze-deployment-tooling/tree/v2.9.3)
+<!-- markdown-link-check-enable -->
+Release date: 2024-05-08
 
 ### Added
 
@@ -181,17 +209,19 @@ described in each version section.
 * Unclear documentation about how to run an external connector running in WSL.
 * Incorrect documentation about how to deploy the pre-prod example environment.
 
-[2.9.3]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v2.9.3>
-
-## 2.9.2 - 28/03/2024
+<!-- markdown-link-check-disable -->
+## [2.9.2](https://github.com/i2group/analyze-deployment-tooling/tree/v2.9.2)
+<!-- markdown-link-check-enable -->
+Release date: 2024-03-28
 
 ### Fixed
 
 * Broken copy mechanism for files in the `configuration/liberty` directory.
 
-[2.9.2]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v2.9.2>
-
-## 2.9.1 - 26/03/2024
+<!-- markdown-link-check-disable -->
+## [2.9.1](https://github.com/i2group/analyze-deployment-tooling/tree/v2.9.1)
+<!-- markdown-link-check-enable -->
+Release date: 2024-03-26
 
 ### Added
 
@@ -203,9 +233,10 @@ described in each version section.
 * Postgres backup user (dbb) permissions.
 * Additional trust certificates types support.
 
-[2.9.1]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v2.9.1>
-
-## 2.9.0 - 27/02/2024
+<!-- markdown-link-check-disable -->
+## [2.9.0](https://github.com/i2group/analyze-deployment-tooling/tree/v2.9.0)
+<!-- markdown-link-check-enable -->
+Release date: 2024-02-27
 
 ### Added
 
@@ -226,9 +257,10 @@ described in each version section.
 * `EACCES` error when starting npm connectors. To resolve this issue if you are still experiencing it after upgrading, see [Troubleshooting](https://i2group.github.io/analyze-deployment-tooling/content/troubleshooting.html).
 * "Changes to schema" message blocking deployment.
 
-[2.9.0]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v2.9.0>
-
-## 2.8.0 - 21/12/2023
+<!-- markdown-link-check-disable -->
+## [2.8.0](https://github.com/i2group/analyze-deployment-tooling/tree/v2.8.0)
+<!-- markdown-link-check-enable -->
+Release date: 2023-12-21
 
 ### Added
 
@@ -254,17 +286,19 @@ described in each version section.
 * Removal of old top-level `.sh` scripts. Deprecated since version 2.4.0.
 * Removal of old client functions. Deprecated since version 2.4.0.
 
-[2.8.0]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v2.8.0>
-
-## 2.7.1 - 27/09/2023
+<!-- markdown-link-check-disable -->
+## [2.7.1](https://github.com/i2group/analyze-deployment-tooling/tree/v2.7.1)
+<!-- markdown-link-check-enable -->
+Release date: 2023-09-27
 
 ### Fixed
 
 * Multiple issues with schema update.
 
-[2.7.1]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v2.7.1>
-
-## 2.7.0 - 01/09/2023
+<!-- markdown-link-check-disable -->
+## [2.7.0](https://github.com/i2group/analyze-deployment-tooling/tree/v2.7.0)
+<!-- markdown-link-check-enable -->
+Release date: 2023-09-01
 
 ### Added
 
@@ -280,9 +314,10 @@ described in each version section.
 * `renew-certificates` task updates connector secrets.
 * Secret expiry no longer causes data loss since last backup.
 
-[2.7.0]\: <https://github.com/i2group/analyze-deployment-tooling/tree/v2.7.0>
-
-## 2.6.0 [Deprecated] - 24/07/2023
+<!-- markdown-link-check-disable -->
+## [2.6.0](https://github.com/i2group/analyze-deployment-tooling/tree/v2.6.0) [Deprecated]
+<!-- markdown-link-check-enable -->
+Release date: 2023-07-24
 
 ### Added
 
@@ -301,7 +336,10 @@ described in each version section.
 * A config that includes `overrideHttpAuthMethod="CLIENT_CERT"` in the `server.extensions.xml` can be deployed successfully.
 * Fixed JDBC driver version validation for `create-environment` script.
 
-## 2.5.3 [Deprecated] - 07/06/2023
+<!-- markdown-link-check-disable -->
+## [2.5.3](https://github.com/i2group/analyze-deployment-tooling/tree/v2.5.3) [Deprecated]
+<!-- markdown-link-check-enable -->
+Release date: 2023-06-07
 
 ### Added
 
@@ -317,7 +355,10 @@ described in each version section.
 * The pre-prod example deployment now backs up the match_index2.
 * Versions are correctly resolved in documentation.
 
-## 2.5.2 [Deprecated] - 31/03/2023
+<!-- markdown-link-check-disable -->
+## [2.5.2](https://github.com/i2group/analyze-deployment-tooling/tree/v2.5.2) [Deprecated]
+<!-- markdown-link-check-enable -->
+Release date: 2023-03-31
 
 ### Added
 
@@ -336,7 +377,10 @@ described in each version section.
 * Stopped repeating Liberty properties on start up.
 * Password generation issues on Mac OS.
 
-## 2.5.1 [Deprecated] - 14/02/2023
+<!-- markdown-link-check-disable -->
+## [2.5.1](https://github.com/i2group/analyze-deployment-tooling/releases/tag/v2.5.1) [Deprecated]
+<!-- markdown-link-check-enable -->
+Release date: 2023-02-14
 
 ### Changed
 
@@ -351,7 +395,10 @@ described in each version section.
 
 * Upgrading from v2.2.0 after a you complete a back up results in connectors that cannot be recovered. Before you upgrade, run `deploy -c <config_name> -t connectors`.
 
-## 2.5.0 [Deprecated] - 20/12/2022
+<!-- markdown-link-check-disable -->
+## [2.5.0](https://github.com/i2group/analyze-deployment-tooling/tree/v2.5.0) [Deprecated]
+<!-- markdown-link-check-enable -->
+Release date: 2022-12-20
 
 ### Added
 
@@ -366,7 +413,10 @@ described in each version section.
 * Improved shared configuration UX by changing `configure-paths` script parameters. Use the `-h` flag for more information on how to run the command.
 * `manage-environment -t upgrade` and `manage-toolkit-configuration -t {create | prepare | import | export}` commands now use the path specified in the `path-configuration.json` file instead of the `-p` flag. Use the `-h` flag in each script for more information on how to run the commands.
 
-## 2.4.0 [Deprecated] - 23/09/2022
+<!-- markdown-link-check-disable -->
+## [2.4.0](https://github.com/i2group/analyze-deployment-tooling/tree/v2.4.0) [Deprecated]
+<!-- markdown-link-check-enable -->
+Release date: 2022-09-23
 
 ### Added
 
@@ -385,7 +435,10 @@ described in each version section.
 * The top-level `.sh` scripts. Start using the commands instead.
 * The client functions with the previous names. Start using the renamed functions.
 
-## 2.3.0 [Deprecated]- 22/07/2022
+<!-- markdown-link-check-disable -->
+## [2.3.0](https://github.com/i2group/analyze-deployment-tooling/tree/v2.3.0) [Deprecated]
+<!-- markdown-link-check-enable -->
+Release date: 2022-07-22
 
 ### Added
 
@@ -397,7 +450,10 @@ described in each version section.
 * The environment must be run inside a VS Code development container.
 * The base Docker images are no longer built locally. The images are pulled from [docker hub - i2group](https://hub.docker.com/u/i2group).
 
-## 2.2.0 [Deprecated] - 06/05/2022
+<!-- markdown-link-check-disable -->
+## [2.2.0](https://github.com/i2group/analyze-deployment-tooling/tree/v2.2.0) [Deprecated]
+<!-- markdown-link-check-enable -->
+Release date: 2022-05-06
 
 ### Added
 
@@ -409,27 +465,39 @@ described in each version section.
 
 * i2Connect SDK connector base image.
 
-## 2.1.3 [Deprecated] - 13/05/2022
+<!-- markdown-link-check-disable -->
+## [2.1.3](https://github.com/i2group/analyze-deployment-tooling/tree/v2.1.3) [Deprecated]
+<!-- markdown-link-check-enable -->
+Release date: 2022-05-13
 
 ### Added
 
 * Functionality to support upgrading to future releases of i2 Analyze.
 
-## 2.1.2 [Deprecated] - 31/03/2022
+<!-- markdown-link-check-disable -->
+## [2.1.2](https://github.com/i2group/analyze-deployment-tooling/tree/v2.1.2) [Deprecated]
+<!-- markdown-link-check-enable -->
+Release date: 2022-03-31
 
 ### Security
 
 * Updated the Liberty and Solr images to use Log4j2 version 2.17.2 to remediate <https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-44228>
   * To remediate the CVE, you must rebuild the Docker images in your environment. To rebuild the Docker images, complete the instructions [Updating to the latest version of the analyze-deployment-tooling repository](https://i2group.github.io/analyze-deployment-tooling/content/managing_update_env.html).
 
-## 2.1.1 [Deprecated] - 12/01/2022
+<!-- markdown-link-check-disable -->
+## [2.1.1](https://github.com/i2group/analyze-deployment-tooling/tree/v2.1.1) [Deprecated]
+<!-- markdown-link-check-enable -->
+Release date: 2022-01-12
 
 ### Security
 
 * Updated the Liberty and Solr images to use Log4j2 version 2.17.1 to remediate <https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-44228>
   * To remediate the CVE, you must rebuild the Docker images in your environment. To rebuild the Docker images, complete the instructions [Updating to the latest version of the analyze-deployment-tooling repository](https://i2group.github.io/analyze-deployment-tooling/content/managing_update_env.html).
 
-## 2.1.0 [Deprecated] - 06/10/2021
+<!-- markdown-link-check-disable -->
+## [2.1.0](https://github.com/i2group/analyze-deployment-tooling/tree/v2.1.0) [Deprecated]
+<!-- markdown-link-check-enable -->
+Release date: 2021-10-06
 
 ### Added
 
@@ -443,7 +511,10 @@ described in each version section.
 * Additional command line tools required.
   * See [Updating to the latest version of the analyze-deployment-tooling repository](https://i2group.github.io/analyze-deployment-tooling/content/managing_update_env.html).
 
-## 2.0.0 [Deprecated] - 23/07/2021
+<!-- markdown-link-check-disable -->
+## [2.0.0](https://github.com/i2group/analyze-deployment-tooling/tree/v2.0.0) [Deprecated]
+<!-- markdown-link-check-enable -->
+Release date: 2021-07-23
 
 ### Added
 
@@ -455,14 +526,20 @@ described in each version section.
 
 * Moved `environments/pre-prod` to `examples/pre-prod`.
 
-## 1.1.0 [Deprecated] - 18/02/2021
+<!-- markdown-link-check-disable -->
+## [1.1.0](https://github.com/i2group/analyze-deployment-tooling/tree/v1.1.0) [Deprecated]
+<!-- markdown-link-check-enable -->
+Release date: 2021-02-18
 
 ### Added
 
 * Walkthroughs to demonstrate backup and restore procedure.
 * Updated for compatibility with i2 Analyze 4.3.3.1.
 
-## 1.0.1 [Deprecated] - 29/01/2021
+<!-- markdown-link-check-disable -->
+## [1.0.1](https://github.com/i2group/analyze-deployment-tooling/tree/v1.0.1) [Deprecated]
+<!-- markdown-link-check-enable -->
+Release date: 2021-01-29
 
 ### Added
 
@@ -476,7 +553,10 @@ described in each version section.
 * environments/pre-prod/walkthroughs/change-management/ingestDataWalkthrough.sh fixed to ingest all of the data in the example data set.
 * Broken links in markdown documentation.
 
-## 1.0.0 [Deprecated] - 17/12/2020
+<!-- markdown-link-check-disable -->
+## [1.0.0](https://github.com/i2group/analyze-deployment-tooling/tree/v1.0.0) [Deprecated]
+<!-- markdown-link-check-enable -->
+Release date: 2020-12-17
 
 ### Added
 
