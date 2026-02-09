@@ -82,7 +82,7 @@
 <h2 id="error-opening-analyze-deployment-tooling-in-a-dev-container">Error opening analyze-deployment-tooling in a Dev Container</h2>
 <p><strong>Scenario:</strong><br>Opening the folder in a Dev Container fails on Windows.</p>
 <p><strong>Solution:</strong><br>Ensure that you have opened the analyze-deployment-tooling folder in a WSL VS Code window before opening the folder as a Dev Container.</p>
-<p>In the bottom-left of the window, the green bar must say <code>WSL: Ubuntu</code>. For example: <img src="../images/vscode_wsl_green.png" alt="WSL: Ubuntu">.</p>
+<p>In the bottom-left of the window, the bar must say <code>WSL: Ubuntu</code>. For example: <img src="../images/vscode_wsl.png" alt="WSL: Ubuntu">.</p>
 <p>If it does not say <code>WSL: Ubuntu</code>, press <strong>F1</strong> and type <code>WSL: Reopen folder in WSL</code> then select it. After the WSL window opens, you can then follow the instructions to open the folder in a Dev Container.</p>
 <h2 id="error-when-reloading-vs-code-window">Error when reloading VS Code window</h2>
 <p><strong>Scenario:</strong><br>When you have multiple versions of analyze-deployment-tooling running in VS Code and run <code>manage-environment -t stop</code> in one of the windows, the other VS Code window displays the message <code>Cannot reconnect. Please reload the window.</code>. When you press <strong>Reload Window</strong>, you might see the following message: <code>An error occurred setting up the container.</code></p>
@@ -178,7 +178,7 @@ If you are unable to open the VS Code development container and you have already
 <p><strong>Solution:</strong></p>
 <ol>
 <li>In Docker Desktop, locate the Docker image.
-In the <strong>Images</strong> pane, find the image name that begins with <code>vsc</code> followed by the folder name for the upgrade. For example: <code>vsc-analyze-deployment-tooling-321</code>. The rest of the image name is a GUID.</li>
+In the <strong>Images</strong> pane, find the image name that begins with <code>vsc</code> followed by the folder name for the upgrade. For example: <code>vsc-analyze-deployment-tooling-322</code>. The rest of the image name is a GUID.</li>
 <li>Select the image by using the checkbox and click <strong>Delete</strong>.</li>
 <li>Try and reopen the VS Code development environment.</li>
 </ol>
