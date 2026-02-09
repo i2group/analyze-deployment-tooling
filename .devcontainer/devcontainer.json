@@ -1,26 +1,27 @@
 {
-  "name": "Analyze Containers Dev",
+  "name": "ADT devcontainer",
   "image": "i2group/i2eng-analyze-containers-dev:1.2",
   "remoteUser": "vscode",
   "runArgs": [
     "--init",
-    "--env-file",".devcontainer/devcontainer.env"
+    "--env-file",
+    ".devcontainer/devcontainer.env"
   ],
   "mounts": [
+    "source=${localEnv:HOME}/.config/gh/,target=/home/vscode/.config/gh/,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.m2/,target=/home/vscode/.m2/,type=bind,consistency=cached",
     "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind",
-    "source=analyze-containers,target=/commandhistory,type=volume",
-    "source=${localEnv:HOME}/.m2,target=/home/vscode/.m2,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.config/gh,target=/home/vscode/.config/gh,type=bind"
+    "source=analyze-containers,target=/commandhistory,type=volume"
   ],
   "overrideCommand": false,
   "initializeCommand": "bash ./.devcontainer/bootstrap init",
   "onCreateCommand": "bash ./.devcontainer/bootstrap create",
   "postStartCommand": "bash ./.devcontainer/bootstrap start",
   "remoteEnv": {
-    "WORKSPACE": "${containerWorkspaceFolder}",
     "DEVCONTAINER": "true",
+    "DOCKER_BUILDKIT": "1",
     "HOST_HOME": "${localEnv:HOME}",
-    "DOCKER_BUILDKIT": "1"
+    "WORKSPACE": "${containerWorkspaceFolder}"
   },
   "workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind,consistency=cached",
   "workspaceFolder": "${localWorkspaceFolder}",
@@ -28,9 +29,9 @@
     "vscode": {
       "extensions": [
         "ms-azuretools.vscode-docker",
-        "redhat.vscode-yaml",
-        "redhat.vscode-xml",
         "ms-vscode-remote.remote-wsl",
+        "redhat.vscode-xml",
+        "redhat.vscode-yaml",
         "vscjava.vscode-java-pack",
         "vscode-icons-team.vscode-icons"
       ],

@@ -16,7 +16,7 @@ fi
 SCRIPT_NAME="$(basename "$0")"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # This MUST be maintained to be in sync with the version of the code.
-DEFAULT_VERSION="3.2.1"
+DEFAULT_VERSION="3.2.2"
 
 USAGE="""
 Usage:

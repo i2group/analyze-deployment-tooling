@@ -28,54 +28,157 @@ function run_task() {
   esac
 }
 
-# Called as the dev-container's initializeCommand
-function init() {
-  if [[ -z "${HOME:-}" ]]; then
-    printf "\e[31mERROR: HOME environment variable is not set\e[0m\n" >&2
-    exit 1
+# Returns a list of paths in the native user's home directory that are directly mounted into
+# the devcontainer, one per line.
+# $1 = Path to devcontainer.json to be read, relative to this script's location.
+function get_mounted_native_user_paths() {
+  local devcontainer_location="$1"
+  local devcontainer_json_path
+  devcontainer_json_path="$(dirname "$(realpath "$0")")/${devcontainer_location}"
+  if [[ ! -f "${devcontainer_json_path}" ]]; then
+    printf "\e[31mERROR: devcontainer.json file not found at expected location: %s\e[0m\n" "${devcontainer_json_path}" >&2
+    return 1
   fi
-  docker pull i2group/i2eng-analyze-containers-dev:1.2
+  # shellcheck disable=SC2016
+  ( grep -o 'source=${localEnv:HOME}/[^,"]\+,target=' "${devcontainer_json_path}" || true ) \
+    | \
+    sed 's/source=${localEnv:HOME}\///;s/,target=//'
 }
 
-# Called as the dev-container's onCreateCommand
-function create() {
-  if [[ -z "${HOSTNAME:-}" ]]; then
-    printf "\e[31mERROR: HOSTNAME environment variable is not set\e[0m\n" >&2
-    exit 1
+# Returns a list of paths in the filesystem that are directly mounted into
+# the devcontainer, one per line.
+# $1 = Path to devcontainer.json to be read, relative to this script's location.
+function get_mounted_absolute_paths() {
+  local devcontainer_location="$1"
+  local devcontainer_json_path
+  devcontainer_json_path="$(dirname "$(realpath "$0")")/${devcontainer_location}"
+  if [[ ! -f "${devcontainer_json_path}" ]]; then
+    printf "\e[31mERROR: devcontainer.json file not found at expected location: %s\e[0m\n" "${devcontainer_json_path}" >&2
+    return 1
   fi
-  if [[ -z "$(docker network ls -q --filter name='^eia$')" ]]; then
-    docker network create eia
-  fi
-  docker network connect eia "${HOSTNAME}"
-  echo "VSCode dev container connected to docker network: eia"
-  echo "Done"
+  # shellcheck disable=SC2016
+  ( grep -o 'source=/[^,"]\+,target=' "${devcontainer_json_path}" || true ) \
+    | \
+    sed 's/source=//;s/,target=//'
 }
 
-# Called as the dev-container's postStartCommand
-function post_start() {
-  # see if we need to sudo to do things as root
-  local -a maybe_sudo
-  if [[ "$(id -u)" -ne 0 ]]; then
-    maybe_sudo=("sudo")
-  else
-    maybe_sudo=()
+# Ensures that the native user's home directory contains all the files and folders
+# that are needed by the dev-container.
+#
+# Folders in the user's home directory that we're about to try to mount MUST exist, otherwise
+# docker will either fail, or create them as root-owned folders, neither of which is desirable.
+# This is especially common when customers are doing a clean start.
+# Internal users often mount "everything" indirectly, but they'll want everything that customers use too.
+function ensure_required_native_user_settings_exist() {
+  local user_settings_to_be_mounted
+  user_settings_to_be_mounted=$(get_mounted_native_user_paths devcontainer.json)
+  local user_settings_we_know_we_must_exist
+  if ! user_settings_we_know_we_must_exist=$(get_mounted_native_user_paths ../dev/public/.devcontainer/devcontainer.json 2>/dev/null); then
+    user_settings_we_know_we_must_exist=""
   fi
-  # make VSC dev-container user ~/.* that point back to /local_user versions.
-  # i.e. most of the dotfiles and folders from /local_user (where the original user's home is mounted) to ~ (in the container)
-  (
-    cd /local_user
-    # There's a few things we know we're going to want, even if the user has never used them before.
-    for dotfilename in .m2/ .config/ .circleci/ .npmrc; do
-      if [[ ! -e "${dotfilename}" ]]; then
-        if [[ "${dotfilename}" == */ ]]; then
-          "${maybe_sudo[@]}" mkdir -p "${dotfilename}"
-        else
-          "${maybe_sudo[@]}" touch "${dotfilename}"
+  local normalised_user_settings_list
+  normalised_user_settings_list=$( ( echo "${user_settings_to_be_mounted}" ; echo "${user_settings_we_know_we_must_exist}" ) | sort -u | ( grep -v '^$' || true ))
+  local -a user_settings_dirs_we_need_but_dont_have=()
+  local -a user_settings_files_we_need_but_dont_have=()
+  local user_setting_name
+  while IFS= read -r user_setting_name; do
+    local full_path="${HOME}/${user_setting_name}"
+    # if it ends in a slash, it's a folder otherwise we expect it to be a file.
+    if [[ "${user_setting_name}" == */ ]]; then
+      full_path="${full_path%/}"
+      if [[ -d "${full_path}" ]]; then
+        echo "Native user folder exists: ${full_path}"
+      else
+        if [[ -e "${full_path}" ]]; then
+          printf "\e[31mERROR: Native user path %s exists but is not a folder\e[0m\n" "${full_path}" >&2
+          return 1
         fi
-        "${maybe_sudo[@]}" chown --reference=. "${dotfilename}"
+        user_settings_dirs_we_need_but_dont_have+=("${full_path}")
+      fi
+    else
+      if [[ -f "${full_path}" ]]; then
+        echo "Native user file exists: ${full_path}"
+      else
+        if [[ -e "${full_path}" ]]; then
+          printf "\e[31mERROR: Native user path %s exists but is not a file\e[0m\n" "${full_path}" >&2
+          return 1
+        fi
+        user_settings_files_we_need_but_dont_have+=("${full_path}")
+      fi
+    fi
+  done <<< "${normalised_user_settings_list}"
+  if [[ "${#user_settings_dirs_we_need_but_dont_have[@]}" -le 0 && "${#user_settings_files_we_need_but_dont_have[@]}" -le 0 ]]; then
+    echo "All native user settings needed by the dev-container are present."
+    return 0
+  fi
+  echo "Creating entries in native user's home directory that will be needed in the dev-container:"
+  if [[ "${#user_settings_files_we_need_but_dont_have[@]}" -gt 0 ]]; then
+    local file_we_need
+    for file_we_need in "${user_settings_files_we_need_but_dont_have[@]}"; do
+      local parent_dir_of_file_we_need
+      parent_dir_of_file_we_need="$(dirname "${file_we_need}")"
+      if [[ ! -d "${parent_dir_of_file_we_need}" ]]; then
+        # Only add if not already in the list
+        local already_in_list_to_be_created=0
+        local dir_we_already_intend_to_create
+        for dir_we_already_intend_to_create in "${user_settings_dirs_we_need_but_dont_have[@]}"; do
+          if [[ "${dir_we_already_intend_to_create}" == "${parent_dir_of_file_we_need}" ]]; then
+            already_in_list_to_be_created=1
+            break
+          fi
+        done
+        if [[ "${already_in_list_to_be_created}" -eq 0 ]]; then
+          user_settings_dirs_we_need_but_dont_have+=("${parent_dir_of_file_we_need}")
+        fi
       fi
     done
-    # We do NOT copy .docker because that depends on docker-credential-desktop.exe which is not available in the container.
+  fi
+  if [[ "${#user_settings_dirs_we_need_but_dont_have[@]}" -gt 0 ]]; then
+    (
+      set -x
+      mkdir -p "${user_settings_dirs_we_need_but_dont_have[@]}" || exit 1
+    )
+  fi
+  if [[ "${#user_settings_files_we_need_but_dont_have[@]}" -gt 0 ]]; then
+    (
+      set -x
+      touch "${user_settings_files_we_need_but_dont_have[@]}" || exit 1
+    )
+  fi
+}
+
+# Checks that the native filesystem contains everything that the dev-container is about to mount.
+#
+# Things that we're about to try to mount MUST exist, otherwise docker will either fail, or try
+# to create them as root-owned folders, neither of which is desirable.
+# This can happen if there's a mismatch between what the author of the dev-container expected to be present
+# and the native environment it's being launched from.
+function verify_required_native_paths_exist() {
+  local absolute_paths_to_be_mounted
+  absolute_paths_to_be_mounted=$(get_mounted_absolute_paths devcontainer.json | sort -u | ( grep -v '^$' || true ))
+  local -a paths_we_need_but_dont_have=()
+  local absolute_path_to_be_mounted
+  while IFS= read -r absolute_path_to_be_mounted; do
+    if [[ ! -e "${absolute_path_to_be_mounted}" ]]; then
+      printf "\e[31mERROR: Native path %s does not exist but devcontainer is configured to mount it.\e[0m\n" "${absolute_path_to_be_mounted}" >&2
+      return 1
+    fi
+    echo "Dev-container will mount native path: ${absolute_path_to_be_mounted}"
+  done <<< "${absolute_paths_to_be_mounted}"
+  echo "All native paths needed by the dev-container are present."
+  return 0
+}
+
+# Make VSC dev-container user ~/.* files that point back to native user's versions.
+# This allows things like .gitconfig, .bashrc, .config/Code/User/settings.json, etc to be shared
+# between the native user and the dev-container user ... but requires that the entire native user's home
+# directory is mounted into the dev-container and the uid/gid matches perfectly.
+function map_native_user_settings_into_container_user() {
+  local native_user_dir="$1"
+  (
+    cd "${native_user_dir}" || exit 1
+    # We do NOT copy .docker because that depends on docker-credential-desktop.exe
+    # which is not available in the container.
     # We omit the .ssh folder as we make a deep copy of that later.
     # We omit the others as they're intended to be local to the OS they're on.
     find . \
@@ -96,29 +199,81 @@ function post_start() {
       rm -rf ~/"${dotfilename}"
       (
         set -x
-        ln -sf "/local_user/${dotfilename}" ~/"${dotfilename}"
+        ln -sf "${native_user_dir}/${dotfilename}" ~/"${dotfilename}"
       )
     done
   )
   # SSH won't accept a symlink'ed .ssh folder, so we copy it.
-  if [[ -d /local_user/.ssh ]]; then
+  if [[ -d "${native_user_dir}/.ssh" ]]; then
     rm -rf ~/.ssh
     (
       homedir=$(cd ~ && pwd)
       set -x
-      "${maybe_sudo[@]}" cp -pr /local_user/.ssh "${homedir}/.ssh"
-      "${maybe_sudo[@]}" chown --recursive --reference="${homedir}" "${homedir}/.ssh"
+      cp -pr "${native_user_dir}/.ssh" "${homedir}/.ssh"
     )
   fi
+}
+
+# Called as the dev-container's initializeCommand
+# This runs as the local native user before the container is created.
+function init() {
+  if [[ -z "${HOME:-}" ]]; then
+    printf "\e[31mERROR: HOME environment variable is not set\e[0m\n" >&2
+    exit 1
+  fi
+  ensure_required_native_user_settings_exist
+  verify_required_native_paths_exist
+  docker pull i2group/i2eng-analyze-containers-dev:1.2
+}
+
+# Called as the dev-container's onCreateCommand
+function create() {
+  if [[ -z "${HOSTNAME:-}" ]]; then
+    printf "\e[31mERROR: HOSTNAME environment variable is not set\e[0m\n" >&2
+    exit 1
+  fi
+  if [[ -z "$(docker network ls -q --filter name='^eia$')" ]]; then
+    docker network create eia
+  fi
+  docker network connect eia "${HOSTNAME}"
+  echo "VSCode dev container connected to docker network: eia"
+}
+
+# Called as the dev-container's postStartCommand
+# This runs inside the container after it has started.
+function post_start() {
   if [[ -z "${WORKSPACE:-}" ]]; then
     printf "\e[31mERROR: WORKSPACE environment variable is not set\e[0m\n" >&2
     exit 1
+  fi
+  # Only map native user settings if we can and it is safe to do so.
+  local native_user_dir='/local_user'
+  if [[ ! -d "${native_user_dir}" ]]; then
+    printf "\e[33mINFO: Did not map all native user settings into devcontainer user. To enable, mount \${localEnv:HOME} to %s in the devcontainer.\e[0m\n" "${native_user_dir}" >&2
+  else
+    local native_user_uid_colon_gid
+    # shellcheck disable=SC2012 # ls is the same on mac and linux, stat is not.
+    native_user_uid_colon_gid=$(ls -ldn "${native_user_dir}" | awk '{print $3":"$4}')
+    local container_user_uid_colon_gid
+    # shellcheck disable=SC2012
+    container_user_uid_colon_gid=$(ls -ldn ~ | awk '{print $3":"$4}')
+    if [[ "${native_user_uid_colon_gid}" != "${container_user_uid_colon_gid}" ]]; then
+      # Visual Studio Code is meant to ensure that the dev-container user always has the same UID and GID as
+      # the native user but it's allegedly not 100% reliable, especially for mac users.
+      printf "\e[33mWARNING: Not mapping user settings because %s has uid:gid=%s and %s has uid:gid=%s\e[0m\n" \
+        "${native_user_dir}" "${native_user_uid_colon_gid}" ~ "${container_user_uid_colon_gid}" >&2
+    else
+      echo "Found ${native_user_dir} with matching uid:gid=${native_user_uid_colon_gid}, mapping user settings..."
+      map_native_user_settings_into_container_user "${native_user_dir}"
+      echo "Mapped native user settings into container user."
+      echo "If you add more user settings to the native user's home directory, rebuild the devcontainer to get them included."
+    fi
   fi
   if [[ -f "${WORKSPACE}/scripts/manage-environment" ]]; then
     (
       export ANALYZE_CONTAINERS_ROOT_DIR="${WORKSPACE}"
       export CONTINUE_ON_ERROR="true"
-      "${ANALYZE_CONTAINERS_ROOT_DIR}/scripts/manage-environment" -t link
+      "${ANALYZE_CONTAINERS_ROOT_DIR}/scripts/manage-environment" -t link || exit 1
     )
     echo "Dev Container is ready"
   else
