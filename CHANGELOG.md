@@ -23,9 +23,30 @@ described in each version section.
 -->
 
 <!-- markdown-link-check-disable -->
+## [3.3.0](https://github.com/i2group/analyze-deployment-tooling/tree/v3.3.0)
+<!-- markdown-link-check-enable -->
+Release date: 2026-05-08
+
+### Added
+
+* Updated for compatibility with i2 Analyze 4.4.7.
+
+<!-- markdown-link-check-disable -->
+## [3.2.2](https://github.com/i2group/analyze-deployment-tooling/tree/v3.2.2)
+<!-- markdown-link-check-enable -->
+Release date: 2026-02-09
+
+### Fixed
+
+<!-- markdown-link-check-disable -->
+* Fixed bug: Error reported when starting dev container.
+* Fixed bug: Certificate validation error reported by ANB.
+<!-- markdown-link-check-enable -->
+
+<!-- markdown-link-check-disable -->
 ## [3.2.1](https://github.com/i2group/analyze-deployment-tooling/tree/v3.2.1)
 <!-- markdown-link-check-enable -->
-Release date: 16/12/2025.
+Release date: 2025-12-16
 
 ### Security
 
