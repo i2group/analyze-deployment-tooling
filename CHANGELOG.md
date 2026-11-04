@@ -23,6 +23,48 @@ described in each version section.
 -->
 
 <!-- markdown-link-check-disable -->
+## [3.4.0](https://github.com/i2group/analyze-deployment-tooling/tree/v3.4.0)
+<!-- markdown-link-check-enable -->
+Release date: 2026-11-04
+
+### Added
+
+* Compatibility with i2 Analyze 4.4.8.
+* A `manage-data -t reset-failed-chart-upgrades` task to retry quarantined chart
+  upgrades after addressing their cause. This requires a Toolkit that generates
+  the reset scripts.
+
+### Changed
+
+* Container defaults now use Java 21, PostgreSQL 18, and Solr 9.11.
+* PostgreSQL 17 deployments must use the documented backup and upgrade process
+  to move to 18.
+  An existing PostgreSQL 17 data volume cannot be opened directly by PostgreSQL 18.
+* Solr commands use the supported `solr zk` and `solr cluster` interfaces.
+  Container settings also support the Solr 10 advertised-host and backup-path
+  names.
+
+### Fixed
+
+* Preserve web chart sessions during deployment, backup, and restore.
+* Generate and apply schema metadata changes correctly, stopping PostgreSQL
+  change-set scripts at the first failing statement.
+* Include native Linux licensing libraries in the Liberty image.
+* Limit certificate common names to 64 characters without truncating DNS subject
+  alternative names.
+
+### Security
+
+* Prevent administrator authentication and session headers from appearing in
+  gateway reload diagnostics.
+* Raise the cryptography dependency floor and require an updated certificate
+  authority bundle.
+* Retain main's temporary ZooKeeper TLS compatibility setting: inbound quorum
+  hostname verification is disabled for DNS-only certificates. TLS, certificate
+  trust checks, and outbound hostname verification remain enabled. This
+  limitation requires security approval before release.
+
+<!-- markdown-link-check-disable -->
 ## [3.3.0](https://github.com/i2group/analyze-deployment-tooling/tree/v3.3.0)
 <!-- markdown-link-check-enable -->
 Release date: 2026-05-08
