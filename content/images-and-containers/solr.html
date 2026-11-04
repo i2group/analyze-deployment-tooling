@@ -89,8 +89,8 @@
 <h3 id="docker-build-command">Docker build command</h3>
 <p>The Solr image is built from the Dockerfile in <code>images/solr_server</code>.
 The following <code>docker build</code> command builds the Solr image:</p>
-<pre><code class="lang-bash">docker build -t &quot;solr_redhat:4.4.7&quot; images/solr_server \
-  --build-arg I2ANALYZE_VERSION=&quot;4.4.7&quot;
+<pre><code class="lang-bash">docker build -t &quot;solr_redhat:4.4.8&quot; images/solr_server \
+  --build-arg I2ANALYZE_VERSION=&quot;4.4.8&quot;
 </code></pre><p>For examples of the build commands, see <code>build-images</code> script.</p>
 <h2 id="running-a-solr-container">Running a Solr container</h2>
 <p>A Solr container uses the Solr image. In the <code>docker run</code> command, you can use <code>-e</code> to pass environment variables to Solr on the container. The environment variables are described in <a href="#environment-variables">environment variables</a></p>
@@ -108,6 +108,7 @@ The following <code>docker build</code> command builds the Solr image:</p>
    -v &quot;/environment-secrets/simulated-secret-store/solr1:/run/secrets&quot; \
    -e ZK_HOST=&quot;zk1.eia:2281,zk2.eia:2281,zk3.eia:2281&quot; \
    -e SOLR_HOST=&quot;solr1.eia&quot; \
+   -e SOLR_HOST_ADVERTISE=&quot;solr1.eia&quot; \
    -e ZOO_DIGEST_USERNAME=&quot;solr&quot; \
    -e ZOO_DIGEST_PASSWORD_FILE=&quot;/run/secrets/ZK_DIGEST_PASSWORD&quot; \
    -e ZOO_DIGEST_READONLY_USERNAME=&quot;readonly-user&quot; \
@@ -117,7 +118,7 @@ The following <code>docker build</code> command builds the Solr image:</p>
    -e SSL_PRIVATE_KEY_FILE=&quot;/run/secrets/server.key&quot; \
    -e SSL_CERTIFICATE_FILE=&quot;/run/secrets/server.cer&quot; \
    -e SSL_CA_CERTIFICATE_FILE=&quot;/run/secrets/CA.cer&quot; \
-   &quot;solr_redhat:4.4.7&quot;
+   &quot;solr_redhat:4.4.8&quot;
 </code></pre><p>For an example of the <code>docker run</code> command, see <code>utils/server_functions.sh</code> script. The <code>run_solr</code> function takes the following arguments to support running multiple Solr containers:</p>
 <ol>
 <li><code>CONTAINER</code> - The name for the container.</li>
@@ -135,7 +136,11 @@ For example:</p>
 -v solr_backup:/backup \
 -v /environment-secrets/simulated-secret-store/solr1:/run/secrets
 </code></pre><p>A unique volume name must be used for each Solr container.</p>
-<p>For more information, see <a href="https://github.com/docker-solr/docker-solr#how-the-image-works">How the image works</a>.</p>
+<p>Solr backs up and restores only to paths it allows. To allow the backup volume, set both of the
+following system properties in <code>SOLR_OPTS</code>, because Solr 9 reads the first and Solr 10 reads the
+second:</p>
+<pre><code class="lang-sh">-e SOLR_OPTS=&quot;-Dsolr.allowPaths=/backup -Dsolr.security.allow.paths=/backup&quot; \
+</code></pre><p>For more information, see <a href="https://github.com/docker-solr/docker-solr#how-the-image-works">How the image works</a>.</p>
 <p><strong>Secrets</strong>:<br>A directory that contains all of the secrets that this tool requires. Specifically this includes credentials to access zookeeper and certificates used in SSL.<br>The directory is mounted to <code>/run/secrets</code> inside the container. This can then be used by other environment variables such as <code>ZOO_DIGEST_USERNAME_FILE</code> to locate the secrets.
 In a production environment, the orchestration environment can provide the secrets to the file system or the secrets can be passed in via environment variables. The mechanism that is used here simulates the orchestration system providing the secrets as files.</p>
 <h3 id="environment-variables">Environment variables</h3>
@@ -152,10 +157,19 @@ In a production environment, the orchestration environment can provide the secre
 <tbody>
 <tr>
 <td><code>SOLR_HOST</code></td>
-<td>Specifies the fully qualified domain name of the Solr container.</td>
+<td>Specifies the fully qualified domain name of the Solr container. Set both this and <code>SOLR_HOST_ADVERTISE</code> to the same FQDN.</td>
+</tr>
+<tr>
+<td><code>SOLR_HOST_ADVERTISE</code></td>
+<td>Specifies the fully qualified domain name of the Solr container. Set both this and <code>SOLR_HOST</code> to the same FQDN.</td>
+</tr>
+<tr>
+<td><code>SOLR_OPTS</code></td>
+<td>Additional Solr system properties. Set it to allow the backup volume, as described in <a href="#storage">Storage</a>.</td>
 </tr>
 </tbody>
 </table>
+<p>Solr 9 reads <code>SOLR_HOST</code> and Solr 10 reads <code>SOLR_HOST_ADVERTISE</code>, so setting both works with either.</p>
 <h4 id="zookeeper-authentication">ZooKeeper authentication</h4>
 <p>The following environment variables are used to configure Solr to connect to ZooKeeper as a client:</p>
 <table>

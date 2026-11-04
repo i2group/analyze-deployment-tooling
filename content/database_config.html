@@ -150,6 +150,9 @@ scripts in the changeset in the correct order.</p>
 <a href="https://docs.i2group.com/analyze/t_specifying_credentials.html">Specifying the deployment credentials</a>.</li>
 <li><code>-P &lt;db-password&gt;</code> is the password for the user.</li>
 </ul>
+<p>When the change set updates or upgrades an existing database, the script stops at the first statement that fails
+and exits with a non-zero code. The statements that ran before the failure stay applied, so restore the database
+from a backup before you run the script again.</p>
 <p>When you update the database in a system using the deployment toolkit, you must run the toolkit tasks that are
 used to update the Liberty server with the changes:</p>
 <ul>

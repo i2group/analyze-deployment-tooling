@@ -79,7 +79,7 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="ingesting-development-data-into-the-information-store">Ingesting development data into the Information Store</h1>
 
-<p>When you are developing a configuration, ingest a small amount of representative test data into the system to ensure the schema is suitable for your data and you can configure i2 Analyze to meet your requirements. For more information about ingesting data, see <a href="https://docs.i2group.com/analyze/4.4.7/data_ingestion.html">Ingesting data into the Information Store</a>.</p>
+<p>When you are developing a configuration, ingest a small amount of representative test data into the system to ensure the schema is suitable for your data and you can configure i2 Analyze to meet your requirements. For more information about ingesting data, see <a href="https://docs.i2group.com/analyze/4.4.8/data_ingestion.html">Ingesting data into the Information Store</a>.</p>
 <p>Ensure that the <code>DEPLOYMENT_PATTERN</code> variable in the <code>&lt;config_name&gt;/utils/variables.conf</code> file is set to a pattern that includes the Information Store.<br>For example:</p>
 <pre><code class="lang-sh">DEPLOYMENT_PATTERN=&quot;i2c_istore&quot;
 </code></pre><p>Process overview:</p>
@@ -100,7 +100,7 @@ There is not a 1-to-1 mapping between data sets and configs. Each data set must 
             - &lt;script2&gt;
 </code></pre><h2 id="ingesting-data-into-the-config-dev-environment">Ingesting data into the config dev environment</h2>
 <p>The <code>manage-data</code> command is used to manage the ingestion process in the dev environment.</p>
-<p>To ingest data into the Information Store, you must create scripts that call the ETL tools that complete the actions required by i2 Analyze for you ingest data.<br>For more information, see: - <a href="tools-and-functions/etl_tools.html">ETL tools</a> - <a href="https://docs.i2group.com/analyze/4.4.7/data_ingestion.html">Ingesting data into the Information Store</a></p>
+<p>To ingest data into the Information Store, you must create scripts that call the ETL tools that complete the actions required by i2 Analyze for you ingest data.<br>For more information, see: - <a href="tools-and-functions/etl_tools.html">ETL tools</a> - <a href="https://docs.i2group.com/analyze/4.4.8/data_ingestion.html">Ingesting data into the Information Store</a></p>
 <ul>
 <li>You can find example scripts in the <code>examples/ingestion/scripts</code> directory. These scripts demonstrate how to create staging tables, populate them, and ingest the data into the Information Store.</li>
 </ul>
@@ -126,7 +126,7 @@ There is not a 1-to-1 mapping between data sets and configs. Each data set must 
 <p>To create the ingestion sources in the array, the <code>manage-data</code> command is called as follows:</p>
 <pre><code class="lang-bash">manage-data -c &lt;config_name&gt; -t sources
 </code></pre><h2 id="example-ingestion-process">Example ingestion process</h2>
-<p>The i2 Analyze minimal toolkit contains the example <code>law-enforcement-data-set-1</code> data that can be ingested when the example law enforcement schema (<code>law-enforcement-schema.xml</code>) is deployed. This contains a number of CSV files that contain the data, and a mapping.xml file. For more information about the mapping file, see <a href="https://docs.i2group.com/analyze/4.4.7/c_ingestion_mapping.html">Ingestion mapping files</a>.</p>
+<p>The i2 Analyze minimal toolkit contains the example <code>law-enforcement-data-set-1</code> data that can be ingested when the example law enforcement schema (<code>law-enforcement-schema.xml</code>) is deployed. This contains a number of CSV files that contain the data, and a mapping.xml file. For more information about the mapping file, see <a href="https://docs.i2group.com/analyze/4.4.8/c_ingestion_mapping.html">Ingestion mapping files</a>.</p>
 <p>Before you can ingest the law enforcement example data, complete the following steps to provide the data set and scripts:</p>
 <ol>
 <li>Copy the <code>pre-reqs/i2analyze/toolkit/examples/data/law-enforcement-data-set-1</code> directory to the <code>i2a-data</code> directory.</li>
@@ -148,17 +148,40 @@ manage-data -c config-development -t ingest -d law-enforcement-data-set-1 -s ing
 </code></pre></li>
 </ol>
 <h2 id="the-manage-data-script">The manage-data script</h2>
-<p>The <code>scripts/manage-data</code> script is used to manage data in an environment. It can be used to run scripts that use the ETL toolkit tools, or to remove all data from the Information Store.</p>
+<p>The <code>scripts/manage-data</code> script is used to manage data in an environment. It can be used to run scripts that use the ETL toolkit tools, remove all data from the Information Store, or explicitly reset failed chart upgrades.</p>
+<h3 id="resetting-failed-chart-upgrades">Resetting failed chart upgrades</h3>
+<p>After resolving the cause of a chart upgrade or migration failure, an administrator can release quarantined charts for another attempt:</p>
+<pre><code class="lang-sh">manage-data -c config-development -t reset-failed-chart-upgrades
+</code></pre><p>This task requires a configured deployment with an Information Store and a Toolkit version that generates both
+<code>runResetFailedChartUpgrades.sh</code> and <code>static/A310-reset-failed-chart-upgrades.sql</code> in the configuration&#39;s
+<code>database-scripts/generated</code> directory. It supports Db2, PostgreSQL, and SQL Server, including user-managed databases.
+If either generated file is unavailable, update the Toolkit and regenerate the database scripts before retrying.
+The task checks these prerequisites before stopping Liberty. Liberty can already be stopped,
+so you can retry a reset after a previous failure without first starting chart upgrades again.
+ZooKeeper, Solr, and any ADT-managed database container must still be running; the task
+checks them before stopping Liberty or changing the database.</p>
+<p>The task stops Liberty, runs the generated Toolkit reset as the database administrator, and restarts Liberty only
+after the reset succeeds. Failed sessions return to pending, failed chart binaries become eligible for migration,
+and missing chart upgrade task rows are restored. Other data and search indexes are not deleted or reset.
+Chart upgrades retry asynchronously after Liberty starts; a successful reset does not mean that the upgrades have finished.</p>
+<p>If the database reset fails, the command reports the failure and leaves Liberty stopped. Resolve the reported error
+before retrying the reset or restarting the deployment. If restarting Liberty fails after a successful reset, the command
+also fails; resolve the startup error before restarting the deployment.
+This reset never runs automatically during normal startup or deployment.</p>
+<h3 id="command-usage">Command usage</h3>
 <p>The following usage and help is provided for the <code>manage-data</code> command:</p>
 <pre><code class="lang-sh">Usage:
   manage-data -c &lt;config_name&gt; -t {ingest} -d &lt;data_set&gt; -s &lt;script_name&gt; [-v]
   manage-data -c &lt;config_name&gt; -t {sources} [-s &lt;script_name&gt;] [-v]
   manage-data -c &lt;config_name&gt; -t {delete} [-v]
+  manage-data -c &lt;config_name&gt; -t {reset-failed-chart-upgrades} [-v]
   manage-data -h
 
 Options:
   -c &lt;config_name&gt;             Name of the config to use.
-  -t {delete|ingest|sources}   The task to run. Either delete or ingest data, or add ingestion sources. Delete permanently removes all data from the database.
+  -t &lt;task&gt;                    The task to run: delete, ingest, reset-failed-chart-upgrades, or sources.
+                               Delete permanently removes all data from the database.
+                               Reset releases quarantined chart upgrades for retry after addressing the cause.
   -d &lt;data_set&gt;                Name of the data set to ingest.
   -s &lt;script_name&gt;             Name of the ingestion script file.
   -v                           Verbose output.

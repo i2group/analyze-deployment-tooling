@@ -128,9 +128,7 @@
 <li><a href="#getvolume">get_volume</a></li>
 </ul>
 <h2 id="environment-utilities">Environment utilities</h2>
-<p>Checks if all required environment variables are set.</p>
 <h3 id="checkenvvarsareset">check_env_vars_are_set</h3>
-<p>Checks if all required environment variables are set.</p>
 <p><em>Function has no arguments.</em></p>
 <h2 id="secret-utilities">Secret utilities</h2>
 <!-- markdown-link-check-enable -->
@@ -265,9 +263,9 @@ For more information, see <a href="../security-and-users/db_users.html">db_users
 <p>Use an ephemeral Solr client container to run commands against Solr.
 For more information about the environment variables and volume mounts that are required for the Solr client, see <a href="../images-and-containers/solr_client.html">Running a Solr client container</a>.
 The run_solr_client_command function takes the command you want to run as an argument.
-For more information about commands you can execute using the Solr zkcli, see <a href="https://solr.apache.org/guide/solr/latest/deployment-guide/zookeeper-utilities.html#using-solrs-zookeeper-cli">Solr ZK Command Line Utilities</a></p>
+For more information about the ZooKeeper commands you can run with <code>solr zk</code> and <code>solr cluster</code>, see <a href="https://solr.apache.org/guide/solr/latest/deployment-guide/solr-control-script-reference.html">Solr Control Script Reference</a></p>
 <h4 id="example-4">Example</h4>
-<pre><code class="lang-bash">run_solr_client_command &quot;/opt/solr/server/scripts/cloud-scripts/zkcli.sh&quot; -zkhost &quot;${ZK_HOST}&quot; -cmd clusterprop -name urlScheme -val https
+<pre><code class="lang-bash">run_solr_client_command solr cluster --property urlScheme --value https -z &quot;${ZK_HOST}&quot;
 </code></pre><h4 id="arguments-10">Arguments</h4>
 <ul>
 <li><strong>...</strong> (string): The command you want to run on the Solr client container</li>

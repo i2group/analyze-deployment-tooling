@@ -90,7 +90,7 @@ See the <code>Running a new Solr container</code> section of the walkthrough scr
 <p>For more information about running a Solr container, see <a href="../images-and-containers/solr.html#running-a-solr-container">Solr</a>.</p>
 <p>The following environment variables are used to specify the hostname of the container and to add the node to the existing cluster:</p>
 <ul>
-<li><code>SOLR_HOST</code> specifies the fully qualified domain name of the Solr container.</li>
+<li><code>SOLR_HOST</code> and <code>SOLR_HOST_ADVERTISE</code> specify the fully qualified domain name of the Solr container. Set both to the same FQDN: Solr 9 reads <code>SOLR_HOST</code>, and Solr 10 reads only <code>SOLR_HOST_ADVERTISE</code>.</li>
 <li><code>ZK_HOST</code> Specifies the connection string for each ZooKeeper server to connect to. To connect to more than one ZooKeeper server, the values must be in comma separated list. When the connection string connects to the existing ZooKeeper quorum, the new Solr node is automatically added to the Solr cluster.</li>
 </ul>
 <h2 id="adding-a-solr-replica">Adding a Solr replica</h2>
