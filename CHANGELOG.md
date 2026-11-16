@@ -23,6 +23,16 @@ described in each version section.
 -->
 
 <!-- markdown-link-check-disable -->
+## [3.4.1](https://github.com/i2group/analyze-deployment-tooling/tree/v3.4.1)
+<!-- markdown-link-check-enable -->
+Release date: 2026-11-16
+
+### Changed
+
+* Compatibility with i2 Analyze 4.4.9, which replaces 4.4.8.
+  Version 3.4.0 of the deployment tooling supports i2 Analyze 4.4.8 only.
+
+<!-- markdown-link-check-disable -->
 ## [3.4.0](https://github.com/i2group/analyze-deployment-tooling/tree/v3.4.0)
 <!-- markdown-link-check-enable -->
 Release date: 2026-11-04
